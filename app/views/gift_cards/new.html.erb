@@ -1,8 +1,7 @@
 <div class="max-w-md mx-auto">
   <div class="bg-white shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
     <h2 class="text-2xl font-bold text-gray-900 mb-6">Buy Gift Card</h2>
-    
-    <%= form_with url: checkout_gift_cards_path, method: :post, local: true, class: "space-y-6" do |form| %>
+    <%= form_with url: checkout_gift_cards_path, method: :post, local: true, data: { turbo: false }, class: "space-y-6" do |form| %>
       <div>
         <%= form.label :amount_cents, "Amount", class: "block text-sm font-medium text-gray-700" %>
         <div class="mt-1 relative rounded-md shadow-sm">
@@ -71,3 +70,9 @@
     <% end %>
   </div>
 </div>
+
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  const stripe = Stripe("<%= ENV['STRIPE_PUBLISHABLE_KEY'] %>");
+</script>

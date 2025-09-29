@@ -34,17 +34,28 @@ class GiftCardsController < ApplicationController
     end
 
     begin
-      session = StripeCheckout.create_session(
-        amount_cents: amount_cents,
-        currency: currency,
-        metadata: {
-          sender_id: current_user.id,
-          recipient_phone: recipient_phone,
-          recipient_email: recipient_email,
-          recipient_name: recipient_name,
-          merchant_id: merchant_id
-        }
-      )
+      session = Stripe::Checkout::Session.create(
+  payment_method_types: ['card'],
+  line_items: [{
+    price_data: {
+      currency: currency.downcase,
+      product_data: { name: "Gift Card for #{recipient_name}" },
+      unit_amount: amount_cents,
+    },
+    quantity: 1,
+  }],
+  mode: 'payment',
+  success_url: success_gift_cards_url + "?session_id={CHECKOUT_SESSION_ID}",
+  cancel_url: cancel_gift_cards_url,
+  metadata: {
+    sender_id: current_user.id,
+    recipient_email: recipient_email,
+    recipient_phone: recipient_phone,
+    recipient_name: recipient_name,
+    merchant_id: merchant_id
+  }
+)
+
 
       redirect_to session.url, allow_other_host: true
     rescue => e

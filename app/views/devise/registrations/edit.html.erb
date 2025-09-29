@@ -36,6 +36,52 @@
   </div>
 <% end %>
 
+<!-- User Status and Information -->
+<div class="mt-8 p-4 bg-gray-50 rounded-lg border">
+  <h3 class="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
+  
+  <!-- User Status -->
+  <div class="mb-4">
+    <span class="text-sm font-medium text-gray-700">Status: </span>
+    <% case resource.role %>
+    <% when 'admin' %>
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+        Administrator
+      </span>
+    <% when 'merchant' %>
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+        Merchant
+      </span>
+    <% else %>
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+        Regular User
+      </span>
+    <% end %>
+  </div>
+  
+  <!-- User Data -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+    <div>
+      <span class="font-medium text-gray-700">Name:</span>
+      <span class="text-gray-900"><%= resource.name %></span>
+    </div>
+    <div>
+      <span class="font-medium text-gray-700">Email:</span>
+      <span class="text-gray-900"><%= resource.email %></span>
+    </div>
+    <% if resource.phone.present? %>
+      <div>
+        <span class="font-medium text-gray-700">Phone:</span>
+        <span class="text-gray-900"><%= resource.phone %></span>
+      </div>
+    <% end %>
+    <div>
+      <span class="font-medium text-gray-700">Member since:</span>
+      <span class="text-gray-900"><%= resource.created_at.strftime("%B %d, %Y") %></span>
+    </div>
+  </div>
+</div>
+
 <h3>Cancel my account</h3>
 
 <div>Unhappy? <%= button_to "Cancel my account", registration_path(resource_name), data: { confirm: "Are you sure?", turbo_confirm: "Are you sure?" }, method: :delete %></div>
