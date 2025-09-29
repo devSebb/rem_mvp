@@ -1,0 +1,103 @@
+<div class="max-w-2xl mx-auto">
+  <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+    <div class="px-6 py-8">
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Gift Card Details</h1>
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium <%= 
+          case @gift_card.status
+          when 'active'
+            'bg-green-100 text-green-800'
+          when 'redeemed'
+            'bg-blue-100 text-blue-800'
+          when 'expired'
+            'bg-red-100 text-red-800'
+          when 'canceled'
+            'bg-gray-100 text-gray-800'
+          else
+            'bg-gray-100 text-gray-800'
+          end
+        %>">
+          <%= @gift_card.status.humanize %>
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Card Information</h3>
+          
+          <dl class="space-y-3">
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Amount</dt>
+              <dd class="text-2xl font-bold text-gray-900">
+                <%= number_to_currency(@gift_card.amount / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+              </dd>
+            </div>
+            
+            <div>
+              <dt class="text-sm font-medium text-gray-500">From</dt>
+              <dd class="text-sm text-gray-900"><%= @gift_card.sender.name %></dd>
+            </div>
+            
+            <div>
+              <dt class="text-sm font-medium text-gray-500">To</dt>
+              <dd class="text-sm text-gray-900"><%= @gift_card.recipient&.name || 'Unknown' %></dd>
+            </div>
+            
+            <% if @gift_card.merchant.present? %>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Store</dt>
+                <dd class="text-sm text-gray-900"><%= @gift_card.merchant.store_name %></dd>
+              </div>
+            <% end %>
+            
+            <% if @gift_card.expires_at.present? %>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Expires</dt>
+                <dd class="text-sm text-gray-900"><%= @gift_card.expires_at.strftime('%B %d, %Y at %I:%M %p') %></dd>
+              </div>
+            <% end %>
+            
+            <% if @gift_card.redeemed_at.present? %>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Redeemed</dt>
+                <dd class="text-sm text-gray-900"><%= @gift_card.redeemed_at.strftime('%B %d, %Y at %I:%M %p') %></dd>
+              </div>
+            <% end %>
+          </dl>
+        </div>
+
+        <% if @gift_card.active? %>
+          <div class="text-center">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">QR Code</h3>
+            <div class="bg-white p-4 rounded-lg border-2 border-gray-200 inline-block">
+              <% 
+                # Generate QR code with the gift card code
+                # For security, we'll show a masked version in the UI
+                # The actual code should only be revealed via SMS/email
+                qr_data = "Gift Card ID: #{@gift_card.id}"
+                qr = RQRCode::QRCode.new(qr_data)
+                svg = qr.as_svg(
+                  offset: 0,
+                  color: '000',
+                  shape_rendering: 'crispEdges',
+                  module_size: 6,
+                  standalone: true
+                )
+              %>
+              <%= raw svg %>
+            </div>
+            <p class="mt-2 text-sm text-gray-500">Show this QR code to the merchant</p>
+            <p class="mt-1 text-xs text-gray-400">Code will be sent via SMS/email</p>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="mt-8 flex justify-between">
+        <%= link_to "Back to Wallet", gift_cards_path, class: "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
+        <% if @gift_card.active? %>
+          <%= link_to "Buy Another", new_gift_card_path, class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

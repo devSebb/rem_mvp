@@ -1,0 +1,73 @@
+<div class="max-w-md mx-auto">
+  <div class="bg-white shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Buy Gift Card</h2>
+    
+    <%= form_with url: checkout_gift_cards_path, method: :post, local: true, class: "space-y-6" do |form| %>
+      <div>
+        <%= form.label :amount_cents, "Amount", class: "block text-sm font-medium text-gray-700" %>
+        <div class="mt-1 relative rounded-md shadow-sm">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="text-gray-500 sm:text-sm">$</span>
+          </div>
+          <%= form.number_field :amount_cents, 
+                value: params[:amount_cents], 
+                min: 100, 
+                step: 100, 
+                class: "focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md",
+                placeholder: "0.00" %>
+          <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <span class="text-gray-500 sm:text-sm">.00</span>
+          </div>
+        </div>
+        <p class="mt-1 text-sm text-gray-500">Minimum amount is $1.00</p>
+      </div>
+
+      <div>
+        <%= form.label :currency, "Currency", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.select :currency, 
+              options_for_select([['USD', 'USD'], ['EUR', 'EUR']], params[:currency] || 'USD'),
+              {},
+              class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md" %>
+      </div>
+
+      <div>
+        <%= form.label :recipient_name, "Recipient Name", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.text_field :recipient_name, 
+              value: params[:recipient_name],
+              class: "mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md",
+              placeholder: "Enter recipient's name" %>
+      </div>
+
+      <div>
+        <%= form.label :recipient_phone, "Recipient Phone", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.telephone_field :recipient_phone, 
+              value: params[:recipient_phone],
+              class: "mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md",
+              placeholder: "+1234567890" %>
+        <p class="mt-1 text-sm text-gray-500">Phone or email is required</p>
+      </div>
+
+      <div>
+        <%= form.label :recipient_email, "Recipient Email", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.email_field :recipient_email, 
+              value: params[:recipient_email],
+              class: "mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md",
+              placeholder: "recipient@example.com" %>
+      </div>
+
+      <div>
+        <%= form.label :merchant_id, "Store (Optional)", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.select :merchant_id, 
+              options_for_select([['Any Store', '']] + Merchant.all.map { |m| [m.store_name, m.id] }, params[:merchant_id]),
+              {},
+              class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md" %>
+        <p class="mt-1 text-sm text-gray-500">Select a specific store or leave blank for general gift card</p>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <%= link_to "Cancel", root_path, class: "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
+        <%= form.submit "Proceed to Payment", class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
+      </div>
+    <% end %>
+  </div>
+</div>

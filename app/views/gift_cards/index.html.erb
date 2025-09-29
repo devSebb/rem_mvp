@@ -1,0 +1,95 @@
+<div class="px-4 sm:px-0">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">My Gift Cards</h1>
+    <%= link_to "Buy New Gift Card", new_gift_card_path, class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+  </div>
+
+  <% if @gift_cards.any? %>
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <% @gift_cards.each do |gift_card| %>
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="px-4 py-5 sm:p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span class="text-white font-bold text-sm">G</span>
+                </div>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">
+                    Amount
+                  </dt>
+                  <dd class="text-lg font-medium text-gray-900">
+                    <%= number_to_currency(gift_card.amount / 100.0, unit: gift_card.currency == 'USD' ? '$' : gift_card.currency) %>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+            
+            <div class="mt-4">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-500">
+                  <% if gift_card.sender == current_user %>
+                    To: <%= gift_card.recipient&.name || 'Unknown' %>
+                  <% else %>
+                    From: <%= gift_card.sender.name %>
+                  <% end %>
+                </span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= 
+                  case gift_card.status
+                  when 'active'
+                    'bg-green-100 text-green-800'
+                  when 'redeemed'
+                    'bg-blue-100 text-blue-800'
+                  when 'expired'
+                    'bg-red-100 text-red-800'
+                  when 'canceled'
+                    'bg-gray-100 text-gray-800'
+                  else
+                    'bg-gray-100 text-gray-800'
+                  end
+                %>">
+                  <%= gift_card.status.humanize %>
+                </span>
+              </div>
+              
+              <% if gift_card.merchant.present? %>
+                <div class="mt-2">
+                  <span class="text-sm text-gray-500">
+                    Store: <%= gift_card.merchant.store_name %>
+                  </span>
+                </div>
+              <% end %>
+              
+              <% if gift_card.expires_at.present? %>
+                <div class="mt-2">
+                  <span class="text-sm text-gray-500">
+                    Expires: <%= gift_card.expires_at.strftime('%B %d, %Y') %>
+                  </span>
+                </div>
+              <% end %>
+            </div>
+            
+            <div class="mt-4">
+              <%= link_to "View Details", gift_card_path(gift_card), class: "text-blue-600 hover:text-blue-500 text-sm font-medium" %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-center py-12">
+      <div class="mx-auto h-12 w-12 text-gray-400">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+        </svg>
+      </div>
+      <h3 class="mt-2 text-sm font-medium text-gray-900">No gift cards</h3>
+      <p class="mt-1 text-sm text-gray-500">Get started by buying your first gift card.</p>
+      <div class="mt-6">
+        <%= link_to "Buy Gift Card", new_gift_card_path, class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+      </div>
+    </div>
+  <% end %>
+</div>

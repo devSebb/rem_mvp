@@ -1,0 +1,17 @@
+<div class="max-w-md mx-auto text-center">
+  <div class="bg-white shadow-lg rounded-lg px-8 pt-6 pb-8 mb-4">
+    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+      <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+      </svg>
+    </div>
+    
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">Payment Cancelled</h1>
+    <p class="text-gray-600 mb-6">No charges were made to your account. You can try again anytime.</p>
+    
+    <div class="space-y-3">
+      <%= link_to "Try Again", new_gift_card_path, class: "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
+      <%= link_to "Back to Home", root_path, class: "w-full bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,61 @@
+class Merchant::RedemptionsController < ApplicationController
+  before_action :ensure_merchant
+
+  def new
+    @gift_card = nil
+  end
+
+  def create
+    code = params[:code]&.strip&.upcase
+    @gift_card = GiftCard.find_active_by_code(code)
+
+    if @gift_card.nil?
+      flash[:alert] = 'Gift card not found or already redeemed.'
+      render :new and return
+    end
+
+    unless @gift_card.can_be_redeemed?
+      flash[:alert] = 'This gift card cannot be redeemed (expired or inactive).'
+      render :new and return
+    end
+
+    # Show confirmation page
+    render :confirm
+  end
+
+  def confirm
+    gift_card_id = params[:gift_card_id]
+    @gift_card = GiftCard.find(gift_card_id)
+
+    if @gift_card.redeem!(merchant: current_user.merchant, actor: current_user)
+      flash[:notice] = "Gift card redeemed successfully! Amount: #{format_amount(@gift_card.amount, @gift_card.currency)}"
+      redirect_to merchant_root_path
+    else
+      flash[:alert] = 'Failed to redeem gift card. Please try again.'
+      redirect_to new_merchant_redemption_path
+    end
+  rescue ActiveRecord::RecordNotFound
+    flash[:alert] = 'Gift card not found.'
+    redirect_to new_merchant_redemption_path
+  end
+
+  private
+
+  def ensure_merchant
+    unless current_user&.merchant?
+      flash[:alert] = 'You must be a merchant to access this area.'
+      redirect_to root_path
+    end
+  end
+
+  def format_amount(amount_cents, currency)
+    case currency.upcase
+    when 'USD'
+      "$#{amount_cents / 100.0}"
+    when 'EUR'
+      "€#{amount_cents / 100.0}"
+    else
+      "#{amount_cents / 100.0} #{currency}"
+    end
+  end
+end
