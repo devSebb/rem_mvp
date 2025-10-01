@@ -18,7 +18,9 @@ Rails.application.routes.draw do
   namespace :merchant do
     root to: "dashboard#index"
     resources :redemptions, only: [:new, :create] do
-      post :confirm, on: :collection
+      get :confirm, on: :collection
+      post :redeem, on: :collection
+      get :success, on: :collection
     end
     resources :settlements, only: [:index, :show]
     resource :profile, only: [:show, :update]

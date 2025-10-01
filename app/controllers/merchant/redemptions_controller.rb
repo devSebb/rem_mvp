@@ -11,29 +11,43 @@ class Merchant::RedemptionsController < ApplicationController
 
     if @gift_card.nil?
       flash[:alert] = 'Gift card not found or already redeemed.'
-      render :new and return
+      redirect_to new_merchant_redemption_path and return
     end
 
     unless @gift_card.can_be_redeemed?
       flash[:alert] = 'This gift card cannot be redeemed (expired or inactive).'
-      render :new and return
+      redirect_to new_merchant_redemption_path and return
     end
 
     # Show confirmation page
-    render :confirm
+    redirect_to confirm_merchant_redemptions_path(gift_card_id: @gift_card.id)
   end
 
   def confirm
     gift_card_id = params[:gift_card_id]
     @gift_card = GiftCard.find(gift_card_id)
+  rescue ActiveRecord::RecordNotFound
+    flash[:alert] = 'Gift card not found.'
+    redirect_to new_merchant_redemption_path
+  end
+
+  def redeem
+    gift_card_id = params[:gift_card_id]
+    @gift_card = GiftCard.find(gift_card_id)
 
     if @gift_card.redeem!(merchant: current_user.merchant, actor: current_user)
-      flash[:notice] = "Gift card redeemed successfully! Amount: #{format_amount(@gift_card.amount, @gift_card.currency)}"
-      redirect_to merchant_root_path
+      redirect_to success_merchant_redemptions_path(gift_card_id: @gift_card.id)
     else
       flash[:alert] = 'Failed to redeem gift card. Please try again.'
       redirect_to new_merchant_redemption_path
     end
+  rescue ActiveRecord::RecordNotFound
+    flash[:alert] = 'Gift card not found.'
+    redirect_to new_merchant_redemption_path
+  end
+
+  def success
+    @gift_card = GiftCard.find(params[:gift_card_id]) if params[:gift_card_id]
   rescue ActiveRecord::RecordNotFound
     flash[:alert] = 'Gift card not found.'
     redirect_to new_merchant_redemption_path

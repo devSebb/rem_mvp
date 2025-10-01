@@ -69,6 +69,17 @@ class GiftCard < ApplicationRecord
     active? && !expired?
   end
 
+  # DEVELOPMENT ONLY: Method to retrieve raw code for testing
+  # TODO: Remove this method before production deployment
+  def raw_code
+    return nil unless Rails.env.development?
+    
+    # For development, we'll try to find the code by checking against known test codes
+    # This is a temporary solution for testing purposes
+    test_codes = ['REM-TEST-1234-5678', 'REM-TEST-ABCD-EFGH']
+    test_codes.find { |code| BCrypt::Password.new(code_digest) == code }
+  end
+
   private
 
   def set_defaults

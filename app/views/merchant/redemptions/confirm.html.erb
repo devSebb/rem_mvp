@@ -54,7 +54,7 @@
         </div>
       </div>
       
-      <%= form_with url: confirm_merchant_redemptions_path, method: :post, local: true, class: "space-y-6" do |form| %>
+      <%= form_with url: redeem_merchant_redemptions_path, method: :post, local: true, class: "space-y-6" do |form| %>
         <%= form.hidden_field :gift_card_id, value: @gift_card.id %>
         
         <div class="flex items-center justify-between">
