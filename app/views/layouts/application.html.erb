@@ -37,7 +37,7 @@
                 <%= link_to "Merchant Portal", merchant_root_path, class: "text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" %>
               <% end %>
               <%= link_to "Profile", edit_user_registration_path, class: "text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" %>
-              <%= link_to "Logout", destroy_user_session_path, method: :delete, class: "text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" %>
+              <%= button_to "Logout", destroy_user_session_path, method: :delete, class: "text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium bg-transparent border-none cursor-pointer" %>
             <% else %>
               <%= link_to "Login", new_user_session_path, class: "text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" %>
               <%= link_to "Sign Up", new_user_registration_path, class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>

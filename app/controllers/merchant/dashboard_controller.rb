@@ -4,7 +4,7 @@ class Merchant::DashboardController < ApplicationController
   def index
     @merchant = current_user.merchant
     @today_redemptions = @merchant.gift_cards.redeemed.where(redeemed_at: Date.current.all_day).count
-    @pending_settlement = @merchant.settlements.pending.sum(:amount)
+    @pending_settlement = @merchant.gift_cards.redeemed.sum(:amount)
     @recent_redemptions = @merchant.gift_cards.redeemed.includes(:sender, :recipient).order(redeemed_at: :desc).limit(10)
   end
 
