@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_09_29_031235) do
+ActiveRecord::Schema[7.2].define(version: 2025_10_03_020945) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -27,9 +27,19 @@ ActiveRecord::Schema[7.2].define(version: 2025_09_29_031235) do
     t.string "checkout_session_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "link_token_digest"
+    t.datetime "link_token_expires_at"
+    t.string "otp_digest"
+    t.datetime "otp_expires_at"
+    t.boolean "sent_via_whatsapp", default: false, null: false
+    t.boolean "sent_via_sms", default: false, null: false
+    t.boolean "sent_via_email", default: false, null: false
+    t.integer "remaining_balance", default: 0
     t.index ["checkout_session_id"], name: "index_gift_cards_on_checkout_session_id", unique: true
     t.index ["code_digest"], name: "index_gift_cards_on_code_digest", unique: true
+    t.index ["link_token_digest"], name: "index_gift_cards_on_link_token_digest", unique: true
     t.index ["merchant_id"], name: "index_gift_cards_on_merchant_id"
+    t.index ["otp_digest"], name: "index_gift_cards_on_otp_digest", unique: true
     t.index ["recipient_id"], name: "index_gift_cards_on_recipient_id"
     t.index ["sender_id"], name: "index_gift_cards_on_sender_id"
     t.index ["status"], name: "index_gift_cards_on_status"

@@ -15,7 +15,7 @@ class Merchant::RedemptionsController < ApplicationController
     end
 
     unless @gift_card.can_be_redeemed?
-      flash[:alert] = 'This gift card cannot be redeemed (expired or inactive).'
+      flash[:alert] = 'This gift card cannot be redeemed (expired, inactive, or has no remaining balance).'
       redirect_to new_merchant_redemption_path and return
     end
 
@@ -33,9 +33,22 @@ class Merchant::RedemptionsController < ApplicationController
 
   def redeem
     gift_card_id = params[:gift_card_id]
+    redemption_amount = params[:redemption_amount]&.to_f&.*(100)&.to_i # Convert to cents
     @gift_card = GiftCard.find(gift_card_id)
 
-    if @gift_card.redeem!(merchant: current_user.merchant, actor: current_user)
+    # Validate redemption amount
+    if redemption_amount.nil? || redemption_amount <= 0
+      flash[:alert] = 'Please enter a valid redemption amount.'
+      redirect_to confirm_merchant_redemptions_path(gift_card_id: @gift_card.id) and return
+    end
+
+    if redemption_amount > @gift_card.remaining_balance
+      flash[:alert] = "Redemption amount cannot exceed remaining balance of #{format_amount(@gift_card.remaining_balance, @gift_card.currency)}."
+      redirect_to confirm_merchant_redemptions_path(gift_card_id: @gift_card.id) and return
+    end
+
+    if @gift_card.partial_redeem!(redemption_amount: redemption_amount, merchant: current_user.merchant, actor: current_user)
+      flash[:notice] = "Successfully redeemed #{format_amount(redemption_amount, @gift_card.currency)}. Remaining balance: #{format_amount(@gift_card.reload.remaining_balance, @gift_card.currency)}."
       redirect_to success_merchant_redemptions_path(gift_card_id: @gift_card.id)
     else
       flash[:alert] = 'Failed to redeem gift card. Please try again.'

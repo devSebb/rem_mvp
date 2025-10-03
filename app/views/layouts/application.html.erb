@@ -31,8 +31,10 @@
           <div class="flex items-center space-x-4">
             <% if user_signed_in? %>
               <%= link_to "Home", root_path, class: "text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" %>
-              <%= link_to "My Wallet", gift_cards_path, class: "text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" %>
-              <%= link_to "Buy Gift Card", new_gift_card_path, class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+              <% unless current_user.merchant? %>
+                <%= link_to "My Wallet", gift_cards_path, class: "text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" %>
+                <%= link_to "Buy Gift Card", new_gift_card_path, class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+              <% end %>
               <% if current_user.merchant? %>
                 <%= link_to "Merchant Portal", merchant_root_path, class: "text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" %>
               <% end %>

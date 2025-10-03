@@ -317,7 +317,10 @@ GEM
       rubocop-performance (>= 1.24)
       rubocop-rails (>= 2.30)
     ruby-progressbar (1.13.0)
+    ruby_http_client (3.5.5)
     securerandom (0.4.1)
+    sendgrid-ruby (6.7.0)
+      ruby_http_client (~> 3.4)
     sidekiq (7.3.9)
       base64
       connection_pool (>= 2.3.0)
@@ -401,6 +404,7 @@ DEPENDENCIES
   rqrcode
   rspec-rails
   rubocop-rails-omakase
+  sendgrid-ruby
   sidekiq
   sprockets-rails
   stimulus-rails

@@ -13,7 +13,13 @@ Rails.application.routes.draw do
 
   namespace :webhooks do
     post :stripe, to: "stripe#receive"
+    post :twilio_status, to: "twilio#status"
   end
+
+  # Gift card redemption routes
+  get '/redeem', to: 'redeems#show'
+  post '/redeem/claim', to: 'redeems#claim'
+  get '/redeem/success', to: 'redeems#success', as: :redeem_success
 
   namespace :merchant do
     root to: "dashboard#index"

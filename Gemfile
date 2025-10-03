@@ -39,6 +39,9 @@ gem "stripe"
 # SMS/WhatsApp notifications
 gem "twilio-ruby"
 
+# Email delivery
+gem "sendgrid-ruby"
+
 # Background jobs
 gem "sidekiq"
 

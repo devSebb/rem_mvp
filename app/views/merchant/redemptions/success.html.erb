@@ -11,7 +11,11 @@
 
     <div class="text-center">
       <h2 class="text-2xl font-bold text-gray-900 mb-2">Redemption Successful!</h2>
-      <p class="text-gray-600 mb-6">The gift card has been successfully redeemed.</p>
+      <% if @gift_card&.remaining_balance&.> 0 %>
+        <p class="text-gray-600 mb-6">The gift card has been partially redeemed. The remaining balance can be used for future purchases.</p>
+      <% else %>
+        <p class="text-gray-600 mb-6">The gift card has been fully redeemed.</p>
+      <% end %>
     </div>
 
     <% if @gift_card %>
@@ -22,14 +26,23 @@
           <div class="flex justify-between">
             <dt class="text-sm font-medium text-green-700">Amount Redeemed</dt>
             <dd class="text-lg font-bold text-green-900">
-              <%= number_to_currency(@gift_card.amount / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+              <%= number_to_currency((@gift_card.amount - @gift_card.remaining_balance) / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
             </dd>
           </div>
+          
+          <% if @gift_card.remaining_balance > 0 %>
+            <div class="flex justify-between">
+              <dt class="text-sm font-medium text-green-700">Remaining Balance</dt>
+              <dd class="text-lg font-bold text-blue-600">
+                <%= number_to_currency(@gift_card.remaining_balance / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+              </dd>
+            </div>
+          <% end %>
           
           <div class="flex justify-between">
             <dt class="text-sm font-medium text-green-700">Redeemed At</dt>
             <dd class="text-sm text-green-900">
-              <%= @gift_card.redeemed_at.strftime('%B %d, %Y at %I:%M %p') %>
+              <%= @gift_card.redeemed_at&.strftime('%B %d, %Y at %I:%M %p') || Time.current.strftime('%B %d, %Y at %I:%M %p') %>
             </dd>
           </div>
           

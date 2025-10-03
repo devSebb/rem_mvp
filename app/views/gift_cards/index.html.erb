@@ -1,131 +1,485 @@
 <div class="px-4 sm:px-0">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold text-gray-900">My Gift Cards</h1>
-    <%= link_to "Buy New Gift Card", new_gift_card_path, class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+  <!-- Header Section -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">My Wallet</h1>
+      <p class="mt-2 text-sm text-gray-600">Manage your gift cards and track your transactions</p>
+    </div>
+    <div class="mt-4 sm:mt-0">
+      <%= link_to "Buy New Gift Card", new_gift_card_path, class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
+    </div>
   </div>
 
-  <% if @gift_cards.any? %>
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      <% @gift_cards.each do |gift_card| %>
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-          <div class="px-4 py-5 sm:p-6">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span class="text-white font-bold text-sm">G</span>
-                </div>
-              </div>
-              <div class="ml-5 w-0 flex-1">
-                <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">
-                    Amount
-                  </dt>
-                  <dd class="text-lg font-medium text-gray-900">
-                    <%= number_to_currency(gift_card.amount / 100.0, unit: gift_card.currency == 'USD' ? '$' : gift_card.currency) %>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-            
-            <div class="mt-4">
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-500">
-                  <% if gift_card.sender == current_user %>
-                    To: <%= gift_card.recipient&.name || 'Unknown' %>
-                  <% else %>
-                    From: <%= gift_card.sender.name %>
-                  <% end %>
-                </span>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= 
-                  case gift_card.status
-                  when 'active'
-                    'bg-green-100 text-green-800'
-                  when 'redeemed'
-                    'bg-blue-100 text-blue-800'
-                  when 'expired'
-                    'bg-red-100 text-red-800'
-                  when 'canceled'
-                    'bg-gray-100 text-gray-800'
-                  else
-                    'bg-gray-100 text-gray-800'
-                  end
-                %>">
-                  <% if gift_card.status == 'active' %>
-                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                    </svg>
-                  <% elsif gift_card.status == 'redeemed' %>
-                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                    </svg>
-                  <% elsif gift_card.status == 'expired' %>
-                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                    </svg>
-                  <% elsif gift_card.status == 'canceled' %>
-                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                    </svg>
-                  <% end %>
-                  <%= gift_card.status.humanize %>
-                </span>
-              </div>
-              
-              <% if gift_card.merchant.present? %>
-                <div class="mt-2">
-                  <span class="text-sm text-gray-500">
-                    <% if gift_card.redeemed? %>
-                      Redeemed at: <%= gift_card.merchant.store_name %>
-                    <% else %>
-                      Store: <%= gift_card.merchant.store_name %>
-                    <% end %>
-                  </span>
-                </div>
-              <% end %>
-              
-              <% if gift_card.redeemed_at.present? %>
-                <div class="mt-2">
-                  <span class="text-sm text-gray-500">
-                    Redeemed: <%= gift_card.redeemed_at.strftime('%B %d, %Y') %>
-                  </span>
-                </div>
-              <% elsif gift_card.expires_at.present? %>
-                <div class="mt-2">
-                  <span class="text-sm text-gray-500">
-                    Expires: <%= gift_card.expires_at.strftime('%B %d, %Y') %>
-                  </span>
-                </div>
-              <% end %>
-            </div>
-            
-            <!-- DEVELOPMENT ONLY: Show raw code for testing -->
-            <!-- TODO: Remove this section before production deployment -->
-            <% if Rails.env.development? && gift_card.raw_code.present? %>
-              <div class="mt-3 bg-yellow-50 border border-yellow-200 rounded-md p-2">
-                <p class="text-xs font-medium text-yellow-800">🧪 Test Code:</p>
-                <p class="text-sm font-mono font-bold text-yellow-900"><%= gift_card.raw_code %></p>
-              </div>
-            <% end %>
-
-            <div class="mt-4">
-              <%= link_to "View Details", gift_card_path(gift_card), class: "text-blue-600 hover:text-blue-500 text-sm font-medium" %>
+  <!-- Summary Statistics -->
+  <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+      <div class="p-5">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+              </svg>
             </div>
           </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Sent Cards</dt>
+              <dd class="text-lg font-medium text-gray-900" id="sent-summary-count">0</dd>
+            </dl>
+          </div>
         </div>
-      <% end %>
+      </div>
     </div>
-  <% else %>
-    <div class="text-center py-12">
-      <div class="mx-auto h-12 w-12 text-gray-400">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+      <div class="p-5">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Received Cards</dt>
+              <dd class="text-lg font-medium text-gray-900" id="received-summary-count">0</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+      <div class="p-5">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Redeemed Cards</dt>
+              <dd class="text-lg font-medium text-gray-900" id="redeemed-summary-count">0</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+      <div class="p-5">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Total Value</dt>
+              <dd class="text-lg font-medium text-gray-900" id="total-value">$0.00</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search and Filter Bar -->
+  <div class="bg-white shadow rounded-lg p-4 mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+      <div class="flex-1 max-w-lg">
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
+          <input type="text" id="search-input" placeholder="Search gift cards..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+        </div>
+      </div>
+      <div class="flex space-x-3">
+        <select id="status-filter" class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+          <option value="">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="redeemed">Redeemed</option>
+          <option value="expired">Expired</option>
+          <option value="canceled">Canceled</option>
+        </select>
+        <select id="sort-filter" class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="amount-high">Amount (High to Low)</option>
+          <option value="amount-low">Amount (Low to High)</option>
+          <option value="status">Status</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="border-b border-gray-200 mb-8">
+    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+      <button onclick="showTab('sent')" id="sent-tab" class="tab-button active whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600">
+        <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
         </svg>
+        Sent Cards
+        <span id="sent-count" class="ml-2 py-0.5 px-2.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">0</span>
+      </button>
+      <button onclick="showTab('received')" id="received-tab" class="tab-button whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+        <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+        </svg>
+        Received Cards
+        <span id="received-count" class="ml-2 py-0.5 px-2.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">0</span>
+      </button>
+      <button onclick="showTab('redeemed')" id="redeemed-tab" class="tab-button whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+        <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        Redeemed Cards
+        <span id="redeemed-count" class="ml-2 py-0.5 px-2.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">0</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Tab Content -->
+  <div id="tab-content">
+    <!-- Sent Cards Tab -->
+    <div id="sent-content" class="tab-content">
+      <div class="mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-2">Cards You've Sent</h2>
+        <p class="text-sm text-gray-600">Gift cards you've purchased and sent to others</p>
       </div>
-      <h3 class="mt-2 text-sm font-medium text-gray-900">No gift cards</h3>
-      <p class="mt-1 text-sm text-gray-500">Get started by buying your first gift card.</p>
-      <div class="mt-6">
-        <%= link_to "Buy Gift Card", new_gift_card_path, class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+      
+      <div id="sent-cards" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <!-- Sent cards will be populated here -->
+      </div>
+      
+      <div id="sent-empty" class="hidden text-center py-12">
+        <div class="mx-auto h-12 w-12 text-gray-400">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+          </svg>
+        </div>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No sent cards yet</h3>
+        <p class="mt-1 text-sm text-gray-500">Start by sending a gift card to someone special.</p>
+        <div class="mt-6">
+          <%= link_to "Send Gift Card", new_gift_card_path, class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+        </div>
       </div>
     </div>
-  <% end %>
+
+    <!-- Received Cards Tab -->
+    <div id="received-content" class="tab-content hidden">
+      <div class="mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-2">Cards You've Received</h2>
+        <p class="text-sm text-gray-600">Gift cards others have sent to you</p>
+      </div>
+      
+      <div id="received-cards" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <!-- Received cards will be populated here -->
+      </div>
+      
+      <div id="received-empty" class="hidden text-center py-12">
+        <div class="mx-auto h-12 w-12 text-gray-400">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No received cards yet</h3>
+        <p class="mt-1 text-sm text-gray-500">You'll see gift cards sent to you here.</p>
+      </div>
+    </div>
+
+    <!-- Redeemed Cards Tab -->
+    <div id="redeemed-content" class="tab-content hidden">
+      <div class="mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-2">Redeemed Cards</h2>
+        <p class="text-sm text-gray-600">Cards that have been used at merchants</p>
+      </div>
+      
+      <div id="redeemed-cards" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <!-- Redeemed cards will be populated here -->
+      </div>
+      
+      <div id="redeemed-empty" class="hidden text-center py-12">
+        <div class="mx-auto h-12 w-12 text-gray-400">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No redeemed cards yet</h3>
+        <p class="mt-1 text-sm text-gray-500">Redeemed cards will appear here once they're used.</p>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- JavaScript for tab functionality -->
+<script>
+  // Tab switching functionality
+  function showTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.add('hidden');
+    });
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.classList.remove('active', 'border-blue-500', 'text-blue-600');
+      button.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    // Show selected tab content
+    document.getElementById(tabName + '-content').classList.remove('hidden');
+    
+    // Add active class to selected tab
+    const activeTab = document.getElementById(tabName + '-tab');
+    activeTab.classList.add('active', 'border-blue-500', 'text-blue-600');
+    activeTab.classList.remove('border-transparent', 'text-gray-500');
+  }
+
+  // Global variables for filtering
+  let allCards = [];
+  let currentUserId = 0;
+  let currentTab = 'sent';
+  let filteredCards = {
+    sent: [],
+    received: [],
+    redeemed: []
+  };
+
+  // Card categorization and rendering
+  function categorizeCards() {
+    allCards = <%= raw @gift_cards.to_json(include: [:sender, :recipient, :merchant]) %>;
+    currentUserId = <%= current_user.id %>;
+    
+    const sentCards = allCards.filter(card => card.sender_id === currentUserId);
+    const receivedCards = allCards.filter(card => card.recipient_id === currentUserId);
+    const redeemedCards = allCards.filter(card => card.status === 'redeemed');
+    
+    // Store filtered cards
+    filteredCards.sent = sentCards;
+    filteredCards.received = receivedCards;
+    filteredCards.redeemed = redeemedCards;
+    
+    // Update summary statistics
+    updateSummaryStats(sentCards, receivedCards, redeemedCards);
+    
+    // Apply current filters
+    applyFilters();
+  }
+
+  function updateSummaryStats(sentCards, receivedCards, redeemedCards) {
+    // Update counts
+    document.getElementById('sent-count').textContent = sentCards.length;
+    document.getElementById('received-count').textContent = receivedCards.length;
+    document.getElementById('redeemed-count').textContent = redeemedCards.length;
+    
+    // Update summary counts
+    document.getElementById('sent-summary-count').textContent = sentCards.length;
+    document.getElementById('received-summary-count').textContent = receivedCards.length;
+    document.getElementById('redeemed-summary-count').textContent = redeemedCards.length;
+    
+    // Calculate total value
+    const totalValue = allCards.reduce((sum, card) => sum + (card.amount / 100), 0);
+    document.getElementById('total-value').textContent = '$' + totalValue.toFixed(2);
+  }
+
+  function applyFilters() {
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const statusFilter = document.getElementById('status-filter').value;
+    const sortFilter = document.getElementById('sort-filter').value;
+    
+    // Filter and sort each category
+    ['sent', 'received', 'redeemed'].forEach(category => {
+      let cards = filteredCards[category];
+      
+      // Apply search filter
+      if (searchTerm) {
+        cards = cards.filter(card => {
+          const senderName = card.sender ? card.sender.name.toLowerCase() : '';
+          const recipientName = card.recipient ? card.recipient.name.toLowerCase() : '';
+          const merchantName = card.merchant ? card.merchant.store_name.toLowerCase() : '';
+          const amount = (card.amount / 100).toString();
+          
+          return senderName.includes(searchTerm) || 
+                 recipientName.includes(searchTerm) || 
+                 merchantName.includes(searchTerm) ||
+                 amount.includes(searchTerm);
+        });
+      }
+      
+      // Apply status filter
+      if (statusFilter) {
+        cards = cards.filter(card => card.status === statusFilter);
+      }
+      
+      // Apply sorting
+      cards = sortCards(cards, sortFilter);
+      
+      // Render cards
+      renderCards(category + '-cards', cards, category);
+      
+      // Show/hide empty states
+      toggleEmptyState(category + '-empty', cards.length === 0);
+    });
+  }
+
+  function sortCards(cards, sortType) {
+    switch(sortType) {
+      case 'newest':
+        return cards.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      case 'oldest':
+        return cards.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      case 'amount-high':
+        return cards.sort((a, b) => b.amount - a.amount);
+      case 'amount-low':
+        return cards.sort((a, b) => a.amount - b.amount);
+      case 'status':
+        return cards.sort((a, b) => a.status.localeCompare(b.status));
+      default:
+        return cards;
+    }
+  }
+
+  function renderCards(containerId, cards, type) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    
+    cards.forEach(card => {
+      const cardElement = createCardElement(card, type);
+      container.appendChild(cardElement);
+    });
+  }
+
+  function createCardElement(card, type) {
+    const div = document.createElement('div');
+    div.className = 'bg-white overflow-hidden shadow-lg rounded-xl border border-gray-200 hover:shadow-xl transition-shadow duration-200';
+    
+    const statusColors = {
+      'active': 'bg-green-100 text-green-800',
+      'redeemed': 'bg-blue-100 text-blue-800',
+      'expired': 'bg-red-100 text-red-800',
+      'canceled': 'bg-gray-100 text-gray-800'
+    };
+    
+    const statusIcons = {
+      'active': '<svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>',
+      'redeemed': '<svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>',
+      'expired': '<svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>',
+      'canceled': '<svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>'
+    };
+    
+    const amount = (card.amount / 100).toFixed(2);
+    const remainingBalance = (card.remaining_balance / 100).toFixed(2);
+    const currency = card.currency === 'USD' ? '$' : card.currency;
+    
+    let recipientInfo = '';
+    if (type === 'sent') {
+      recipientInfo = `To: ${card.recipient ? card.recipient.name : 'Unknown'}`;
+    } else if (type === 'received') {
+      recipientInfo = `From: ${card.sender.name}`;
+    } else {
+      recipientInfo = card.sender_id === <%= current_user.id %> ? 
+        `To: ${card.recipient ? card.recipient.name : 'Unknown'}` : 
+        `From: ${card.sender.name}`;
+    }
+    
+    div.innerHTML = `
+      <div class="px-6 py-6">
+        <!-- Header with amount and status -->
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center">
+            <div class="w-12 h-12 ${type === 'sent' ? 'bg-blue-500' : type === 'received' ? 'bg-green-500' : 'bg-purple-500'} rounded-full flex items-center justify-center">
+              <span class="text-white font-bold text-lg">${type === 'sent' ? '📤' : type === 'received' ? '📥' : '✅'}</span>
+            </div>
+            <div class="ml-4">
+              <div class="text-2xl font-bold text-gray-900">${currency}${amount}</div>
+              <div class="text-sm text-gray-500">${card.currency}</div>
+              ${card.remaining_balance < card.amount ? `<div class="text-sm text-green-600 font-medium">Remaining: ${currency}${remainingBalance}</div>` : ''}
+            </div>
+          </div>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusColors[card.status]}">
+            ${statusIcons[card.status]}
+            ${card.status.charAt(0).toUpperCase() + card.status.slice(1)}
+          </span>
+        </div>
+        
+        <!-- Recipient/From info -->
+        <div class="mb-4">
+          <div class="text-sm text-gray-600">${recipientInfo}</div>
+          ${card.merchant ? `<div class="text-sm text-gray-500 mt-1">${card.redeemed ? 'Redeemed at: ' : 'Store: '}${card.merchant.store_name}</div>` : ''}
+        </div>
+        
+        <!-- Dates -->
+        <div class="space-y-1 text-sm text-gray-500">
+          ${card.redeemed_at ? `<div>Redeemed: ${new Date(card.redeemed_at).toLocaleDateString()}</div>` : ''}
+          ${card.expires_at && !card.redeemed ? `<div>Expires: ${new Date(card.expires_at).toLocaleDateString()}</div>` : ''}
+          <div>Created: ${new Date(card.created_at).toLocaleDateString()}</div>
+        </div>
+        
+        <!-- Development test code -->
+        ${card.raw_code ? `
+          <div class="mt-4 bg-yellow-50 border border-yellow-200 rounded-md p-3">
+            <p class="text-xs font-medium text-yellow-800">🧪 Test Code:</p>
+            <p class="text-sm font-mono font-bold text-yellow-900">${card.raw_code}</p>
+          </div>
+        ` : ''}
+        
+        <!-- Action button -->
+        <div class="mt-6">
+          <a href="/gift_cards/${card.id}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-600 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            View Details
+            <svg class="ml-2 -mr-1 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    `;
+    
+    return div;
+  }
+
+  function toggleEmptyState(emptyId, isEmpty) {
+    const emptyElement = document.getElementById(emptyId);
+    if (isEmpty) {
+      emptyElement.classList.remove('hidden');
+    } else {
+      emptyElement.classList.add('hidden');
+    }
+  }
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    categorizeCards();
+    
+    // Add event listeners for search and filtering
+    document.getElementById('search-input').addEventListener('input', applyFilters);
+    document.getElementById('status-filter').addEventListener('change', applyFilters);
+    document.getElementById('sort-filter').addEventListener('change', applyFilters);
+  });
+</script>
+
+<style>
+  .tab-button.active {
+    border-color: #3B82F6;
+    color: #2563EB;
+  }
+  
+  .tab-button:hover {
+    color: #374151;
+    border-color: #D1D5DB;
+  }
+</style>
