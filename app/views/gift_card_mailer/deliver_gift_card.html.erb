@@ -100,35 +100,32 @@
     </div>
 
     <div class="otp-code">
-      Your redemption code: <%= @tokens[:otp] %>
-    </div>
-
-    <div style="text-align: center;">
-      <a href="<%= @redeem_url %>" class="cta-button">
-        Redeem Your Gift Card
-      </a>
+      Your gift card code: <%= @raw_code %>
     </div>
 
     <% if @qr_code %>
       <div class="qr-code">
         <h3>Or scan this QR code:</h3>
         <%= raw @qr_code %>
+        <p style="margin-top: 10px; font-size: 14px; color: #6b7280;">
+          The QR code contains your gift card code for easy scanning
+        </p>
       </div>
     <% end %>
 
     <div class="expiry-info">
       <strong>⏰ Important:</strong><br>
-      • Your redemption link expires in <strong>7 days</strong><br>
-      • Your redemption code expires in <strong>1 hour</strong><br>
-      • Use both the link and code to redeem your gift card
+      • Your gift card code: <strong><%= @raw_code %></strong><br>
+      • Show this code or QR code to any participating merchant<br>
+      • No expiration date - use anytime!
     </div>
 
     <div style="margin: 30px 0; padding: 20px; background: #f9fafb; border-radius: 8px;">
       <h3>How to redeem:</h3>
       <ol>
-        <li>Click the "Redeem Your Gift Card" button above or scan the QR code</li>
-        <li>Enter your 6-digit redemption code: <strong><%= @tokens[:otp] %></strong></li>
-        <li>Choose a merchant to redeem at</li>
+        <li>Visit any participating merchant</li>
+        <li>Show them your gift card code: <strong><%= @raw_code %></strong></li>
+        <li>Or let them scan the QR code above</li>
         <li>Enjoy your gift card!</li>
       </ol>
     </div>

@@ -3,20 +3,17 @@
 Amount: <%= @gift_card.currency %> <%= @gift_card.amount / 100.0 %>
 From: <%= @sender.name %> (<%= @sender.email %>)
 
-Your redemption code: <%= @tokens[:otp] %>
+Your gift card code: <%= @raw_code %>
 
-Redeem your gift card here:
-<%= @redeem_url %>
-
-⏰ IMPORTANT EXPIRY INFORMATION:
-• Your redemption link expires in 7 days
-• Your redemption code expires in 1 hour
-• You need both the link and code to redeem
+⏰ IMPORTANT INFORMATION:
+• Your gift card code: <%= @raw_code %>
+• Show this code to any participating merchant
+• No expiration date - use anytime!
 
 HOW TO REDEEM:
-1. Visit the link above
-2. Enter your 6-digit redemption code: <%= @tokens[:otp] %>
-3. Choose a merchant to redeem at
+1. Visit any participating merchant
+2. Show them your gift card code: <%= @raw_code %>
+3. Or let them scan the QR code (in HTML version)
 4. Enjoy your gift card!
 
 Thank you for using REM! 🚀

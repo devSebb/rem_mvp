@@ -10,7 +10,7 @@ Rails.application.configure do
     
     # Email configuration
     email: {
-      from: ENV['DEFAULT_FROM_EMAIL'] || 'noreply@rem.com',
+      from: ENV['DEFAULT_FROM_EMAIL'] || 'papayalapp@gmail.com',
       sendgrid_api_key: ENV['SENDGRID_API_KEY']
     },
     

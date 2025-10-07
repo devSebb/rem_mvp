@@ -107,23 +107,29 @@
             <h3 class="text-lg font-medium text-gray-900 mb-4">QR Code</h3>
             <div class="bg-white p-4 rounded-lg border-2 border-gray-200 inline-block">
               <% 
-                # Generate QR code with the gift card code
-                # For security, we'll show a masked version in the UI
-                # The actual code should only be revealed via SMS/email
-                qr_data = "Gift Card ID: #{@gift_card.id}"
-                qr = RQRCode::QRCode.new(qr_data)
-                svg = qr.as_svg(
-                  offset: 0,
-                  color: '000',
-                  shape_rendering: 'crispEdges',
-                  module_size: 6,
-                  standalone: true
-                )
+                # Generate QR code with the actual gift card code
+                raw_code = @gift_card.raw_code
+                if raw_code.present?
+                  qr = RQRCode::QRCode.new(raw_code)
+                  svg = qr.as_svg(
+                    offset: 0,
+                    color: '000',
+                    shape_rendering: 'crispEdges',
+                    module_size: 6,
+                    standalone: true
+                  )
+                else
+                  svg = nil
+                end
               %>
-              <%= raw svg %>
+              <% if svg %>
+                <%= raw svg %>
+              <% else %>
+                <p class="text-gray-500">QR code not available</p>
+              <% end %>
             </div>
             <p class="mt-2 text-sm text-gray-500">Show this QR code to the merchant</p>
-            <p class="mt-1 text-xs text-gray-400">Code will be sent via SMS/email</p>
+            <p class="mt-1 text-xs text-gray-400">Contains your gift card code: <%= raw_code %></p>
           </div>
         <% end %>
       </div>

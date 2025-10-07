@@ -27,17 +27,12 @@ class GiftCard < ApplicationRecord
     gift_cards.find { |gc| BCrypt::Password.new(gc.code_digest) == code }
   end
 
-  def self.find_by_link_token(token)
-    return nil if token.blank?
-    
-    gift_cards = where.not(link_token_digest: nil)
-    gift_cards.find { |gc| gc.valid_link_token?(token) }
-  end
 
   # Instance methods
   def generate_code!
     raw_code = CodeGenerator.generate
     self.code_digest = BCrypt::Password.create(raw_code)
+    store_raw_code!(raw_code)
     save!
     raw_code
   end
@@ -100,74 +95,6 @@ class GiftCard < ApplicationRecord
     transactions.successful.redemptions.sum(:amount)
   end
 
-  # Security token methods
-  # Generates new delivery tokens and persists their digests.
-  # Returns the raw link token and OTP for immediate delivery.
-  def generate_delivery_tokens!
-    # Generate secure random link token (32 bytes, urlsafe base64)
-    raw_link_token = SecureRandom.urlsafe_base64(32)
-    self.link_token_digest = BCrypt::Password.create(raw_link_token)
-    self.link_token_expires_at = 7.days.from_now
-
-    # Generate 6-digit OTP
-    raw_otp = format('%06d', SecureRandom.random_number(1_000_000))
-    self.otp_digest = BCrypt::Password.create(raw_otp)
-    self.otp_expires_at = 1.hour.from_now
-
-    save!
-
-    @last_generated_link_token = raw_link_token
-
-    { link: raw_link_token, otp: raw_otp }
-  end
-
-  def valid_link_token?(raw_token)
-    return false if link_token_digest.blank? || link_token_expires_at.blank?
-    return false if link_token_expires_at < Time.current
-    
-    BCrypt::Password.new(link_token_digest) == raw_token
-  end
-
-  def valid_otp?(raw_otp)
-    return false if otp_digest.blank? || otp_expires_at.blank?
-    return false if otp_expires_at < Time.current
-    
-    BCrypt::Password.new(otp_digest) == raw_otp
-  end
-
-  def consume_link_token!
-    return false if link_token_digest.blank?
-    
-    update!(
-      link_token_digest: nil,
-      link_token_expires_at: nil
-    )
-    true
-  end
-
-  def consume_otp!
-    return false if otp_digest.blank?
-    
-    update!(
-      otp_digest: nil,
-      otp_expires_at: nil
-    )
-    true
-  end
-
-  # Builds a redeem URL using the most recently generated raw link token.
-  # This ensures we send recipients the usable token rather than the stored digest.
-  # Optionally a specific raw token and host can be provided.
-  def redeem_url(raw_token: nil, host: nil)
-    token = raw_token || @last_generated_link_token
-    return nil if token.blank?
-
-    host ||= ENV['APP_HOST'] || Rails.application.routes.default_url_options[:host]
-    return nil if host.blank?
-
-    formatted_host = host.delete_suffix('/')
-    "#{formatted_host}/redeem?token=#{token}"
-  end
 
   # Trigger notification delivery
   def send_notifications!
@@ -177,15 +104,18 @@ class GiftCard < ApplicationRecord
     true
   end
 
-  # DEVELOPMENT ONLY: Method to retrieve raw code for testing
-  # TODO: Remove this method before production deployment
+  # Method to get or generate raw code for notifications
   def raw_code
-    return nil unless Rails.env.development?
+    # If we have a stored raw code, return it
+    return @stored_raw_code if @stored_raw_code.present?
     
-    # For development, we'll try to find the code by checking against known test codes
-    # This is a temporary solution for testing purposes
-    test_codes = ['REM-TEST-1234-5678', 'REM-TEST-ABCD-EFGH']
-    test_codes.find { |code| BCrypt::Password.new(code_digest) == code }
+    # Otherwise, generate a new one
+    generate_code!
+  end
+
+  # Store raw code temporarily (for notifications)
+  def store_raw_code!(raw_code)
+    @stored_raw_code = raw_code
   end
 
   private
@@ -193,7 +123,14 @@ class GiftCard < ApplicationRecord
   def set_defaults
     self.currency ||= 'USD'
     self.status ||= :active
-    self.code_digest ||= BCrypt::Password.create(CodeGenerator.generate)
+    
+    # Generate code and store both digest and raw code
+    if code_digest.blank?
+      raw_code = CodeGenerator.generate
+      self.code_digest = BCrypt::Password.create(raw_code)
+      store_raw_code!(raw_code)
+    end
+    
     self.remaining_balance = amount if amount.present? && remaining_balance == 0
   end
 end

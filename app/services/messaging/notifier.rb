@@ -2,12 +2,11 @@ module Messaging
   class Notifier
     include Rails.application.routes.url_helpers
 
-    def initialize(gift_card)
-      @gift_card = gift_card
-      @tokens = gift_card.generate_delivery_tokens!
-      @recipient = gift_card.recipient
-      @sender = gift_card.sender
-    end
+  def initialize(gift_card)
+    @gift_card = gift_card
+    @recipient = gift_card.recipient
+    @sender = gift_card.sender
+  end
 
     def send_all_notifications
       results = {}
@@ -77,57 +76,56 @@ module Messaging
       end
     end
 
-    def send_email
-      return { success: false, error: 'No email address' } unless @recipient&.email.present?
+  def send_email
+    return { success: false, error: 'No email address' } unless @recipient&.email.present?
 
-      begin
-        GiftCardMailer.deliver_gift_card(@gift_card, @tokens).deliver_later
-        { success: true }
-      rescue => e
-        Rails.logger.error "Email delivery failed: #{e.message}"
-        { success: false, error: e.message }
-      end
+    begin
+      # Get the raw gift card code for email delivery
+      raw_code = @gift_card.raw_code || @gift_card.generate_code!
+      GiftCardMailer.deliver_gift_card(@gift_card, raw_code).deliver_later
+      { success: true }
+    rescue => e
+      Rails.logger.error "Email delivery failed: #{e.message}"
+      { success: false, error: e.message }
     end
+  end
 
     private
 
     def whatsapp_message
+      raw_code = @gift_card.raw_code || @gift_card.generate_code!
       <<~MESSAGE
         🎁 You've received a REM gift card!
 
         💰 Amount: #{@gift_card.currency} #{@gift_card.amount / 100.0}
         👤 From: #{@sender.name}
 
-        🔗 Redeem here: #{redeem_url}
-        🔐 Your code: #{@tokens[:otp]}
+        🎫 Your gift card code: #{raw_code}
 
-        ⏰ Link expires in 7 days
-        ⏰ Code expires in 1 hour
+        📱 Show this code to any participating merchant
+        ⏰ No expiration - use anytime!
 
         Thank you for using REM! 🚀
       MESSAGE
     end
 
     def sms_message
+      raw_code = @gift_card.raw_code || @gift_card.generate_code!
       <<~MESSAGE
         🎁 REM Gift Card Received!
 
         Amount: #{@gift_card.currency} #{@gift_card.amount / 100.0}
         From: #{@sender.name}
 
-        Redeem: #{redeem_url}
-        Code: #{@tokens[:otp]}
+        Code: #{raw_code}
 
-        Link expires: 7 days
-        Code expires: 1 hour
+        Show this code to any merchant
+        No expiration - use anytime!
 
         Thanks for using REM!
       MESSAGE
     end
 
-    def redeem_url
-      "#{ENV['APP_HOST']}/redeem?token=#{@tokens[:link]}"
-    end
 
     def update_delivery_flags(results)
       updates = {}

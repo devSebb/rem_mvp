@@ -1,12 +1,11 @@
 class GiftCardMailer < ApplicationMailer
-  default from: ENV['DEFAULT_FROM_EMAIL'] || 'noreply@rem.com'
+  default from: ENV['DEFAULT_FROM_EMAIL'] || 'papayalapp@gmail.com'
 
-  def deliver_gift_card(gift_card, tokens)
+  def deliver_gift_card(gift_card, raw_code)
     @gift_card = gift_card
-    @tokens = tokens
+    @raw_code = raw_code
     @recipient = gift_card.recipient
     @sender = gift_card.sender
-    @redeem_url = "#{ENV['APP_HOST']}/redeem?token=#{tokens[:link]}"
     @qr_code = generate_qr_code
 
     mail(
@@ -18,9 +17,9 @@ class GiftCardMailer < ApplicationMailer
   private
 
   def generate_qr_code
-    return nil unless @redeem_url
+    return nil unless @raw_code
 
-    qr = RQRCode::QRCode.new(@redeem_url)
+    qr = RQRCode::QRCode.new(@raw_code)
     qr.as_svg(
       offset: 0,
       color: '000',

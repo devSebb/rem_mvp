@@ -16,10 +16,7 @@ Rails.application.routes.draw do
     post :twilio_status, to: "twilio#status"
   end
 
-  # Gift card redemption routes
-  get '/redeem', to: 'redeems#show'
-  post '/redeem/claim', to: 'redeems#claim'
-  get '/redeem/success', to: 'redeems#success', as: :redeem_success
+  # Gift card redemption routes (removed - using direct merchant redemption only)
 
   namespace :merchant do
     root to: "dashboard#index"
