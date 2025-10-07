@@ -101,6 +101,8 @@ class GiftCard < ApplicationRecord
   end
 
   # Security token methods
+  # Generates new delivery tokens and persists their digests.
+  # Returns the raw link token and OTP for immediate delivery.
   def generate_delivery_tokens!
     # Generate secure random link token (32 bytes, urlsafe base64)
     raw_link_token = SecureRandom.urlsafe_base64(32)
@@ -113,7 +115,9 @@ class GiftCard < ApplicationRecord
     self.otp_expires_at = 1.hour.from_now
 
     save!
-    
+
+    @last_generated_link_token = raw_link_token
+
     { link: raw_link_token, otp: raw_otp }
   end
 
@@ -151,10 +155,18 @@ class GiftCard < ApplicationRecord
     true
   end
 
-  def redeem_url
-    return nil if link_token_digest.blank?
-    
-    Rails.application.routes.url_helpers.redeem_url(token: link_token_digest)
+  # Builds a redeem URL using the most recently generated raw link token.
+  # This ensures we send recipients the usable token rather than the stored digest.
+  # Optionally a specific raw token and host can be provided.
+  def redeem_url(raw_token: nil, host: nil)
+    token = raw_token || @last_generated_link_token
+    return nil if token.blank?
+
+    host ||= ENV['APP_HOST'] || Rails.application.routes.default_url_options[:host]
+    return nil if host.blank?
+
+    formatted_host = host.delete_suffix('/')
+    "#{formatted_host}/redeem?token=#{token}"
   end
 
   # Trigger notification delivery
