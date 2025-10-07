@@ -41,7 +41,7 @@ class StripeWebhooks
     merchant = Merchant.find_by(id: metadata['merchant_id']) if metadata['merchant_id']
 
     # Create gift card safely
-    gift_card = GiftCard.new(
+    gift_card = GiftCard.create!(
       sender: sender,
       recipient: recipient,
       merchant: merchant,
@@ -51,7 +51,7 @@ class StripeWebhooks
       expires_at: 1.year.from_now
     )
 
-    # Generate code before saving to avoid validation error
+    # Generate code after saving
     raw_code = gift_card.generate_code!
 
     # Create purchase transaction only if association exists

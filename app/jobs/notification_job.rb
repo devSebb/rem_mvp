@@ -3,7 +3,12 @@ class NotificationJob < ApplicationJob
 
   def perform(gift_card_id, raw_code)
     gift_card = GiftCard.find(gift_card_id)
-    NotificationSender.send_gift_card_notification(gift_card, raw_code)
+    
+    # Use the new messaging system
+    notifier = Messaging::Notifier.new(gift_card)
+    results = notifier.send_all_notifications
+    
+    Rails.logger.info "Gift card notifications sent for #{gift_card_id}: #{results}"
   rescue ActiveRecord::RecordNotFound
     Rails.logger.error "Gift card #{gift_card_id} not found for notification"
   rescue => e
