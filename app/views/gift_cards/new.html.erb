@@ -8,17 +8,15 @@
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <span class="text-gray-500 sm:text-sm">$</span>
           </div>
-          <%= form.number_field :amount_cents, 
-                value: params[:amount_cents], 
-                min: 100, 
-                step: 100, 
-                class: "focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md",
+          <%= form.number_field :amount_cents,
+                value: params[:amount_cents],
+                min: 1,
+                step: 0.01,
+                inputmode: "decimal",
+                class: "focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-3 sm:text-sm border-gray-300 rounded-md",
                 placeholder: "0.00" %>
-          <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-            <span class="text-gray-500 sm:text-sm">.00</span>
-          </div>
         </div>
-        <p class="mt-1 text-sm text-gray-500">Minimum amount is $1.00</p>
+        <p class="mt-1 text-sm text-gray-500">Enter the amount in dollars. Minimum amount is $1.00</p>
       </div>
 
       <div>
@@ -63,9 +61,9 @@
         <p class="mt-1 text-sm text-gray-500">Select a specific store or leave blank for general gift card</p>
       </div>
 
-      <div class="flex items-center justify-between">
-        <%= link_to "Cancel", root_path, class: "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
-        <%= form.submit "Proceed to Payment", class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <%= link_to "Cancel", root_path, class: "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full sm:w-auto text-center" %>
+        <%= form.submit "Proceed to Payment", class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full sm:w-auto" %>
       </div>
     <% end %>
   </div>

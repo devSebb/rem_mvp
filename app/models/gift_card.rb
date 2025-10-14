@@ -32,7 +32,6 @@ class GiftCard < ApplicationRecord
   def generate_code!
     raw_code = CodeGenerator.generate
     self.code_digest = BCrypt::Password.create(raw_code)
-    store_raw_code!(raw_code)
     save!
     raw_code
   end
@@ -42,10 +41,15 @@ class GiftCard < ApplicationRecord
   end
 
   def partial_redeem!(redemption_amount:, merchant:, actor:)
-    return false unless can_partial_redeem?(redemption_amount)
     return false if merchant.nil? || actor.nil?
 
     transaction do
+      # Pessimistic locking to prevent race conditions
+      lock!
+      reload # Get latest balance from database
+      
+      return false unless can_partial_redeem?(redemption_amount)
+
       # Create redemption transaction
       transactions.create!(
         amount: redemption_amount,
@@ -95,6 +99,77 @@ class GiftCard < ApplicationRecord
     transactions.successful.redemptions.sum(:amount)
   end
 
+  def refund!(refund_amount:, reason:, actor:)
+    transaction do
+      lock!
+      reload
+      
+      # Validate refund amount
+      total_redeemed = transactions.successful.redemptions.sum(:amount)
+      return false if refund_amount > total_redeemed
+      return false if refund_amount <= 0
+      
+      # Create refund transaction
+      transactions.create!(
+        amount: refund_amount,
+        txn_type: :refund,
+        status: :pending,
+        processor_ref: "refund_#{id}_#{Time.current.to_i}",
+        metadata: {
+          actor_id: actor.id,
+          reason: reason,
+          refunded_at: Time.current.iso8601
+        }
+      )
+      
+      # Restore balance
+      update!(remaining_balance: remaining_balance + refund_amount)
+      
+      # Revert to active if fully refunded
+      if remaining_balance == amount
+        update!(status: :active, redeemed_at: nil)
+      end
+    end
+    
+    true
+  end
+
+  def transfer_to!(new_recipient:, actor:)
+    transaction do
+      lock!
+      reload
+      
+      # Validations
+      return false unless active? && remaining_balance > 0
+      return false unless new_recipient.is_a?(User)
+      return false if new_recipient == recipient
+      
+      old_recipient = recipient
+      
+      # Create transfer transaction
+      transactions.create!(
+        amount: 0, # No money movement, just ownership change
+        txn_type: :adjustment,
+        status: :succeeded,
+        processor_ref: "transfer_#{id}_#{Time.current.to_i}",
+        metadata: {
+          action: 'transfer',
+          from_user_id: old_recipient.id,
+          to_user_id: new_recipient.id,
+          actor_id: actor.id,
+          transferred_at: Time.current.iso8601
+        }
+      )
+      
+      # Update recipient
+      update!(recipient: new_recipient)
+      
+      # Send notification to new recipient
+      send_notifications!
+    end
+    
+    true
+  end
 
   # Trigger notification delivery
   def send_notifications!
@@ -104,18 +179,13 @@ class GiftCard < ApplicationRecord
     true
   end
 
-  # Method to get or generate raw code for notifications
+  # Method to get raw code for display (only for recipients)
+  # Note: This should only be called when we know the user has permission
   def raw_code
-    # If we have a stored raw code, return it
-    return @stored_raw_code if @stored_raw_code.present?
-    
-    # Otherwise, generate a new one
+    # This is a security risk - raw codes should not be stored in memory
+    # For now, we'll generate a new code each time (not ideal for performance)
+    # TODO: Implement secure token-based system in Phase 2
     generate_code!
-  end
-
-  # Store raw code temporarily (for notifications)
-  def store_raw_code!(raw_code)
-    @stored_raw_code = raw_code
   end
 
   private
@@ -124,11 +194,10 @@ class GiftCard < ApplicationRecord
     self.currency ||= 'USD'
     self.status ||= :active
     
-    # Generate code and store both digest and raw code
+    # Generate code and store digest
     if code_digest.blank?
       raw_code = CodeGenerator.generate
       self.code_digest = BCrypt::Password.create(raw_code)
-      store_raw_code!(raw_code)
     end
     
     self.remaining_balance = amount if amount.present? && remaining_balance == 0

@@ -1,2 +1,196 @@
-<h1>Merchant::Settlements#show</h1>
-<p>Find me in app/views/merchant/settlements/show.html.erb</p>
+<div class="px-4 sm:px-0">
+  <div class="mb-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Settlement #<%= @settlement.id %></h1>
+        <p class="mt-1 text-sm text-gray-600">
+          Period: <%= @settlement.period_start.strftime('%B %d, %Y') %> - <%= @settlement.period_end.strftime('%B %d, %Y') %>
+        </p>
+      </div>
+      <div class="flex items-center space-x-3">
+        <% case @settlement.payout_status %>
+        <% when 'pending' %>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+            Pending Payout
+          </span>
+        <% when 'paid' %>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+            Paid
+          </span>
+        <% when 'failed' %>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+            Failed
+          </span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="bg-white shadow rounded-lg mb-6">
+    <div class="px-4 py-5 sm:p-6">
+      <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <%= link_to "Redeem Gift Card", new_merchant_redemption_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+        <%= link_to "All Settlements", merchant_settlements_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+        <%= link_to "Dashboard", merchant_root_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settlement Summary -->
+  <div class="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+      <div class="p-5">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Settlement Amount</dt>
+              <dd class="text-lg font-medium text-gray-900">
+                <%= number_to_currency(@settlement.amount / 100.0, unit: '$') %>
+              </dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+      <div class="p-5">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Gift Cards</dt>
+              <dd class="text-lg font-medium text-gray-900"><%= @gift_cards_in_settlement.count %></dd>
+              <dd class="text-xs text-gray-500">Unique cards</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+      <div class="p-5">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Transactions</dt>
+              <dd class="text-lg font-medium text-gray-900"><%= @settlement_transactions.count %></dd>
+              <dd class="text-xs text-gray-500">Total redemptions</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settlement Details -->
+  <div class="bg-white shadow rounded-lg mb-8">
+    <div class="px-4 py-5 sm:p-6">
+      <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Settlement Details</h3>
+      <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+        <div>
+          <dt class="text-sm font-medium text-gray-500">Created</dt>
+          <dd class="mt-1 text-sm text-gray-900"><%= @settlement.created_at.strftime('%B %d, %Y at %I:%M %p') %></dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-gray-500">Last Updated</dt>
+          <dd class="mt-1 text-sm text-gray-900"><%= @settlement.updated_at.strftime('%B %d, %Y at %I:%M %p') %></dd>
+        </div>
+        <% if @settlement.notes.present? %>
+          <div class="sm:col-span-2">
+            <dt class="text-sm font-medium text-gray-500">Notes</dt>
+            <dd class="mt-1 text-sm text-gray-900"><%= @settlement.notes %></dd>
+          </div>
+        <% end %>
+      </dl>
+    </div>
+  </div>
+
+  <!-- Gift Cards in Settlement -->
+  <% if @gift_cards_in_settlement.any? %>
+    <div class="bg-white shadow rounded-lg">
+      <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Gift Cards in Settlement</h3>
+        <div class="space-y-6">
+          <% @gift_cards_in_settlement.each do |gift_card, transactions| %>
+            <div class="border border-gray-200 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center">
+                  <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span class="text-blue-600 font-bold text-sm">GC</span>
+                  </div>
+                  <div class="ml-3">
+                    <h4 class="text-sm font-medium text-gray-900">Gift Card #<%= gift_card.id %></h4>
+                    <p class="text-sm text-gray-500">
+                      From: <%= gift_card.sender.name %> • To: <%= gift_card.recipient.name %>
+                    </p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <p class="text-sm font-medium text-gray-900">
+                    <%= number_to_currency(transactions.sum(&:amount) / 100.0, unit: '$') %>
+                  </p>
+                  <p class="text-xs text-gray-500"><%= transactions.count %> redemption<%= 's' if transactions.count != 1 %></p>
+                </div>
+              </div>
+              
+              <!-- Transaction Details -->
+              <div class="space-y-2">
+                <% transactions.each do |transaction| %>
+                  <div class="flex items-center justify-between text-sm bg-gray-50 rounded-md p-2">
+                    <div class="flex items-center">
+                      <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                      <span class="text-gray-600">
+                        <%= number_to_currency(transaction.amount / 100.0, unit: '$') %> redeemed
+                      </span>
+                    </div>
+                    <span class="text-gray-500">
+                      <%= transaction.created_at.strftime('%B %d, %Y at %I:%M %p') %>
+                    </span>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% else %>
+    <div class="text-center py-12">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900">No transactions in this settlement</h3>
+      <p class="mt-1 text-sm text-gray-500">This settlement period had no gift card redemptions.</p>
+    </div>
+  <% end %>
+
+  <!-- Back to Settlements -->
+  <div class="mt-8">
+    <%= link_to "← Back to Settlements", merchant_settlements_path, 
+        class: "inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+  </div>
+</div>

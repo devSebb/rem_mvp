@@ -1,6 +1,19 @@
-<div class="max-w-md mx-auto">
-  <div class="bg-white shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">Redeem Gift Card</h2>
+<div class="px-4 sm:px-0">
+  <!-- Quick Actions -->
+  <div class="bg-white shadow rounded-lg mb-6">
+    <div class="px-4 py-5 sm:p-6">
+      <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <%= link_to "Dashboard", merchant_root_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+        <%= link_to "View Settlements", merchant_settlements_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+        <%= link_to "Update Profile", merchant_profile_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-md mx-auto">
+    <div class="bg-white shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Redeem Gift Card</h2>
     
     <%= form_with url: merchant_redemptions_path, method: :post, local: true, class: "space-y-6" do |form| %>
       <div>
@@ -34,10 +47,14 @@
         </div>
       <% end %>
 
-      <div class="flex items-center justify-between">
-        <%= link_to "Back to Dashboard", merchant_root_path, class: "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
-        <%= form.submit "Find Gift Card", class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <%= link_to "Back to Dashboard", merchant_root_path, class: "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full sm:w-auto text-center" %>
+        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <%= link_to "Scan QR Code", scan_qr_merchant_redemptions_path, class: "bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-center" %>
+          <%= form.submit "Find Gift Card", class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
+        </div>
       </div>
     <% end %>
+    </div>
   </div>
 </div>

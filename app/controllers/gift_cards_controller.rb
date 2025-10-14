@@ -1,3 +1,5 @@
+require 'bigdecimal'
+
 class GiftCardsController < ApplicationController
   before_action :set_gift_card, only: [:show]
 
@@ -16,7 +18,12 @@ class GiftCardsController < ApplicationController
   def checkout
     authorize GiftCard, :checkout?
     
-    amount_cents = params[:amount_cents].to_i
+    amount_input = params[:amount_cents].to_s
+    amount_cents = begin
+      (BigDecimal(amount_input) * 100).to_i
+    rescue ArgumentError, TypeError
+      0
+    end
     currency = params[:currency] || 'USD'
     recipient_phone = params[:recipient_phone]
     recipient_email = params[:recipient_email]
@@ -25,6 +32,11 @@ class GiftCardsController < ApplicationController
 
     if amount_cents <= 0
       flash[:alert] = 'Amount must be greater than 0'
+      redirect_to new_gift_card_path and return
+    end
+
+    if amount_cents < 100
+      flash[:alert] = 'Amount must be at least $1.00'
       redirect_to new_gift_card_path and return
     end
 

@@ -1,0 +1,88 @@
+<div class="max-w-md mx-auto">
+  <div class="bg-white shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Confirm Transfer</h2>
+    
+    <!-- Gift Card Information -->
+    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-3">Gift Card Details</h3>
+      
+      <dl class="space-y-2">
+        <div>
+          <dt class="text-sm font-medium text-gray-500">Amount</dt>
+          <dd class="text-lg font-semibold text-gray-900">
+            <%= number_to_currency(@gift_card.amount / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+          </dd>
+        </div>
+        
+        <div>
+          <dt class="text-sm font-medium text-gray-500">Remaining Balance</dt>
+          <dd class="text-lg font-semibold text-green-600">
+            <%= number_to_currency(@gift_card.remaining_balance / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+          </dd>
+        </div>
+        
+        <div>
+          <dt class="text-sm font-medium text-gray-500">Original Sender</dt>
+          <dd class="text-sm text-gray-900"><%= @gift_card.sender.name %></dd>
+        </div>
+      </dl>
+    </div>
+
+    <!-- Transfer Details -->
+    <div class="bg-blue-50 rounded-lg p-4 mb-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-3">Transfer Details</h3>
+      
+      <dl class="space-y-2">
+        <div>
+          <dt class="text-sm font-medium text-gray-500">From (Current Recipient)</dt>
+          <dd class="text-sm text-gray-900"><%= @gift_card.recipient.name %></dd>
+        </div>
+        
+        <div>
+          <dt class="text-sm font-medium text-gray-500">To (New Recipient)</dt>
+          <dd class="text-sm text-gray-900">
+            <%= @new_recipient.name %>
+            <% if @new_recipient.email.present? %>
+              <br><span class="text-gray-500">(<%= @new_recipient.email %>)</span>
+            <% end %>
+            <% if @new_recipient.phone.present? %>
+              <br><span class="text-gray-500">(<%= @new_recipient.phone %>)</span>
+            <% end %>
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    <!-- Warning -->
+    <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">This action cannot be undone</h3>
+          <div class="mt-2 text-sm text-red-700">
+            <p>Once you transfer this gift card, you will lose access to it permanently. The new recipient will receive a notification and can use the gift card immediately.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transfer Form -->
+    <%= form_with url: process_transfer_gift_card_transfers_path(@gift_card), method: :post, local: true, class: "space-y-6" do |form| %>
+      <%= form.hidden_field :new_recipient_id, value: @new_recipient.id %>
+      
+      <div class="flex items-center justify-between">
+        <%= link_to "Cancel", gift_card_path(@gift_card), class: "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
+        <%= form.submit "Confirm Transfer", 
+            class: "bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline",
+            data: { 
+              disable_with: "Processing...",
+              turbo_confirm: "Are you sure you want to transfer this gift card to #{@new_recipient.name}? This action cannot be undone."
+            } %>
+      </div>
+    <% end %>
+  </div>
+</div>

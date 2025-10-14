@@ -16,6 +16,13 @@ class Rack::Attack
     end
   end
 
+  # Throttle Twilio webhook requests by IP
+  throttle('webhooks/twilio/ip', limit: 100, period: 1.minute) do |req|
+    if req.path == '/webhooks/twilio_status' && req.post?
+      req.ip
+    end
+  end
+
   # Throttle login attempts by IP
   throttle('login/ip', limit: 5, period: 20.minutes) do |req|
     if req.path == '/users/sign_in' && req.post?

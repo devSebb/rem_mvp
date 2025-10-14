@@ -18,6 +18,42 @@ class Settlement < ApplicationRecord
   scope :paid, -> { where(payout_status: :paid) }
   scope :failed, -> { where(payout_status: :failed) }
 
+  # Get all transactions included in this settlement
+  def transactions
+    Transaction.joins(:gift_card)
+              .where(gift_cards: { merchant: merchant })
+              .where(txn_type: :redemption, status: :succeeded)
+              .where(created_at: period_start..period_end)
+  end
+
+  # Get all gift cards included in this settlement
+  def gift_cards
+    GiftCard.joins(:transactions)
+            .where(merchant: merchant)
+            .where(transactions: { txn_type: :redemption, status: :succeeded })
+            .where(transactions: { created_at: period_start..period_end })
+            .distinct
+  end
+
+  # Calculate the total amount that should be settled for this period
+  def calculated_amount
+    transactions.sum(:amount)
+  end
+
+  # Check if the settlement amount matches the calculated amount
+  def amount_matches_calculated?
+    amount == calculated_amount
+  end
+
+  # Get settlement status for a specific gift card
+  def gift_card_settlement_status(gift_card)
+    gift_card_transactions = transactions.where(gift_card: gift_card)
+    return 'not_included' if gift_card_transactions.empty?
+    
+    # For now, all transactions in a settlement are considered settled
+    'settled'
+  end
+
   private
 
   def period_end_after_period_start

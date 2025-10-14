@@ -1,0 +1,112 @@
+<div class="px-4 sm:px-0">
+  <!-- Quick Actions -->
+  <div class="bg-white shadow rounded-lg mb-6">
+    <div class="px-4 py-5 sm:p-6">
+      <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <%= link_to "Manual Entry", new_merchant_redemption_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+        <%= link_to "Dashboard", merchant_root_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+        <%= link_to "View Settlements", merchant_settlements_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-md mx-auto">
+    <div class="bg-white shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Scan QR Code</h2>
+    
+    <div class="space-y-6">
+      <!-- QR Code Scanner Section -->
+      <div class="text-center">
+        <div class="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-8 mb-4">
+          <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+          </svg>
+          <p class="text-gray-600 mb-2">QR Code Scanner</p>
+          <p class="text-sm text-gray-500">Camera access required for QR scanning</p>
+        </div>
+        
+        <button id="start-camera" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4">
+          Start Camera
+        </button>
+        
+        <div id="camera-container" class="hidden">
+          <video id="video" width="300" height="200" class="mx-auto rounded-lg border"></video>
+          <canvas id="canvas" class="hidden"></canvas>
+        </div>
+      </div>
+
+      <!-- Manual QR Token Entry -->
+      <div class="border-t pt-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Or Enter QR Token Manually</h3>
+        
+        <%= form_with url: process_qr_merchant_redemptions_path, method: :post, local: true, class: "space-y-4" do |form| %>
+          <div>
+            <%= form.label :qr_token, "QR Token", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= form.text_area :qr_token, 
+                rows: 3,
+                class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
+                placeholder: "Paste the QR token here..." %>
+            <p class="mt-1 text-sm text-gray-500">
+              QR tokens expire in 5 minutes for security
+            </p>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <%= link_to "Back to Manual Entry", new_merchant_redemption_path, class: "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
+            <%= form.submit "Process QR Token", class: "bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Instructions -->
+      <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-blue-800">How to use QR scanning:</h3>
+            <div class="mt-2 text-sm text-blue-700">
+              <ol class="list-decimal list-inside space-y-1">
+                <li>Ask the customer to show their QR code on their phone</li>
+                <li>Click "Start Camera" and point at the QR code</li>
+                <li>The system will automatically detect and process the code</li>
+                <li>Or manually enter the QR token if scanning fails</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Basic QR code scanning functionality
+// Note: This is a simplified implementation. In production, you'd want to use a proper QR library like jsQR
+document.getElementById('start-camera').addEventListener('click', function() {
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const cameraContainer = document.getElementById('camera-container');
+  
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(function(stream) {
+      video.srcObject = stream;
+      cameraContainer.classList.remove('hidden');
+      this.textContent = 'Stop Camera';
+      this.onclick = function() {
+        stream.getTracks().forEach(track => track.stop());
+        cameraContainer.classList.add('hidden');
+        this.textContent = 'Start Camera';
+        this.onclick = arguments.callee;
+      };
+    })
+    .catch(function(err) {
+      alert('Camera access denied or not available. Please use manual entry.');
+    });
+});
+</script>

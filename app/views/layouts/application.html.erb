@@ -28,7 +28,8 @@
             <% end %>
           </div>
           
-          <div class="flex items-center space-x-4">
+          <!-- Desktop Navigation -->
+          <div class="hidden md:flex items-center space-x-4">
             <% if user_signed_in? %>
               <%= link_to "Home", root_path, class: "text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" %>
               <% unless current_user.merchant? %>
@@ -43,6 +44,37 @@
             <% else %>
               <%= link_to "Login", new_user_session_path, class: "text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" %>
               <%= link_to "Sign Up", new_user_registration_path, class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+            <% end %>
+          </div>
+
+          <!-- Mobile menu button -->
+          <div class="md:hidden flex items-center">
+            <button type="button" class="mobile-menu-button bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500" aria-controls="mobile-menu" aria-expanded="false">
+              <span class="sr-only">Open main menu</span>
+              <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div class="md:hidden hidden" id="mobile-menu">
+          <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t">
+            <% if user_signed_in? %>
+              <%= link_to "Home", root_path, class: "text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" %>
+              <% unless current_user.merchant? %>
+                <%= link_to "My Wallet", gift_cards_path, class: "text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" %>
+                <%= link_to "Buy Gift Card", new_gift_card_path, class: "bg-blue-600 hover:bg-blue-700 text-white block px-3 py-2 rounded-md text-base font-medium" %>
+              <% end %>
+              <% if current_user.merchant? %>
+                <%= link_to "Merchant Portal", merchant_root_path, class: "text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" %>
+              <% end %>
+              <%= link_to "Profile", edit_user_registration_path, class: "text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" %>
+              <%= button_to "Logout", destroy_user_session_path, method: :delete, class: "text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium bg-transparent border-none cursor-pointer w-full text-left" %>
+            <% else %>
+              <%= link_to "Login", new_user_session_path, class: "text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" %>
+              <%= link_to "Sign Up", new_user_registration_path, class: "bg-blue-600 hover:bg-blue-700 text-white block px-3 py-2 rounded-md text-base font-medium" %>
             <% end %>
           </div>
         </div>
@@ -66,5 +98,21 @@
     <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       <%= yield %>
     </main>
+
+    <script>
+      // Mobile menu toggle
+      document.addEventListener('DOMContentLoaded', function() {
+        const mobileMenuButton = document.querySelector('.mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        if (mobileMenuButton && mobileMenu) {
+          mobileMenuButton.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+            const isExpanded = !mobileMenu.classList.contains('hidden');
+            mobileMenuButton.setAttribute('aria-expanded', isExpanded);
+          });
+        }
+      });
+    </script>
   </body>
 </html>

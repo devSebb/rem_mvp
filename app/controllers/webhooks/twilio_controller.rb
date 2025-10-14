@@ -18,11 +18,20 @@ class Webhooks::TwilioController < ApplicationController
   private
 
   def verify_twilio_signature
-    # In production, you should verify the Twilio signature
-    # For now, we'll skip this for development
+    # Skip verification in development for easier testing
     return if Rails.env.development?
 
-    # TODO: Implement Twilio signature verification
-    # See: https://www.twilio.com/docs/usage/webhooks/webhooks-security
+    validator = Twilio::Security::RequestValidator.new(
+      Rails.application.config.twilio[:auth_token]
+    )
+    
+    signature = request.headers['HTTP_X_TWILIO_SIGNATURE']
+    url = request.original_url
+    post_params = request.POST
+    
+    unless validator.validate(url, post_params, signature)
+      Rails.logger.warn "Invalid Twilio signature from IP: #{request.ip}"
+      render json: { error: 'Invalid signature' }, status: :forbidden
+    end
   end
 end

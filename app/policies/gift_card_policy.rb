@@ -15,6 +15,21 @@ class GiftCardPolicy < ApplicationPolicy
     user.present?
   end
 
+  # Only recipients (and admins) can see the raw gift card code
+  def view_code?
+    user.present? && (record.recipient == user || user.admin?)
+  end
+
+  # Only admins can issue refunds
+  def refund?
+    user.present? && user.admin?
+  end
+
+  # Only recipients can transfer their gift cards
+  def transfer?
+    user.present? && record.recipient == user && record.active?
+  end
+
   class Scope < Scope
     def resolve
       if user.admin?

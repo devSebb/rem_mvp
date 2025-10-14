@@ -1,2 +1,64 @@
-<h1>Merchant::Profiles#show</h1>
-<p>Find me in app/views/merchant/profiles/show.html.erb</p>
+<div class="px-4 sm:px-0">
+  <!-- Quick Actions -->
+  <div class="bg-white shadow rounded-lg mb-6">
+    <div class="px-4 py-5 sm:p-6">
+      <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <%= link_to "Redeem Gift Card", new_merchant_redemption_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+        <%= link_to "Dashboard", merchant_root_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+        <%= link_to "View Settlements", merchant_settlements_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto">
+    <div class="bg-white shadow rounded-lg">
+      <div class="px-4 py-5 sm:p-6">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">Merchant Profile</h1>
+        
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Store Information</h3>
+            <dl class="space-y-3">
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Store Name</dt>
+                <dd class="text-sm text-gray-900"><%= current_user.merchant.store_name %></dd>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Contact Email</dt>
+                <dd class="text-sm text-gray-900"><%= current_user.merchant.contact_email || 'Not provided' %></dd>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Account Created</dt>
+                <dd class="text-sm text-gray-900"><%= current_user.merchant.created_at.strftime('%B %d, %Y') %></dd>
+              </div>
+            </dl>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Account Information</h3>
+            <dl class="space-y-3">
+              <div>
+                <dt class="text-sm font-medium text-gray-500">User Name</dt>
+                <dd class="text-sm text-gray-900"><%= current_user.name %></dd>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Email</dt>
+                <dd class="text-sm text-gray-900"><%= current_user.email %></dd>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Member Since</dt>
+                <dd class="text-sm text-gray-900"><%= current_user.created_at.strftime('%B %d, %Y') %></dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+        
+        <div class="mt-6">
+          <%= link_to "Edit Profile", edit_user_registration_path, 
+              class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

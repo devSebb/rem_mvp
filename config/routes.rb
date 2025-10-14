@@ -9,6 +9,11 @@ Rails.application.routes.draw do
       get :success
       get :cancel
     end
+    
+    resources :transfers, only: [:new, :create] do
+      get :confirm, on: :collection
+      post :process_transfer, on: :collection
+    end
   end
 
   namespace :webhooks do
@@ -24,9 +29,17 @@ Rails.application.routes.draw do
       get :confirm, on: :collection
       post :redeem, on: :collection
       get :success, on: :collection
+      get :scan_qr, on: :collection
+      post :process_qr, on: :collection
     end
     resources :settlements, only: [:index, :show]
     resource :profile, only: [:show, :update]
+  end
+
+  namespace :admin do
+    resources :gift_cards, only: [] do
+      resources :refunds, only: [:new, :create], path: 'refund'
+    end
   end
 
   # Mount Sidekiq web interface at /sidekiq (admin only)
