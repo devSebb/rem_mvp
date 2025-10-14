@@ -21,7 +21,7 @@
     <!-- Navigation -->
     <nav class="bg-white shadow-sm border-b">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
+        <div class="flex justify-between items-center h-16">
           <div class="flex items-center">
             <%= link_to root_path, class: "text-xl font-bold text-gray-900" do %>
               GiftCard MVP
@@ -29,21 +29,21 @@
           </div>
           
           <!-- Desktop Navigation -->
-          <div class="hidden md:flex items-center space-x-4">
+          <div class="desktop-navigation hidden md:flex items-center space-x-6" style="display: none;">
             <% if user_signed_in? %>
-              <%= link_to "Home", root_path, class: "text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" %>
+              <%= link_to "Home", root_path, class: "nav-item text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200" %>
               <% unless current_user.merchant? %>
-                <%= link_to "My Wallet", gift_cards_path, class: "text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" %>
-                <%= link_to "Buy Gift Card", new_gift_card_path, class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+                <%= link_to "My Wallet", gift_cards_path, class: "nav-item text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200" %>
+                <%= link_to "Buy Gift Card", new_gift_card_path, class: "nav-item bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200" %>
               <% end %>
               <% if current_user.merchant? %>
-                <%= link_to "Merchant Portal", merchant_root_path, class: "text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" %>
+                <%= link_to "Merchant Portal", merchant_root_path, class: "nav-item text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200" %>
               <% end %>
-              <%= link_to "Profile", edit_user_registration_path, class: "text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" %>
-              <%= button_to "Logout", destroy_user_session_path, method: :delete, class: "text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium bg-transparent border-none cursor-pointer" %>
+              <%= link_to "Profile", edit_user_registration_path, class: "nav-item text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200" %>
+              <%= button_to "Logout", destroy_user_session_path, method: :delete, class: "nav-item text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium bg-transparent border-none cursor-pointer transition-colors duration-200" %>
             <% else %>
-              <%= link_to "Login", new_user_session_path, class: "text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" %>
-              <%= link_to "Sign Up", new_user_registration_path, class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+              <%= link_to "Login", new_user_session_path, class: "nav-item text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200" %>
+              <%= link_to "Sign Up", new_user_registration_path, class: "nav-item bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200" %>
             <% end %>
           </div>
 
@@ -51,15 +51,20 @@
           <div class="md:hidden flex items-center">
             <button type="button" class="mobile-menu-button bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500" aria-controls="mobile-menu" aria-expanded="false">
               <span class="sr-only">Open main menu</span>
-              <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <!-- Hamburger icon -->
+              <svg class="hamburger-icon block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <!-- Close icon (hidden by default) -->
+              <svg class="close-icon hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
         </div>
 
         <!-- Mobile menu -->
-        <div class="md:hidden hidden" id="mobile-menu">
+        <div class="md:hidden hidden" id="mobile-menu" style="display: none;">
           <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t">
             <% if user_signed_in? %>
               <%= link_to "Home", root_path, class: "text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" %>
@@ -99,6 +104,30 @@
       <%= yield %>
     </main>
 
+    <style>
+      /* Ensure desktop nav is hidden on small screens */
+      @media (max-width: 767px) {
+        .desktop-navigation {
+          display: none !important;
+        }
+      }
+      
+      @media (min-width: 768px) {
+        .desktop-navigation {
+          display: flex !important;
+        }
+      }
+      
+      /* Smooth transitions for menu items */
+      .nav-item {
+        transition: all 0.2s ease-in-out;
+      }
+      
+      .nav-item:hover {
+        transform: translateY(-1px);
+      }
+    </style>
+
     <script>
       // Mobile menu toggle
       document.addEventListener('DOMContentLoaded', function() {
@@ -106,10 +135,47 @@
         const mobileMenu = document.getElementById('mobile-menu');
         
         if (mobileMenuButton && mobileMenu) {
-          mobileMenuButton.addEventListener('click', function() {
-            mobileMenu.classList.toggle('hidden');
-            const isExpanded = !mobileMenu.classList.contains('hidden');
-            mobileMenuButton.setAttribute('aria-expanded', isExpanded);
+          // Ensure menu starts hidden
+          mobileMenu.style.display = 'none';
+          mobileMenu.classList.add('hidden');
+          
+          mobileMenuButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const isCurrentlyHidden = mobileMenu.style.display === 'none' || mobileMenu.classList.contains('hidden');
+            
+            if (isCurrentlyHidden) {
+              // Show menu
+              mobileMenu.style.display = 'block';
+              mobileMenu.classList.remove('hidden');
+              mobileMenuButton.setAttribute('aria-expanded', 'true');
+            } else {
+              // Hide menu
+              mobileMenu.style.display = 'none';
+              mobileMenu.classList.add('hidden');
+              mobileMenuButton.setAttribute('aria-expanded', 'false');
+            }
+            
+            // Toggle hamburger and close icons
+            const hamburgerIcon = mobileMenuButton.querySelector('.hamburger-icon');
+            const closeIcon = mobileMenuButton.querySelector('.close-icon');
+            
+            if (hamburgerIcon && closeIcon) {
+              if (isCurrentlyHidden) {
+                // Menu is opening - show close icon, hide hamburger
+                hamburgerIcon.style.display = 'none';
+                closeIcon.style.display = 'block';
+                hamburgerIcon.classList.add('hidden');
+                closeIcon.classList.remove('hidden');
+              } else {
+                // Menu is closing - show hamburger icon, hide close
+                hamburgerIcon.style.display = 'block';
+                closeIcon.style.display = 'none';
+                hamburgerIcon.classList.remove('hidden');
+                closeIcon.classList.add('hidden');
+              }
+            }
           });
         }
       });
