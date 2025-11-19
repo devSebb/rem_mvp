@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+# Helper script to start Stripe webhook forwarding for development
+# This forwards Stripe webhooks to your local Rails server
+
+set -e
+
+echo "🔔 Starting Stripe webhook forwarding..."
+echo ""
+echo "This will forward Stripe webhooks to: http://localhost:3000/webhooks/stripe"
+echo ""
+echo "⚠️  Make sure your Rails server is running on port 3000"
+echo "⚠️  Copy the webhook signing secret (whsec_...) to your .env file as STRIPE_WEBHOOK_SECRET"
+echo ""
+
+# Check if stripe CLI is installed
+if ! command -v stripe &> /dev/null; then
+    echo "❌ Stripe CLI is not installed."
+    echo "   Install it from: https://stripe.com/docs/stripe-cli"
+    exit 1
+fi
+
+# Check if port 3000 is in use (basic check)
+if lsof -Pi :3000 -sTCP:LISTEN -t >/dev/null 2>&1 ; then
+    echo "✅ Port 3000 is in use (Rails server likely running)"
+else
+    echo "⚠️  Warning: Port 3000 doesn't seem to be in use"
+    echo "   Make sure your Rails server is running!"
+    echo ""
+fi
+
+echo "Starting Stripe webhook listener..."
+echo ""
+
+# Start stripe listen with forwarding
+stripe listen --forward-to http://localhost:3000/webhooks/stripe
+

@@ -276,8 +276,13 @@
     // Update summary statistics
     updateSummaryStats(sentCards, receivedCards, redeemedCards);
     
-    // Apply current filters
+    // Apply current filters (this will render cards and set empty states)
     applyFilters();
+    
+    // Explicitly set empty states after filters are applied to ensure they're correct
+    toggleEmptyState('sent-empty', sentCards.length === 0);
+    toggleEmptyState('received-empty', receivedCards.length === 0);
+    toggleEmptyState('redeemed-empty', redeemedCards.length === 0);
   }
 
   function updateSummaryStats(sentCards, receivedCards, redeemedCards) {
@@ -331,8 +336,16 @@
       // Render cards
       renderCards(category + '-cards', cards, category);
       
-      // Show/hide empty states
-      toggleEmptyState(category + '-empty', cards.length === 0);
+      // Show/hide empty states - only show if category has NO cards at all
+      // Check the original category array, not filtered results
+      const hasCardsInCategory = filteredCards[category] && filteredCards[category].length > 0;
+      const cardsContainer = document.getElementById(category + '-cards');
+      const hasRenderedCards = cardsContainer && cardsContainer.children.length > 0;
+      
+      // Hide empty state if category has cards OR if cards are rendered
+      // Only show empty state if category truly has no cards
+      const shouldShowEmpty = !hasCardsInCategory;
+      toggleEmptyState(category + '-empty', shouldShowEmpty);
     });
   }
 
@@ -355,6 +368,8 @@
 
   function renderCards(containerId, cards, type) {
     const container = document.getElementById(containerId);
+    if (!container) return;
+    
     container.innerHTML = '';
     
     cards.forEach(card => {
@@ -454,22 +469,51 @@
 
   function toggleEmptyState(emptyId, isEmpty) {
     const emptyElement = document.getElementById(emptyId);
+    if (!emptyElement) {
+      console.warn('Empty state element not found:', emptyId);
+      return;
+    }
+    
+    // Force hide/show - ensure empty state is properly managed
     if (isEmpty) {
       emptyElement.classList.remove('hidden');
+      emptyElement.style.display = '';
     } else {
       emptyElement.classList.add('hidden');
+      emptyElement.style.display = 'none';
     }
   }
 
-  // Initialize on page load
-  document.addEventListener('DOMContentLoaded', function() {
+  // Initialize function
+  function initializeWallet() {
     categorizeCards();
     
     // Add event listeners for search and filtering
-    document.getElementById('search-input').addEventListener('input', applyFilters);
-    document.getElementById('status-filter').addEventListener('change', applyFilters);
-    document.getElementById('sort-filter').addEventListener('change', applyFilters);
-  });
+    const searchInput = document.getElementById('search-input');
+    const statusFilter = document.getElementById('status-filter');
+    const sortFilter = document.getElementById('sort-filter');
+    
+    if (searchInput) {
+      searchInput.addEventListener('input', applyFilters);
+    }
+    if (statusFilter) {
+      statusFilter.addEventListener('change', applyFilters);
+    }
+    if (sortFilter) {
+      sortFilter.addEventListener('change', applyFilters);
+    }
+  }
+
+  // Initialize on page load (for full page loads)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeWallet);
+  } else {
+    // DOM is already ready
+    initializeWallet();
+  }
+
+  // Initialize on Turbo navigation (for Turbo-driven page loads)
+  document.addEventListener('turbo:load', initializeWallet);
 </script>
 
 <style>

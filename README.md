@@ -91,14 +91,40 @@ REDIS_URL=redis://localhost:6379/0
 
 ### Development
 
+**Important:** Make sure Redis is running before starting the app:
+
 ```bash
-# Start the application
+# Check if Redis is running
+redis-cli ping
+# Should return: PONG
+
+# If not running, start Redis:
+# macOS (Homebrew):
+brew services start redis
+# Or manually:
+redis-server
+
+# Linux:
+sudo systemctl start redis
+# Or:
+redis-server
+```
+
+Then start the application:
+
+```bash
+# Start the application (includes Rails, Sidekiq, and asset watchers)
 bin/dev
 
 # Or run separately:
 rails server
 sidekiq
 ```
+
+**Note:** Redis is required for:
+- Idempotency tokens (prevents duplicate redemptions)
+- Background job processing (Sidekiq)
+- Caching
 
 ### Production
 
@@ -123,13 +149,55 @@ bundle exec rspec spec/models/gift_card_spec.rb
 
 ## Stripe Webhook Setup
 
-For development, use the Stripe CLI to forward webhooks:
+For development, you **MUST** use the Stripe CLI to forward webhooks to your local server.
+Without this, Stripe cannot notify your app when payments complete, and gift cards won't be created.
+
+### Quick Start
 
 ```bash
+# Option 1: Use the helper script
+bin/stripe-webhook
+
+# Option 2: Run directly
 stripe listen --forward-to http://localhost:3000/webhooks/stripe
 ```
 
-Copy the webhook signing secret to your `.env` file.
+### Important Steps
+
+1. **Install Stripe CLI** (if not already installed):
+   ```bash
+   # macOS
+   brew install stripe/stripe-cli/stripe
+   
+   # Or download from: https://stripe.com/docs/stripe-cli
+   ```
+
+2. **Login to Stripe CLI**:
+   ```bash
+   stripe login
+   ```
+
+3. **Start webhook forwarding** (in a separate terminal):
+   ```bash
+   bin/stripe-webhook
+   # OR
+   stripe listen --forward-to http://localhost:3000/webhooks/stripe
+   ```
+
+4. **Copy the webhook signing secret**:
+   - When you run `stripe listen`, it will output a webhook signing secret like: `whsec_...`
+   - Copy this value to your `.env` file as `STRIPE_WEBHOOK_SECRET=whsec_...`
+   - **Restart your Rails server** after updating the env var
+
+5. **Verify it's working**:
+   - Check your Rails logs - you should see `🔔 Stripe webhook received` messages
+   - After completing a test payment, check logs for gift card creation
+
+### Troubleshooting
+
+- **No webhooks received?** Make sure `stripe listen` is running in a separate terminal
+- **Invalid signature errors?** Check that `STRIPE_WEBHOOK_SECRET` in `.env` matches the secret from `stripe listen`
+- **Webhooks not creating gift cards?** Check Rails logs for detailed error messages
 
 ## Manual Testing Plan
 

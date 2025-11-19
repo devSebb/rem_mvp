@@ -82,10 +82,24 @@ module Messaging
     begin
       # Get the raw gift card code for email delivery
       raw_code = @gift_card.raw_code || @gift_card.generate_code!
-      GiftCardMailer.deliver_gift_card(@gift_card, raw_code).deliver_later
+      
+      # Try deliver_later first, fallback to deliver_now if Sidekiq not available
+      mail = GiftCardMailer.deliver_gift_card(@gift_card, raw_code)
+      
+      begin
+        mail.deliver_later
+        Rails.logger.info "📧 Email queued for delivery to #{@recipient.email}"
+      rescue NoMethodError, Redis::CannotConnectError => e
+        # Sidekiq not available or Redis not running - use sync
+        Rails.logger.warn "⚠️ Sidekiq not available for email (#{e.class}), sending immediately"
+        mail.deliver_now
+        Rails.logger.info "📧 Email sent immediately to #{@recipient.email}"
+      end
+      
       { success: true }
     rescue => e
-      Rails.logger.error "Email delivery failed: #{e.message}"
+      Rails.logger.error "❌ Email delivery failed to #{@recipient.email}: #{e.class} - #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
       { success: false, error: e.message }
     end
   end

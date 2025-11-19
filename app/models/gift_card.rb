@@ -4,6 +4,9 @@ class GiftCard < ApplicationRecord
   belongs_to :merchant, optional: true
   has_many :transactions, dependent: :destroy
 
+  # Raw code is stored encrypted in encrypted_raw_code column
+  # We handle encryption/decryption manually for compatibility
+
   # Enums
   enum status: { active: 0, redeemed: 1, expired: 2, canceled: 3 }
 
@@ -23,17 +26,44 @@ class GiftCard < ApplicationRecord
   def self.find_active_by_code(code)
     return nil if code.blank?
     
+    # Normalize code - remove spaces and ensure uppercase
+    normalized_code = code.strip.upcase.gsub(/\s+/, '')
+    
+    Rails.logger.debug "🔍 Looking for gift card with code: #{normalized_code}"
+    
     gift_cards = where(status: :active)
-    gift_cards.find { |gc| BCrypt::Password.new(gc.code_digest) == code }
+    found_card = gift_cards.find { |gc| 
+      begin
+        BCrypt::Password.new(gc.code_digest) == normalized_code
+      rescue BCrypt::Errors::InvalidHash => e
+        Rails.logger.error "❌ Invalid code_digest for gift card #{gc.id}: #{e.message}"
+        false
+      end
+    }
+    
+    if found_card
+      Rails.logger.info "✅ Found gift card #{found_card.id} for code"
+    else
+      Rails.logger.warn "❌ No active gift card found for code: #{normalized_code}"
+    end
+    
+    found_card
   end
 
 
   # Instance methods
   def generate_code!
-    raw_code = CodeGenerator.generate
-    self.code_digest = BCrypt::Password.create(raw_code)
-    save!
-    raw_code
+    # Only generate if we don't already have a code
+    if encrypted_raw_code.blank? || raw_code.blank?
+      new_raw_code = CodeGenerator.generate
+      self.code_digest = BCrypt::Password.create(new_raw_code)
+      self.raw_code = new_raw_code  # Store encrypted
+      save!
+      new_raw_code
+    else
+      # Return existing code
+      raw_code
+    end
   end
 
   def redeem!(merchant:, actor:)
@@ -41,17 +71,32 @@ class GiftCard < ApplicationRecord
   end
 
   def partial_redeem!(redemption_amount:, merchant:, actor:)
-    return false if merchant.nil? || actor.nil?
+    Rails.logger.info "🔄 partial_redeem! called - Amount: #{redemption_amount}, Merchant: #{merchant&.id}, Actor: #{actor&.id}"
+    
+    if merchant.nil?
+      Rails.logger.error "❌ Merchant is nil"
+      return false
+    end
+    
+    if actor.nil?
+      Rails.logger.error "❌ Actor is nil"
+      return false
+    end
 
     transaction do
       # Pessimistic locking to prevent race conditions
       lock!
       reload # Get latest balance from database
       
-      return false unless can_partial_redeem?(redemption_amount)
+      Rails.logger.info "   Current balance: #{remaining_balance}, Status: #{status}"
+      
+      unless can_partial_redeem?(redemption_amount)
+        Rails.logger.error "❌ Cannot partial redeem - can_partial_redeem? returned false"
+        return false
+      end
 
       # Create redemption transaction
-      transactions.create!(
+      txn = transactions.create!(
         amount: redemption_amount,
         txn_type: :redemption,
         status: :succeeded,
@@ -63,6 +108,8 @@ class GiftCard < ApplicationRecord
           redeemed_at: Time.current.iso8601
         }
       )
+      
+      Rails.logger.info "   ✅ Created transaction #{txn.id}"
 
       # Update remaining balance
       new_balance = remaining_balance - redemption_amount
@@ -70,6 +117,8 @@ class GiftCard < ApplicationRecord
         remaining_balance: new_balance,
         merchant: merchant
       )
+      
+      Rails.logger.info "   ✅ Updated balance: #{new_balance}"
 
       # Mark as fully redeemed if balance is zero
       if new_balance == 0
@@ -77,10 +126,16 @@ class GiftCard < ApplicationRecord
           status: :redeemed,
           redeemed_at: Time.current
         )
+        Rails.logger.info "   ✅ Marked as fully redeemed"
       end
     end
 
+    Rails.logger.info "✅ partial_redeem! completed successfully"
     true
+  rescue => e
+    Rails.logger.error "💥 Error in partial_redeem!: #{e.class} - #{e.message}"
+    Rails.logger.error e.backtrace.join("\n")
+    raise
   end
 
   def expired?
@@ -181,23 +236,54 @@ class GiftCard < ApplicationRecord
 
   # Method to get raw code for display (only for recipients)
   # Note: This should only be called when we know the user has permission
+  # The raw code is stored encrypted in the database and decrypted when accessed
   def raw_code
-    # This is a security risk - raw codes should not be stored in memory
-    # For now, we'll generate a new code each time (not ideal for performance)
-    # TODO: Implement secure token-based system in Phase 2
-    generate_code!
+    # If we have an encrypted code, decrypt and return it
+    if encrypted_raw_code.present?
+      decrypt_raw_code
+    else
+      # No code stored yet - generate one (should only happen for old records)
+      Rails.logger.warn "⚠️ Gift card #{id} has no stored raw code, generating new one"
+      generate_code!
+    end
   end
-
+  
+  # Setter for raw_code (stores encrypted)
+  def raw_code=(value)
+    return if value.blank?
+    self.encrypted_raw_code = encrypt_raw_code(value)
+  end
+  
   private
+  
+  # Encrypt raw code for storage
+  def encrypt_raw_code(code)
+    return nil if code.blank?
+    key = Rails.application.credentials.secret_key_base || Rails.application.secret_key_base
+    encryptor = ActiveSupport::MessageEncryptor.new(key[0..31])
+    encryptor.encrypt_and_sign(code)
+  end
+  
+  # Decrypt raw code for display
+  def decrypt_raw_code
+    return nil if encrypted_raw_code.blank?
+    key = Rails.application.credentials.secret_key_base || Rails.application.secret_key_base
+    encryptor = ActiveSupport::MessageEncryptor.new(key[0..31])
+    encryptor.decrypt_and_verify(encrypted_raw_code)
+  rescue => e
+    Rails.logger.error "❌ Failed to decrypt raw code for gift card #{id}: #{e.message}"
+    nil
+  end
 
   def set_defaults
     self.currency ||= 'USD'
     self.status ||= :active
     
-    # Generate code and store digest
+    # Generate code and store digest + encrypted raw code
     if code_digest.blank?
-      raw_code = CodeGenerator.generate
-      self.code_digest = BCrypt::Password.create(raw_code)
+      raw_code_value = CodeGenerator.generate
+      self.code_digest = BCrypt::Password.create(raw_code_value)
+      self.raw_code = raw_code_value  # Store encrypted
     end
     
     self.remaining_balance = amount if amount.present? && remaining_balance == 0

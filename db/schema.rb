@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_10_03_020945) do
+ActiveRecord::Schema[7.2].define(version: 2025_11_14_035713) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -35,8 +35,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_03_020945) do
     t.boolean "sent_via_sms", default: false, null: false
     t.boolean "sent_via_email", default: false, null: false
     t.integer "remaining_balance", default: 0
+    t.text "encrypted_raw_code"
     t.index ["checkout_session_id"], name: "index_gift_cards_on_checkout_session_id", unique: true
     t.index ["code_digest"], name: "index_gift_cards_on_code_digest", unique: true
+    t.index ["encrypted_raw_code"], name: "index_gift_cards_on_encrypted_raw_code", where: "(encrypted_raw_code IS NOT NULL)"
     t.index ["link_token_digest"], name: "index_gift_cards_on_link_token_digest", unique: true
     t.index ["merchant_id"], name: "index_gift_cards_on_merchant_id"
     t.index ["otp_digest"], name: "index_gift_cards_on_otp_digest", unique: true

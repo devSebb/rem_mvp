@@ -80,7 +80,22 @@ class GiftCardsController < ApplicationController
   def success
     @session_id = params[:session_id]
     if @session_id.present?
+      # Try to find gift card - webhook might not have arrived yet
       @gift_card = GiftCard.find_by(checkout_session_id: @session_id)
+      
+      # If not found, wait a moment and try again (webhook might be processing)
+      unless @gift_card
+        sleep(1) # Give webhook a moment to process
+        @gift_card = GiftCard.find_by(checkout_session_id: @session_id)
+      end
+      
+      # Log for debugging
+      if @gift_card
+        Rails.logger.info "✅ Success page: Found gift card #{@gift_card.id} for session #{@session_id}"
+      else
+        Rails.logger.warn "⚠️ Success page: Gift card not found for session #{@session_id}"
+        Rails.logger.warn "   This usually means the webhook hasn't arrived yet. Check if Stripe CLI is running."
+      end
     end
   end
 
