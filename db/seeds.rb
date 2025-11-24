@@ -57,8 +57,7 @@ if GiftCard.count == 0
   )
   active_gift_card.generate_code!
   
-  # Test gift card with known code for easy redemption testing
-  test_gift_card = GiftCard.new(
+  test_gift_card = GiftCard.create!(
     sender: admin,
     recipient: regular_user,
     merchant: merchant,
@@ -67,13 +66,9 @@ if GiftCard.count == 0
     checkout_session_id: 'cs_demo_test',
     expires_at: 1.year.from_now
   )
-  # Set a known test code instead of generating a random one
-  test_code = "REM-TEST-1234-5678"
-  test_gift_card.code_digest = BCrypt::Password.create(test_code)
-  test_gift_card.save!
+  test_gift_card.generate_code!
   
-  # Additional test gift card with different code for testing
-  test_gift_card_2 = GiftCard.new(
+  test_gift_card_2 = GiftCard.create!(
     sender: admin,
     recipient: regular_user,
     merchant: merchant,
@@ -82,10 +77,7 @@ if GiftCard.count == 0
     checkout_session_id: 'cs_demo_test_2',
     expires_at: 1.year.from_now
   )
-  # Set another known test code
-  test_code_2 = "REM-TEST-ABCD-EFGH"
-  test_gift_card_2.code_digest = BCrypt::Password.create(test_code_2)
-  test_gift_card_2.save!
+  test_gift_card_2.generate_code!
   
   # Redeemed gift card
   redeemed_gift_card = GiftCard.new(
@@ -116,10 +108,6 @@ if GiftCard.count == 0
   expired_gift_card.generate_code!
   
   puts "✅ Created demo gift cards"
-  puts "🧪 Test gift card codes:"
-  puts "   - #{test_code} ($30.00)"
-  puts "   - #{test_code_2} ($20.00)"
-  puts "   Use these codes for easy redemption testing!"
 end
 
 # Create some settlements

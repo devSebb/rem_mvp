@@ -3,6 +3,7 @@ class GiftCard < ApplicationRecord
   belongs_to :recipient, class_name: 'User', optional: true
   belongs_to :merchant, optional: true
   has_many :transactions, dependent: :destroy
+  has_many :redemption_tokens, dependent: :destroy
 
   # Raw code is stored encrypted in encrypted_raw_code column
   # We handle encryption/decryption manually for compatibility

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_11_14_035713) do
+ActiveRecord::Schema[7.2].define(version: 2025_11_24_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -57,6 +57,19 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_14_035713) do
     t.datetime "updated_at", null: false
     t.index ["store_name"], name: "index_merchants_on_store_name"
     t.index ["user_id"], name: "index_merchants_on_user_id"
+  end
+
+  create_table "redemption_tokens", force: :cascade do |t|
+    t.bigint "gift_card_id", null: false
+    t.string "token_digest", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "used_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expires_at"], name: "index_redemption_tokens_on_expires_at"
+    t.index ["gift_card_id", "expires_at"], name: "index_redemption_tokens_on_gift_card_id_and_expires_at"
+    t.index ["gift_card_id"], name: "index_redemption_tokens_on_gift_card_id"
+    t.index ["token_digest"], name: "index_redemption_tokens_on_token_digest", unique: true
   end
 
   create_table "settlements", force: :cascade do |t|
@@ -109,6 +122,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_14_035713) do
   add_foreign_key "gift_cards", "users", column: "recipient_id"
   add_foreign_key "gift_cards", "users", column: "sender_id"
   add_foreign_key "merchants", "users"
+  add_foreign_key "redemption_tokens", "gift_cards"
   add_foreign_key "settlements", "merchants"
   add_foreign_key "transactions", "gift_cards"
 end

@@ -16,6 +16,14 @@ Rails.application.routes.draw do
     end
   end
 
+  namespace :api do
+    namespace :v1 do
+      resources :gift_cards, only: [] do
+        resource :redemption_token, only: :create, module: :gift_cards
+      end
+    end
+  end
+
   namespace :webhooks do
     post :stripe, to: "stripe#receive"
     post :twilio_status, to: "twilio#status"
@@ -29,8 +37,6 @@ Rails.application.routes.draw do
       get :confirm, on: :collection
       post :redeem, on: :collection
       get :success, on: :collection
-      get :scan_qr, on: :collection
-      post :process_qr, on: :collection
     end
     resources :settlements, only: [:index, :show]
     resource :profile, only: [:show, :update]

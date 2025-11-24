@@ -160,35 +160,6 @@ class Merchant::RedemptionsController < ApplicationController
     redirect_to new_merchant_redemption_path
   end
 
-  def scan_qr
-    # Show QR scanning interface
-  end
-
-  def process_qr
-    qr_token = params[:qr_token]&.strip
-    
-    if qr_token.blank?
-      flash[:alert] = 'Please enter or scan a QR code.'
-      redirect_to scan_qr_merchant_redemptions_path and return
-    end
-
-    # Verify the QR token
-    @gift_card = QrTokenService.verify_token(qr_token)
-    
-    if @gift_card.nil?
-      flash[:alert] = 'Invalid or expired QR code. Please try again or use manual code entry.'
-      redirect_to scan_qr_merchant_redemptions_path and return
-    end
-
-    unless @gift_card.can_be_redeemed?
-      flash[:alert] = 'This gift card cannot be redeemed (expired, inactive, or has no remaining balance).'
-      redirect_to scan_qr_merchant_redemptions_path and return
-    end
-
-    # Redirect to confirmation page
-    redirect_to confirm_merchant_redemptions_path(gift_card_id: @gift_card.id)
-  end
-
   private
 
   def ensure_merchant

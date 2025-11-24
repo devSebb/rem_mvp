@@ -99,15 +99,11 @@
 
             <!-- Gift Card Code Display -->
             <% if policy(@gift_card).view_code? %>
-              <!-- Recipients and admins can see the full code -->
               <div class="bg-green-50 border border-green-200 rounded-md p-3 mt-4">
-                <dt class="text-sm font-medium text-green-800">🎫 Tu Código de Tarjeta de Regalo</dt>
-                <dd class="text-lg font-mono font-bold text-green-900 mt-1">
-                  <%= @gift_card.raw_code %>
+                <dt class="text-sm font-medium text-green-800">🎫 Token dinámico</dt>
+                <dd class="text-sm text-green-800 mt-1">
+                  Usa el panel de la derecha para mostrar tu código QR, código de barras o código manual. Cambia cada 90 segundos para tu seguridad.
                 </dd>
-                <p class="text-xs text-green-700 mt-1">
-                  Muestra este código a cualquier comercio participante para canjear tu tarjeta de regalo.
-                </p>
               </div>
             <% elsif @gift_card.sender == current_user %>
               <!-- Senders can only see masked code -->
@@ -125,34 +121,41 @@
         </div>
 
         <% if @gift_card.active? && policy(@gift_card).view_code? %>
-          <div class="text-center">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Código QR</h3>
-            <div class="bg-white p-4 rounded-lg border-2 border-gray-200 inline-block">
-              <% 
-                # Generate QR code with signed token (expires in 5 minutes)
-                qr_token = QrTokenService.generate_token(@gift_card.id)
-                if qr_token.present?
-                  qr = RQRCode::QRCode.new(qr_token)
-                  svg = qr.as_svg(
-                    offset: 0,
-                    color: '000',
-                    shape_rendering: 'crispEdges',
-                    module_size: 6,
-                    standalone: true
-                  )
-                else
-                  svg = nil
-                end
-              %>
-              <% if svg %>
-                <%= raw svg %>
-              <% else %>
-                <p class="text-gray-500">Código QR no disponible</p>
-              <% end %>
+          <div 
+            class="bg-gray-50 border border-gray-200 rounded-xl p-6"
+            data-controller="redemption-code"
+            data-redemption-code-url-value="<%= api_v1_gift_card_redemption_token_path(@gift_card) %>">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-medium text-gray-900">Tu código Papayal</h3>
+              <div class="flex items-center text-sm text-gray-500">
+                <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span data-redemption-code-target="timer">--s</span>
+              </div>
             </div>
-            <p class="mt-2 text-sm text-gray-500">Muestra este código QR al comercio</p>
-            <p class="mt-1 text-xs text-gray-400">El código QR expira en 5 minutos por seguridad</p>
-            <p class="mt-1 text-xs text-gray-400">Código manual: <%= @gift_card.raw_code %></p>
+            <p class="text-sm text-gray-600 mb-4">
+              Muestra cualquiera de estas opciones al comercio. Todas apuntan al mismo token seguro y se renuevan automáticamente.
+            </p>
+            <div data-redemption-code-target="status" class="hidden text-sm text-yellow-800 bg-yellow-100 border border-yellow-200 rounded-md px-3 py-2 mb-4"></div>
+            <div class="grid gap-6 md:grid-cols-2">
+              <div class="text-center">
+                <canvas
+                  width="220"
+                  height="220"
+                  class="mx-auto bg-white rounded-lg shadow p-2"
+                  data-redemption-code-target="qr">
+                </canvas>
+                <p class="mt-2 text-xs text-gray-500">Escanea el QR (90s TTL)</p>
+              </div>
+              <div class="flex flex-col items-center justify-center space-y-4">
+                <svg class="w-full h-20" data-redemption-code-target="barcode"></svg>
+                <div class="text-2xl font-mono tracking-[0.3em] text-gray-900" data-redemption-code-target="code">
+                  ••••
+                </div>
+                <p class="text-xs text-gray-500 text-center">Ingresa el código manual si no puedes escanear.</p>
+              </div>
+            </div>
           </div>
         <% elsif @gift_card.active? && @gift_card.sender == current_user %>
           <div class="text-center">
@@ -168,44 +171,6 @@
             <p class="mt-2 text-sm text-gray-500">Solo el destinatario puede ver el código QR</p>
           </div>
         <% end %>
-      </div>
-
-      <!-- Barcode Section -->
-      <div class="mt-8 pt-8 border-t border-gray-200">
-        <div class="text-center">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Código de Barras</h3>
-          <div class="bg-white p-6 rounded-lg border-2 border-gray-200 inline-block">
-            <% 
-              # Generate a simple barcode pattern from gift card ID
-              barcode_data = @gift_card.id.to_s.rjust(8, '0')
-              bar_width = 2
-              x_pos = 10
-              barcode_svg = ""
-              
-              # Start guard bar
-              barcode_svg += "<rect x=\"5\" y=\"10\" width=\"3\" height=\"70\" fill=\"black\"/>"
-              
-              # Generate bars for each digit
-              barcode_data.chars.each do |char|
-                digit = char.to_i
-                # Create pattern: each digit creates 4 bars (2 wide, 2 narrow)
-                pattern = [digit % 2 == 0 ? 3 : 1, digit % 3 == 0 ? 2 : 1, digit % 2 == 1 ? 3 : 1, digit % 3 == 1 ? 2 : 1]
-                pattern.each do |width|
-                  bar_height = width == 1 ? 60 : 70
-                  barcode_svg += "<rect x=\"#{x_pos}\" y=\"#{10 + (70 - bar_height)}\" width=\"#{bar_width * width}\" height=\"#{bar_height}\" fill=\"black\"/>"
-                  x_pos += bar_width * width + 1
-                end
-              end
-              
-              # End guard bar
-              barcode_svg += "<rect x=\"#{x_pos}\" y=\"10\" width=\"3\" height=\"70\" fill=\"black\"/>"
-            %>
-            <svg width="300" height="80" xmlns="http://www.w3.org/2000/svg" class="mx-auto">
-              <%= raw barcode_svg %>
-            </svg>
-            <p class="mt-3 text-sm font-mono text-gray-700"><%= @gift_card.raw_code || "REM-#{@gift_card.id.to_s.rjust(8, '0')}" %></p>
-          </div>
-        </div>
       </div>
 
       <div class="mt-8 flex flex-col sm:flex-row justify-between gap-4">
