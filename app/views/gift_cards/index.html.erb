@@ -2,11 +2,11 @@
   <!-- Header Section -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
     <div>
-      <h1 class="text-3xl font-bold text-gray-900">My Wallet</h1>
-      <p class="mt-2 text-sm text-gray-600">Manage your gift cards and track your transactions</p>
+      <h1 class="text-3xl font-bold" style="color: #2C3A43;">Mi Billetera</h1>
+      <p class="mt-2 text-sm text-gray-600">Administra tus tarjetas de regalo y rastrea tus transacciones</p>
     </div>
     <div class="mt-4 sm:mt-0">
-      <%= link_to "Buy New Gift Card", new_gift_card_path, class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
+      <%= link_to "Comprar Nueva Tarjeta", new_gift_card_path, class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2", style: "background-color: #FCA50F;" %>
     </div>
   </div>
 
@@ -24,8 +24,8 @@
           </div>
           <div class="ml-5 w-0 flex-1">
             <dl>
-              <dt class="text-sm font-medium text-gray-500 truncate">Sent Cards</dt>
-              <dd class="text-lg font-medium text-gray-900" id="sent-summary-count">0</dd>
+              <dt class="text-sm font-medium text-gray-500 truncate">Tarjetas Enviadas</dt>
+              <dd class="text-lg font-medium" style="color: #2C3A43;" id="sent-summary-count">0</dd>
             </dl>
           </div>
         </div>
@@ -44,8 +44,8 @@
           </div>
           <div class="ml-5 w-0 flex-1">
             <dl>
-              <dt class="text-sm font-medium text-gray-500 truncate">Received Cards</dt>
-              <dd class="text-lg font-medium text-gray-900" id="received-summary-count">0</dd>
+              <dt class="text-sm font-medium text-gray-500 truncate">Tarjetas Recibidas</dt>
+              <dd class="text-lg font-medium" style="color: #2C3A43;" id="received-summary-count">0</dd>
             </dl>
           </div>
         </div>
@@ -64,8 +64,8 @@
           </div>
           <div class="ml-5 w-0 flex-1">
             <dl>
-              <dt class="text-sm font-medium text-gray-500 truncate">Redeemed Cards</dt>
-              <dd class="text-lg font-medium text-gray-900" id="redeemed-summary-count">0</dd>
+              <dt class="text-sm font-medium text-gray-500 truncate">Tarjetas Canjeadas</dt>
+              <dd class="text-lg font-medium" style="color: #2C3A43;" id="redeemed-summary-count">0</dd>
             </dl>
           </div>
         </div>
@@ -84,8 +84,8 @@
           </div>
           <div class="ml-5 w-0 flex-1">
             <dl>
-              <dt class="text-sm font-medium text-gray-500 truncate">Total Value</dt>
-              <dd class="text-lg font-medium text-gray-900" id="total-value">$0.00</dd>
+              <dt class="text-sm font-medium text-gray-500 truncate">Valor Total</dt>
+              <dd class="text-lg font-medium" style="color: #2C3A43;" id="total-value">$0.00</dd>
             </dl>
           </div>
         </div>
@@ -95,31 +95,24 @@
 
   <!-- Search and Filter Bar -->
   <div class="bg-white shadow rounded-lg p-4 mb-8">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <div class="flex-1 max-w-lg">
-        <div class="relative">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-          </div>
-          <input type="text" id="search-input" placeholder="Search gift cards..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-        </div>
+        <input type="text" id="search-input" placeholder="Buscar tarjetas..." class="block w-full rounded-md border border-gray-300 bg-white py-2.5 px-3 text-sm placeholder-gray-500 focus:border-[#FCA50F] focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-[#FCA50F]">
       </div>
-      <div class="flex space-x-3">
-        <select id="status-filter" class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-          <option value="">All Statuses</option>
-          <option value="active">Active</option>
-          <option value="redeemed">Redeemed</option>
-          <option value="expired">Expired</option>
-          <option value="canceled">Canceled</option>
+      <div class="flex gap-3">
+        <select id="status-filter" class="block w-full pl-3 pr-10 py-2.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#FCA50F] focus:border-[#FCA50F]">
+          <option value="">Todos los Estados</option>
+          <option value="active">Activa</option>
+          <option value="redeemed">Canjeada</option>
+          <option value="expired">Vencida</option>
+          <option value="canceled">Cancelada</option>
         </select>
-        <select id="sort-filter" class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-          <option value="newest">Newest First</option>
-          <option value="oldest">Oldest First</option>
-          <option value="amount-high">Amount (High to Low)</option>
-          <option value="amount-low">Amount (Low to High)</option>
-          <option value="status">Status</option>
+        <select id="sort-filter" class="block w-full pl-3 pr-10 py-2.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#FCA50F] focus:border-[#FCA50F]">
+          <option value="newest">Más Recientes</option>
+          <option value="oldest">Más Antiguas</option>
+          <option value="amount-high">Monto (Mayor a Menor)</option>
+          <option value="amount-low">Monto (Menor a Mayor)</option>
+          <option value="status">Estado</option>
         </select>
       </div>
     </div>
@@ -128,25 +121,25 @@
   <!-- Tab Navigation -->
   <div class="border-b border-gray-200 mb-8">
     <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-      <button onclick="showTab('sent')" id="sent-tab" class="tab-button active whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600">
+      <button onclick="showTab('sent')" id="sent-tab" class="tab-button active whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm" style="border-color: #FCA50F; color: #FCA50F;">
         <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
         </svg>
-        Sent Cards
+        Tarjetas Enviadas
         <span id="sent-count" class="ml-2 py-0.5 px-2.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">0</span>
       </button>
       <button onclick="showTab('received')" id="received-tab" class="tab-button whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
         <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
         </svg>
-        Received Cards
+        Tarjetas Recibidas
         <span id="received-count" class="ml-2 py-0.5 px-2.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">0</span>
       </button>
       <button onclick="showTab('redeemed')" id="redeemed-tab" class="tab-button whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
         <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
-        Redeemed Cards
+        Tarjetas Canjeadas
         <span id="redeemed-count" class="ml-2 py-0.5 px-2.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">0</span>
       </button>
     </nav>
@@ -157,8 +150,8 @@
     <!-- Sent Cards Tab -->
     <div id="sent-content" class="tab-content">
       <div class="mb-6">
-        <h2 class="text-xl font-semibold text-gray-900 mb-2">Cards You've Sent</h2>
-        <p class="text-sm text-gray-600">Gift cards you've purchased and sent to others</p>
+        <h2 class="text-xl font-semibold mb-2" style="color: #2C3A43;">Tarjetas que Has Enviado</h2>
+        <p class="text-sm text-gray-600">Tarjetas de regalo que has comprado y enviado a otros</p>
       </div>
       
       <div id="sent-cards" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -171,10 +164,10 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
           </svg>
         </div>
-        <h3 class="mt-2 text-sm font-medium text-gray-900">No sent cards yet</h3>
-        <p class="mt-1 text-sm text-gray-500">Start by sending a gift card to someone special.</p>
+        <h3 class="mt-2 text-sm font-medium" style="color: #2C3A43;">Aún no has enviado tarjetas</h3>
+        <p class="mt-1 text-sm text-gray-500">Comienza enviando una tarjeta de regalo a alguien especial.</p>
         <div class="mt-6">
-          <%= link_to "Send Gift Card", new_gift_card_path, class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+          <%= link_to "Enviar Tarjeta", new_gift_card_path, class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white", style: "background-color: #FCA50F;" %>
         </div>
       </div>
     </div>
@@ -182,8 +175,8 @@
     <!-- Received Cards Tab -->
     <div id="received-content" class="tab-content hidden">
       <div class="mb-6">
-        <h2 class="text-xl font-semibold text-gray-900 mb-2">Cards You've Received</h2>
-        <p class="text-sm text-gray-600">Gift cards others have sent to you</p>
+        <h2 class="text-xl font-semibold mb-2" style="color: #2C3A43;">Tarjetas que Has Recibido</h2>
+        <p class="text-sm text-gray-600">Tarjetas de regalo que otros te han enviado</p>
       </div>
       
       <div id="received-cards" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -196,16 +189,16 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
           </svg>
         </div>
-        <h3 class="mt-2 text-sm font-medium text-gray-900">No received cards yet</h3>
-        <p class="mt-1 text-sm text-gray-500">You'll see gift cards sent to you here.</p>
+        <h3 class="mt-2 text-sm font-medium" style="color: #2C3A43;">Aún no has recibido tarjetas</h3>
+        <p class="mt-1 text-sm text-gray-500">Verás aquí las tarjetas de regalo que te envíen.</p>
       </div>
     </div>
 
     <!-- Redeemed Cards Tab -->
     <div id="redeemed-content" class="tab-content hidden">
       <div class="mb-6">
-        <h2 class="text-xl font-semibold text-gray-900 mb-2">Redeemed Cards</h2>
-        <p class="text-sm text-gray-600">Cards that have been used at merchants</p>
+        <h2 class="text-xl font-semibold mb-2" style="color: #2C3A43;">Tarjetas Canjeadas</h2>
+        <p class="text-sm text-gray-600">Tarjetas que han sido utilizadas en comercios</p>
       </div>
       
       <div id="redeemed-cards" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -218,8 +211,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
         </div>
-        <h3 class="mt-2 text-sm font-medium text-gray-900">No redeemed cards yet</h3>
-        <p class="mt-1 text-sm text-gray-500">Redeemed cards will appear here once they're used.</p>
+        <h3 class="mt-2 text-sm font-medium" style="color: #2C3A43;">Aún no hay tarjetas canjeadas</h3>
+        <p class="mt-1 text-sm text-gray-500">Las tarjetas canjeadas aparecerán aquí una vez que se utilicen.</p>
       </div>
     </div>
   </div>
@@ -236,8 +229,9 @@
     
     // Remove active class from all tabs
     document.querySelectorAll('.tab-button').forEach(button => {
-      button.classList.remove('active', 'border-blue-500', 'text-blue-600');
-      button.classList.add('border-transparent', 'text-gray-500');
+      button.classList.remove('active');
+      button.style.borderColor = 'transparent';
+      button.style.color = '#6B7280';
     });
     
     // Show selected tab content
@@ -245,8 +239,9 @@
     
     // Add active class to selected tab
     const activeTab = document.getElementById(tabName + '-tab');
-    activeTab.classList.add('active', 'border-blue-500', 'text-blue-600');
-    activeTab.classList.remove('border-transparent', 'text-gray-500');
+    activeTab.classList.add('active');
+    activeTab.style.borderColor = '#FCA50F';
+    activeTab.style.color = '#FCA50F';
   }
 
   // Global variables for filtering
@@ -400,15 +395,22 @@
     const remainingBalance = (card.remaining_balance / 100).toFixed(2);
     const currency = card.currency === 'USD' ? '$' : card.currency;
     
+    const statusLabels = {
+      'active': 'Activa',
+      'redeemed': 'Canjeada',
+      'expired': 'Vencida',
+      'canceled': 'Cancelada'
+    };
+    
     let recipientInfo = '';
     if (type === 'sent') {
-      recipientInfo = `To: ${card.recipient ? card.recipient.name : 'Unknown'}`;
+      recipientInfo = `Para: ${card.recipient ? card.recipient.name : 'Desconocido'}`;
     } else if (type === 'received') {
-      recipientInfo = `From: ${card.sender.name}`;
+      recipientInfo = `De: ${card.sender.name}`;
     } else {
       recipientInfo = card.sender_id === <%= current_user.id %> ? 
-        `To: ${card.recipient ? card.recipient.name : 'Unknown'}` : 
-        `From: ${card.sender.name}`;
+        `Para: ${card.recipient ? card.recipient.name : 'Desconocido'}` : 
+        `De: ${card.sender.name}`;
     }
     
     div.innerHTML = `
@@ -420,42 +422,42 @@
               <span class="text-white font-bold text-lg">${type === 'sent' ? '📤' : type === 'received' ? '📥' : '✅'}</span>
             </div>
             <div class="ml-4">
-              <div class="text-2xl font-bold text-gray-900">${currency}${amount}</div>
+              <div class="text-2xl font-bold" style="color: #2C3A43;">${currency}${amount}</div>
               <div class="text-sm text-gray-500">${card.currency}</div>
-              ${card.remaining_balance < card.amount ? `<div class="text-sm text-green-600 font-medium">Remaining: ${currency}${remainingBalance}</div>` : ''}
+              ${card.remaining_balance < card.amount ? `<div class="text-sm text-green-600 font-medium">Restante: ${currency}${remainingBalance}</div>` : ''}
             </div>
           </div>
           <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusColors[card.status]}">
             ${statusIcons[card.status]}
-            ${card.status.charAt(0).toUpperCase() + card.status.slice(1)}
+            ${statusLabels[card.status] || card.status.charAt(0).toUpperCase() + card.status.slice(1)}
           </span>
         </div>
         
         <!-- Recipient/From info -->
         <div class="mb-4">
           <div class="text-sm text-gray-600">${recipientInfo}</div>
-          ${card.merchant ? `<div class="text-sm text-gray-500 mt-1">${card.redeemed ? 'Redeemed at: ' : 'Store: '}${card.merchant.store_name}</div>` : ''}
+          ${card.merchant ? `<div class="text-sm text-gray-500 mt-1">${card.redeemed ? 'Canjeada en: ' : 'Tienda: '}${card.merchant.store_name}</div>` : ''}
         </div>
         
         <!-- Dates -->
         <div class="space-y-1 text-sm text-gray-500">
-          ${card.redeemed_at ? `<div>Redeemed: ${new Date(card.redeemed_at).toLocaleDateString()}</div>` : ''}
-          ${card.expires_at && !card.redeemed ? `<div>Expires: ${new Date(card.expires_at).toLocaleDateString()}</div>` : ''}
-          <div>Created: ${new Date(card.created_at).toLocaleDateString()}</div>
+          ${card.redeemed_at ? `<div>Canjeada: ${new Date(card.redeemed_at).toLocaleDateString('es-EC')}</div>` : ''}
+          ${card.expires_at && !card.redeemed ? `<div>Vence: ${new Date(card.expires_at).toLocaleDateString('es-EC')}</div>` : ''}
+          <div>Creada: ${new Date(card.created_at).toLocaleDateString('es-EC')}</div>
         </div>
         
         <!-- Development test code -->
         ${card.raw_code ? `
           <div class="mt-4 bg-yellow-50 border border-yellow-200 rounded-md p-3">
-            <p class="text-xs font-medium text-yellow-800">🧪 Test Code:</p>
+            <p class="text-xs font-medium text-yellow-800">🧪 Código de Prueba:</p>
             <p class="text-sm font-mono font-bold text-yellow-900">${card.raw_code}</p>
           </div>
         ` : ''}
         
         <!-- Action button -->
         <div class="mt-6">
-          <a href="/gift_cards/${card.id}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-600 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            View Details
+          <a href="/gift_cards/${card.id}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2" style="color: #FCA50F; background-color: #FEF3E2;">
+            Ver Detalles
             <svg class="ml-2 -mr-1 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
             </svg>
@@ -518,8 +520,8 @@
 
 <style>
   .tab-button.active {
-    border-color: #3B82F6;
-    color: #2563EB;
+    border-color: #FCA50F;
+    color: #FCA50F;
   }
   
   .tab-button:hover {

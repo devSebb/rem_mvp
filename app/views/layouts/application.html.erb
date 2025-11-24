@@ -1,13 +1,18 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Rem Mvp" %></title>
+    <title><%= content_for(:title) || "Papayal" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
     <%= yield :head %>
+
+    <!-- Satoshi Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/icon.png" type="image/png">
@@ -17,40 +22,40 @@
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
   </head>
 
-  <body class="bg-gray-50 min-h-screen">
+  <body class="min-h-screen" style="background-color: #EBEBE8;">
     <!-- Navigation -->
     <nav class="bg-white shadow-sm border-b">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <div class="flex items-center">
-            <%= link_to root_path, class: "text-xl font-bold text-gray-900" do %>
-              GiftCard MVP
+            <%= link_to root_path, class: "text-xl font-bold", style: "color: #2C3A43;" do %>
+              Papayal
             <% end %>
           </div>
           
           <!-- Desktop Navigation -->
           <div class="desktop-navigation hidden md:flex items-center space-x-6" style="display: none;">
             <% if user_signed_in? %>
-              <%= link_to "Home", root_path, class: "nav-item text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200" %>
+              <%= link_to "Inicio", root_path, class: "nav-item px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200", style: "color: #2C3A43;" %>
               <% unless current_user.merchant? %>
-                <%= link_to "My Wallet", gift_cards_path, class: "nav-item text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200" %>
-                <%= link_to "Buy Gift Card", new_gift_card_path, class: "nav-item bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200" %>
+                <%= link_to "Mi Billetera", gift_cards_path, class: "nav-item px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200", style: "color: #2C3A43;" %>
+                <%= link_to "Comprar Tarjeta", new_gift_card_path, class: "nav-item text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200", style: "background-color: #FCA50F;" %>
               <% end %>
               <% if current_user.merchant? %>
-                <%= link_to "Merchant Portal", merchant_root_path, class: "nav-item text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200" %>
+                <%= link_to "Portal Comercio", merchant_root_path, class: "nav-item px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200", style: "color: #2C3A43;" %>
               <% end %>
-              <%= link_to "Profile", edit_user_registration_path, class: "nav-item text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200" %>
-              <%= button_to "Logout", destroy_user_session_path, method: :delete, class: "nav-item text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium bg-transparent border-none cursor-pointer transition-colors duration-200" %>
+              <%= link_to "Perfil", edit_user_registration_path, class: "nav-item px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200", style: "color: #2C3A43;" %>
+              <%= button_to "Cerrar Sesión", destroy_user_session_path, method: :delete, class: "nav-item px-3 py-2 rounded-md text-sm font-medium bg-transparent border-none cursor-pointer transition-colors duration-200", style: "color: #2C3A43;" %>
             <% else %>
-              <%= link_to "Login", new_user_session_path, class: "nav-item text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200" %>
-              <%= link_to "Sign Up", new_user_registration_path, class: "nav-item bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200" %>
+              <%= link_to "Iniciar Sesión", new_user_session_path, class: "nav-item px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200", style: "color: #2C3A43;" %>
+              <%= link_to "Registrarse", new_user_registration_path, class: "nav-item text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200", style: "background-color: #FCA50F;" %>
             <% end %>
           </div>
 
           <!-- Mobile menu button -->
           <div class="md:hidden flex items-center">
-            <button type="button" class="mobile-menu-button bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500" aria-controls="mobile-menu" aria-expanded="false">
-              <span class="sr-only">Open main menu</span>
+            <button type="button" class="mobile-menu-button bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#FCA50F]" aria-controls="mobile-menu" aria-expanded="false">
+              <span class="sr-only">Abrir menú principal</span>
               <!-- Hamburger icon -->
               <svg class="hamburger-icon block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -67,19 +72,19 @@
         <div class="md:hidden hidden" id="mobile-menu" style="display: none;">
           <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t">
             <% if user_signed_in? %>
-              <%= link_to "Home", root_path, class: "text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" %>
+              <%= link_to "Inicio", root_path, class: "block px-3 py-2 rounded-md text-base font-medium", style: "color: #2C3A43;" %>
               <% unless current_user.merchant? %>
-                <%= link_to "My Wallet", gift_cards_path, class: "text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" %>
-                <%= link_to "Buy Gift Card", new_gift_card_path, class: "bg-blue-600 hover:bg-blue-700 text-white block px-3 py-2 rounded-md text-base font-medium" %>
+                <%= link_to "Mi Billetera", gift_cards_path, class: "block px-3 py-2 rounded-md text-base font-medium", style: "color: #2C3A43;" %>
+                <%= link_to "Comprar Tarjeta", new_gift_card_path, class: "text-white block px-3 py-2 rounded-md text-base font-medium", style: "background-color: #FCA50F;" %>
               <% end %>
               <% if current_user.merchant? %>
-                <%= link_to "Merchant Portal", merchant_root_path, class: "text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" %>
+                <%= link_to "Portal Comercio", merchant_root_path, class: "block px-3 py-2 rounded-md text-base font-medium", style: "color: #2C3A43;" %>
               <% end %>
-              <%= link_to "Profile", edit_user_registration_path, class: "text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" %>
-              <%= button_to "Logout", destroy_user_session_path, method: :delete, class: "text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium bg-transparent border-none cursor-pointer w-full text-left" %>
+              <%= link_to "Perfil", edit_user_registration_path, class: "block px-3 py-2 rounded-md text-base font-medium", style: "color: #2C3A43;" %>
+              <%= button_to "Cerrar Sesión", destroy_user_session_path, method: :delete, class: "block px-3 py-2 rounded-md text-base font-medium bg-transparent border-none cursor-pointer w-full text-left", style: "color: #2C3A43;" %>
             <% else %>
-              <%= link_to "Login", new_user_session_path, class: "text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" %>
-              <%= link_to "Sign Up", new_user_registration_path, class: "bg-blue-600 hover:bg-blue-700 text-white block px-3 py-2 rounded-md text-base font-medium" %>
+              <%= link_to "Iniciar Sesión", new_user_session_path, class: "block px-3 py-2 rounded-md text-base font-medium", style: "color: #2C3A43;" %>
+              <%= link_to "Registrarse", new_user_registration_path, class: "text-white block px-3 py-2 rounded-md text-base font-medium", style: "background-color: #FCA50F;" %>
             <% end %>
           </div>
         </div>
