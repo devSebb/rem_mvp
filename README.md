@@ -237,7 +237,47 @@ After running `rails db:seed`:
 
 - **Admin**: admin@example.com / password123
 - **Merchant**: merchant@example.com / password123  
+- **Merchant 2**: merchant2@example.com / password123
 - **User**: user@example.com / password123
+
+## Merchant Redemption API
+
+1. **Run migrations**
+
+   ```bash
+   bin/rails db:migrate
+   ```
+
+2. **Seed development data (rotates demo API keys & prints secrets in `log/development.log`)**
+
+   ```bash
+   bin/rails db:seed
+   ```
+
+3. **Generate a rotating token from the recipient UI**  
+   (Use the existing gift card page to issue a fresh code/QR and copy the raw token that the recipient sees.)
+
+4. **Redeem via curl**
+
+   ```bash
+   curl -X POST http://localhost:3000/api/v1/redemptions \
+     -H "Authorization: Bearer <MERCHANT_SECRET_KEY>" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "token":"<RAW_TOKEN>",
+       "amount_cents":500,
+       "idempotency_key":"test-uuid-1"
+     }'
+   ```
+
+5. **Retrieve the redemption later**
+
+   ```bash
+   curl -X GET http://localhost:3000/api/v1/redemptions/<ID> \
+     -H "Authorization: Bearer <MERCHANT_SECRET_KEY>"
+   ```
+
+Approved/declined responses both return `200 OK` with an `approved` boolean, the resulting balances, and an optional `decline_reason`. Suspended or unknown merchants receive `403/401`, and malformed input returns `422`.
 
 ## Security Notes
 

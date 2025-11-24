@@ -4,6 +4,15 @@
 
 puts "🌱 Seeding database..."
 
+def rotate_and_log_api_key!(merchant)
+  return unless Rails.env.development?
+
+  creds = Merchant.generate_keys!(merchant)
+  message = "🔐 Merchant API secret for #{merchant.name} (public key: #{creds[:public_key]}): #{creds[:secret_key]}"
+  Rails.logger.info(message)
+  puts message
+end
+
 # Create admin user
 admin = User.find_or_create_by!(email: 'admin@example.com') do |user|
   user.name = 'Admin User'
@@ -23,14 +32,37 @@ merchant_user = User.find_or_create_by!(email: 'merchant@example.com') do |user|
   user.phone = '+1234567890'
 end
 
-merchant = Merchant.find_or_create_by!(user: merchant_user) do |m|
-  m.store_name = 'Demo Store'
-  m.address = '123 Main Street, City, State 12345'
-  m.contact_email = 'merchant@example.com'
-  m.bank_account_iban = 'US12345678901234567890'
+merchant = Merchant.find_or_initialize_by(user: merchant_user)
+merchant.store_name = 'Demo Store'
+merchant.name = 'Demo Store'
+merchant.address = '123 Main Street, City, State 12345'
+merchant.contact_email = 'merchant@example.com'
+merchant.bank_account_iban = 'US12345678901234567890'
+merchant.save!
+
+rotate_and_log_api_key!(merchant)
+
+puts "✅ Ensured merchant: #{merchant.store_name}"
+
+merchant_user_two = User.find_or_create_by!(email: 'merchant2@example.com') do |user|
+  user.name = 'Second Merchant Owner'
+  user.password = 'password123'
+  user.password_confirmation = 'password123'
+  user.role = :merchant
+  user.phone = '+1098765432'
 end
 
-puts "✅ Created merchant: #{merchant.store_name}"
+merchant_two = Merchant.find_or_initialize_by(user: merchant_user_two)
+merchant_two.store_name = 'Sunset Pharmacy'
+merchant_two.name = 'Sunset Pharmacy'
+merchant_two.address = '456 Coastal Road, Beach City'
+merchant_two.contact_email = 'merchant2@example.com'
+merchant_two.bank_account_iban = 'US98765432109876543210'
+merchant_two.save!
+
+rotate_and_log_api_key!(merchant_two)
+
+puts "✅ Ensured merchant: #{merchant_two.store_name}"
 
 # Create regular user
 regular_user = User.find_or_create_by!(email: 'user@example.com') do |user|
@@ -129,6 +161,7 @@ puts ""
 puts "Login credentials:"
 puts "Admin: admin@example.com / password123"
 puts "Merchant: merchant@example.com / password123"
+puts "Merchant 2: merchant2@example.com / password123"
 puts "User: user@example.com / password123"
 puts ""
 puts "You can now run: rails server"

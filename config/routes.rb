@@ -21,6 +21,8 @@ Rails.application.routes.draw do
       resources :gift_cards, only: [] do
         resource :redemption_token, only: :create, module: :gift_cards
       end
+
+      resources :redemptions, only: [:create, :show]
     end
   end
 

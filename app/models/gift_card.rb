@@ -4,6 +4,16 @@ class GiftCard < ApplicationRecord
   belongs_to :merchant, optional: true
   has_many :transactions, dependent: :destroy
   has_many :redemption_tokens, dependent: :destroy
+  has_many :redemptions, dependent: :nullify
+  class RedemptionError < StandardError
+    attr_reader :reason
+
+    def initialize(reason)
+      @reason = reason
+      super(reason.to_s)
+    end
+  end
+
 
   # Raw code is stored encrypted in encrypted_raw_code column
   # We handle encryption/decryption manually for compatibility
@@ -69,6 +79,27 @@ class GiftCard < ApplicationRecord
 
   def redeem!(merchant:, actor:)
     partial_redeem!(redemption_amount: remaining_balance, merchant: merchant, actor: actor)
+  end
+  def redeem_amount!(amount_cents)
+    cents = amount_cents.to_i
+    raise RedemptionError.new(:invalid_amount) if cents <= 0
+
+    with_lock do
+      reload
+
+      raise RedemptionError.new(:gift_card_inactive) unless active? && !expired?
+      raise RedemptionError.new(:insufficient_balance) if cents > remaining_balance
+
+      new_balance = remaining_balance - cents
+      updates = { remaining_balance: new_balance }
+      if new_balance.zero?
+        updates[:status] = :redeemed
+        updates[:redeemed_at] = Time.current
+      end
+
+      update!(updates)
+      new_balance
+    end
   end
 
   def partial_redeem!(redemption_amount:, merchant:, actor:)
