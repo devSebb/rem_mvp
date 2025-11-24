@@ -1,80 +1,77 @@
-<div class="max-w-md mx-auto">
-  <div class="bg-white shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
-    <h2 class="text-2xl font-bold mb-6" style="color: #2C3A43;">Comprar Tarjeta de Regalo</h2>
+<div class="max-w-3xl mx-auto space-y-6">
+  <div class="papayal-card p-8">
+    <div class="mb-6">
+      <p class="papayal-meta text-[#0D2F32]">Nueva tarjeta</p>
+      <h1 class="text-3xl font-bold text-[#0D2F32] mt-2">Comprar Tarjeta de Regalo</h1>
+      <p class="text-sm text-[#2C3A43]/70 mt-2">Completa los datos en español. El formulario valida teléfono y correo.</p>
+    </div>
+
     <%= form_with url: checkout_gift_cards_path, method: :post, local: true, data: { turbo: false }, class: "space-y-6" do |form| %>
       <div>
-        <%= form.label :amount_cents, "Monto", class: "block text-sm font-medium", style: "color: #2C3A43;" %>
-        <div class="mt-1 relative rounded-md shadow-sm">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <span class="text-gray-500 sm:text-sm">$</span>
-          </div>
+        <%= form.label :amount_cents, "Monto", class: "papayal-label" %>
+        <div class="mt-2 relative">
+          <span class="absolute inset-y-0 left-3 flex items-center text-[#2C3A43]/50">$</span>
           <%= form.number_field :amount_cents,
                 value: params[:amount_cents],
                 min: 1,
                 step: 0.01,
                 inputmode: "decimal",
-                class: "block w-full pl-7 pr-3 sm:text-sm border-gray-300 rounded-md",
-                style: "focus-ring-color: #FCA50F; focus-border-color: #FCA50F;",
-                placeholder: "0.00" %>
+                class: "papayal-input pl-8",
+                placeholder: "50.00" %>
         </div>
-        <p class="mt-1 text-sm text-gray-500">Ingresa el monto en dólares. El monto mínimo es $1.00</p>
+        <p class="mt-1 text-xs text-[#2C3A43]/60">Monto mínimo $1.00 USD.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <%= form.label :currency, "Moneda", class: "papayal-label" %>
+          <%= form.select :currency,
+                options_for_select([['USD', 'USD'], ['EUR', 'EUR']], params[:currency] || 'USD'),
+                {},
+                class: "papayal-input mt-2" %>
+        </div>
+        <div>
+          <%= form.label :merchant_id, "Tienda (opcional)", class: "papayal-label" %>
+          <%= form.select :merchant_id,
+                options_for_select([['Cualquier Tienda', '']] + Merchant.all.map { |m| [m.store_name, m.id] }, params[:merchant_id]),
+                {},
+                class: "papayal-input mt-2" %>
+        </div>
       </div>
 
       <div>
-        <%= form.label :currency, "Moneda", class: "block text-sm font-medium", style: "color: #2C3A43;" %>
-        <%= form.select :currency, 
-              options_for_select([['USD', 'USD'], ['EUR', 'EUR']], params[:currency] || 'USD'),
-              {},
-              class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none sm:text-sm rounded-md",
-              style: "focus-ring-color: #FCA50F; focus-border-color: #FCA50F;" %>
-      </div>
-
-      <div>
-        <%= form.label :recipient_name, "Nombre del Destinatario", class: "block text-sm font-medium", style: "color: #2C3A43;" %>
-        <%= form.text_field :recipient_name, 
+        <%= form.label :recipient_name, "Nombre del destinatario", class: "papayal-label" %>
+        <%= form.text_field :recipient_name,
               value: params[:recipient_name],
-              class: "mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md",
-              style: "focus-ring-color: #FCA50F; focus-border-color: #FCA50F;",
-              placeholder: "Ingresa el nombre del destinatario" %>
+              class: "papayal-input mt-2",
+              placeholder: "Andrea Morales" %>
       </div>
 
-      <div>
-        <%= form.label :recipient_phone, "Teléfono del Destinatario", class: "block text-sm font-medium", style: "color: #2C3A43;" %>
-        <%= form.telephone_field :recipient_phone, 
-              value: params[:recipient_phone],
-              class: "mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md",
-              style: "focus-ring-color: #FCA50F; focus-border-color: #FCA50F;",
-              placeholder: "+1234567890" %>
-        <p class="mt-1 text-sm text-gray-500">Se requiere teléfono o correo electrónico</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <%= form.label :recipient_phone, "Teléfono del destinatario", class: "papayal-label" %>
+          <%= form.telephone_field :recipient_phone,
+                value: params[:recipient_phone],
+                class: "papayal-input mt-2",
+                placeholder: "+593 99 999 9999" %>
+          <p class="mt-1 text-xs text-[#2C3A43]/60">Debe incluir código de país.</p>
+        </div>
+        <div>
+          <%= form.label :recipient_email, "Correo del destinatario", class: "papayal-label" %>
+          <%= form.email_field :recipient_email,
+                value: params[:recipient_email],
+                class: "papayal-input mt-2",
+                placeholder: "destinatario@ejemplo.com" %>
+        </div>
       </div>
 
-      <div>
-        <%= form.label :recipient_email, "Correo del Destinatario", class: "block text-sm font-medium", style: "color: #2C3A43;" %>
-        <%= form.email_field :recipient_email, 
-              value: params[:recipient_email],
-              class: "mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md",
-              style: "focus-ring-color: #FCA50F; focus-border-color: #FCA50F;",
-              placeholder: "destinatario@ejemplo.com" %>
-      </div>
-
-      <div>
-        <%= form.label :merchant_id, "Tienda (Opcional)", class: "block text-sm font-medium", style: "color: #2C3A43;" %>
-        <%= form.select :merchant_id, 
-              options_for_select([['Cualquier Tienda', '']] + Merchant.all.map { |m| [m.store_name, m.id] }, params[:merchant_id]),
-              {},
-              class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none sm:text-sm rounded-md",
-              style: "focus-ring-color: #FCA50F; focus-border-color: #FCA50F;" %>
-        <p class="mt-1 text-sm text-gray-500">Selecciona una tienda específica o deja en blanco para tarjeta general</p>
-      </div>
-
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <%= link_to "Cancelar", root_path, class: "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full sm:w-auto text-center" %>
-        <%= form.submit "Continuar al Pago", class: "text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full sm:w-auto", style: "background-color: #FCA50F;" %>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <%= link_to "Cancelar", root_path, class: "papayal-btn-secondary w-full text-center" %>
+        <%= form.submit "Continuar al pago", class: "papayal-btn-primary w-full" %>
       </div>
     <% end %>
   </div>
 </div>
-
 
 <script src="https://js.stripe.com/v3/"></script>
 <script>

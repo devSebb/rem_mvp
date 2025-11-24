@@ -5,28 +5,63 @@
   :root {
     --color-primary: #FCA50F;
     --color-primary-text: #2C3A43;
-    --color-background: #EBEBE8;
+    --color-background: #EBEBEB;
+    --color-teal: #0D2F32;
   }
   
   body {
-    font-family: "Satoshi", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: "Satoshi Variable", "Satoshi", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     color: #2C3A43;
-    background-color: #EBEBE8;
+    background-color: #EBEBEB;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    font-family: "Satoshi", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: "Satoshi Variable", "Satoshi", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-weight: 700;
     color: #2C3A43;
   }
   
   nav {
-    font-family: "Satoshi", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: "Satoshi Variable", "Satoshi", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-weight: 500;
   }
   
   button, .btn, [type="submit"] {
-    font-family: "Satoshi", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: "Satoshi Variable", "Satoshi", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-weight: 500;
+  }
+}
+
+@layer components {
+  .papayal-card {
+    @apply bg-white rounded-2xl border border-black/5 shadow-sm;
+  }
+  
+  .papayal-card-hover {
+    @apply hover:shadow-md transition-all duration-200;
+  }
+  
+  .papayal-btn-primary {
+    @apply inline-flex items-center justify-center bg-[#FCA50F] text-[#0D2F32] rounded-xl font-medium px-4 py-2 shadow-sm hover:brightness-95 active:scale-[.98] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#FCA50F]/60;
+  }
+  
+  .papayal-btn-secondary {
+    @apply inline-flex items-center justify-center bg-white border border-[#0D2F32]/20 text-[#0D2F32] rounded-xl px-4 py-2 font-medium hover:bg-[#0D2F32]/5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D2F32]/40;
+  }
+  
+  .papayal-btn-ghost {
+    @apply inline-flex items-center justify-center text-[#0D2F32] rounded-lg px-3 py-2 font-medium hover:bg-black/5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black/30;
+  }
+  
+  .papayal-input {
+    @apply w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-[#2C3A43] placeholder:text-[#2C3A43]/40 focus:border-[#FCA50F] focus:ring-2 focus:ring-[#FCA50F]/30 transition outline-none;
+  }
+  
+  .papayal-label {
+    @apply text-sm font-medium text-[#2C3A43];
+  }
+  
+  .papayal-meta {
+    @apply text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider;
   }
 }

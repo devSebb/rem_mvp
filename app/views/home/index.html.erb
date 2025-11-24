@@ -1,138 +1,316 @@
 <% if user_signed_in? && current_user.admin? %>
-  <div class="bg-white shadow rounded-lg p-6">
-    <h1 class="text-3xl font-bold mb-6" style="color: #2C3A43;">Panel de Administración</h1>
-    
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-8">
-      <div class="bg-blue-50 rounded-lg p-4">
-        <h3 class="text-lg font-medium text-blue-900">Total de Tarjetas</h3>
-        <p class="text-3xl font-bold text-blue-600"><%= GiftCard.count %></p>
+  <% recent_gift_cards = GiftCard.order(created_at: :desc).limit(5) %>
+  <% latest_merchants = Merchant.order(created_at: :desc).limit(5) %>
+  <% recent_redemptions = Redemption.order(created_at: :desc).limit(5) %>
+  <% total_volume = GiftCard.sum(:amount).to_f / 100 %>
+  <div class="space-y-10">
+    <div class="grid grid-cols-12 gap-6 items-start">
+      <div class="col-span-12 xl:col-span-8 papayal-card p-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p class="papayal-meta text-[#0D2F32]">Panel de Administración</p>
+          <h1 class="text-3xl font-bold text-[#0D2F32] mt-2">Hola, <%= current_user.name %></h1>
+          <p class="text-base text-[#2C3A43]/80 mt-3 max-w-2xl">
+            Controla la salud de Papayal de un vistazo. Los datos se actualizan en tiempo real para que puedas actuar rápido.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <%= link_to "Ver actividad", gift_cards_path, class: "papayal-btn-secondary" %>
+          <%= link_to "Panel Comercios", merchant_root_path, class: "papayal-btn-primary" %>
+        </div>
       </div>
-      
-      <div class="bg-green-50 rounded-lg p-4">
-        <h3 class="text-lg font-medium text-green-900">Total Canjeadas</h3>
-        <p class="text-3xl font-bold text-green-600"><%= GiftCard.where(status: "redeemed").count %></p>
+      <div class="col-span-12 xl:col-span-4 papayal-card p-6 bg-[#0D2F32] text-white">
+        <p class="papayal-meta text-white/70">Volumen Total Emitido</p>
+        <p class="text-4xl font-bold mt-2"><%= number_to_currency(total_volume, unit: '$') %></p>
+        <p class="text-sm text-white/70 mt-3">Incluye todas las tarjetas activas y canjeadas.</p>
       </div>
-      
-      <div class="bg-purple-50 rounded-lg p-4">
-        <h3 class="text-lg font-medium text-purple-900">Total de Usuarios</h3>
-        <p class="text-3xl font-bold text-purple-600"><%= User.count %></p>
-      </div>
+    </div>
 
-    </div>
-    
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-      <div class="bg-gray-50 rounded-lg p-4">
-        <h3 class="text-lg font-medium mb-2" style="color: #2C3A43;">Tarjetas Activas</h3>
-        <p class="text-2xl font-bold text-gray-600"><%= GiftCard.where(status: "active").count %></p>
+    <div class="grid grid-cols-12 gap-6">
+      <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+        <p class="papayal-meta">Tarjetas Emitidas</p>
+        <p class="text-3xl font-bold mt-3"><%= GiftCard.count %></p>
+        <p class="text-sm text-[#2C3A43]/70 mt-1">Total histórico</p>
       </div>
-      
-      <div class="bg-gray-50 rounded-lg p-4">
-        <h3 class="text-lg font-medium mb-2" style="color: #2C3A43;">Total de Comercios</h3>
-        <p class="text-2xl font-bold text-gray-600"><%= Merchant.count %></p>
+      <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+        <p class="papayal-meta">Tarjetas Activas</p>
+        <p class="text-3xl font-bold mt-3"><%= GiftCard.active.count %></p>
+        <p class="text-sm text-[#2C3A43]/70 mt-1">Disponibles para usar</p>
+      </div>
+      <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+        <p class="papayal-meta">Tarjetas Canjeadas</p>
+        <p class="text-3xl font-bold mt-3"><%= GiftCard.redeemed.count %></p>
+        <p class="text-sm text-[#2C3A43]/70 mt-1">Finalizadas totalmente</p>
+      </div>
+      <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+        <p class="papayal-meta">Comercios</p>
+        <p class="text-3xl font-bold mt-3"><%= Merchant.count %></p>
+        <p class="text-sm text-[#2C3A43]/70 mt-1">Socios activos</p>
       </div>
     </div>
-  </div>
-<% else %>
-  <div class="text-center">
-    <h1 class="text-4xl font-bold sm:text-5xl md:text-6xl" style="color: #2C3A43;">
-      Tarjetas de Regalo Simplificadas
-    </h1>
-    <p class="mt-3 max-w-md mx-auto text-base sm:text-lg md:mt-5 md:text-xl md:max-w-3xl" style="color: #2C3A43;">
-      Compra y envía tarjetas de regalo al instante. Los comercios pueden canjearlas fácilmente con nuestro sistema seguro.
-    </p>
-    
-    <div class="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
-      <% if user_signed_in? %>
-        <div class="rounded-md shadow">
-          <%= link_to "Comprar Tarjeta", new_gift_card_path, class: "w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white md:py-4 md:text-lg md:px-10", style: "background-color: #FCA50F;" %>
-        </div>
-        <div class="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
-          <%= link_to "Mi Billetera", gift_cards_path, class: "w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10", style: "color: #2C3A43;" %>
-        </div>
-      <% else %>
-        <div class="rounded-md shadow">
-          <%= link_to "Comenzar", new_user_registration_path, class: "w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white md:py-4 md:text-lg md:px-10", style: "background-color: #FCA50F;" %>
-        </div>
-        <div class="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
-          <%= link_to "Iniciar Sesión", new_user_session_path, class: "w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10", style: "color: #2C3A43;" %>
-        </div>
-      <% end %>
-    </div>
-  </div>
 
-  <% if user_signed_in? && @recent_gift_cards&.any? %>
-    <div class="mt-16">
-      <h2 class="text-2xl font-bold mb-6" style="color: #2C3A43;">Tarjetas Recientes</h2>
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <% @recent_gift_cards.each do |gift_card| %>
-          <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                    <span class="text-white font-bold text-sm">G</span>
-                  </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">
-                      Monto
-                    </dt>
-                    <dd class="text-lg font-medium" style="color: #2C3A43;">
+    <div class="grid grid-cols-12 gap-6">
+      <div class="col-span-12 lg:col-span-6 papayal-card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="papayal-meta">Actividad</p>
+            <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Tarjetas recientes</h2>
+          </div>
+          <%= link_to "Ver todas", gift_cards_path, class: "papayal-btn-ghost text-sm" %>
+        </div>
+        <% if recent_gift_cards.any? %>
+          <div class="overflow-hidden rounded-2xl border border-black/5">
+            <table class="min-w-full divide-y divide-black/5">
+              <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
+                <tr>
+                  <th class="px-4 py-3">Tarjeta</th>
+                  <th class="px-4 py-3">Monto</th>
+                  <th class="px-4 py-3">Estado</th>
+                  <th class="px-4 py-3">Fecha</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-black/5 text-sm">
+                <% recent_gift_cards.each do |gift_card| %>
+                  <tr class="hover:bg-[#EBEBEB]/40 transition">
+                    <td class="px-4 py-3">
+                      <p class="font-medium text-[#2C3A43]">REM-<%= gift_card.id.to_s.last(6) %></p>
+                      <p class="text-xs text-[#2C3A43]/70">Para <%= gift_card.recipient&.name || "Sin destinatario" %></p>
+                    </td>
+                    <td class="px-4 py-3 font-medium">
                       <%= number_to_currency(gift_card.amount / 100.0, unit: gift_card.currency == 'USD' ? '$' : gift_card.currency) %>
-                    </dd>
-                  </dl>
+                    </td>
+                    <td class="px-4 py-3">
+                      <span class="<%= status_badge_classes(gift_card.status) %>">
+                        <%= status_badge_label(gift_card.status) %>
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 text-[#2C3A43]/70">
+                      <%= gift_card.created_at.strftime('%d/%m/%Y') %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <div class="text-center py-10 text-sm text-[#2C3A43]/70">
+            Aún no se emiten tarjetas recientes.
+          </div>
+        <% end %>
+      </div>
+
+      <div class="col-span-12 lg:col-span-6 papayal-card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="papayal-meta">Comercios</p>
+            <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Nuevos socios</h2>
+          </div>
+          <%= link_to "Gestionar", merchant_root_path, class: "papayal-btn-ghost text-sm" %>
+        </div>
+        <% if latest_merchants.any? %>
+          <div class="space-y-4">
+            <% latest_merchants.each do |merchant| %>
+              <div class="flex items-center justify-between rounded-2xl border border-black/5 px-4 py-3 bg-[#EBEBEB]/40">
+                <div>
+                  <p class="font-semibold text-[#0D2F32]"><%= merchant.store_name %></p>
+                  <p class="text-xs text-[#2C3A43]/70">ID Comercio • <%= merchant.created_at.strftime('%d %b %Y') %></p>
                 </div>
+                <span class="text-sm font-medium text-[#0D2F32]"><%= number_to_currency(merchant.redemptions.sum(:amount_cents).to_f / 100, unit: '$') %></span>
               </div>
-              <div class="mt-4">
-                <div class="flex items-center justify-between">
-                  <span class="text-sm text-gray-500">
-                    De: <%= gift_card.sender.name %>
-                  </span>
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= 
-                    case gift_card.status
-                    when 'active'
-                      'bg-green-100 text-green-800'
-                    when 'redeemed'
-                      'bg-blue-100 text-blue-800'
-                    when 'expired'
-                      'bg-red-100 text-red-800'
-                    when 'canceled'
-                      'bg-gray-100 text-gray-800'
-                    else
-                      'bg-gray-100 text-gray-800'
-                    end
-                  %>">
-                    <% if gift_card.status == 'active' %>
-                      <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                      </svg>
-                      Activa
-                    <% elsif gift_card.status == 'redeemed' %>
-                      <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                      </svg>
-                      Canjeada
-                    <% elsif gift_card.status == 'expired' %>
-                      <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                      </svg>
-                      Vencida
-                    <% elsif gift_card.status == 'canceled' %>
-                      <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                      </svg>
-                      Cancelada
-                    <% end %>
-                  </span>
-                </div>
-              </div>
-              
-            </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="text-center py-10 text-sm text-[#2C3A43]/70">
+            No hay comercios nuevos todavía.
           </div>
         <% end %>
       </div>
     </div>
-  <% end %>
-<% end %>
 
+    <div class="papayal-card p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <p class="papayal-meta">Redenciones</p>
+          <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Últimos canjes</h2>
+        </div>
+        <%= link_to "Ver liquidaciones", merchant_settlements_path, class: "papayal-btn-secondary text-sm" %>
+      </div>
+      <% if recent_redemptions.any? %>
+        <div class="overflow-hidden rounded-2xl border border-black/5">
+          <table class="min-w-full divide-y divide-black/5">
+            <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
+              <tr>
+                <th class="px-4 py-3">Comercio</th>
+                <th class="px-4 py-3">Monto</th>
+                <th class="px-4 py-3">Estado</th>
+                <th class="px-4 py-3">Fecha</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-black/5 text-sm">
+              <% recent_redemptions.each do |redemption| %>
+                <tr class="hover:bg-[#EBEBEB]/40 transition">
+                  <td class="px-4 py-3">
+                    <p class="font-medium text-[#2C3A43]"><%= redemption.merchant.store_name %></p>
+                    <p class="text-xs text-[#2C3A43]/70"><%= redemption.gift_card&.sender&.name || "Sin remitente" %></p>
+                  </td>
+                  <td class="px-4 py-3 font-semibold">
+                    <%= number_to_currency(redemption.amount_cents / 100.0, unit: redemption.currency == 'USD' ? '$' : redemption.currency) %>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class="<%= redemption.approved? ? status_badge_classes(:active) : status_badge_classes(:pending) %>">
+                      <%= redemption.approved? ? "Aprobado" : "Pendiente" %>
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-[#2C3A43]/70">
+                    <%= redemption.created_at.strftime('%d/%m/%Y %H:%M') %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="text-center py-10 text-sm text-[#2C3A43]/70">
+          Aún no hay canjes registrados.
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% elsif user_signed_in? %>
+  <% total_sent = current_user.sent_gift_cards.count %>
+  <% total_received = current_user.received_gift_cards.count %>
+  <% active_cards = current_user.received_gift_cards.active.count %>
+  <% remaining_balance = current_user.received_gift_cards.sum(:remaining_balance).to_f / 100 %>
+  <div class="space-y-10">
+    <div class="papayal-card p-8 grid grid-cols-12 gap-6 items-center">
+      <div class="col-span-12 lg:col-span-8">
+        <p class="papayal-meta text-[#0D2F32]">Tu panel</p>
+        <h1 class="text-3xl font-bold text-[#0D2F32] mt-2">Hola, <%= current_user.name.split.first %></h1>
+        <p class="text-base text-[#2C3A43]/80 mt-3">
+          Gestiona tus tarjetas Papayal con seguridad premium y claridad total.
+        </p>
+      </div>
+      <div class="col-span-12 lg:col-span-4 flex flex-wrap gap-3 justify-start lg:justify-end">
+        <%= link_to "Mi Billetera", gift_cards_path, class: "papayal-btn-secondary w-full sm:w-auto" %>
+        <%= link_to "Comprar Tarjeta", new_gift_card_path, class: "papayal-btn-primary w-full sm:w-auto" %>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-12 gap-6">
+      <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+        <p class="papayal-meta">Saldo Disponible</p>
+        <p class="text-3xl font-bold mt-2"><%= number_to_currency(remaining_balance, unit: '$') %></p>
+        <p class="text-sm text-[#2C3A43]/70 mt-2">Suma de tus tarjetas activas</p>
+      </div>
+      <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+        <p class="papayal-meta">Tarjetas Activas</p>
+        <p class="text-3xl font-bold mt-2"><%= active_cards %></p>
+        <p class="text-sm text-[#2C3A43]/70 mt-2">Listas para canjear</p>
+      </div>
+      <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+        <p class="papayal-meta">Enviadas</p>
+        <p class="text-3xl font-bold mt-2"><%= total_sent %></p>
+        <p class="text-sm text-[#2C3A43]/70 mt-2">Regalos compartidos</p>
+      </div>
+      <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+        <p class="papayal-meta">Recibidas</p>
+        <p class="text-3xl font-bold mt-2"><%= total_received %></p>
+        <p class="text-sm text-[#2C3A43]/70 mt-2">Tarjetas en tu poder</p>
+      </div>
+    </div>
+
+    <% if @recent_gift_cards&.any? %>
+      <div class="papayal-card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="papayal-meta">Actividad reciente</p>
+            <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Tus últimas tarjetas</h2>
+          </div>
+          <%= link_to "Ver billetera", gift_cards_path, class: "papayal-btn-ghost text-sm" %>
+        </div>
+        <div class="grid grid-cols-12 gap-4">
+          <% @recent_gift_cards.each do |gift_card| %>
+            <div class="col-span-12 md:col-span-6 xl:col-span-4 papayal-card papayal-card-hover border border-black/5 p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <p class="text-sm text-[#2C3A43]/70">De <%= gift_card.sender.name %></p>
+                  <p class="text-2xl font-bold text-[#0D2F32]">
+                    <%= number_to_currency(gift_card.amount / 100.0, unit: gift_card.currency == 'USD' ? '$' : gift_card.currency) %>
+                  </p>
+                </div>
+                <span class="<%= status_badge_classes(gift_card.status) %>"><%= status_badge_label(gift_card.status) %></span>
+              </div>
+              <p class="text-sm text-[#2C3A43]/70">
+                Disponible en <%= gift_card.merchant&.store_name || "Cualquier comercio Papayal" %>
+              </p>
+              <p class="text-xs text-[#2C3A43]/60 mt-2">
+                Recibida el <%= gift_card.created_at.strftime('%d %b %Y') %>
+              </p>
+              <div class="mt-4 flex justify-end">
+                <%= link_to "Ver tarjeta", gift_card_path(gift_card), class: "papayal-btn-secondary text-sm" %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% else %>
+      <div class="papayal-card p-8 text-center space-y-3">
+        <p class="text-xl font-semibold text-[#2C3A43]">Aún no tienes tarjetas recientes</p>
+        <p class="text-sm text-[#2C3A43]/70">Compra o recibe una tarjeta para ver tu actividad aquí.</p>
+        <div class="flex flex-wrap justify-center gap-3">
+          <%= link_to "Comprar una tarjeta", new_gift_card_path, class: "papayal-btn-primary" %>
+          <%= link_to "Explorar billetera", gift_cards_path, class: "papayal-btn-secondary" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <div class="grid grid-cols-12 gap-6 items-center">
+    <div class="col-span-12 lg:col-span-7">
+      <p class="papayal-meta text-[#0D2F32]">Papayal para todos</p>
+      <h1 class="text-4xl lg:text-5xl font-bold text-[#0D2F32] mt-4">
+        Tarjetas de regalo cálidas con calidad fintech.
+      </h1>
+      <p class="text-lg text-[#2C3A43]/80 mt-4 max-w-2xl">
+        Compra, envía y canjea tarjetas Papayal con la misma confianza de bancos modernos.
+        Todo en español, todo seguro.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-4">
+        <%= link_to "Comenzar gratis", new_user_registration_path, class: "papayal-btn-primary px-6 py-3 text-base" %>
+        <%= link_to "Iniciar Sesión", new_user_session_path, class: "papayal-btn-secondary px-6 py-3 text-base" %>
+      </div>
+    </div>
+    <div class="col-span-12 lg:col-span-5 papayal-card p-6 bg-white/80">
+      <p class="papayal-meta text-[#0D2F32]">Seguridad de primer nivel</p>
+      <p class="text-2xl font-bold text-[#0D2F32] mt-2">Código dinámico cada 90s</p>
+      <p class="text-sm text-[#2C3A43]/70 mt-3">
+        Mostramos QR, código de barras y token manual en un solo módulo elegante para proteger tus regalos.
+      </p>
+      <div class="mt-6 grid grid-cols-2 gap-4 text-center">
+        <div class="rounded-2xl border border-black/5 py-4">
+          <p class="text-3xl font-bold text-[#0D2F32]">90s</p>
+          <p class="text-xs text-[#2C3A43]/70 mt-1">Tiempo de vida</p>
+        </div>
+        <div class="rounded-2xl border border-black/5 py-4">
+          <p class="text-3xl font-bold text-[#0D2F32]">3</p>
+          <p class="text-xs text-[#2C3A43]/70 mt-1">Formatos seguros</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-12 grid grid-cols-12 gap-6">
+    <% [
+      { title: "Para personas", body: "Envía sorpresas digitales al instante con mensajes cálidos.", icon: "🎁" },
+      { title: "Para comercios", body: "Recibe canjes confiables con panel profesional y reportes.", icon: "🏪" },
+      { title: "Para administradores", body: "Supervisa pagos, usuarios y comercios con métricas claras.", icon: "🛡️" }
+    ].each do |feature| %>
+      <div class="col-span-12 md:col-span-4 papayal-card papayal-card-hover p-6">
+        <div class="h-12 w-12 rounded-2xl bg-[#FCA50F]/20 flex items-center justify-center text-2xl">
+          <%= feature[:icon] %>
+        </div>
+        <h3 class="text-xl font-bold text-[#2C3A43] mt-4"><%= feature[:title] %></h3>
+        <p class="text-sm text-[#2C3A43]/80 mt-2"><%= feature[:body] %></p>
+      </div>
+    <% end %>
+  </div>
+<% end %>

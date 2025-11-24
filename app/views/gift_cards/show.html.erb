@@ -1,193 +1,206 @@
-<div class="max-w-2xl mx-auto">
-  <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-    <div class="px-6 py-8">
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">Detalles de la Tarjeta de Regalo</h1>
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium <%= 
-          case @gift_card.status
-          when 'active'
-            'bg-green-100 text-green-800'
-          when 'redeemed'
-            'bg-blue-100 text-blue-800'
-          when 'expired'
-            'bg-red-100 text-red-800'
-          when 'canceled'
-            'bg-gray-100 text-gray-800'
-          else
-            'bg-gray-100 text-gray-800'
-          end
-        %>">
-          <% if @gift_card.status == 'active' %>
-            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-            </svg>
-          <% elsif @gift_card.status == 'redeemed' %>
-            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-            </svg>
-          <% elsif @gift_card.status == 'expired' %>
-            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-            </svg>
-          <% elsif @gift_card.status == 'canceled' %>
-            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-            </svg>
-          <% end %>
-          <% case @gift_card.status
-             when 'active'
-               'Activa'
-             when 'redeemed'
-               'Canjeada'
-             when 'expired'
-               'Vencida'
-             when 'canceled'
-               'Cancelada'
-             else
-               @gift_card.status.humanize
-             end %>
-        </span>
-      </div>
+<div class="space-y-8">
+  <div class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p class="papayal-meta text-[#0D2F32]">Tarjeta Papayal</p>
+      <h1 class="text-3xl font-bold text-[#0D2F32] mt-2">Detalles de la Tarjeta de Regalo</h1>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">Visualiza toda la información clave antes de compartir o canjear.</p>
+    </div>
+    <span class="<%= status_badge_classes(@gift_card.status) %>"><%= status_badge_label(@gift_card.status) %></span>
+  </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div>
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Información de la Tarjeta</h3>
-          
-          <dl class="space-y-3">
+  <div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 lg:col-span-8 space-y-6">
+      <div class="papayal-card p-6">
+        <h2 class="text-xl font-bold text-[#2C3A43] mb-4">Resumen</h2>
+        <dl class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-[#2C3A43]/80">
+          <div>
+            <dt class="papayal-meta text-[#2C3A43]/60">Monto total</dt>
+            <dd class="text-2xl font-bold text-[#0D2F32] mt-1">
+              <%= number_to_currency(@gift_card.amount / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+            </dd>
+          </div>
+          <div>
+            <dt class="papayal-meta text-[#2C3A43]/60">Saldo restante</dt>
+            <dd class="text-2xl font-bold text-[#0D2F32] mt-1">
+              <%= number_to_currency(@gift_card.remaining_balance / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+            </dd>
+          </div>
+          <div>
+            <dt class="papayal-meta text-[#2C3A43]/60">De</dt>
+            <dd class="text-base text-[#2C3A43] mt-1"><%= @gift_card.sender.name %></dd>
+          </div>
+          <div>
+            <dt class="papayal-meta text-[#2C3A43]/60">Para</dt>
+            <dd class="text-base text-[#2C3A43] mt-1"><%= @gift_card.recipient&.name || 'Desconocido' %></dd>
+          </div>
+          <% if @gift_card.merchant.present? %>
             <div>
-              <dt class="text-sm font-medium text-gray-500">Monto</dt>
-              <dd class="text-2xl font-bold text-gray-900">
-                <%= number_to_currency(@gift_card.amount / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+              <dt class="papayal-meta text-[#2C3A43]/60">Tienda asociada</dt>
+              <dd class="text-base text-[#2C3A43] mt-1"><%= @gift_card.merchant.store_name %></dd>
+            </div>
+          <% end %>
+          <% if @gift_card.expires_at.present? %>
+            <div>
+              <dt class="papayal-meta text-[#2C3A43]/60">Vence</dt>
+              <dd class="text-base text-[#2C3A43] mt-1"><%= @gift_card.expires_at.strftime('%d/%m/%Y %H:%M') %></dd>
+            </div>
+          <% end %>
+          <% if @gift_card.redeemed_at.present? %>
+            <div>
+              <dt class="papayal-meta text-[#2C3A43]/60">Canjeada</dt>
+              <dd class="text-base text-[#2C3A43] mt-1">
+                <%= @gift_card.redeemed_at.strftime('%d/%m/%Y %H:%M') %>
+                <% if @gift_card.merchant.present? %>
+                  <span class="block text-xs text-[#2C3A43]/60">en <%= @gift_card.merchant.store_name %></span>
+                <% end %>
               </dd>
             </div>
-            
-            <div>
-              <dt class="text-sm font-medium text-gray-500">De</dt>
-              <dd class="text-sm text-gray-900"><%= @gift_card.sender.name %></dd>
-            </div>
-            
-            <div>
-              <dt class="text-sm font-medium text-gray-500">Para</dt>
-              <dd class="text-sm text-gray-900"><%= @gift_card.recipient&.name || 'Desconocido' %></dd>
-            </div>
-            
-            <% if @gift_card.merchant.present? %>
-              <div>
-                <dt class="text-sm font-medium text-gray-500">Tienda</dt>
-                <dd class="text-sm text-gray-900"><%= @gift_card.merchant.store_name %></dd>
-              </div>
-            <% end %>
-            
-            <% if @gift_card.expires_at.present? %>
-              <div>
-                <dt class="text-sm font-medium text-gray-500">Vence</dt>
-                <dd class="text-sm text-gray-900"><%= @gift_card.expires_at.strftime('%B %d, %Y a las %I:%M %p') %></dd>
-              </div>
-            <% end %>
-            
-            <% if @gift_card.redeemed_at.present? %>
-              <div>
-                <dt class="text-sm font-medium text-gray-500">Canjeada</dt>
-                <dd class="text-sm text-gray-900">
-                  <%= @gift_card.redeemed_at.strftime('%B %d, %Y a las %I:%M %p') %>
-                  <% if @gift_card.merchant.present? %>
-                    <br><span class="text-xs text-gray-500">en <%= @gift_card.merchant.store_name %></span>
-                  <% end %>
-                </dd>
-              </div>
-            <% end %>
+          <% end %>
+        </dl>
 
-            <!-- Gift Card Code Display -->
-            <% if policy(@gift_card).view_code? %>
-              <div class="bg-green-50 border border-green-200 rounded-md p-3 mt-4">
-                <dt class="text-sm font-medium text-green-800">🎫 Token dinámico</dt>
-                <dd class="text-sm text-green-800 mt-1">
-                  Usa el panel de la derecha para mostrar tu código QR, código de barras o código manual. Cambia cada 90 segundos para tu seguridad.
-                </dd>
-              </div>
-            <% elsif @gift_card.sender == current_user %>
-              <!-- Senders can only see masked code -->
-              <div class="bg-blue-50 border border-blue-200 rounded-md p-3 mt-4">
-                <dt class="text-sm font-medium text-blue-800">🎁 Código de Tarjeta de Regalo</dt>
-                <dd class="text-lg font-mono font-bold text-blue-900 mt-1">
-                  <%= @gift_card.raw_code&.gsub(/(REM-)(.{4})(.{4})(.{4})/, '\1****-****-\3') || 'REM-****-****-****' %>
-                </dd>
-                <p class="text-xs text-blue-700 mt-1">
-                  Solo el destinatario puede ver el código completo por seguridad.
-                </p>
-              </div>
-            <% end %>
-          </dl>
-        </div>
-
-        <% if @gift_card.active? && policy(@gift_card).view_code? %>
-          <div 
-            class="bg-gray-50 border border-gray-200 rounded-xl p-6"
-            data-controller="redemption-code"
-            data-redemption-code-url-value="<%= api_v1_gift_card_redemption_token_path(@gift_card) %>">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-medium text-gray-900">Tu código Papayal</h3>
-              <div class="flex items-center text-sm text-gray-500">
-                <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span data-redemption-code-target="timer">--s</span>
-              </div>
-            </div>
-            <p class="text-sm text-gray-600 mb-4">
-              Muestra cualquiera de estas opciones al comercio. Todas apuntan al mismo token seguro y se renuevan automáticamente.
+        <% if policy(@gift_card).view_code? %>
+          <div class="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+            <p class="papayal-meta text-emerald-700">Token dinámico</p>
+            <p class="text-sm text-emerald-900 mt-2">
+              El panel de códigos muestra QR, código de barras o token manual. Todo se actualiza cada 90 segundos para máxima seguridad.
             </p>
-            <div data-redemption-code-target="status" class="hidden text-sm text-yellow-800 bg-yellow-100 border border-yellow-200 rounded-md px-3 py-2 mb-4"></div>
-            <div class="grid gap-6 md:grid-cols-2">
-              <div class="text-center">
-                <canvas
-                  width="220"
-                  height="220"
-                  class="mx-auto bg-white rounded-lg shadow p-2"
-                  data-redemption-code-target="qr">
-                </canvas>
-                <p class="mt-2 text-xs text-gray-500">Escanea el QR (90s TTL)</p>
-              </div>
-              <div class="flex flex-col items-center justify-center space-y-4">
-                <svg class="w-full h-20" data-redemption-code-target="barcode"></svg>
-                <div class="text-2xl font-mono tracking-[0.3em] text-gray-900" data-redemption-code-target="code">
-                  ••••
-                </div>
-                <p class="text-xs text-gray-500 text-center">Ingresa el código manual si no puedes escanear.</p>
-              </div>
-            </div>
           </div>
-        <% elsif @gift_card.active? && @gift_card.sender == current_user %>
-          <div class="text-center">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Código QR</h3>
-            <div class="bg-gray-100 p-8 rounded-lg border-2 border-gray-300 inline-block">
-              <div class="text-gray-400">
-                <svg class="w-16 h-16 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path>
-                </svg>
-                <p class="text-sm text-gray-500">Código QR solo visible para el destinatario</p>
-              </div>
-            </div>
-            <p class="mt-2 text-sm text-gray-500">Solo el destinatario puede ver el código QR</p>
+        <% elsif @gift_card.sender == current_user %>
+          <div class="mt-6 rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
+            <p class="papayal-meta text-blue-800">Código oculto por seguridad</p>
+            <p class="text-base font-mono tracking-widest text-blue-900 mt-2">
+              <%= @gift_card.raw_code&.gsub(/(REM-)(.{4})(.{4})(.{4})/, '\1****-****-\3') || 'REM-****-****-****' %>
+            </p>
+            <p class="text-xs text-blue-800 mt-1">Solo el destinatario puede ver el código completo.</p>
           </div>
         <% end %>
       </div>
 
-      <div class="mt-8 flex flex-col sm:flex-row justify-between gap-4">
-        <%= link_to "Volver a la Billetera", gift_cards_path, class: "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-center" %>
-        <div class="flex flex-col sm:flex-row gap-2">
-          <% if policy(@gift_card).transfer? %>
-            <%= link_to "Transferir", new_gift_card_transfer_path(@gift_card), class: "bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-center" %>
+      <div class="papayal-card p-6">
+        <h2 class="text-xl font-bold text-[#2C3A43] mb-4">Línea de tiempo</h2>
+        <div class="space-y-4 text-sm text-[#2C3A43]/80">
+          <div class="flex items-center gap-3">
+            <span class="h-10 w-10 rounded-2xl bg-[#FCA50F]/20 flex items-center justify-center text-[#0D2F32] font-semibold">1</span>
+            <div>
+              <p class="font-medium text-[#2C3A43]">Creada</p>
+              <p><%= @gift_card.created_at.strftime('%d/%m/%Y %H:%M') %></p>
+            </div>
+          </div>
+          <% if @gift_card.redeemed_at.present? %>
+            <div class="flex items-center gap-3">
+              <span class="h-10 w-10 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-800 font-semibold">2</span>
+              <div>
+                <p class="font-medium text-[#2C3A43]">Canjeada</p>
+                <p><%= @gift_card.redeemed_at.strftime('%d/%m/%Y %H:%M') %></p>
+              </div>
+            </div>
           <% end %>
-          <% if current_user&.admin? && @gift_card.transactions.successful.redemptions.any? %>
-            <%= link_to "Emitir Reembolso", new_admin_refund_path(@gift_card), class: "bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-center" %>
-          <% end %>
-          <% if @gift_card.active? %>
-            <%= link_to "Comprar Otra", new_gift_card_path, class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-center" %>
+          <% if @gift_card.expires_at.present? %>
+            <div class="flex items-center gap-3">
+              <span class="h-10 w-10 rounded-2xl bg-[#0D2F32]/10 flex items-center justify-center text-[#0D2F32] font-semibold">∞</span>
+              <div>
+                <p class="font-medium text-[#2C3A43]">Expira</p>
+                <p><%= @gift_card.expires_at.strftime('%d/%m/%Y %H:%M') %></p>
+              </div>
+            </div>
           <% end %>
         </div>
       </div>
     </div>
+
+    <div class="col-span-12 lg:col-span-4 space-y-6">
+      <div class="papayal-card p-6 space-y-4">
+        <div>
+          <p class="papayal-meta text-[#2C3A43]/60">Saldo disponible</p>
+          <p class="text-4xl font-bold text-[#0D2F32] mt-2">
+            <%= number_to_currency(@gift_card.remaining_balance / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+          </p>
+          <p class="text-sm text-[#2C3A43]/70 mt-1">Actualizado en tiempo real</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <%= link_to "Volver a la Billetera", gift_cards_path, class: "papayal-btn-secondary w-full" %>
+          <% if policy(@gift_card).transfer? %>
+            <%= link_to "Transferir", new_gift_card_transfer_path(@gift_card), class: "papayal-btn-primary w-full" %>
+          <% end %>
+          <% if current_user&.admin? && @gift_card.transactions.successful.redemptions.any? %>
+            <%= link_to "Emitir Reembolso", new_admin_refund_path(@gift_card), class: "papayal-btn-ghost w-full text-center border border-rose-200 text-rose-700 bg-rose-50/60 hover:bg-rose-100" %>
+          <% end %>
+          <% if @gift_card.active? %>
+            <%= link_to "Comprar Otra", new_gift_card_path, class: "papayal-btn-ghost w-full text-center" %>
+          <% end %>
+        </div>
+      </div>
+
+      <% if @gift_card.active? && policy(@gift_card).view_code? %>
+        <div class="papayal-card p-6 bg-[#EBEBEB]/60"
+             data-controller="redemption-code"
+             data-redemption-code-url-value="<%= api_v1_gift_card_redemption_token_path(@gift_card) %>">
+          <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+            <div>
+              <p class="papayal-meta text-[#0D2F32]">Panel de canje</p>
+              <h3 class="text-xl font-bold text-[#0D2F32] mt-1">Tu código Papayal</h3>
+            </div>
+            <div class="flex items-center gap-2 text-sm text-[#2C3A43]/70">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span data-redemption-code-target="timer">--s</span>
+            </div>
+          </div>
+          <p class="text-sm text-[#2C3A43]/70 mb-4">
+            Escanea, comparte o escribe este token. Se renueva automáticamente para mantener tu seguridad.
+          </p>
+          <div data-redemption-code-target="status" class="hidden text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 mb-4"></div>
+          <div class="flex flex-col gap-6">
+            <div class="flex flex-col items-center">
+              <canvas width="220" height="220" class="bg-white rounded-2xl shadow-inner p-2" data-redemption-code-target="qr"></canvas>
+              <p class="text-xs text-[#2C3A43]/60 mt-2">Código QR (TTL 90s)</p>
+            </div>
+            <div class="flex flex-col gap-3">
+              <div class="flex flex-col sm:flex-row items-center gap-3">
+                <span id="manual-token" class="font-mono tracking-[0.35em] text-lg bg-black/5 rounded-lg px-3 py-2 text-[#0D2F32]" data-redemption-code-target="code">••••</span>
+                <button type="button" class="papayal-btn-secondary text-sm w-full sm:w-auto justify-center" data-copy-target="manual-token">
+                  Copiar código
+                </button>
+              </div>
+              <p class="text-xs text-[#2C3A43]/60 text-center sm:text-left">Entrega este código si el comercio no puede escanear.</p>
+            </div>
+            <div class="border border-black/5 rounded-2xl bg-white p-4">
+              <svg class="w-full h-20" data-redemption-code-target="barcode"></svg>
+            </div>
+          </div>
+        </div>
+      <% elsif @gift_card.active? && @gift_card.sender == current_user %>
+        <div class="papayal-card p-6 text-center">
+          <p class="papayal-meta text-[#2C3A43]/60">Código seguro</p>
+          <h3 class="text-xl font-bold text-[#2C3A43] mt-2">Solo visible para el destinatario</h3>
+          <p class="text-sm text-[#2C3A43]/70 mt-2">Compartimos el código real únicamente con la persona que recibirá la tarjeta.</p>
+        </div>
+      <% end %>
+    </div>
   </div>
+</div>
+
+<script>
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-copy-target]');
+    if (!button) return;
+
+    event.preventDefault();
+    const targetId = button.getAttribute('data-copy-target');
+    const tokenElement = document.getElementById(targetId);
+    if (!tokenElement) return;
+
+    const text = tokenElement.textContent.trim();
+    if (!text || text.includes('•')) return;
+
+    navigator.clipboard.writeText(text).then(() => {
+      button.dataset.originalText = button.dataset.originalText || button.textContent;
+      button.textContent = 'Copiado ✓';
+      setTimeout(() => button.textContent = button.dataset.originalText, 2000);
+    });
+  });
+</script>
+
 </div>
 

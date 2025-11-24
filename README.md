@@ -39,7 +39,7 @@ A production-lean MVP for buying and sending gift cards, with merchant redemptio
    git clone <repository-url>
    cd rem_mvp
    bundle install
-   yarn install
+   npm install
    ```
 
 2. **Set up environment variables:**
@@ -57,8 +57,8 @@ A production-lean MVP for buying and sending gift cards, with merchant redemptio
 
 4. **Build assets:**
    ```bash
-   yarn build:css
-   yarn build
+   npm run build:css
+   npm run build
    ```
 
 ### Environment Variables

@@ -1,25 +1,27 @@
-<%- if controller_name != 'sessions' %>
-  <%= link_to "Iniciar Sesión", new_session_path(resource_name), style: "color: #FCA50F;" %><br />
-<% end %>
-
-<%- if devise_mapping.registerable? && controller_name != 'registrations' %>
-  <%= link_to "Registrarse", new_registration_path(resource_name), style: "color: #FCA50F;" %><br />
-<% end %>
-
-<%- if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations' %>
-  <%= link_to "¿Olvidaste tu contraseña?", new_password_path(resource_name), style: "color: #FCA50F;" %><br />
-<% end %>
-
-<%- if devise_mapping.confirmable? && controller_name != 'confirmations' %>
-  <%= link_to "¿No recibiste las instrucciones de confirmación?", new_confirmation_path(resource_name), style: "color: #FCA50F;" %><br />
-<% end %>
-
-<%- if devise_mapping.lockable? && resource_class.unlock_strategy_enabled?(:email) && controller_name != 'unlocks' %>
-  <%= link_to "¿No recibiste las instrucciones de desbloqueo?", new_unlock_path(resource_name), style: "color: #FCA50F;" %><br />
-<% end %>
-
-<%- if devise_mapping.omniauthable? %>
-  <%- resource_class.omniauth_providers.each do |provider| %>
-    <%= button_to "Iniciar sesión con #{OmniAuth::Utils.camelize(provider)}", omniauth_authorize_path(resource_name, provider), data: { turbo: false }, style: "color: #FCA50F;" %><br />
+<div class="space-y-2">
+  <%- if controller_name != 'sessions' %>
+    <%= link_to "Iniciar sesión", new_session_path(resource_name), class: "text-sm text-[#0D2F32] hover:text-[#FCA50F] transition" %><br />
   <% end %>
-<% end %>
+
+  <%- if devise_mapping.registerable? && controller_name != 'registrations' %>
+    <%= link_to "Crear una cuenta", new_registration_path(resource_name), class: "text-sm text-[#0D2F32] hover:text-[#FCA50F] transition" %><br />
+  <% end %>
+
+  <%- if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations' %>
+    <%= link_to "¿Olvidaste tu contraseña?", new_password_path(resource_name), class: "text-sm text-[#0D2F32] hover:text-[#FCA50F] transition" %><br />
+  <% end %>
+
+  <%- if devise_mapping.confirmable? && controller_name != 'confirmations' %>
+    <%= link_to "Reenviar instrucciones de confirmación", new_confirmation_path(resource_name), class: "text-sm text-[#0D2F32] hover:text-[#FCA50F] transition" %><br />
+  <% end %>
+
+  <%- if devise_mapping.lockable? && resource_class.unlock_strategy_enabled?(:email) && controller_name != 'unlocks' %>
+    <%= link_to "Reenviar instrucciones de desbloqueo", new_unlock_path(resource_name), class: "text-sm text-[#0D2F32] hover:text-[#FCA50F] transition" %><br />
+  <% end %>
+
+  <%- if devise_mapping.omniauthable? %>
+    <%- resource_class.omniauth_providers.each do |provider| %>
+      <%= button_to "Iniciar sesión con #{OmniAuth::Utils.camelize(provider)}", omniauth_authorize_path(resource_name, provider), data: { turbo: false }, class: "papayal-btn-secondary w-full" %><br />
+    <% end %>
+  <% end %>
+</div>

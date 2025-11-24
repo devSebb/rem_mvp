@@ -1,3 +1,153 @@
+<div class="space-y-8">
+  <div class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-[#0D2F32] text-white">
+    <div>
+      <p class="papayal-meta text-white/70">Modo Comercio</p>
+      <h1 class="text-3xl font-bold">Hola, <%= @merchant.store_name %></h1>
+      <p class="text-sm text-white/70 mt-2">Administra tus canjes y liquidaciones desde un panel cálido y profesional.</p>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <%= link_to "Canjear Tarjeta", new_merchant_redemption_path, class: "papayal-btn-primary bg-white text-[#0D2F32]" %>
+      <%= link_to "Actualizar Perfil", merchant_profile_path, class: "papayal-btn-secondary border-white/40 text-white hover:bg-white/10" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+      <p class="papayal-meta text-[#2C3A43]/60">Canjes de hoy</p>
+      <p class="text-3xl font-bold text-[#0D2F32] mt-2"><%= @today_redemptions %></p>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">Movimientos confirmados</p>
+    </div>
+    <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+      <p class="papayal-meta text-[#2C3A43]/60">Liquidación pendiente</p>
+      <p class="text-3xl font-bold text-[#0D2F32] mt-2">
+        <%= number_to_currency(@pending_settlement / 100.0, unit: '$') %>
+      </p>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">En cola para pago</p>
+    </div>
+    <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+      <p class="papayal-meta text-[#2C3A43]/60">Tarjetas únicas</p>
+      <p class="text-3xl font-bold text-[#0D2F32] mt-2"><%= @unique_gift_cards_redeemed %></p>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">Clientes impactados</p>
+    </div>
+    <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+      <p class="papayal-meta text-[#2C3A43]/60">Total canjeado</p>
+      <p class="text-3xl font-bold text-[#0D2F32] mt-2">
+        <%= number_to_currency(@total_redemption_amount / 100.0, unit: '$') %>
+      </p>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">Acumulado histórico</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 lg:col-span-8 papayal-card p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <p class="papayal-meta text-[#2C3A43]/60">Acciones rápidas</p>
+          <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Operaciones clave</h2>
+        </div>
+      </div>
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-12 md:col-span-4 p-4 rounded-2xl border border-black/5 bg-[#EBEBEB]/60">
+          <p class="font-semibold text-[#0D2F32]">Canjear</p>
+          <p class="text-sm text-[#2C3A43]/70 mt-1">Procesa tarjetas en mostrador o teléfono.</p>
+          <%= link_to "Iniciar canje", new_merchant_redemption_path, class: "papayal-btn-primary mt-4 w-full" %>
+        </div>
+        <div class="col-span-12 md:col-span-4 p-4 rounded-2xl border border-black/5 bg-[#EBEBEB]/60">
+          <p class="font-semibold text-[#0D2F32]">Liquidaciones</p>
+          <p class="text-sm text-[#2C3A43]/70 mt-1">Consulta pagos y estados.</p>
+          <%= link_to "Ver liquidaciones", merchant_settlements_path, class: "papayal-btn-secondary mt-4 w-full" %>
+        </div>
+        <div class="col-span-12 md:col-span-4 p-4 rounded-2xl border border-black/5 bg-[#EBEBEB]/60">
+          <p class="font-semibold text-[#0D2F32]">Perfil</p>
+          <p class="text-sm text-[#2C3A43]/70 mt-1">Mantén tus datos y claves al día.</p>
+          <%= link_to "Actualizar perfil", merchant_profile_path, class: "papayal-btn-ghost mt-4 w-full justify-center" %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-span-12 lg:col-span-4 papayal-card p-6">
+      <p class="papayal-meta text-[#2C3A43]/60">Liquidaciones</p>
+      <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Estado del próximo pago</h2>
+      <div class="mt-4 space-y-3 text-sm text-[#2C3A43]/80">
+        <div class="flex items-center justify-between">
+          <span>Importe pendiente</span>
+          <span class="font-semibold text-[#0D2F32]"><%= number_to_currency(@pending_settlement / 100.0, unit: '$') %></span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span>Última liquidación</span>
+          <span><%= @merchant.settlements.order(created_at: :desc).first&.created_at&.strftime('%d %b %Y') || 'N/A' %></span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span>Próximo corte</span>
+          <span><%= (@merchant.settlements.order(created_at: :desc).first&.created_at || Time.current).advance(days: 7).strftime('%d %b %Y') %></span>
+        </div>
+      </div>
+      <%= link_to "Ver detalle", merchant_settlements_path, class: "papayal-btn-primary w-full mt-4" %>
+    </div>
+  </div>
+
+  <% if @recent_redemptions.any? %>
+    <div class="papayal-card p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <p class="papayal-meta text-[#2C3A43]/60">Redenciones recientes</p>
+          <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Movimientos últimos</h2>
+        </div>
+      </div>
+      <div class="overflow-hidden rounded-2xl border border-black/5">
+        <table class="min-w-full divide-y divide-black/5 text-sm">
+          <thead class="bg-[#EBEBEB]/60 text-left text-xs font-semibold text-[#2C3A43]/70 uppercase tracking-wider">
+            <tr>
+              <th class="px-4 py-3">Detalle</th>
+              <th class="px-4 py-3">Cliente</th>
+              <th class="px-4 py-3">Monto</th>
+              <th class="px-4 py-3">Estado</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-black/5">
+            <% @recent_redemptions.each do |transaction| %>
+              <tr class="hover:bg-[#EBEBEB]/40 transition">
+                <td class="px-4 py-4">
+                  <p class="font-semibold text-[#0D2F32]">
+                    <%= number_to_currency(transaction.amount / 100.0, unit: '$') %>
+                  </p>
+                  <p class="text-xs text-[#2C3A43]/70">
+                    <%= transaction.created_at.strftime('%d %b %Y %I:%M %p') %>
+                  </p>
+                </td>
+                <td class="px-4 py-4 text-[#2C3A43]/80">
+                  De <%= transaction.gift_card.sender.name %>
+                </td>
+                <td class="px-4 py-4">
+                  <% if transaction.gift_card.remaining_balance > 0 %>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                      Parcial · Restante <%= number_to_currency(transaction.gift_card.remaining_balance / 100.0, unit: '$') %>
+                    </span>
+                  <% else %>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                      Completo
+                    </span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-4">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#0D2F32]/10 text-[#0D2F32]">
+                    Canjeado
+                  </span>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% else %>
+    <div class="papayal-card p-8 text-center space-y-3">
+      <p class="text-xl font-semibold text-[#2C3A43]">Aún no hay canjes recientes</p>
+      <p class="text-sm text-[#2C3A43]/70">Cuando registres un canje aparecerá en este panel.</p>
+      <%= link_to "Registrar mi primer canje", new_merchant_redemption_path, class: "papayal-btn-primary" %>
+    </div>
+  <% end %>
+</div>
 <div class="px-4 sm:px-0">
   <div class="mb-8">
     <h1 class="text-2xl font-bold" style="color: #2C3A43;">Panel del Comercio</h1>

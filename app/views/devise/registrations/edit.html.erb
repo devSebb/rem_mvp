@@ -1,89 +1,135 @@
-<h2>Edit <%= resource_name.to_s.humanize %></h2>
-
-<%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
-  <%= render "devise/shared/error_messages", resource: resource %>
-
-  <div class="field">
-    <%= f.label :email %><br />
-    <%= f.email_field :email, autofocus: true, autocomplete: "email" %>
-  </div>
-
-  <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
-    <div>Currently waiting confirmation for: <%= resource.unconfirmed_email %></div>
-  <% end %>
-
-  <div class="field">
-    <%= f.label :password %> <i>(leave blank if you don't want to change it)</i><br />
-    <%= f.password_field :password, autocomplete: "new-password" %>
-    <% if @minimum_password_length %>
-      <br />
-      <em><%= @minimum_password_length %> characters minimum</em>
-    <% end %>
-  </div>
-
-  <div class="field">
-    <%= f.label :password_confirmation %><br />
-    <%= f.password_field :password_confirmation, autocomplete: "new-password" %>
-  </div>
-
-  <div class="field">
-    <%= f.label :current_password %> <i>(we need your current password to confirm your changes)</i><br />
-    <%= f.password_field :current_password, autocomplete: "current-password" %>
-  </div>
-
-  <div class="actions">
-    <%= f.submit "Update" %>
-  </div>
-<% end %>
-
-<!-- User Status and Information -->
-<div class="mt-8 p-4 bg-gray-50 rounded-lg border">
-  <h3 class="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
-  
-  <!-- User Status -->
-  <div class="mb-4">
-    <span class="text-sm font-medium text-gray-700">Status: </span>
-    <% case resource.role %>
-    <% when 'admin' %>
-      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-        Administrator
-      </span>
-    <% when 'merchant' %>
-      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-        Merchant
-      </span>
-    <% else %>
-      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-        Regular User
-      </span>
-    <% end %>
-  </div>
-  
-  <!-- User Data -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+<div class="space-y-8">
+  <div class="papayal-card p-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
     <div>
-      <span class="font-medium text-gray-700">Name:</span>
-      <span class="text-gray-900"><%= resource.name %></span>
+      <p class="papayal-meta text-[#0D2F32]">Perfil</p>
+      <h1 class="text-3xl font-bold text-[#0D2F32] mt-1">Administra tu cuenta</h1>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">Actualiza tus datos personales y tu contraseña con la misma calidez del resto de Papayal.</p>
     </div>
-    <div>
-      <span class="font-medium text-gray-700">Email:</span>
-      <span class="text-gray-900"><%= resource.email %></span>
-    </div>
-    <% if resource.phone.present? %>
-      <div>
-        <span class="font-medium text-gray-700">Phone:</span>
-        <span class="text-gray-900"><%= resource.phone %></span>
+    <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0D2F32]/10 text-[#0D2F32] text-sm font-medium">
+      ID • <%= resource.id %>
+    </span>
+  </div>
+
+  <div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 lg:col-span-8 space-y-6">
+      <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }, class: "space-y-6") do |f| %>
+        <%= render "devise/shared/error_messages", resource: resource %>
+
+        <div class="papayal-card p-6 space-y-4">
+          <div>
+            <p class="papayal-meta text-[#2C3A43]/60">Datos personales</p>
+            <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Información básica</h2>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <%= f.label :name, "Nombre completo", class: "papayal-label" %>
+              <%= f.text_field :name, autofocus: true, class: "papayal-input mt-2", placeholder: "Mariana López" %>
+            </div>
+            <div>
+              <%= f.label :phone, "Teléfono", class: "papayal-label" %>
+              <%= f.telephone_field :phone, class: "papayal-input mt-2", placeholder: "+593 99 999 9999" %>
+            </div>
+            <div class="md:col-span-2">
+              <%= f.label :email, "Correo electrónico", class: "papayal-label" %>
+              <%= f.email_field :email, autocomplete: "email", class: "papayal-input mt-2", placeholder: "tu@correo.com" %>
+              <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
+                <p class="text-xs text-[#2C3A43]/60 mt-1">Esperando confirmación para: <%= resource.unconfirmed_email %></p>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <div class="papayal-card p-6 space-y-4">
+          <div>
+            <p class="papayal-meta text-[#2C3A43]/60">Seguridad</p>
+            <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Actualizar contraseña</h2>
+            <p class="text-sm text-[#2C3A43]/70 mt-1">Déjalo en blanco si no deseas cambiarla. Siempre necesitaremos tu contraseña actual para confirmar.</p>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <%= f.label :password, "Nueva contraseña", class: "papayal-label" %>
+              <%= f.password_field :password, autocomplete: "new-password", class: "papayal-input mt-2" %>
+              <% if @minimum_password_length %>
+                <p class="text-xs text-[#2C3A43]/60 mt-1">Mínimo <%= @minimum_password_length %> caracteres.</p>
+              <% end %>
+            </div>
+            <div>
+              <%= f.label :password_confirmation, "Confirmar nueva contraseña", class: "papayal-label" %>
+              <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "papayal-input mt-2" %>
+            </div>
+            <div class="md:col-span-2">
+              <%= f.label :current_password, "Contraseña actual", class: "papayal-label" %>
+              <%= f.password_field :current_password, autocomplete: "current-password", class: "papayal-input mt-2" %>
+              <p class="text-xs text-[#2C3A43]/60 mt-1">Necesaria para confirmar cualquier cambio.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+          <%= link_to "Volver al inicio", root_path, class: "papayal-btn-secondary w-full sm:w-auto text-center" %>
+          <%= f.submit "Guardar cambios", class: "papayal-btn-primary w-full sm:w-auto" %>
+        </div>
+      <% end %>
+
+      <div class="papayal-card p-6 border border-rose-200 bg-rose-50/60 space-y-4">
+        <div>
+          <p class="papayal-meta text-rose-700">Zona de riesgo</p>
+          <h2 class="text-xl font-bold text-rose-800 mt-1">Cancelar mi cuenta</h2>
+          <p class="text-sm text-rose-800/80 mt-1">Si ya no deseas usar Papayal puedes eliminar tu cuenta permanentemente.</p>
+        </div>
+        <div class="flex flex-col gap-2 sm:flex-row">
+          <%= button_to "Cancelar mi cuenta", registration_path(resource_name),
+                data: { confirm: "¿Seguro que deseas eliminar tu cuenta?", turbo_confirm: "¿Seguro que deseas eliminar tu cuenta?" },
+                method: :delete,
+                class: "papayal-btn-ghost w-full text-center border border-rose-300 text-rose-700 hover:bg-rose-100" %>
+        </div>
       </div>
-    <% end %>
-    <div>
-      <span class="font-medium text-gray-700">Member since:</span>
-      <span class="text-gray-900"><%= resource.created_at.strftime("%B %d, %Y") %></span>
+    </div>
+
+    <div class="col-span-12 lg:col-span-4 space-y-6">
+      <div class="papayal-card p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="papayal-meta text-[#2C3A43]/60">Estado</p>
+            <h3 class="text-xl font-bold text-[#2C3A43]">Tu rol en Papayal</h3>
+          </div>
+          <% role_badge = case resource.role
+             when 'admin' then ['Admin', 'bg-[#0D2F32] text-white']
+             when 'merchant' then ['Comercio', 'bg-[#FCA50F]/20 text-[#0D2F32]']
+             else ['Usuario', 'bg-[#0D2F32]/10 text-[#0D2F32]']
+          end %>
+          <span class="inline-flex items-center px-4 py-1 rounded-full text-xs font-semibold <%= role_badge.last %>">
+            <%= role_badge.first %>
+          </span>
+        </div>
+        <div class="space-y-3 text-sm text-[#2C3A43]/80">
+          <div class="flex items-center justify-between">
+            <span>Nombre</span>
+            <span class="font-semibold text-[#0D2F32]"><%= resource.name %></span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span>Email</span>
+            <span class="font-semibold text-[#0D2F32] truncate max-w-[180px]" title="<%= resource.email %>"><%= resource.email %></span>
+          </div>
+          <% if resource.phone.present? %>
+            <div class="flex items-center justify-between">
+              <span>Teléfono</span>
+              <span class="font-semibold text-[#0D2F32]"><%= resource.phone %></span>
+            </div>
+          <% end %>
+          <div class="flex items-center justify-between">
+            <span>Miembro desde</span>
+            <span class="font-semibold text-[#0D2F32]"><%= resource.created_at.strftime("%d/%m/%Y") %></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="papayal-card p-6 space-y-3">
+        <p class="papayal-meta text-[#2C3A43]/60">Ayuda rápida</p>
+        <h3 class="text-xl font-bold text-[#2C3A43]">¿Necesitas soporte?</h3>
+        <p class="text-sm text-[#2C3A43]/70">Escríbenos si tienes dudas sobre tu cuenta o quieres convertirte en comercio.</p>
+        <%= link_to "Contactar soporte", "mailto:soporte@papayal.com", class: "papayal-btn-secondary w-full text-center" %>
+      </div>
     </div>
   </div>
 </div>
-
-<h3>Cancel my account</h3>
-
-<div>Unhappy? <%= button_to "Cancel my account", registration_path(resource_name), data: { confirm: "Are you sure?", turbo_confirm: "Are you sure?" }, method: :delete %></div>
-
-<%= link_to "Back", :back %>

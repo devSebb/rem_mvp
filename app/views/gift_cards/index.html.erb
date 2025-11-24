@@ -1,115 +1,63 @@
-<div class="px-4 sm:px-0">
+<div class="space-y-8">
   <!-- Header Section -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
-    <div>
-      <h1 class="text-3xl font-bold" style="color: #2C3A43;">Mi Billetera</h1>
-      <p class="mt-2 text-sm text-gray-600">Administra tus tarjetas de regalo y rastrea tus transacciones</p>
+  <div class="grid grid-cols-12 gap-6 items-start">
+    <div class="col-span-12 lg:col-span-8">
+      <p class="papayal-meta text-[#0D2F32]">Billetera</p>
+      <h1 class="text-3xl font-bold text-[#0D2F32] mt-2">Mi Billetera</h1>
+      <p class="text-sm text-[#2C3A43]/80 mt-2">Administra tus tarjetas con una vista clara y cálida.</p>
     </div>
-    <div class="mt-4 sm:mt-0">
-      <%= link_to "Comprar Nueva Tarjeta", new_gift_card_path, class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2", style: "background-color: #FCA50F;" %>
+    <div class="col-span-12 lg:col-span-4 flex flex-wrap gap-3 justify-start lg:justify-end">
+      <%= link_to "Actualizar Perfil", edit_user_registration_path, class: "papayal-btn-secondary" %>
+      <%= link_to "Comprar Nueva Tarjeta", new_gift_card_path, class: "papayal-btn-primary" %>
     </div>
   </div>
 
   <!-- Summary Statistics -->
-  <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-    <div class="bg-white overflow-hidden shadow rounded-lg">
-      <div class="p-5">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-              </svg>
-            </div>
-          </div>
-          <div class="ml-5 w-0 flex-1">
-            <dl>
-              <dt class="text-sm font-medium text-gray-500 truncate">Tarjetas Enviadas</dt>
-              <dd class="text-lg font-medium" style="color: #2C3A43;" id="sent-summary-count">0</dd>
-            </dl>
-          </div>
-        </div>
-      </div>
+  <div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+      <p class="papayal-meta">Tarjetas Enviadas</p>
+      <p class="text-3xl font-bold text-[#0D2F32] mt-2" id="sent-summary-count">0</p>
+      <p class="text-sm text-[#2C3A43]/70 mt-2">Regalos compartidos</p>
     </div>
-
-    <div class="bg-white overflow-hidden shadow rounded-lg">
-      <div class="p-5">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-              </svg>
-            </div>
-          </div>
-          <div class="ml-5 w-0 flex-1">
-            <dl>
-              <dt class="text-sm font-medium text-gray-500 truncate">Tarjetas Recibidas</dt>
-              <dd class="text-lg font-medium" style="color: #2C3A43;" id="received-summary-count">0</dd>
-            </dl>
-          </div>
-        </div>
-      </div>
+    <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+      <p class="papayal-meta">Tarjetas Recibidas</p>
+      <p class="text-3xl font-bold text-[#0D2F32] mt-2" id="received-summary-count">0</p>
+      <p class="text-sm text-[#2C3A43]/70 mt-2">Llegaron a ti</p>
     </div>
-
-    <div class="bg-white overflow-hidden shadow rounded-lg">
-      <div class="p-5">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </div>
-          </div>
-          <div class="ml-5 w-0 flex-1">
-            <dl>
-              <dt class="text-sm font-medium text-gray-500 truncate">Tarjetas Canjeadas</dt>
-              <dd class="text-lg font-medium" style="color: #2C3A43;" id="redeemed-summary-count">0</dd>
-            </dl>
-          </div>
-        </div>
-      </div>
+    <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+      <p class="papayal-meta">Tarjetas Canjeadas</p>
+      <p class="text-3xl font-bold text-[#0D2F32] mt-2" id="redeemed-summary-count">0</p>
+      <p class="text-sm text-[#2C3A43]/70 mt-2">Ya utilizadas</p>
     </div>
-
-    <div class="bg-white overflow-hidden shadow rounded-lg">
-      <div class="p-5">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-              </svg>
-            </div>
-          </div>
-          <div class="ml-5 w-0 flex-1">
-            <dl>
-              <dt class="text-sm font-medium text-gray-500 truncate">Valor Total</dt>
-              <dd class="text-lg font-medium" style="color: #2C3A43;" id="total-value">$0.00</dd>
-            </dl>
-          </div>
-        </div>
-      </div>
+    <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+      <p class="papayal-meta">Valor Total</p>
+      <p class="text-3xl font-bold text-[#0D2F32] mt-2" id="total-value">$0.00</p>
+      <p class="text-sm text-[#2C3A43]/70 mt-2">Suma emitida</p>
     </div>
   </div>
 
   <!-- Search and Filter Bar -->
-  <div class="bg-white shadow rounded-lg p-4 mb-8">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <div class="flex-1 max-w-lg">
-        <input type="text" id="search-input" placeholder="Buscar tarjetas..." class="block w-full rounded-md border border-gray-300 bg-white py-2.5 px-3 text-sm placeholder-gray-500 focus:border-[#FCA50F] focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-[#FCA50F]">
-      </div>
-      <div class="flex gap-3">
-        <select id="status-filter" class="block w-full pl-3 pr-10 py-2.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#FCA50F] focus:border-[#FCA50F]">
-          <option value="">Todos los Estados</option>
+  <div class="papayal-card p-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div class="flex-1">
+      <label for="search-input" class="papayal-meta text-[#2C3A43]/60 mb-2 block">Buscar</label>
+      <input type="text" id="search-input" placeholder="Nombre, tienda, monto o estado..." class="papayal-input">
+    </div>
+    <div class="flex flex-col sm:flex-row gap-4">
+      <div>
+        <label for="status-filter" class="papayal-meta text-[#2C3A43]/60 mb-2 block">Estado</label>
+        <select id="status-filter" class="papayal-input">
+          <option value="">Todos los estados</option>
           <option value="active">Activa</option>
           <option value="redeemed">Canjeada</option>
           <option value="expired">Vencida</option>
           <option value="canceled">Cancelada</option>
         </select>
-        <select id="sort-filter" class="block w-full pl-3 pr-10 py-2.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#FCA50F] focus:border-[#FCA50F]">
-          <option value="newest">Más Recientes</option>
-          <option value="oldest">Más Antiguas</option>
+      </div>
+      <div>
+        <label for="sort-filter" class="papayal-meta text-[#2C3A43]/60 mb-2 block">Ordenar</label>
+        <select id="sort-filter" class="papayal-input">
+          <option value="newest">Más recientes</option>
+          <option value="oldest">Más antiguas</option>
           <option value="amount-high">Monto (Mayor a Menor)</option>
           <option value="amount-low">Monto (Menor a Mayor)</option>
           <option value="status">Estado</option>
@@ -118,105 +66,290 @@
     </div>
   </div>
 
-  <!-- Tab Navigation -->
-  <div class="border-b border-gray-200 mb-8">
-    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-      <button onclick="showTab('sent')" id="sent-tab" class="tab-button active whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm" style="border-color: #FCA50F; color: #FCA50F;">
-        <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-        </svg>
-        Tarjetas Enviadas
-        <span id="sent-count" class="ml-2 py-0.5 px-2.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">0</span>
+  <!-- Tab Navigation & Content -->
+  <div class="papayal-card p-6">
+    <div class="flex flex-wrap gap-3 mb-6" aria-label="Tabs">
+      <button onclick="showTab('sent')" id="sent-tab" class="tab-button active-tab inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium border border-[#0D2F32] text-white bg-[#0D2F32] shadow-sm transition">
+        <span class="text-base">📤</span> Enviadas
+        <span id="sent-count" class="text-xs px-2 py-1 rounded-full bg-white/20 text-white">0</span>
       </button>
-      <button onclick="showTab('received')" id="received-tab" class="tab-button whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
-        <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-        </svg>
-        Tarjetas Recibidas
-        <span id="received-count" class="ml-2 py-0.5 px-2.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">0</span>
+      <button onclick="showTab('received')" id="received-tab" class="tab-button inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium border border-transparent text-[#2C3A43]/70 bg-[#EBEBEB] hover:border-[#0D2F32]/20 transition">
+        <span class="text-base">📥</span> Recibidas
+        <span id="received-count" class="text-xs px-2 py-1 rounded-full bg-white text-[#0D2F32]">0</span>
       </button>
-      <button onclick="showTab('redeemed')" id="redeemed-tab" class="tab-button whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
-        <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        Tarjetas Canjeadas
-        <span id="redeemed-count" class="ml-2 py-0.5 px-2.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">0</span>
+      <button onclick="showTab('redeemed')" id="redeemed-tab" class="tab-button inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium border border-transparent text-[#2C3A43]/70 bg-[#EBEBEB] hover:border-[#0D2F32]/20 transition">
+        <span class="text-base">✅</span> Canjeadas
+        <span id="redeemed-count" class="text-xs px-2 py-1 rounded-full bg-white text-[#0D2F32]">0</span>
       </button>
-    </nav>
-  </div>
-
-  <!-- Tab Content -->
-  <div id="tab-content">
-    <!-- Sent Cards Tab -->
-    <div id="sent-content" class="tab-content">
-      <div class="mb-6">
-        <h2 class="text-xl font-semibold mb-2" style="color: #2C3A43;">Tarjetas que Has Enviado</h2>
-        <p class="text-sm text-gray-600">Tarjetas de regalo que has comprado y enviado a otros</p>
-      </div>
-      
-      <div id="sent-cards" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <!-- Sent cards will be populated here -->
-      </div>
-      
-      <div id="sent-empty" class="hidden text-center py-12">
-        <div class="mx-auto h-12 w-12 text-gray-400">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-          </svg>
-        </div>
-        <h3 class="mt-2 text-sm font-medium" style="color: #2C3A43;">Aún no has enviado tarjetas</h3>
-        <p class="mt-1 text-sm text-gray-500">Comienza enviando una tarjeta de regalo a alguien especial.</p>
-        <div class="mt-6">
-          <%= link_to "Enviar Tarjeta", new_gift_card_path, class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white", style: "background-color: #FCA50F;" %>
-        </div>
-      </div>
     </div>
 
-    <!-- Received Cards Tab -->
-    <div id="received-content" class="tab-content hidden">
-      <div class="mb-6">
-        <h2 class="text-xl font-semibold mb-2" style="color: #2C3A43;">Tarjetas que Has Recibido</h2>
-        <p class="text-sm text-gray-600">Tarjetas de regalo que otros te han enviado</p>
-      </div>
-      
-      <div id="received-cards" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <!-- Received cards will be populated here -->
-      </div>
-      
-      <div id="received-empty" class="hidden text-center py-12">
-        <div class="mx-auto h-12 w-12 text-gray-400">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-          </svg>
+    <div id="tab-content">
+      <!-- Sent Cards Tab -->
+      <div id="sent-content" class="tab-content">
+        <div class="mb-6">
+          <h2 class="text-xl font-bold text-[#2C3A43]">Tarjetas que has enviado</h2>
+          <p class="text-sm text-[#2C3A43]/70">Regalos digitales que compartiste con tus contactos.</p>
         </div>
-        <h3 class="mt-2 text-sm font-medium" style="color: #2C3A43;">Aún no has recibido tarjetas</h3>
-        <p class="mt-1 text-sm text-gray-500">Verás aquí las tarjetas de regalo que te envíen.</p>
+        <div id="sent-cards" class="grid grid-cols-12 gap-6"></div>
+        <div id="sent-empty" class="hidden papayal-card text-center py-12 mt-4 space-y-3">
+          <p class="text-xl font-semibold text-[#2C3A43]">Aún no has enviado tarjetas</p>
+          <p class="text-sm text-[#2C3A43]/70">Sorprende a alguien con una tarjeta Papayal.</p>
+          <%= link_to "Enviar Tarjeta", new_gift_card_path, class: "papayal-btn-primary" %>
+        </div>
       </div>
-    </div>
 
-    <!-- Redeemed Cards Tab -->
-    <div id="redeemed-content" class="tab-content hidden">
-      <div class="mb-6">
-        <h2 class="text-xl font-semibold mb-2" style="color: #2C3A43;">Tarjetas Canjeadas</h2>
-        <p class="text-sm text-gray-600">Tarjetas que han sido utilizadas en comercios</p>
-      </div>
-      
-      <div id="redeemed-cards" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <!-- Redeemed cards will be populated here -->
-      </div>
-      
-      <div id="redeemed-empty" class="hidden text-center py-12">
-        <div class="mx-auto h-12 w-12 text-gray-400">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
+      <!-- Received Cards Tab -->
+      <div id="received-content" class="tab-content hidden">
+        <div class="mb-6">
+          <h2 class="text-xl font-bold text-[#2C3A43]">Tarjetas recibidas</h2>
+          <p class="text-sm text-[#2C3A43]/70">Todo lo que te han enviado amigos, familia o marcas.</p>
         </div>
-        <h3 class="mt-2 text-sm font-medium" style="color: #2C3A43;">Aún no hay tarjetas canjeadas</h3>
-        <p class="mt-1 text-sm text-gray-500">Las tarjetas canjeadas aparecerán aquí una vez que se utilicen.</p>
+        <div id="received-cards" class="grid grid-cols-12 gap-6"></div>
+        <div id="received-empty" class="hidden papayal-card text-center py-12 mt-4 space-y-3">
+          <p class="text-xl font-semibold text-[#2C3A43]">Aún no tienes tarjetas recibidas</p>
+          <p class="text-sm text-[#2C3A43]/70">Cuando llegue una tarjeta aparecerá aquí.</p>
+        </div>
+      </div>
+
+      <!-- Redeemed Cards Tab -->
+      <div id="redeemed-content" class="tab-content hidden">
+        <div class="mb-6">
+          <h2 class="text-xl font-bold text-[#2C3A43]">Tarjetas canjeadas</h2>
+          <p class="text-sm text-[#2C3A43]/70">Historial completo de tus usos.</p>
+        </div>
+        <div id="redeemed-cards" class="grid grid-cols-12 gap-6"></div>
+        <div id="redeemed-empty" class="hidden papayal-card text-center py-12 mt-4 space-y-3">
+          <p class="text-xl font-semibold text-[#2C3A43]">Sin canjes todavía</p>
+          <p class="text-sm text-[#2C3A43]/70">Cuando uses una tarjeta verás los detalles aquí.</p>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- JavaScript for tab functionality -->
+<script>
+  function toggleTabClasses(button, isActive) {
+    if (isActive) {
+      button.classList.add('active-tab');
+      button.classList.remove('bg-[#EBEBEB]', 'text-[#2C3A43]/70', 'border-transparent');
+      button.classList.add('bg-[#0D2F32]', 'text-white', 'border-[#0D2F32]', 'shadow-sm');
+    } else {
+      button.classList.remove('active-tab', 'bg-[#0D2F32]', 'text-white', 'border-[#0D2F32]', 'shadow-sm');
+      button.classList.add('bg-[#EBEBEB]', 'text-[#2C3A43]/70', 'border-transparent');
+    }
+  }
+
+  function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+    document.querySelectorAll('.tab-button').forEach(button => toggleTabClasses(button, false));
+    document.getElementById(tabName + '-content').classList.remove('hidden');
+    toggleTabClasses(document.getElementById(tabName + '-tab'), true);
+  }
+
+  let allCards = [];
+  let currentUserId = 0;
+  let currentTab = 'sent';
+  let filteredCards = { sent: [], received: [], redeemed: [] };
+
+  function categorizeCards() {
+    allCards = <%= raw @gift_cards.to_json(include: [:sender, :recipient, :merchant]) %>;
+    currentUserId = <%= current_user.id %>;
+
+    const sentCards = allCards.filter(card => card.sender_id === currentUserId);
+    const receivedCards = allCards.filter(card => card.recipient_id === currentUserId);
+    const redeemedCards = allCards.filter(card => card.status === 'redeemed');
+
+    filteredCards.sent = sentCards;
+    filteredCards.received = receivedCards;
+    filteredCards.redeemed = redeemedCards;
+
+    updateSummaryStats(sentCards, receivedCards, redeemedCards);
+    applyFilters();
+
+    toggleEmptyState('sent-empty', sentCards.length === 0);
+    toggleEmptyState('received-empty', receivedCards.length === 0);
+    toggleEmptyState('redeemed-empty', redeemedCards.length === 0);
+  }
+
+  function updateSummaryStats(sentCards, receivedCards, redeemedCards) {
+    document.getElementById('sent-count').textContent = sentCards.length;
+    document.getElementById('received-count').textContent = receivedCards.length;
+    document.getElementById('redeemed-count').textContent = redeemedCards.length;
+
+    document.getElementById('sent-summary-count').textContent = sentCards.length;
+    document.getElementById('received-summary-count').textContent = receivedCards.length;
+    document.getElementById('redeemed-summary-count').textContent = redeemedCards.length;
+
+    const totalValue = allCards.reduce((sum, card) => sum + (card.amount / 100), 0);
+    document.getElementById('total-value').textContent = '$' + totalValue.toFixed(2);
+  }
+
+  function applyFilters() {
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const statusFilter = document.getElementById('status-filter').value;
+    const sortFilter = document.getElementById('sort-filter').value;
+
+    ['sent', 'received', 'redeemed'].forEach(category => {
+      let cards = filteredCards[category];
+
+      if (searchTerm) {
+        cards = cards.filter(card => {
+          const senderName = card.sender ? card.sender.name.toLowerCase() : '';
+          const recipientName = card.recipient ? card.recipient.name.toLowerCase() : '';
+          const merchantName = card.merchant ? card.merchant.store_name.toLowerCase() : '';
+          const amount = (card.amount / 100).toString();
+          return senderName.includes(searchTerm) ||
+                 recipientName.includes(searchTerm) ||
+                 merchantName.includes(searchTerm) ||
+                 amount.includes(searchTerm);
+        });
+      }
+
+      if (statusFilter) {
+        cards = cards.filter(card => card.status === statusFilter);
+      }
+
+      cards = sortCards(cards, sortFilter);
+      renderCards(category + '-cards', cards, category);
+
+      const hasCardsInCategory = filteredCards[category] && filteredCards[category].length > 0;
+      toggleEmptyState(category + '-empty', !hasCardsInCategory);
+    });
+  }
+
+  function sortCards(cards, sortType) {
+    switch(sortType) {
+      case 'newest':
+        return cards.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      case 'oldest':
+        return cards.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      case 'amount-high':
+        return cards.sort((a, b) => b.amount - a.amount);
+      case 'amount-low':
+        return cards.sort((a, b) => a.amount - b.amount);
+      case 'status':
+        return cards.sort((a, b) => a.status.localeCompare(b.status));
+      default:
+        return cards;
+    }
+  }
+
+  function renderCards(containerId, cards, type) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+    cards.forEach(card => container.appendChild(createCardElement(card, type)));
+  }
+
+  function createCardElement(card, type) {
+    const div = document.createElement('div');
+    div.className = 'col-span-12 md:col-span-6 xl:col-span-4';
+
+    const statusClasses = {
+      'active': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100',
+      'redeemed': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100',
+      'expired': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-100',
+      'canceled': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200'
+    };
+
+    const statusLabels = {
+      'active': 'Activa',
+      'redeemed': 'Canjeada',
+      'expired': 'Vencida',
+      'canceled': 'Cancelada'
+    };
+
+    const amount = (card.amount / 100).toFixed(2);
+    const remainingBalance = (card.remaining_balance / 100).toFixed(2);
+    const currency = card.currency === 'USD' ? '$' : card.currency;
+
+    let recipientInfo = '';
+    if (type === 'sent') {
+      recipientInfo = `Para: ${card.recipient ? card.recipient.name : 'Desconocido'}`;
+    } else if (type === 'received') {
+      recipientInfo = `De: ${card.sender.name}`;
+    } else {
+      recipientInfo = card.sender_id === currentUserId ? 
+        `Para: ${card.recipient ? card.recipient.name : 'Desconocido'}` : 
+        `De: ${card.sender.name}`;
+    }
+
+    const merchantName = card.merchant ? card.merchant.store_name : 'Cualquier comercio Papayal';
+    const expiresText = card.expires_at && !card.redeemed ? `Vence: ${new Date(card.expires_at).toLocaleDateString('es-EC')}` : '';
+    const redeemedText = card.redeemed_at ? `Canjeada: ${new Date(card.redeemed_at).toLocaleDateString('es-EC')}` : '';
+    const updatedAt = new Date(card.updated_at).toLocaleDateString('es-EC');
+
+    div.innerHTML = `
+      <article class="papayal-card papayal-card-hover h-full flex flex-col p-5">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="papayal-meta text-[#2C3A43]/60">${type === 'sent' ? 'Tarjeta enviada' : type === 'received' ? 'Tarjeta recibida' : 'Historial de canje'}</p>
+            <p class="text-3xl font-bold text-[#0D2F32] mt-1">${currency}${amount}</p>
+            <p class="text-sm text-[#2C3A43]/70 mt-1">${merchantName}</p>
+            ${card.remaining_balance < card.amount ? `<p class="text-xs text-[#0D2F32] mt-1">Restante: ${currency}${remainingBalance}</p>` : ''}
+          </div>
+          <span class="${statusClasses[card.status]}">
+            ${statusLabels[card.status] || card.status}
+          </span>
+        </div>
+
+        <div class="mt-4 space-y-2 text-sm text-[#2C3A43]/80">
+          <p>${recipientInfo}</p>
+          ${card.redeemed ? `<p class="text-[#0D2F32]/90 font-medium">${card.merchant ? `Canjeada en ${card.merchant.store_name}` : 'Canjeada parcialmente'}</p>` : ''}
+          ${redeemedText ? `<p>${redeemedText}</p>` : ''}
+          ${expiresText ? `<p>${expiresText}</p>` : ''}
+          <p>Creada: ${new Date(card.created_at).toLocaleDateString('es-EC')}</p>
+        </div>
+
+        <div class="mt-6 flex items-center justify-between text-xs text-[#2C3A43]/60">
+          <span>Actualizado ${updatedAt}</span>
+          <a href="/gift_cards/${card.id}" class="papayal-btn-secondary text-sm">Ver detalles</a>
+        </div>
+      </article>
+    `;
+
+    return div;
+  }
+
+  function toggleEmptyState(emptyId, isEmpty) {
+    const emptyElement = document.getElementById(emptyId);
+    if (!emptyElement) return;
+    if (isEmpty) {
+      emptyElement.classList.remove('hidden');
+      emptyElement.style.display = '';
+    } else {
+      emptyElement.classList.add('hidden');
+      emptyElement.style.display = 'none';
+    }
+  }
+
+  function initializeWallet() {
+    categorizeCards();
+    const searchInput = document.getElementById('search-input');
+    const statusFilter = document.getElementById('status-filter');
+    const sortFilter = document.getElementById('sort-filter');
+
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+    if (sortFilter) sortFilter.addEventListener('change', applyFilters);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeWallet);
+  } else {
+    initializeWallet();
+  }
+
+  document.addEventListener('turbo:load', initializeWallet);
+</script>
+
+<style>
+  .tab-button.active-tab {
+    box-shadow: 0px 15px 30px -15px rgba(13, 47, 50, 0.4);
+  }
+</style>
+
 
 <!-- JavaScript for tab functionality -->
 <script>
