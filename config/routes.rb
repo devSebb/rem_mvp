@@ -22,6 +22,9 @@ Rails.application.routes.draw do
         resource :redemption_token, only: :create, module: :gift_cards
       end
 
+      post "gift_cards/validate", to: "gift_cards#validate"
+      get  "gift_cards/:token",   to: "gift_cards#show"
+
       resources :redemptions, only: [:create, :show]
     end
   end
