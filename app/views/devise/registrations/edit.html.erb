@@ -30,6 +30,11 @@
               <%= f.telephone_field :phone, class: "papayal-input mt-2", placeholder: "+593 99 999 9999" %>
             </div>
             <div class="md:col-span-2">
+              <%= f.label :national_id, "Número de identificación nacional", class: "papayal-label" %>
+              <%= f.text_field :national_id, class: "papayal-input mt-2", placeholder: "ABC1234" %>
+              <p class="text-xs text-[#2C3A43]/60 mt-1">Mínimo 7 caracteres alfanuméricos.</p>
+            </div>
+            <div class="md:col-span-2">
               <%= f.label :email, "Correo electrónico", class: "papayal-label" %>
               <%= f.email_field :email, autocomplete: "email", class: "papayal-input mt-2", placeholder: "tu@correo.com" %>
               <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>

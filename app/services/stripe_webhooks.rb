@@ -167,7 +167,8 @@ class StripeWebhooks
       email: email || "gift_recipient_#{SecureRandom.hex(8)}@example.com",
       phone: phone,
       password: SecureRandom.hex(16),
-      role: :user
+      role: :user,
+      skip_national_id_validation: true
     )
     Rails.logger.info "✅ Created new recipient: #{recipient.email}"
     recipient

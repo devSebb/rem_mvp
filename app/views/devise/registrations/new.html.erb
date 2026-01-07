@@ -25,6 +25,12 @@
       </div>
 
       <div>
+        <%= f.label :national_id, "Número de identificación nacional", class: "papayal-label" %>
+        <%= f.text_field :national_id, required: true, class: "papayal-input mt-2", placeholder: "ABC1234" %>
+        <p class="text-xs text-[#2C3A43]/60 mt-1">Mínimo 7 caracteres alfanuméricos.</p>
+      </div>
+
+      <div>
         <%= f.label :password, "Contraseña", class: "papayal-label" %>
         <%= f.password_field :password, autocomplete: "new-password", class: "papayal-input mt-2" %>
         <% if @minimum_password_length %>

@@ -117,7 +117,8 @@ RSpec.describe "Api::V1::GiftCards", type: :request do
       email: "#{role}-#{SecureRandom.hex(6)}@example.com",
       password: "Password!23",
       name: "#{role.to_s.capitalize} #{SecureRandom.hex(4)}",
-      role: role
+      role: role,
+      national_id: "TEST#{SecureRandom.hex(4)}".upcase
     )
   end
 

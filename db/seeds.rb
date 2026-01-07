@@ -19,6 +19,7 @@ admin = User.find_or_create_by!(email: 'admin@example.com') do |user|
   user.password = 'password123'
   user.password_confirmation = 'password123'
   user.role = :admin
+  user.national_id = 'ADMIN001'
 end
 
 puts "✅ Created admin user: #{admin.email}"
@@ -30,6 +31,7 @@ merchant_user = User.find_or_create_by!(email: 'merchant@example.com') do |user|
   user.password_confirmation = 'password123'
   user.role = :merchant
   user.phone = '+1234567890'
+  user.national_id = 'MERC001A'
 end
 
 merchant = Merchant.find_or_initialize_by(user: merchant_user)
@@ -50,6 +52,7 @@ merchant_user_two = User.find_or_create_by!(email: 'merchant2@example.com') do |
   user.password_confirmation = 'password123'
   user.role = :merchant
   user.phone = '+1098765432'
+  user.national_id = 'MERC002B'
 end
 
 merchant_two = Merchant.find_or_initialize_by(user: merchant_user_two)
@@ -71,6 +74,7 @@ regular_user = User.find_or_create_by!(email: 'user@example.com') do |user|
   user.password_confirmation = 'password123'
   user.role = :user
   user.phone = '+1987654321'
+  user.national_id = 'USER001C'
 end
 
 puts "✅ Created regular user: #{regular_user.email}"
