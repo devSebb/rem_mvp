@@ -14,20 +14,35 @@ module Api
       end
 
       def show
-        redemption = current_merchant.redemptions.find(params[:id])
+        transaction = Transaction.find_by!(merchant_id: current_merchant.id, id: params[:id])
         result = {
-          redemption: redemption,
-          approved: redemption.approved?,
-          status: redemption.status,
-          decline_reason: redemption.decline_reason,
-          redemption_id: redemption.id,
-          gift_card_id: redemption.gift_card_id,
-          amount_cents: redemption.amount_cents,
-          remaining_balance_cents: redemption.gift_card&.remaining_balance,
-          currency: redemption.currency
+          transaction: transaction,
+          approved: transaction.succeeded?,
+          status: transaction.status,
+          decline_reason: transaction.decline_reason,
+          transaction_id: transaction.id,
+          gift_card_id: transaction.gift_card_id,
+          amount_cents: transaction.amount,
+          remaining_balance_cents: transaction.gift_card&.remaining_balance,
+          currency: transaction.currency
         }
 
         render json: format_response(result), status: :ok
+      end
+
+      def refund
+        idempotency_key = params.require(:idempotency_key)
+        reason = params[:reason]
+
+        result = Refunds::Issue.call(
+          merchant: current_merchant,
+          redemption_transaction_id: params[:id],
+          actor: nil,
+          reason: reason,
+          idempotency_key: idempotency_key
+        )
+
+        render json: result, status: :ok
       end
 
       private
@@ -44,7 +59,7 @@ module Api
         payload = {
           approved: result[:approved],
           status: result[:status],
-          redemption_id: result[:redemption_id],
+          transaction_id: result[:transaction_id],
           gift_card_id: result[:gift_card_id],
           amount_cents: result[:amount_cents],
           remaining_balance_cents: result[:remaining_balance_cents],

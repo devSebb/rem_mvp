@@ -20,9 +20,10 @@ class GiftCardPolicy < ApplicationPolicy
     user.present? && (record.recipient == user || user.admin?)
   end
 
-  # Only admins can issue refunds
   def refund?
-    user.present? && user.admin?
+    return false unless user.present?
+    return true if user.admin?
+    user.merchant? && record.merchant&.user_id == user.id
   end
 
   # Only recipients can transfer their gift cards

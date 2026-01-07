@@ -1,5 +1,5 @@
 class Admin::RefundsController < ApplicationController
-  before_action :ensure_admin
+  before_action :ensure_admin_or_merchant
   before_action :set_gift_card, only: [:new, :create]
 
   def new
@@ -46,9 +46,9 @@ class Admin::RefundsController < ApplicationController
 
   private
 
-  def ensure_admin
-    unless current_user&.admin?
-      flash[:alert] = 'You must be an admin to access this area.'
+  def ensure_admin_or_merchant
+    unless current_user&.admin? || current_user&.merchant?
+      flash[:alert] = 'You must be an admin or merchant to access this area.'
       redirect_to root_path
     end
   end

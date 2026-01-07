@@ -5,6 +5,7 @@ module Api
 
       rescue_from ActionController::ParameterMissing, with: :render_unprocessable_entity
       rescue_from Redemptions::AuthorizeAndCapture::ValidationError, with: :render_unprocessable_entity
+      rescue_from Refunds::Issue::ValidationError, with: :render_unprocessable_entity
       rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
       attr_reader :current_merchant

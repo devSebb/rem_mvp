@@ -1,4 +1,12 @@
 <div class="space-y-8">
+  <div class="flex items-center">
+    <% back_target = request.referer.presence || gift_cards_path(tab: params[:tab].presence || 'sent') %>
+    <%= link_to back_target, class: "inline-flex items-center gap-2 text-sm text-[#0D2F32] hover:text-[#0B2528]" do %>
+      <span aria-hidden="true">←</span>
+      <span>Volver</span>
+    <% end %>
+  </div>
+
   <div class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
     <div>
       <p class="papayal-meta text-[#0D2F32]">Tarjeta Papayal</p>
@@ -122,8 +130,8 @@
           <% if policy(@gift_card).transfer? %>
             <%= link_to "Transferir", new_gift_card_transfer_path(@gift_card), class: "papayal-btn-primary w-full" %>
           <% end %>
-          <% if current_user&.admin? && @gift_card.transactions.successful.redemptions.any? %>
-            <%= link_to "Emitir Reembolso", new_admin_refund_path(@gift_card), class: "papayal-btn-ghost w-full text-center border border-rose-200 text-rose-700 bg-rose-50/60 hover:bg-rose-100" %>
+          <% if policy(@gift_card).refund? && @gift_card.transactions.successful.redemptions.any? %>
+            <%= link_to "Emitir Reembolso", new_admin_gift_card_refund_path(@gift_card), class: "papayal-btn-ghost w-full text-center border border-rose-200 text-rose-700 bg-rose-50/60 hover:bg-rose-100" %>
           <% end %>
           <% if @gift_card.active? %>
             <%= link_to "Comprar Otra", new_gift_card_path, class: "papayal-btn-ghost w-full text-center" %>

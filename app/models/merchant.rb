@@ -5,7 +5,6 @@ class Merchant < ApplicationRecord
   has_many :gift_cards, dependent: :nullify
   has_many :transactions, through: :gift_cards
   has_many :settlements, dependent: :destroy
-  has_many :redemptions, dependent: :nullify
 
   enum status: { active: 0, suspended: 1 }
 

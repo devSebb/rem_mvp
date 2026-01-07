@@ -1,13 +1,16 @@
 <div class="space-y-8">
-  <div class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-[#0D2F32] text-white">
+  <div
+    class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+    style="background: linear-gradient(135deg, #FCA50F 0%, #FFC65C 45%, #EBEBE8 100%);"
+  >
     <div>
-      <p class="papayal-meta text-white/70">Modo Comercio</p>
-      <h1 class="text-3xl font-bold">Hola, <%= @merchant.store_name %></h1>
-      <p class="text-sm text-white/70 mt-2">Administra tus canjes y liquidaciones desde un panel cálido y profesional.</p>
+      <p class="papayal-meta text-[#0D2F32]/80">Modo Comercio</p>
+      <h1 class="text-3xl font-bold text-[#0D2F32]">Hola, <%= @merchant.store_name %></h1>
+      <p class="text-sm text-[#0D2F32]/80 mt-2">Administra tus canjes y liquidaciones desde un panel cálido y profesional.</p>
     </div>
     <div class="flex flex-wrap gap-3">
-      <%= link_to "Canjear Tarjeta", new_merchant_redemption_path, class: "papayal-btn-primary bg-white text-[#0D2F32]" %>
-      <%= link_to "Actualizar Perfil", merchant_profile_path, class: "papayal-btn-secondary border-white/40 text-white hover:bg-white/10" %>
+      <%= link_to "Canjear Tarjeta", new_merchant_redemption_path,
+          class: "papayal-btn-primary bg-[#EBEBE8] text-[#0D2F32] border border-[#0D2F32]/20 hover:bg-[#EBEBE8]/90" %>
     </div>
   </div>
 
@@ -102,6 +105,7 @@
               <th class="px-4 py-3">Cliente</th>
               <th class="px-4 py-3">Monto</th>
               <th class="px-4 py-3">Estado</th>
+              <th class="px-4 py-3 text-right">Detalle</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-black/5">
@@ -133,6 +137,11 @@
                   <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#0D2F32]/10 text-[#0D2F32]">
                     Canjeado
                   </span>
+                </td>
+                <td class="px-4 py-4 text-right">
+                  <%= link_to "Detalles",
+                      merchant_gift_card_path(transaction.gift_card),
+                      class: "papayal-btn-secondary text-xs whitespace-nowrap" %>
                 </td>
               </tr>
             <% end %>

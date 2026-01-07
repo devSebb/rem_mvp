@@ -25,7 +25,10 @@ Rails.application.routes.draw do
       post "gift_cards/validate", to: "gift_cards#validate"
       get  "gift_cards/:token",   to: "gift_cards#show"
 
-      resources :redemptions, only: [:create, :show]
+      # Kept path for backwards compatibility; now backed by Transaction records.
+      resources :redemptions, only: [:create, :show] do
+        post :refund, on: :member
+      end
     end
   end
 
@@ -42,6 +45,9 @@ Rails.application.routes.draw do
       get :confirm, on: :collection
       post :redeem, on: :collection
       get :success, on: :collection
+    end
+    resources :gift_cards, only: [:show] do
+      post "transactions/:transaction_id/refund", to: "transactions#refund", as: :refund_transaction
     end
     resources :settlements, only: [:index, :show]
     resource :profile, only: [:show, :update]

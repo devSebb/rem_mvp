@@ -15,4 +15,20 @@ module ApplicationHelper
   def status_badge_label(status)
     STATUS_PRESETS[status.to_s]&.fetch(:label, nil) || status.to_s.humanize
   end
+
+  def navbar_subtitle
+    return tag.span("comercio", class: "italic") if merchant_nav_context?
+
+    "Tu billetera de regalos cálida"
+  end
+
+  def navbar_home_path
+    return merchant_root_path if current_user&.merchant? || merchant_nav_context?
+
+    root_path
+  end
+
+  def merchant_nav_context?
+    controller_path.start_with?("merchant/")
+  end
 end

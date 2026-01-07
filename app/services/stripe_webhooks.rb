@@ -88,6 +88,9 @@ class StripeWebhooks
         txn_type: :purchase,
         status: :succeeded,
         processor_ref: session.payment_intent || "session_#{session.id}",
+        merchant: merchant,
+        user: sender,
+        currency: gift_card.currency,
         metadata: {
           stripe_session_id: session.id,
           stripe_payment_intent: session.payment_intent,

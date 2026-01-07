@@ -96,6 +96,61 @@ curl -X GET http://localhost:3000/api/v1/gift_cards/RAW_TOKEN_COMPARTIDO \
 
 ---
 
+## Reembolsar una redención (refund)
+
+`POST /api/v1/redemptions/:id/refund`
+
+### Importante
+
+- Este endpoint **reembolsa el 100%** del monto de la transacción de redención `:id` (no hay reembolso parcial por ahora).
+- `id` es el **transaction_id** que devuelve `POST /api/v1/redemptions` o `GET /api/v1/redemptions/:id`.
+- Debes enviar un `idempotency_key` en el body para hacer el request idempotente.
+
+### Body (JSON)
+
+```json
+{
+  "idempotency_key": "uuid-o-string-único",
+  "reason": "customer asked (opcional)"
+}
+```
+
+### Respuesta 200 OK
+
+```json
+{
+  "approved": true,
+  "status": "succeeded",
+  "refund_transaction_id": 123,
+  "original_transaction_id": 456,
+  "gift_card_id": 42,
+  "amount_cents": 2500,
+  "remaining_balance_cents": 10000,
+  "currency": "USD"
+}
+```
+
+### Errores comunes
+
+- **401 Unauthorized**: falta o es inválido el header `Authorization`.
+- **403 Forbidden**: comercio suspendido.
+- **404 Not Found**: el `:id` no existe o no pertenece a tu comercio.
+- **422 Unprocessable Entity**: validación fallida (ej. “Transaction is not a successful redemption”, “Redemption already refunded”).
+
+### cURL de ejemplo
+
+```bash
+curl -X POST http://localhost:3000/api/v1/redemptions/456/refund \
+  -H "Authorization: Bearer <MERCHANT_SECRET_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "idempotency_key":"refund-uuid-1",
+    "reason":"customer asked"
+  }'
+```
+
+---
+
 ### Notas
 
 - Los tokens expiran en ~90 segundos y se invalidan después de usarse.

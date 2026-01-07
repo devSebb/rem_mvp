@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_11_24_052000) do
+ActiveRecord::Schema[7.2].define(version: 2026_01_07_013325) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -78,24 +78,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_24_052000) do
     t.index ["token_digest"], name: "index_redemption_tokens_on_token_digest", unique: true
   end
 
-  create_table "redemptions", force: :cascade do |t|
-    t.bigint "merchant_id", null: false
-    t.bigint "gift_card_id"
-    t.bigint "redemption_token_id"
-    t.integer "amount_cents", null: false
-    t.string "currency", default: "USD", null: false
-    t.integer "status", null: false
-    t.string "decline_reason"
-    t.string "idempotency_key", null: false
-    t.string "merchant_reference"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["gift_card_id"], name: "index_redemptions_on_gift_card_id"
-    t.index ["merchant_id", "idempotency_key"], name: "index_redemptions_on_merchant_id_and_idempotency_key", unique: true
-    t.index ["merchant_id"], name: "index_redemptions_on_merchant_id"
-    t.index ["redemption_token_id"], name: "index_redemptions_on_redemption_token_id"
-  end
-
   create_table "settlements", force: :cascade do |t|
     t.bigint "merchant_id", null: false
     t.integer "amount", null: false
@@ -111,7 +93,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_24_052000) do
   end
 
   create_table "transactions", force: :cascade do |t|
-    t.bigint "gift_card_id", null: false
+    t.bigint "gift_card_id"
     t.integer "amount", null: false
     t.integer "txn_type", null: false
     t.integer "status", default: 0, null: false
@@ -119,10 +101,21 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_24_052000) do
     t.jsonb "metadata", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "merchant_id"
+    t.bigint "user_id"
+    t.bigint "redemption_token_id"
+    t.string "currency"
+    t.string "idempotency_key"
+    t.string "decline_reason"
+    t.string "merchant_reference"
     t.index ["gift_card_id"], name: "index_transactions_on_gift_card_id"
+    t.index ["merchant_id", "idempotency_key"], name: "index_transactions_on_merchant_id_and_idempotency_key", unique: true, where: "(idempotency_key IS NOT NULL)"
+    t.index ["merchant_id"], name: "index_transactions_on_merchant_id"
     t.index ["metadata"], name: "index_transactions_on_metadata", using: :gin
+    t.index ["redemption_token_id"], name: "index_transactions_on_redemption_token_id"
     t.index ["status"], name: "index_transactions_on_status"
     t.index ["txn_type"], name: "index_transactions_on_txn_type"
+    t.index ["user_id"], name: "index_transactions_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -147,9 +140,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_24_052000) do
   add_foreign_key "gift_cards", "users", column: "sender_id"
   add_foreign_key "merchants", "users"
   add_foreign_key "redemption_tokens", "gift_cards"
-  add_foreign_key "redemptions", "gift_cards"
-  add_foreign_key "redemptions", "merchants"
-  add_foreign_key "redemptions", "redemption_tokens"
   add_foreign_key "settlements", "merchants"
   add_foreign_key "transactions", "gift_cards"
+  add_foreign_key "transactions", "merchants"
+  add_foreign_key "transactions", "redemption_tokens"
+  add_foreign_key "transactions", "users"
 end

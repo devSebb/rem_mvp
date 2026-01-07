@@ -29,13 +29,13 @@
         <div class="max-w-7xl mx-auto px-6">
           <div class="flex h-16 items-center justify-between gap-6">
             <div class="flex items-center gap-3">
-              <%= link_to root_path, class: "flex items-center gap-3" do %>
+              <%= link_to navbar_home_path, class: "flex items-center gap-3" do %>
                 <div class="h-10 w-10 rounded-2xl bg-[#FCA50F] flex items-center justify-center shadow-sm">
                   <span class="font-bold text-[#0D2F32]">Pa</span>
                 </div>
                 <div>
                   <p class="text-lg font-bold text-[#0D2F32]">Papayal</p>
-                  <p class="text-xs text-[#2C3A43]/70">Tu billetera de regalos cálida</p>
+                  <p class="text-xs text-[#2C3A43]/70"><%= navbar_subtitle %></p>
                 </div>
               <% end %>
               <% if current_user&.admin? %>
@@ -46,7 +46,9 @@
             <!-- Desktop Navigation -->
             <div class="desktop-navigation hidden md:flex items-center gap-2">
               <% if user_signed_in? %>
-                <%= link_to "Inicio", root_path, class: "papayal-btn-ghost text-sm" %>
+                <% unless current_user&.merchant? || merchant_nav_context? %>
+                  <%= link_to "Inicio", root_path, class: "papayal-btn-ghost text-sm" %>
+                <% end %>
                 <% unless current_user.merchant? %>
                   <%= link_to "Mi Billetera", gift_cards_path, class: "papayal-btn-ghost text-sm" %>
                   <%= link_to "Comprar Tarjeta", new_gift_card_path, class: "papayal-btn-primary text-sm" %>
@@ -80,7 +82,9 @@
           <div class="md:hidden hidden pb-6" id="mobile-menu" style="display: none;">
             <div class="space-y-2 border-t border-black/5 pt-4">
               <% if user_signed_in? %>
-                <%= link_to "Inicio", root_path, class: "block w-full papayal-btn-ghost text-left justify-start" %>
+                <% unless current_user&.merchant? || merchant_nav_context? %>
+                  <%= link_to "Inicio", root_path, class: "block w-full papayal-btn-ghost text-left justify-start" %>
+                <% end %>
                 <% unless current_user.merchant? %>
                   <%= link_to "Mi Billetera", gift_cards_path, class: "block w-full papayal-btn-ghost text-left justify-start" %>
                   <%= link_to "Comprar Tarjeta", new_gift_card_path, class: "block w-full papayal-btn-primary text-center" %>

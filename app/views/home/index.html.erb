@@ -1,7 +1,7 @@
 <% if user_signed_in? && current_user.admin? %>
   <% recent_gift_cards = GiftCard.order(created_at: :desc).limit(5) %>
   <% latest_merchants = Merchant.order(created_at: :desc).limit(5) %>
-  <% recent_redemptions = Redemption.order(created_at: :desc).limit(5) %>
+  <% recent_redemptions = Transaction.where(txn_type: :redemption).order(created_at: :desc).includes(:merchant, gift_card: :sender).limit(5) %>
   <% total_volume = GiftCard.sum(:amount).to_f / 100 %>
   <div class="space-y-10">
     <div class="grid grid-cols-12 gap-6 items-start">
@@ -114,7 +114,7 @@
                   <p class="font-semibold text-[#0D2F32]"><%= merchant.store_name %></p>
                   <p class="text-xs text-[#2C3A43]/70">ID Comercio • <%= merchant.created_at.strftime('%d %b %Y') %></p>
                 </div>
-                <span class="text-sm font-medium text-[#0D2F32]"><%= number_to_currency(merchant.redemptions.sum(:amount_cents).to_f / 100, unit: '$') %></span>
+                <span class="text-sm font-medium text-[#0D2F32]"><%= number_to_currency(Transaction.where(merchant_id: merchant.id, txn_type: :redemption, status: :succeeded).sum(:amount).to_f / 100, unit: '$') %></span>
               </div>
             <% end %>
           </div>
@@ -149,15 +149,15 @@
               <% recent_redemptions.each do |redemption| %>
                 <tr class="hover:bg-[#EBEBEB]/40 transition">
                   <td class="px-4 py-3">
-                    <p class="font-medium text-[#2C3A43]"><%= redemption.merchant.store_name %></p>
+                    <p class="font-medium text-[#2C3A43]"><%= (redemption.merchant || redemption.gift_card&.merchant)&.store_name || "Comercio desconocido" %></p>
                     <p class="text-xs text-[#2C3A43]/70"><%= redemption.gift_card&.sender&.name || "Sin remitente" %></p>
                   </td>
                   <td class="px-4 py-3 font-semibold">
-                    <%= number_to_currency(redemption.amount_cents / 100.0, unit: redemption.currency == 'USD' ? '$' : redemption.currency) %>
+                    <%= number_to_currency(redemption.amount / 100.0, unit: redemption.currency == 'USD' ? '$' : redemption.currency) %>
                   </td>
                   <td class="px-4 py-3">
-                    <span class="<%= redemption.approved? ? status_badge_classes(:active) : status_badge_classes(:pending) %>">
-                      <%= redemption.approved? ? "Aprobado" : "Pendiente" %>
+                    <span class="<%= redemption.succeeded? ? status_badge_classes(:active) : status_badge_classes(:pending) %>">
+                      <%= redemption.succeeded? ? "Aprobado" : "Rechazado" %>
                     </span>
                   </td>
                   <td class="px-4 py-3 text-[#2C3A43]/70">
@@ -267,7 +267,7 @@
   <div class="grid grid-cols-12 gap-6 items-center">
     <div class="col-span-12 lg:col-span-7">
       <p class="papayal-meta text-[#0D2F32]">Papayal para todos</p>
-      <h1 class="text-4xl lg:text-5xl font-bold text-[#0D2F32] mt-4">
+      <h1 class="text-4xl lg:text-5xl font-bold text-[#0D2F32] mt-4 leading-relaxed">
         Tarjetas de regalo cálidas con calidad fintech.
       </h1>
       <p class="text-lg text-[#2C3A43]/80 mt-4 max-w-2xl">

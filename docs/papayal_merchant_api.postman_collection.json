@@ -1,0 +1,127 @@
+{
+  "info": {
+    "_postman_id": "b0e6f9f2-2cc8-4d4d-8f3d-2fca0b0df4b6",
+    "name": "Papayal Merchant API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Merchant-facing API for validating balances, redeeming gift cards, fetching redemption transactions, and issuing refunds.\n\nAuth\n- Authorization: Bearer {{api_key}}\n\nVariables you should set in Postman\n- base_url (e.g. http://localhost:3000)\n- api_key (merchant secret key)\n- token (short-lived redemption token shown by the customer)\n- transaction_id (the redemption transaction id returned by POST /api/v1/redemptions)\n\nImportant\n- `idempotency_key` is REQUIRED in the JSON body for redemption and refund requests.\n- Refunds are currently FULL refunds of the referenced redemption transaction (no partial refund endpoint yet).\n- This app does NOT currently read an `Idempotency-Key` HTTP header; include it only if your client wants to echo/log it."
+  },
+  "item": [
+    {
+      "name": "Validate Gift Card",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{api_key}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"{{token}}\",\n  \"amount_cents\": 500\n}\n",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/gift_cards/validate",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "gift_cards", "validate"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Show Balance",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{api_key}}", "type": "text" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/gift_cards/{{token}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "gift_cards", "{{token}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Redeem (Authorize & Capture)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.environment.set(\"idempotency_key\", crypto.randomUUID());"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{api_key}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"{{token}}\",\n  \"amount_cents\": 500,\n  \"idempotency_key\": \"{{idempotency_key}}\",\n  \"merchant_reference\": \"pos-demo-001\"\n}\n",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/redemptions",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "redemptions"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Redemption Transaction",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{api_key}}", "type": "text" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/redemptions/{{transaction_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "redemptions", "{{transaction_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Refund Redemption (Full Refund)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.environment.set(\"refund_idempotency_key\", crypto.randomUUID());"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{api_key}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"idempotency_key\": \"{{refund_idempotency_key}}\",\n  \"reason\": \"customer asked\"\n}\n",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/redemptions/{{transaction_id}}/refund",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "redemptions", "{{transaction_id}}", "refund"]
+        }
+      },
+      "response": []
+    }
+  ]
+}
+
+

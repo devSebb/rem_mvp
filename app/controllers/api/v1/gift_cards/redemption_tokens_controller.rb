@@ -2,6 +2,7 @@ module Api
   module V1
     module GiftCards
       class RedemptionTokensController < ApplicationController
+        skip_before_action :verify_authenticity_token
         before_action :set_gift_card
 
         def create

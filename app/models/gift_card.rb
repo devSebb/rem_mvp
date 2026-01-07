@@ -4,7 +4,6 @@ class GiftCard < ApplicationRecord
   belongs_to :merchant, optional: true
   has_many :transactions, dependent: :destroy
   has_many :redemption_tokens, dependent: :destroy
-  has_many :redemptions, dependent: :nullify
   class RedemptionError < StandardError
     attr_reader :reason
 
@@ -32,6 +31,7 @@ class GiftCard < ApplicationRecord
 
   # Callbacks
   before_validation :set_defaults, on: :create
+  after_create :record_issuance_transaction_unless_stripe!
 
   # Class methods
   def self.find_active_by_code(code)
@@ -132,7 +132,10 @@ class GiftCard < ApplicationRecord
         amount: redemption_amount,
         txn_type: :redemption,
         status: :succeeded,
-        processor_ref: "redeem_#{id}_#{Time.current.to_i}",
+        processor_ref: "ui_redemption_#{SecureRandom.uuid}",
+        merchant: merchant,
+        user: actor,
+        currency: currency,
         metadata: {
           actor_id: actor.id,
           actor_type: actor.class.name,
@@ -200,8 +203,11 @@ class GiftCard < ApplicationRecord
       transactions.create!(
         amount: refund_amount,
         txn_type: :refund,
-        status: :pending,
-        processor_ref: "refund_#{id}_#{Time.current.to_i}",
+        status: :succeeded,
+        processor_ref: "refund_#{SecureRandom.uuid}",
+        merchant: merchant,
+        user: actor,
+        currency: currency,
         metadata: {
           actor_id: actor.id,
           reason: reason,
@@ -212,8 +218,10 @@ class GiftCard < ApplicationRecord
       # Restore balance
       update!(remaining_balance: remaining_balance + refund_amount)
       
-      # Revert to active if fully refunded
-      if remaining_balance == amount
+      # Revert to active if any balance is restored (or fully refunded)
+      if redeemed? && remaining_balance.positive?
+        update!(status: :active, redeemed_at: nil)
+      elsif remaining_balance == amount
         update!(status: :active, redeemed_at: nil)
       end
     end
@@ -238,7 +246,10 @@ class GiftCard < ApplicationRecord
         amount: 0, # No money movement, just ownership change
         txn_type: :adjustment,
         status: :succeeded,
-        processor_ref: "transfer_#{id}_#{Time.current.to_i}",
+        processor_ref: "transfer_#{SecureRandom.uuid}",
+        merchant: merchant,
+        user: actor,
+        currency: currency,
         metadata: {
           action: 'transfer',
           from_user_id: old_recipient.id,
@@ -319,5 +330,30 @@ class GiftCard < ApplicationRecord
     end
     
     self.remaining_balance = amount if amount.present? && remaining_balance == 0
+  end
+
+  # For non-Stripe issuance (seeds, admin-issued, manual test cards), record an issuance transaction
+  # so the ledger is complete. Stripe-created cards will have checkout_session_id and are handled
+  # by `StripeWebhooks`, which creates a `purchase` transaction instead.
+  def record_issuance_transaction_unless_stripe!
+    return if checkout_session_id.present?
+    return if transactions.purchases.exists?
+    return if amount.blank? || amount.to_i <= 0
+
+    transactions.create!(
+      amount: amount,
+      txn_type: :issuance,
+      status: :succeeded,
+      processor_ref: "issuance_#{SecureRandom.uuid}",
+      merchant: merchant,
+      user: sender,
+      currency: currency,
+      metadata: {
+        source: "non_stripe_issuance"
+      }
+    )
+  rescue => e
+    Rails.logger.error "💥 Failed to record issuance transaction for gift card #{id}: #{e.class} - #{e.message}"
+    # Don't block gift card creation if ledger write fails; log and move on.
   end
 end

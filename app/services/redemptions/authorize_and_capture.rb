@@ -19,7 +19,7 @@ module Redemptions
     def call
       validate_request!
 
-      if (existing = existing_redemption)
+      if (existing = existing_transaction)
         return build_payload(existing)
       end
 
@@ -56,32 +56,33 @@ module Redemptions
           return decline!(reason, token: token, gift_card: gift_card)
         end
 
-        redemption = create_redemption!(
-          status: :approved,
+        txn = create_transaction!(
           gift_card: gift_card,
-          redemption_token: token
+          redemption_token: token,
+          status: :succeeded,
+          decline_reason: nil
         )
-
-        create_transaction!(gift_card, redemption)
         token.update!(used_at: Time.current)
 
-        build_payload(redemption, remaining_balance_override: new_balance)
+        build_payload(txn, remaining_balance_override: new_balance)
       end
     end
 
     def decline!(reason, token: nil, gift_card: nil)
-      redemption = create_redemption!(
-        status: :declined,
-        decline_reason: reason,
+      txn = create_transaction!(
         gift_card: gift_card,
-        redemption_token: token
+        redemption_token: token,
+        status: :failed,
+        decline_reason: reason
       )
 
-      build_payload(redemption)
+      build_payload(txn)
     end
 
-    def existing_redemption
-      @existing_redemption ||= merchant.redemptions.includes(:gift_card).find_by(idempotency_key: idempotency_key)
+    def existing_transaction
+      @existing_transaction ||= Transaction
+                                .includes(:gift_card)
+                                .find_by(merchant_id: merchant.id, idempotency_key: idempotency_key)
     end
 
     def locate_token
@@ -99,51 +100,44 @@ module Redemptions
       raise ValidationError, "idempotency_key is required" if idempotency_key.blank?
     end
 
-    def create_redemption!(status:, gift_card:, redemption_token: nil, decline_reason: nil)
-      merchant.redemptions.create!(
-        gift_card: gift_card,
-        redemption_token: redemption_token,
-        status: status,
-        decline_reason: decline_reason,
-        amount_cents: amount_cents,
-        currency: gift_card&.currency || "USD",
-        idempotency_key: idempotency_key,
-        merchant_reference: merchant_reference
-      )
-    rescue ActiveRecord::RecordNotUnique
-      merchant.redemptions.for_idempotency(merchant.id, idempotency_key).first!
-    end
-
-    def build_payload(redemption, remaining_balance_override: nil)
-      gift_card = redemption.gift_card
+    def build_payload(txn, remaining_balance_override: nil)
+      gift_card = txn.gift_card
       remaining_balance = remaining_balance_override
       remaining_balance ||= gift_card&.reload&.remaining_balance
 
       {
-        redemption: redemption,
-        approved: redemption.approved?,
-        status: redemption.status,
-        decline_reason: redemption.decline_reason,
-        redemption_id: redemption.id,
+        transaction: txn,
+        approved: txn.succeeded?,
+        status: txn.status,
+        decline_reason: txn.decline_reason,
+        transaction_id: txn.id,
         gift_card_id: gift_card&.id,
-        amount_cents: redemption.amount_cents,
+        amount_cents: txn.amount,
         remaining_balance_cents: remaining_balance,
-        currency: redemption.currency || gift_card&.currency || "USD"
+        currency: txn.currency || gift_card&.currency || "USD"
       }
     end
 
-    def create_transaction!(gift_card, redemption)
-      gift_card.transactions.create!(
+    def create_transaction!(gift_card:, redemption_token:, status:, decline_reason:)
+      Transaction.create!(
+        gift_card: gift_card,
+        redemption_token: redemption_token,
+        merchant: merchant,
         amount: amount_cents,
+        currency: gift_card&.currency || "USD",
         txn_type: :redemption,
-        status: :succeeded,
+        status: status,
         processor_ref: "merchant_api_redemption_#{SecureRandom.uuid}",
+        idempotency_key: idempotency_key,
+        merchant_reference: merchant_reference,
+        decline_reason: decline_reason,
         metadata: {
           merchant_id: merchant.id,
-          merchant_reference: merchant_reference,
-          redemption_id: redemption.id
+          merchant_reference: merchant_reference
         }.compact
       )
+    rescue ActiveRecord::RecordNotUnique
+      Transaction.find_by!(merchant_id: merchant.id, idempotency_key: idempotency_key)
     end
   end
 end

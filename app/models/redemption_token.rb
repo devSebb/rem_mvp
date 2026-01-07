@@ -2,7 +2,7 @@ class RedemptionToken < ApplicationRecord
   TTL_SECONDS = 90
 
   belongs_to :gift_card
-  has_many :redemptions, dependent: :nullify
+  has_many :transactions, dependent: :nullify
 
   scope :active, -> { where("expires_at > ? AND used_at IS NULL", Time.current) }
 

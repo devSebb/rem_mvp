@@ -277,7 +277,21 @@ After running `rails db:seed`:
      -H "Authorization: Bearer <MERCHANT_SECRET_KEY>"
    ```
 
-Approved/declined responses both return `200 OK` with an `approved` boolean, the resulting balances, and an optional `decline_reason`. Suspended or unknown merchants receive `403/401`, and malformed input returns `422`.
+6. **Refund a successful redemption (full refund)**
+
+   **Note:** this refunds **100% of the redemption transaction amount** (no partial refunds yet).
+
+   ```bash
+   curl -X POST http://localhost:3000/api/v1/redemptions/<ID>/refund \
+     -H "Authorization: Bearer <MERCHANT_SECRET_KEY>" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "idempotency_key":"refund-uuid-1",
+       "reason":"customer asked"
+     }'
+   ```
+
+Approved/declined redemption responses both return `200 OK` with an `approved` boolean, the resulting balances, and an optional `decline_reason`. Refund responses return `200 OK` with `refund_transaction_id`, `original_transaction_id`, and the restored `remaining_balance_cents`. Suspended or unknown merchants receive `403/401`, and malformed input returns `422`.
 
 ## Security Notes
 

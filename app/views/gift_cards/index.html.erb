@@ -149,7 +149,7 @@
 
   let allCards = [];
   let currentUserId = 0;
-  let currentTab = 'sent';
+  let currentTab = new URLSearchParams(window.location.search).get('tab') || 'sent';
   let filteredCards = { sent: [], received: [], redeemed: [] };
 
   function categorizeCards() {
@@ -304,7 +304,7 @@
 
         <div class="mt-6 flex items-center justify-between text-xs text-[#2C3A43]/60">
           <span>Actualizado ${updatedAt}</span>
-          <a href="/gift_cards/${card.id}" class="papayal-btn-secondary text-sm">Ver detalles</a>
+          <a href="/gift_cards/${card.id}?tab=${type}" class="papayal-btn-secondary text-sm">Ver detalles</a>
         </div>
       </article>
     `;
@@ -325,6 +325,7 @@
   }
 
   function initializeWallet() {
+    showTab(currentTab);
     categorizeCards();
     const searchInput = document.getElementById('search-input');
     const statusFilter = document.getElementById('status-filter');
@@ -380,7 +381,7 @@
   // Global variables for filtering
   let allCards = [];
   let currentUserId = 0;
-  let currentTab = 'sent';
+  let currentTab = new URLSearchParams(window.location.search).get('tab') || 'sent';
   let filteredCards = {
     sent: [],
     received: [],
@@ -613,6 +614,7 @@
 
   // Initialize function
   function initializeWallet() {
+    showTab(currentTab);
     categorizeCards();
     
     // Add event listeners for search and filtering
