@@ -29,6 +29,21 @@ Rails.application.routes.draw do
       resources :redemptions, only: [:create, :show] do
         post :refund, on: :member
       end
+
+      namespace :auth do
+        post :login, to: "sessions#login"
+        post :refresh, to: "sessions#refresh"
+        post :logout, to: "sessions#logout"
+        post :logout_all, to: "sessions#logout_all"
+      end
+
+      get "me", to: "me#show"
+
+      namespace :me do
+        resources :gift_cards, only: [:index, :show] do
+          post :redemption_token, on: :member
+        end
+      end
     end
   end
 

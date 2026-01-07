@@ -1,6 +1,13 @@
 class Rack::Attack
+  redis_url = ENV['REDIS_URL']
+  if Rails.env.production?
+    raise "REDIS_URL is required in production for Rack::Attack cache" if redis_url.blank?
+  else
+    redis_url ||= 'redis://localhost:6379/0'
+  end
+
   # Configure cache store
-  Rack::Attack.cache.store = ActiveSupport::Cache::RedisCacheStore.new(url: ENV['REDIS_URL'] || 'redis://localhost:6379/0')
+  Rack::Attack.cache.store = ActiveSupport::Cache::RedisCacheStore.new(url: redis_url)
 
   # Throttle POST requests to merchant redemptions by IP
   throttle('merchant/redemptions/ip', limit: 10, period: 1.minute) do |req|
@@ -10,7 +17,7 @@ class Rack::Attack
   end
 
   # Throttle webhook requests by IP
-  throttle('webhooks/stripe/ip', limit: 20, period: 1.minute) do |req|
+  throttle('webhooks/stripe/ip', limit: 60, period: 1.minute) do |req|
     if req.path == '/webhooks/stripe' && req.post?
       req.ip
     end
@@ -26,6 +33,24 @@ class Rack::Attack
   # Throttle login attempts by IP
   throttle('login/ip', limit: 5, period: 20.minutes) do |req|
     if req.path == '/users/sign_in' && req.post?
+      req.ip
+    end
+  end
+
+  throttle('api/auth/login/ip', limit: 10, period: 10.minutes) do |req|
+    if req.path == '/api/v1/auth/login' && req.post?
+      req.ip
+    end
+  end
+
+  throttle('api/auth/refresh/ip', limit: 30, period: 30.minutes) do |req|
+    if req.path == '/api/v1/auth/refresh' && req.post?
+      req.ip
+    end
+  end
+
+  throttle('api/me/redemption_token/ip', limit: 20, period: 5.minutes) do |req|
+    if req.path =~ %r{\A/api/v1/me/gift_cards/\d+/redemption_token\z} && req.post?
       req.ip
     end
   end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_01_07_015000) do
+ActiveRecord::Schema[7.2].define(version: 2026_01_07_030000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -118,6 +118,21 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_07_015000) do
     t.index ["user_id"], name: "index_transactions_on_user_id"
   end
 
+  create_table "user_sessions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "refresh_token_digest", null: false
+    t.string "device_id"
+    t.string "ip"
+    t.string "user_agent"
+    t.datetime "last_used_at"
+    t.datetime "revoked_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["refresh_token_digest"], name: "index_user_sessions_on_refresh_token_digest", unique: true
+    t.index ["revoked_at"], name: "index_user_sessions_on_revoked_at"
+    t.index ["user_id"], name: "index_user_sessions_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -147,4 +162,5 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_07_015000) do
   add_foreign_key "transactions", "merchants"
   add_foreign_key "transactions", "redemption_tokens"
   add_foreign_key "transactions", "users"
+  add_foreign_key "user_sessions", "users"
 end

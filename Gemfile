@@ -29,6 +29,7 @@ gem "bcrypt", "~> 3.1.7"
 
 # Authentication
 gem "devise"
+gem "jwt"
 
 # Authorization
 gem "pundit"

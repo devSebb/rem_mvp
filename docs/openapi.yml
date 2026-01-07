@@ -1,0 +1,401 @@
+openapi: 3.0.3
+info:
+  title: Rem Mobile API
+  version: "1.0.0"
+servers:
+  - url: https://api.rem.com
+paths:
+  /api/v1/auth/login:
+    post:
+      summary: Login with email and password
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                device_id:
+                  type: string
+            example:
+              email: user@example.com
+              password: Password!23
+              device_id: ios-device-id
+      responses:
+        "200":
+          description: Tokens issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokensResponse"
+              example:
+                data:
+                  access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  expires_in: 900
+                request_id: 123e4567
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: auth.invalid_credentials
+                  message: Invalid email or password
+                request_id: 123e4567
+  /api/v1/auth/refresh:
+    post:
+      summary: Rotate refresh token and obtain new tokens
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+            example:
+              refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        "200":
+          description: New token pair issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokensResponse"
+              example:
+                data:
+                  access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  expires_in: 900
+                request_id: 123e4567
+        "401":
+          description: Refresh token invalid or revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: auth.refresh_revoked
+                  message: Refresh token has been revoked
+                request_id: 123e4567
+  /api/v1/auth/logout:
+    post:
+      summary: Revoke a single refresh token
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+            example:
+              refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        "200":
+          description: Token revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RevokedResponse"
+              example:
+                data:
+                  revoked: true
+                request_id: 123e4567
+        "401":
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: auth.invalid_refresh
+                  message: Invalid refresh token
+                request_id: 123e4567
+  /api/v1/auth/logout_all:
+    post:
+      summary: Revoke all active sessions for the authenticated user
+      tags: [Auth]
+      security:
+        - AccessToken: []
+      responses:
+        "200":
+          description: All sessions revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RevokedResponse"
+              example:
+                data:
+                  revoked: true
+                request_id: 123e4567
+        "401":
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: auth.invalid_token
+                  message: Invalid token
+                request_id: 123e4567
+  /api/v1/me:
+    get:
+      summary: Current authenticated user
+      tags: [Me]
+      security:
+        - AccessToken: []
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+              example:
+                data:
+                  id: 1
+                  email: user@example.com
+                  name: Jane Smith
+                  phone: "+15551234567"
+                  role: user
+                request_id: 123e4567
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/me/gift_cards:
+    get:
+      summary: List gift cards visible to the user
+      tags: [GiftCards]
+      security:
+        - AccessToken: []
+      responses:
+        "200":
+          description: Gift cards in policy scope
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/GiftCard"
+                  request_id:
+                    type: string
+              example:
+                data:
+                  - id: 10
+                    amount_cents: 5000
+                    remaining_balance_cents: 4000
+                    currency: USD
+                    status: active
+                    expires_at: "2026-01-07T12:00:00Z"
+                    merchant_id: 2
+                request_id: 123e4567
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/me/gift_cards/{id}:
+    get:
+      summary: Fetch a single gift card
+      tags: [GiftCards]
+      security:
+        - AccessToken: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Gift card details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GiftCardResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/me/gift_cards/{id}/redemption_token:
+    post:
+      summary: Issue a redemption token for the gift card
+      tags: [GiftCards]
+      security:
+        - AccessToken: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Redemption token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                      expires_at:
+                        type: string
+                        format: date-time
+                  request_id:
+                    type: string
+              example:
+                data:
+                  token: ABC123TOKEN
+                  expires_at: "2026-01-07T12:00:00Z"
+                request_id: 123e4567
+        "403":
+          description: Not permitted to view the code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: forbidden
+                  message: You are not authorized to perform this action
+                request_id: 123e4567
+        "422":
+          description: Gift card inactive
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: gift_card.inactive
+                  message: Tarjeta inactiva o no disponible
+                request_id: 123e4567
+components:
+  securitySchemes:
+    AccessToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    TokensResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            access_token:
+              type: string
+            refresh_token:
+              type: string
+            expires_in:
+              type: integer
+        request_id:
+          type: string
+    RevokedResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            revoked:
+              type: boolean
+        request_id:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              nullable: true
+        request_id:
+          type: string
+    UserResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/User"
+        request_id:
+          type: string
+    GiftCardResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/GiftCard"
+        request_id:
+          type: string
+    GiftCard:
+      type: object
+      properties:
+        id:
+          type: integer
+        amount_cents:
+          type: integer
+        remaining_balance_cents:
+          type: integer
+        currency:
+          type: string
+        status:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        merchant_id:
+          type: integer
+          nullable: true
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        role:
+          type: string
+
