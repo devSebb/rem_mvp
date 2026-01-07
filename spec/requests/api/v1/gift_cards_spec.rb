@@ -126,6 +126,7 @@ RSpec.describe "Api::V1::GiftCards", type: :request do
     sender = create_user(role: :user)
     GiftCard.create!(
       sender:,
+      recipient: sender,
       merchant:,
       amount: 10_000,
       remaining_balance: 10_000,
@@ -145,4 +146,3 @@ RSpec.describe "Api::V1::GiftCards", type: :request do
     raw_token
   end
 end
-

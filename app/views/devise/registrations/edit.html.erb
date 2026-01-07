@@ -44,7 +44,7 @@
           </div>
         </div>
 
-        <div class="papayal-card p-6 space-y-4">
+        <div class="papayal-card p-6 space-y-4 mt-8">
           <div>
             <p class="papayal-meta text-[#2C3A43]/60">Seguridad</p>
             <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Actualizar contraseña</h2>
@@ -70,9 +70,11 @@
           </div>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-3">
-          <%= link_to "Volver al inicio", root_path, class: "papayal-btn-secondary w-full sm:w-auto text-center" %>
-          <%= f.submit "Guardar cambios", class: "papayal-btn-primary w-full sm:w-auto" %>
+        <div class="pt-6">
+          <div class="flex flex-col sm:flex-row gap-3">
+            <%= link_to "Volver al inicio", root_path, class: "papayal-btn-secondary w-full sm:w-auto text-center py-3" %>
+            <%= f.submit "Guardar cambios", class: "papayal-btn-primary w-full sm:w-auto py-3" %>
+          </div>
         </div>
       <% end %>
 

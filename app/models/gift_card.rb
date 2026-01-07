@@ -1,6 +1,6 @@
 class GiftCard < ApplicationRecord
-  belongs_to :sender, class_name: 'User'
-  belongs_to :recipient, class_name: 'User', optional: true
+  belongs_to :sender, class_name: "User"
+  belongs_to :recipient, class_name: "User"
   belongs_to :merchant, optional: true
   has_many :transactions, dependent: :destroy
   has_many :redemption_tokens, dependent: :destroy
@@ -21,6 +21,8 @@ class GiftCard < ApplicationRecord
   enum status: { active: 0, redeemed: 1, expired: 2, canceled: 3 }
 
   # Validations
+  validates :sender, presence: true
+  validates :recipient, presence: true
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :remaining_balance, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :currency, presence: true
@@ -36,14 +38,14 @@ class GiftCard < ApplicationRecord
   # Class methods
   def self.find_active_by_code(code)
     return nil if code.blank?
-    
+
     # Normalize code - remove spaces and ensure uppercase
-    normalized_code = code.strip.upcase.gsub(/\s+/, '')
-    
+    normalized_code = code.strip.upcase.gsub(/\s+/, "")
+
     Rails.logger.debug "🔍 Looking for gift card with code: #{normalized_code}"
-    
+
     gift_cards = where(status: :active)
-    found_card = gift_cards.find { |gc| 
+    found_card = gift_cards.find { |gc|
       begin
         BCrypt::Password.new(gc.code_digest) == normalized_code
       rescue BCrypt::Errors::InvalidHash => e
@@ -51,13 +53,13 @@ class GiftCard < ApplicationRecord
         false
       end
     }
-    
+
     if found_card
       Rails.logger.info "✅ Found gift card #{found_card.id} for code"
     else
       Rails.logger.warn "❌ No active gift card found for code: #{normalized_code}"
     end
-    
+
     found_card
   end
 
@@ -104,12 +106,12 @@ class GiftCard < ApplicationRecord
 
   def partial_redeem!(redemption_amount:, merchant:, actor:)
     Rails.logger.info "🔄 partial_redeem! called - Amount: #{redemption_amount}, Merchant: #{merchant&.id}, Actor: #{actor&.id}"
-    
+
     if merchant.nil?
       Rails.logger.error "❌ Merchant is nil"
       return false
     end
-    
+
     if actor.nil?
       Rails.logger.error "❌ Actor is nil"
       return false
@@ -119,9 +121,9 @@ class GiftCard < ApplicationRecord
       # Pessimistic locking to prevent race conditions
       lock!
       reload # Get latest balance from database
-      
+
       Rails.logger.info "   Current balance: #{remaining_balance}, Status: #{status}"
-      
+
       unless can_partial_redeem?(redemption_amount)
         Rails.logger.error "❌ Cannot partial redeem - can_partial_redeem? returned false"
         return false
@@ -143,7 +145,7 @@ class GiftCard < ApplicationRecord
           redeemed_at: Time.current.iso8601
         }
       )
-      
+
       Rails.logger.info "   ✅ Created transaction #{txn.id}"
 
       # Update remaining balance
@@ -152,7 +154,7 @@ class GiftCard < ApplicationRecord
         remaining_balance: new_balance,
         merchant: merchant
       )
-      
+
       Rails.logger.info "   ✅ Updated balance: #{new_balance}"
 
       # Mark as fully redeemed if balance is zero
@@ -193,12 +195,12 @@ class GiftCard < ApplicationRecord
     transaction do
       lock!
       reload
-      
+
       # Validate refund amount
       total_redeemed = transactions.successful.redemptions.sum(:amount)
       return false if refund_amount > total_redeemed
       return false if refund_amount <= 0
-      
+
       # Create refund transaction
       transactions.create!(
         amount: refund_amount,
@@ -214,10 +216,10 @@ class GiftCard < ApplicationRecord
           refunded_at: Time.current.iso8601
         }
       )
-      
+
       # Restore balance
       update!(remaining_balance: remaining_balance + refund_amount)
-      
+
       # Revert to active if any balance is restored (or fully refunded)
       if redeemed? && remaining_balance.positive?
         update!(status: :active, redeemed_at: nil)
@@ -225,7 +227,7 @@ class GiftCard < ApplicationRecord
         update!(status: :active, redeemed_at: nil)
       end
     end
-    
+
     true
   end
 
@@ -233,14 +235,14 @@ class GiftCard < ApplicationRecord
     transaction do
       lock!
       reload
-      
+
       # Validations
       return false unless active? && remaining_balance > 0
       return false unless new_recipient.is_a?(User)
       return false if new_recipient == recipient
-      
+
       old_recipient = recipient
-      
+
       # Create transfer transaction
       transactions.create!(
         amount: 0, # No money movement, just ownership change
@@ -251,28 +253,28 @@ class GiftCard < ApplicationRecord
         user: actor,
         currency: currency,
         metadata: {
-          action: 'transfer',
+          action: "transfer",
           from_user_id: old_recipient.id,
           to_user_id: new_recipient.id,
           actor_id: actor.id,
           transferred_at: Time.current.iso8601
         }
       )
-      
+
       # Update recipient
       update!(recipient: new_recipient)
-      
+
       # Send notification to new recipient
       send_notifications!
     end
-    
+
     true
   end
 
   # Trigger notification delivery
   def send_notifications!
     return false unless recipient.present?
-    
+
     SendGiftCardNotificationsJob.perform_later(id)
     true
   end
@@ -290,15 +292,15 @@ class GiftCard < ApplicationRecord
       generate_code!
     end
   end
-  
+
   # Setter for raw_code (stores encrypted)
   def raw_code=(value)
     return if value.blank?
     self.encrypted_raw_code = encrypt_raw_code(value)
   end
-  
+
   private
-  
+
   # Encrypt raw code for storage
   def encrypt_raw_code(code)
     return nil if code.blank?
@@ -306,7 +308,7 @@ class GiftCard < ApplicationRecord
     encryptor = ActiveSupport::MessageEncryptor.new(key[0..31])
     encryptor.encrypt_and_sign(code)
   end
-  
+
   # Decrypt raw code for display
   def decrypt_raw_code
     return nil if encrypted_raw_code.blank?
@@ -319,16 +321,16 @@ class GiftCard < ApplicationRecord
   end
 
   def set_defaults
-    self.currency ||= 'USD'
+    self.currency ||= "USD"
     self.status ||= :active
-    
+
     # Generate code and store digest + encrypted raw code
     if code_digest.blank?
       raw_code_value = CodeGenerator.generate
       self.code_digest = BCrypt::Password.create(raw_code_value)
       self.raw_code = raw_code_value  # Store encrypted
     end
-    
+
     self.remaining_balance = amount if amount.present? && remaining_balance == 0
   end
 

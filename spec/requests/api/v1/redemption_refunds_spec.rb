@@ -125,6 +125,7 @@ RSpec.describe "Api::V1::Redemption refunds", type: :request do
     sender = create_user(role: :user)
     GiftCard.create!(
       sender: sender,
+      recipient: sender,
       merchant: merchant,
       amount: 10_000,
       remaining_balance: 10_000,
@@ -144,5 +145,3 @@ RSpec.describe "Api::V1::Redemption refunds", type: :request do
     raw_token
   end
 end
-
-

@@ -10,13 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_01_07_014000) do
+ActiveRecord::Schema[7.2].define(version: 2026_01_07_015000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
   create_table "gift_cards", force: :cascade do |t|
     t.bigint "sender_id", null: false
-    t.bigint "recipient_id"
+    t.bigint "recipient_id", null: false
     t.bigint "merchant_id"
     t.integer "amount", null: false
     t.string "currency", default: "USD", null: false
