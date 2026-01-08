@@ -20,6 +20,8 @@ module Api
       end
 
       def authenticate_user_from_token!
+        Rails.logger.info("AUTH HEADER: #{request.authorization.inspect}")
+
         scheme, token = request.authorization.to_s.split(" ", 2)
         unless scheme == "Bearer" && token.present?
           return render_error(

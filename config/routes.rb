@@ -31,6 +31,7 @@ Rails.application.routes.draw do
       end
 
       namespace :auth do
+        post :signup, to: "registrations#create"
         post :login, to: "sessions#login"
         post :refresh, to: "sessions#refresh"
         post :logout, to: "sessions#logout"

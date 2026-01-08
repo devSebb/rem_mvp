@@ -6,6 +6,9 @@ module Api
 
         def index
           gift_cards = policy_scope(GiftCard)
+            .includes(:merchant)
+            .order(updated_at: :desc, id: :desc)
+
           render_success(data: gift_cards.map { |card| serialize_gift_card(card) })
         end
 
@@ -38,7 +41,9 @@ module Api
         private
 
         def set_gift_card
-          @gift_card = policy_scope(GiftCard).find(params[:id])
+          @gift_card = policy_scope(GiftCard)
+            .includes(:merchant)
+            .find(params[:id])
         end
 
         def serialize_gift_card(card)
@@ -49,7 +54,14 @@ module Api
             currency: card.currency,
             status: card.status,
             expires_at: card.expires_at&.iso8601,
-            merchant_id: card.merchant_id
+            created_at: card.created_at&.iso8601,
+            updated_at: card.updated_at&.iso8601,
+            sender_id: card.sender_id,
+            recipient_id: card.recipient_id,
+            merchant_id: card.merchant_id,
+            merchant: card.merchant ? { id: card.merchant.id, store_name: card.merchant.store_name } : nil,
+            store_name: card.merchant&.store_name,
+            merchant_name: card.merchant&.store_name
           }
         end
       end

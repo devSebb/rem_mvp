@@ -5,6 +5,70 @@ info:
 servers:
   - url: https://api.rem.com
 paths:
+  /api/v1/auth/signup:
+    post:
+      summary: Sign up with email and password
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, name, phone, national_id]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                password_confirmation:
+                  type: string
+                  format: password
+                name:
+                  type: string
+                phone:
+                  type: string
+                national_id:
+                  type: string
+                device_id:
+                  type: string
+            example:
+              email: user@example.com
+              password: Password!23
+              password_confirmation: Password!23
+              name: Jane Smith
+              phone: "+15551234567"
+              national_id: ABC12345
+              device_id: ios-device-id
+      responses:
+        "200":
+          description: Tokens issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokensResponse"
+              example:
+                data:
+                  access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  expires_in: 900
+                request_id: 123e4567
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: auth.signup_failed
+                  message: Signup failed
+                  details:
+                    email:
+                      - Email has already been taken
+                request_id: 123e4567
   /api/v1/auth/login:
     post:
       summary: Login with email and password
@@ -214,7 +278,16 @@ paths:
                     currency: USD
                     status: active
                     expires_at: "2026-01-07T12:00:00Z"
+                    created_at: "2026-01-01T12:00:00Z"
+                    updated_at: "2026-01-06T12:00:00Z"
+                    sender_id: 1
+                    recipient_id: 2
                     merchant_id: 2
+                    store_name: "Coffee Shop"
+                    merchant_name: "Coffee Shop"
+                    merchant:
+                      id: 2
+                      store_name: "Coffee Shop"
                 request_id: 123e4567
         "401":
           description: Unauthorized
@@ -380,9 +453,33 @@ components:
           type: string
           format: date-time
           nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        sender_id:
+          type: integer
+        recipient_id:
+          type: integer
         merchant_id:
           type: integer
           nullable: true
+        store_name:
+          type: string
+          nullable: true
+        merchant_name:
+          type: string
+          nullable: true
+        merchant:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+            store_name:
+              type: string
     User:
       type: object
       properties:
