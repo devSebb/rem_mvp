@@ -1,235 +1,163 @@
-<div class="px-4 sm:px-0">
-  <div class="mb-8">
-    <h1 class="text-2xl font-bold text-gray-900">Settlements</h1>
-    <p class="mt-1 text-sm text-gray-600">Track your gift card redemptions and settlement status</p>
-  </div>
-
-  <!-- Summary Stats -->
-  <div class="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
-    <div class="bg-white overflow-hidden shadow rounded-lg">
-      <div class="p-5">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
-              </svg>
-            </div>
-          </div>
-          <div class="ml-5 w-0 flex-1">
-            <dl>
-              <dt class="text-sm font-medium text-gray-500 truncate">Pending Settlement</dt>
-              <dd class="text-lg font-medium text-gray-900">
-                <%= number_to_currency(@total_pending_settlement / 100.0, unit: '$') %>
-              </dd>
-            </dl>
-          </div>
-        </div>
+<div class="space-y-8">
+  <div
+    class="papayal-card p-6"
+    style="background: linear-gradient(135deg, #0D2F32 0%, #2C3A43 35%, #FCA50F 100%);"
+  >
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="papayal-meta text-white/70">Liquidaciones</p>
+        <h1 class="text-3xl font-bold text-white">Resumen de pagos</h1>
+        <p class="text-sm text-white/80 mt-1">
+          Revisa los canjes pendientes de pago y lo que ya fue liquidado.
+        </p>
       </div>
-    </div>
-
-    <div class="bg-white overflow-hidden shadow rounded-lg">
-      <div class="p-5">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
-            </div>
-          </div>
-          <div class="ml-5 w-0 flex-1">
-            <dl>
-              <dt class="text-sm font-medium text-gray-500 truncate">Total Settled</dt>
-              <dd class="text-lg font-medium text-gray-900">
-                <%= number_to_currency(@total_settled_amount / 100.0, unit: '$') %>
-              </dd>
-            </dl>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white overflow-hidden shadow rounded-lg">
-      <div class="p-5">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"></path>
-              </svg>
-            </div>
-          </div>
-          <div class="ml-5 w-0 flex-1">
-            <dl>
-              <dt class="text-sm font-medium text-gray-500 truncate">Total Redeemed</dt>
-              <dd class="text-lg font-medium text-gray-900">
-                <%= number_to_currency(@total_redeemed_amount / 100.0, unit: '$') %>
-              </dd>
-            </dl>
-          </div>
-        </div>
+      <div class="flex flex-wrap gap-3">
+        <%= link_to "Iniciar canje", new_merchant_redemption_path, class: "papayal-btn-primary" %>
+        <%= link_to "Volver al panel", merchant_root_path, class: "papayal-btn-secondary bg-white text-[#0D2F32] border-white/60" %>
       </div>
     </div>
   </div>
 
-  <!-- Quick Actions -->
-  <div class="bg-white shadow rounded-lg mb-6">
-    <div class="px-4 py-5 sm:p-6">
-      <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <%= link_to "Redeem Gift Card", new_merchant_redemption_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
-        <%= link_to "Dashboard", merchant_root_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
-        <%= link_to "Update Profile", merchant_profile_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
-      </div>
+  <div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 sm:col-span-4 papayal-card papayal-card-hover p-6">
+      <p class="papayal-meta text-[#2C3A43]/70">Pendiente de pago</p>
+      <p class="text-3xl font-bold text-[#0D2F32] mt-2">
+        <%= number_to_currency(@total_pending_settlement / 100.0, unit: '$') %>
+      </p>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">Canjes listos para liquidar.</p>
+    </div>
+    <div class="col-span-12 sm:col-span-4 papayal-card papayal-card-hover p-6">
+      <p class="papayal-meta text-[#2C3A43]/70">Pagado a tu comercio</p>
+      <p class="text-3xl font-bold text-emerald-700 mt-2">
+        <%= number_to_currency(@total_settled_amount / 100.0, unit: '$') %>
+      </p>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">Importe ya liquidado.</p>
+    </div>
+    <div class="col-span-12 sm:col-span-4 papayal-card papayal-card-hover p-6">
+      <p class="papayal-meta text-[#2C3A43]/70">Monto canjeado</p>
+      <p class="text-3xl font-bold text-[#0D2F32] mt-2">
+        <%= number_to_currency(@total_redeemed_amount / 100.0, unit: '$') %>
+      </p>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">Histórico de canjes registrados.</p>
     </div>
   </div>
 
-  <!-- Filter Tabs -->
-  <div class="bg-white shadow rounded-lg mb-6">
-    <div class="border-b border-gray-200">
-      <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
-        <%= link_to merchant_settlements_path(status: 'all'), 
-            class: "#{@status_filter == 'all' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" do %>
-          All Gift Cards
-          <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs font-medium">
-            <%= @gift_card_settlements.count %>
+  <% filters = [
+    { key: 'all', label: 'Todas', count: @gift_card_settlements.count },
+    { key: 'pending', label: 'Pendientes', count: @gift_card_settlements.count { |gc| gc[:settlement_status] == 'pending' } },
+    { key: 'settled', label: 'Liquidadas', count: @gift_card_settlements.count { |gc| gc[:settlement_status] == 'settled' } }
+  ] %>
+  <div class="papayal-card p-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p class="papayal-meta text-[#2C3A43]/70">Estados</p>
+      <h3 class="text-lg font-semibold text-[#0D2F32]">Filtra tus liquidaciones</h3>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <% filters.each do |filter| %>
+        <% active = @status_filter == filter[:key] %>
+        <%= link_to merchant_settlements_path(status: filter[:key]),
+            class: "papayal-btn-secondary text-sm #{active ? 'bg-[#0D2F32] text-white border-[#0D2F32]' : ''}" do %>
+          <span><%= filter[:label] %></span>
+          <span class="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold <%= active ? 'bg-white/20' : 'bg-[#0D2F32]/10 text-[#0D2F32]' %>">
+            <%= filter[:count] %>
           </span>
         <% end %>
-        <%= link_to merchant_settlements_path(status: 'pending'), 
-            class: "#{@status_filter == 'pending' ? 'border-yellow-500 text-yellow-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" do %>
-          Pending Settlement
-          <span class="ml-2 bg-yellow-100 text-yellow-800 py-0.5 px-2.5 rounded-full text-xs font-medium">
-            <%= @gift_card_settlements.count { |gc| gc[:settlement_status] == 'pending' } %>
-          </span>
-        <% end %>
-        <%= link_to merchant_settlements_path(status: 'settled'), 
-            class: "#{@status_filter == 'settled' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" do %>
-          Settled
-          <span class="ml-2 bg-green-100 text-green-800 py-0.5 px-2.5 rounded-full text-xs font-medium">
-            <%= @gift_card_settlements.count { |gc| gc[:settlement_status] == 'settled' } %>
-          </span>
-        <% end %>
-      </nav>
+      <% end %>
     </div>
   </div>
 
-  <!-- Gift Card Settlement Cards -->
   <% if @gift_card_settlements.any? %>
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="grid grid-cols-12 gap-6">
       <% @gift_card_settlements.each do |settlement_data| %>
         <% gift_card = settlement_data[:gift_card] %>
-        <div class="bg-white overflow-hidden shadow rounded-lg border-l-4 <%= settlement_data[:settlement_status] == 'pending' ? 'border-yellow-400' : 'border-green-400' %>">
-          <div class="p-6">
-            <!-- Header -->
-            <div class="flex items-center justify-between mb-4">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span class="text-blue-600 font-bold text-sm">GC</span>
-                  </div>
-                </div>
-                <div class="ml-3">
-                  <h3 class="text-lg font-medium text-gray-900">Gift Card #<%= gift_card.id %></h3>
-                  <p class="text-sm text-gray-500">
-                    From: <%= gift_card.sender.name %>
-                  </p>
-                </div>
-              </div>
-              <div class="flex-shrink-0">
-                <% if settlement_data[:settlement_status] == 'pending' %>
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                    Pending
-                  </span>
-                <% else %>
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Settled
-                  </span>
-                <% end %>
-              </div>
-            </div>
+        <% progress_percent = settlement_data[:total_redeemed].positive? ? ((settlement_data[:settled_amount].to_f / settlement_data[:total_redeemed]) * 100).round(1) : 0 %>
 
-            <!-- Amounts -->
-            <div class="space-y-3 mb-4">
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-medium text-gray-500">Total Redeemed:</span>
-                <span class="text-lg font-semibold text-gray-900">
-                  <%= number_to_currency(settlement_data[:total_redeemed] / 100.0, unit: '$') %>
-                </span>
-              </div>
-              
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-medium text-gray-500">Settled Amount:</span>
-                <span class="text-lg font-semibold text-green-600">
-                  <%= number_to_currency(settlement_data[:settled_amount] / 100.0, unit: '$') %>
-                </span>
-              </div>
-              
-              <% if settlement_data[:remaining_to_settle] > 0 %>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-medium text-gray-500">Remaining to Settle:</span>
-                  <span class="text-lg font-semibold text-yellow-600">
-                    <%= number_to_currency(settlement_data[:remaining_to_settle] / 100.0, unit: '$') %>
-                  </span>
-                </div>
-              <% end %>
+        <div class="col-span-12 md:col-span-6 xl:col-span-4 papayal-card papayal-card-hover p-5 border border-black/5">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="papayal-meta text-[#2C3A43]/70">Tarjeta #<%= gift_card.id %></p>
+              <h3 class="text-xl font-semibold text-[#0D2F32]">De <%= gift_card.sender.name %></h3>
+              <p class="text-sm text-[#2C3A43]/70">Para <%= gift_card.recipient.name %></p>
             </div>
+            <% if settlement_data[:settlement_status] == 'pending' %>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                Pendiente
+              </span>
+            <% else %>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                Liquidada
+              </span>
+            <% end %>
+          </div>
 
-            <!-- Progress Bar -->
-            <% if settlement_data[:total_redeemed] > 0 %>
-              <div class="mb-4">
-                <div class="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>Settlement Progress</span>
-                  <span><%= ((settlement_data[:settled_amount].to_f / settlement_data[:total_redeemed]) * 100).round(1) %>%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                  <div class="bg-green-500 h-2 rounded-full" style="width: <%= (settlement_data[:settled_amount].to_f / settlement_data[:total_redeemed]) * 100 %>%"></div>
-                </div>
+          <div class="mt-4 space-y-3">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-[#2C3A43]/70">Total canjeado</span>
+              <span class="font-semibold text-[#0D2F32]">
+                <%= number_to_currency(settlement_data[:total_redeemed] / 100.0, unit: '$') %>
+              </span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-[#2C3A43]/70">Pagado</span>
+              <span class="font-semibold text-emerald-700">
+                <%= number_to_currency(settlement_data[:settled_amount] / 100.0, unit: '$') %>
+              </span>
+            </div>
+            <% if settlement_data[:remaining_to_settle] > 0 %>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-[#2C3A43]/70">Pendiente de pago</span>
+                <span class="font-semibold text-amber-700">
+                  <%= number_to_currency(settlement_data[:remaining_to_settle] / 100.0, unit: '$') %>
+                </span>
               </div>
             <% end %>
+          </div>
 
-            <!-- Details -->
-            <div class="text-sm text-gray-500 space-y-1">
-              <p>Recipient: <%= gift_card.recipient.name %></p>
-              <p>Last Redemption: <%= settlement_data[:last_redemption]&.strftime('%B %d, %Y at %I:%M %p') || 'N/A' %></p>
-              <p>Original Amount: <%= number_to_currency(gift_card.amount / 100.0, unit: '$') %></p>
-              <% if gift_card.remaining_balance > 0 %>
-                <p class="text-blue-600 font-medium">Remaining Balance: <%= number_to_currency(gift_card.remaining_balance / 100.0, unit: '$') %></p>
-              <% end %>
+          <% if settlement_data[:total_redeemed] > 0 %>
+            <div class="mt-4">
+              <div class="flex items-center justify-between text-xs text-[#2C3A43]/70 mb-1">
+                <span>Progreso de liquidación</span>
+                <span><%= progress_percent %>%</span>
+              </div>
+              <div class="w-full h-2 rounded-full bg-black/5">
+                <div class="h-2 rounded-full bg-amber-400" style="width: <%= progress_percent %>%"></div>
+              </div>
             </div>
+          <% end %>
 
-            <!-- Actions -->
-            <div class="mt-4 flex space-x-3">
-              <%= link_to "View Details", gift_card_path(gift_card), 
-                  class: "flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium py-2 px-3 rounded-md text-center" %>
-              <% if settlement_data[:settlement_status] == 'pending' %>
-                <button class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium py-2 px-3 rounded-md">
-                  Request Settlement
-                </button>
-              <% end %>
-            </div>
+          <div class="mt-4 space-y-1 text-sm text-[#2C3A43]/70">
+            <p>Último canje: <%= settlement_data[:last_redemption]&.strftime('%d %b %Y %H:%M') || 'N/A' %></p>
+            <p>Monto original: <%= number_to_currency(gift_card.amount / 100.0, unit: '$') %></p>
+            <% if gift_card.remaining_balance > 0 %>
+              <p class="text-[#0D2F32] font-medium">Saldo restante: <%= number_to_currency(gift_card.remaining_balance / 100.0, unit: '$') %></p>
+            <% end %>
+          </div>
+
+          <div class="mt-5 grid grid-cols-2 gap-3">
+            <%= link_to "Ver tarjeta", gift_card_path(gift_card), class: "papayal-btn-secondary justify-center text-sm" %>
+            <% if settlement_data[:settlement_status] == 'pending' %>
+              <button type="button" class="papayal-btn-primary justify-center text-sm">
+                Solicitar liquidación
+              </button>
+            <% else %>
+              <span class="papayal-btn-ghost justify-center text-sm text-[#2C3A43]/70 border border-transparent">
+                Liquidada
+              </span>
+            <% end %>
           </div>
         </div>
       <% end %>
     </div>
   <% else %>
-    <div class="text-center py-12">
-      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-      <h3 class="mt-2 text-sm font-medium text-gray-900">No gift card redemptions</h3>
-      <p class="mt-1 text-sm text-gray-500">Get started by redeeming your first gift card.</p>
-      <div class="mt-6">
-        <%= link_to "Redeem Gift Card", new_merchant_redemption_path, 
-            class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+    <div class="papayal-card p-10 text-center space-y-3">
+      <p class="text-xl font-semibold text-[#0D2F32]">Aún no registras canjes</p>
+      <p class="text-sm text-[#2C3A43]/70">
+        Cuando canjees tarjetas aparecerán aquí para su liquidación.
+      </p>
+      <div class="flex justify-center gap-3">
+        <%= link_to "Iniciar canje", new_merchant_redemption_path, class: "papayal-btn-primary" %>
+        <%= link_to "Volver al panel", merchant_root_path, class: "papayal-btn-secondary" %>
       </div>
     </div>
   <% end %>
-
-  <!-- Back to Dashboard -->
-  <div class="mt-8">
-    <%= link_to "← Back to Dashboard", merchant_root_path, 
-        class: "inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
-  </div>
 </div>

@@ -1,3 +1,5 @@
+require "digest"
+
 class GiftCard < ApplicationRecord
   belongs_to :sender, class_name: "User"
   belongs_to :recipient, class_name: "User"
@@ -41,8 +43,11 @@ class GiftCard < ApplicationRecord
 
     # Normalize code - remove spaces and ensure uppercase
     normalized_code = code.strip.upcase.gsub(/\s+/, "")
+    code_fingerprint = fingerprint_for_code(normalized_code)
 
-    Rails.logger.debug "🔍 Looking for gift card with code: #{normalized_code}"
+    if Rails.env.development?
+      Rails.logger.debug "🔍 Looking for gift card with code fingerprint: #{code_fingerprint}"
+    end
 
     gift_cards = where(status: :active)
     found_card = gift_cards.find { |gc|
@@ -55,13 +60,20 @@ class GiftCard < ApplicationRecord
     }
 
     if found_card
-      Rails.logger.info "✅ Found gift card #{found_card.id} for code"
+      Rails.logger.info "✅ Found gift card #{found_card.id} for code fingerprint #{code_fingerprint}"
     else
-      Rails.logger.warn "❌ No active gift card found for code: #{normalized_code}"
+      Rails.logger.warn "❌ No active gift card found for provided code (fingerprint: #{code_fingerprint})"
     end
 
     found_card
   end
+
+  def self.fingerprint_for_code(code)
+    return "[blank]" if code.blank?
+
+    Digest::SHA256.hexdigest(code)[0, 12]
+  end
+  private_class_method :fingerprint_for_code
 
 
   # Instance methods

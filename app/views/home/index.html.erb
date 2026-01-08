@@ -15,7 +15,7 @@
         </div>
         <div class="flex flex-wrap gap-3">
           <%= link_to "Ver actividad", gift_cards_path, class: "papayal-btn-secondary" %>
-          <%= link_to "Panel Comercios", merchant_root_path, class: "papayal-btn-primary" %>
+          <%= link_to "Panel Comercios", admin_merchants_path, class: "papayal-btn-primary" %>
         </div>
       </div>
       <div class="col-span-12 xl:col-span-4 papayal-card p-6 bg-[#0D2F32] text-white">
@@ -104,7 +104,7 @@
             <p class="papayal-meta">Comercios</p>
             <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Nuevos socios</h2>
           </div>
-          <%= link_to "Gestionar", merchant_root_path, class: "papayal-btn-ghost text-sm" %>
+          <%= link_to "Gestionar", admin_merchants_path, class: "papayal-btn-ghost text-sm" %>
         </div>
         <% if latest_merchants.any? %>
           <div class="space-y-4">

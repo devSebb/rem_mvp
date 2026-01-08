@@ -18,7 +18,7 @@ Rails.application.configure do
 
   # Ensures that a master key has been made available in ENV["RAILS_MASTER_KEY"], config/master.key, or an environment
   # key such as config/credentials/production.key. This key is used to decrypt credentials (and other encrypted files).
-  # config.require_master_key = true
+  config.require_master_key = true
 
   # Disable serving static files from `public/`, relying on NGINX/Apache to do so instead.
   # config.public_file_server.enabled = false
@@ -36,8 +36,16 @@ Rails.application.configure do
   # config.action_dispatch.x_sendfile_header = "X-Sendfile" # for Apache
   # config.action_dispatch.x_sendfile_header = "X-Accel-Redirect" # for NGINX
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  # Store uploaded files in S3 by default (see config/storage.yml for options).
+  config.active_storage.service = (ENV["ACTIVE_STORAGE_SERVICE"].presence || "amazon").to_sym
+
+  if config.active_storage.service == :amazon
+    required_s3_env = %w[AWS_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY]
+    missing = required_s3_env.select { |key| ENV[key].blank? }
+    if missing.any?
+      raise "Missing required AWS S3 environment variables: #{missing.join(', ')}"
+    end
+  end
 
   # Mount Action Cable outside main process or domain.
   # config.action_cable.mount_path = nil
@@ -76,7 +84,7 @@ Rails.application.configure do
   }
 
   # Use a real queuing backend for Active Job (and separate queues per environment).
-  # config.active_job.queue_adapter = :resque
+  config.active_job.queue_adapter = :sidekiq
   # config.active_job.queue_name_prefix = "rem_mvp_production"
 
   # Disable caching for Action Mailer templates even if Action Controller

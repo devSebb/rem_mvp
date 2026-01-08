@@ -19,8 +19,4 @@ bundle exec rake assets:precompile
 echo "Cleaning up old assets..."
 bundle exec rake assets:clean
 
-# Run database migrations
-echo "Running database migrations..."
-bundle exec rake db:migrate
-
 echo "Build completed successfully!"

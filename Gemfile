@@ -43,6 +43,9 @@ gem "twilio-ruby"
 # Email delivery
 gem "sendgrid-ruby"
 
+# File storage (Active Storage - S3)
+gem "aws-sdk-s3"
+
 # Background jobs
 gem "sidekiq"
 

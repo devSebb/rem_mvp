@@ -70,6 +70,7 @@ Rails.application.routes.draw do
   end
 
   namespace :admin do
+    resources :merchants, only: [:index, :new, :create, :show, :edit, :update]
     resources :gift_cards, only: [] do
       resources :refunds, only: [:new, :create], path: 'refund'
     end

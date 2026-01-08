@@ -52,6 +52,7 @@
 
 ### App Configuration
 - `APP_HOST=https://yourapp.onrender.com`
+- `CORS_ORIGINS=https://yourapp.onrender.com` (comma-separated; set in Render service -> Environment tab and redeploy)
 
 ## Deployment Steps
 

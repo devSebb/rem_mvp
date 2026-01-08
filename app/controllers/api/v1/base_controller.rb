@@ -20,9 +20,8 @@ module Api
       end
 
       def authenticate_user_from_token!
-        Rails.logger.info("AUTH HEADER: #{request.authorization.inspect}")
-
         scheme, token = request.authorization.to_s.split(" ", 2)
+        log_authorization_header(scheme: scheme, token: token)
         unless scheme == "Bearer" && token.present?
           return render_error(
             code: "auth.missing_token",
@@ -63,6 +62,19 @@ module Api
           status: :unauthorized,
           details: Rails.env.development? ? e.message : nil
         )
+      end
+
+      def log_authorization_header(scheme:, token:)
+        return unless Rails.env.development?
+
+        redacted_token =
+          if token.present?
+            "#{token[0, 8]}... (len=#{token.length})"
+          else
+            "[blank]"
+          end
+
+        Rails.logger.debug("Auth header received (scheme=#{scheme.inspect}, token=#{redacted_token})")
       end
 
       def render_success(data:, status: :ok)

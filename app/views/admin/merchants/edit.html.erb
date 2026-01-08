@@ -1,0 +1,81 @@
+<div class="space-y-8">
+  <div class="papayal-card p-6 flex flex-col gap-2">
+    <p class="papayal-meta text-[#0D2F32]">Panel Comercios</p>
+    <h1 class="text-2xl font-bold text-[#0D2F32]">Editar comercio</h1>
+    <p class="text-sm text-[#2C3A43]/80">Actualiza los datos del comercio y del propietario. La contraseña no cambia a menos que la edites por consola.</p>
+  </div>
+
+  <% if @merchant.errors.any? || @user.errors.any? %>
+    <div class="papayal-card border border-rose-200 bg-rose-50 text-rose-800 px-4 py-3">
+      <p class="font-semibold">Corrige los siguientes errores:</p>
+      <ul class="list-disc pl-5 text-sm mt-2 space-y-1">
+        <% (@merchant.errors.full_messages + @user.errors.full_messages).uniq.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="papayal-card p-6">
+    <%= form_with model: [:admin, @merchant], local: true, class: "space-y-6" do |form| %>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8] space-y-4">
+          <div>
+            <p class="papayal-meta">Datos del comercio</p>
+            <h2 class="text-lg font-semibold text-[#0D2F32]">Información principal</h2>
+          </div>
+          <div>
+            <label class="papayal-label">Nombre de la tienda *</label>
+            <%= form.text_field :store_name, name: "merchant[store_name]", class: "papayal-input mt-2", value: @merchant.store_name, required: true %>
+          </div>
+          <div>
+            <label class="papayal-label">Dirección</label>
+            <%= form.text_field :address, name: "merchant[address]", class: "papayal-input mt-2", value: @merchant.address %>
+          </div>
+          <div>
+            <label class="papayal-label">Correo de contacto</label>
+            <%= form.email_field :contact_email, name: "merchant[contact_email]", class: "papayal-input mt-2", value: @merchant.contact_email || @user.email %>
+          </div>
+          <div>
+            <label class="papayal-label">Cuenta IBAN</label>
+            <%= form.text_field :bank_account_iban, name: "merchant[bank_account_iban]", class: "papayal-input mt-2", value: @merchant.bank_account_iban %>
+          </div>
+          <div>
+            <label class="papayal-label">Avatar (URL de imagen)</label>
+            <%= form.url_field :avatar_url, name: "merchant[avatar_url]", class: "papayal-input mt-2", value: @merchant.avatar_url, placeholder: "https://..." %>
+            <p class="text-xs text-[#2C3A43]/70 mt-1">Si lo dejas vacío se mostrará un avatar generado automáticamente.</p>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8] space-y-4">
+          <div>
+            <p class="papayal-meta">Propietario</p>
+            <h2 class="text-lg font-semibold text-[#0D2F32]">Cuenta del usuario</h2>
+          </div>
+          <div>
+            <label class="papayal-label">Nombre completo *</label>
+            <%= form.text_field :name, name: "user[name]", class: "papayal-input mt-2", value: @user.name, required: true %>
+          </div>
+          <div>
+            <label class="papayal-label">Correo electrónico *</label>
+            <%= form.email_field :email, name: "user[email]", class: "papayal-input mt-2", value: @user.email, required: true %>
+          </div>
+          <div>
+            <label class="papayal-label">Teléfono</label>
+            <%= form.telephone_field :phone, name: "user[phone]", class: "papayal-input mt-2", value: @user.phone %>
+          </div>
+          <div>
+            <label class="papayal-label">Identificación (mínimo 7 caracteres) *</label>
+            <%= form.text_field :national_id, name: "user[national_id]", class: "papayal-input mt-2", value: @user.national_id, required: true %>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3">
+        <%= link_to "Cancelar", admin_merchant_path(@merchant), class: "papayal-btn-ghost" %>
+        <%= form.submit "Guardar cambios", class: "papayal-btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+

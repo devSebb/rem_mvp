@@ -1,0 +1,105 @@
+<div class="space-y-8">
+  <div class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p class="papayal-meta text-[#0D2F32]">Panel Comercios</p>
+      <h1 class="text-2xl font-bold text-[#0D2F32]">Gestión de comercios</h1>
+      <p class="text-sm text-[#2C3A43]/80 mt-1">Administra los socios activos y crea nuevos accesos de comercio.</p>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <%= link_to "Crear nuevo comercio", new_admin_merchant_path, class: "papayal-btn-primary" %>
+    </div>
+  </div>
+
+  <% if @created_merchant.present? %>
+    <div class="papayal-card p-6 border border-emerald-100 bg-emerald-50">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <p class="papayal-meta text-emerald-700">Comercio creado</p>
+          <h2 class="text-xl font-semibold text-[#0D2F32]"><%= @created_merchant.store_name %></h2>
+          <p class="text-sm text-[#2C3A43]/80 mt-1">Propietario: <%= @created_merchant.user&.name %> • <%= @created_merchant.user&.email %></p>
+        </div>
+        <span class="<%= status_badge_classes(@created_merchant.status) %>"><%= status_badge_label(@created_merchant.status) %></span>
+      </div>
+      <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div class="p-4 rounded-2xl bg-white border border-emerald-100">
+          <p class="papayal-meta text-[#2C3A43]/70">Public Key</p>
+          <p class="font-semibold text-[#0D2F32] break-words"><%= @created_merchant.public_key %></p>
+        </div>
+        <% if @generated_secret_key.present? %>
+          <div class="p-4 rounded-2xl bg-white border border-emerald-100">
+            <p class="papayal-meta text-[#2C3A43]/70">Secret Key (copiar y guardar)</p>
+            <p class="font-semibold text-[#0D2F32] break-words"><%= @generated_secret_key %></p>
+          </div>
+        <% end %>
+        <% if @generated_password.present? %>
+          <div class="p-4 rounded-2xl bg-white border border-emerald-100">
+            <p class="papayal-meta text-[#2C3A43]/70">Contraseña inicial</p>
+            <p class="font-semibold text-[#0D2F32] break-words"><%= @generated_password %></p>
+          </div>
+        <% end %>
+      </div>
+      <p class="text-xs text-[#2C3A43]/70 mt-3">La clave secreta solo se muestra una vez. Compártela de forma segura con el comercio.</p>
+    </div>
+  <% end %>
+
+  <div class="papayal-card p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <p class="papayal-meta">Comercios activos</p>
+        <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Listado de comercios</h2>
+      </div>
+      <%= link_to "Nuevo", new_admin_merchant_path, class: "papayal-btn-secondary text-sm" %>
+    </div>
+
+    <% if @merchants.any? %>
+      <div class="overflow-hidden rounded-2xl border border-black/5">
+        <table class="min-w-full divide-y divide-black/5">
+          <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
+            <tr>
+              <th class="px-4 py-3">Comercio</th>
+              <th class="px-4 py-3">Propietario</th>
+              <th class="px-4 py-3">Estado</th>
+              <th class="px-4 py-3">Public Key</th>
+              <th class="px-4 py-3">Creado</th>
+              <th class="px-4 py-3 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-black/5 text-sm">
+            <% @merchants.each do |merchant| %>
+              <tr class="hover:bg-[#EBEBEB]/40 transition">
+                <td class="px-4 py-3">
+                  <p class="font-semibold text-[#0D2F32]"><%= merchant.store_name %></p>
+                  <p class="text-xs text-[#2C3A43]/70"><%= merchant.contact_email.presence || "Sin email" %></p>
+                </td>
+                <td class="px-4 py-3">
+                  <p class="font-medium text-[#2C3A43]"><%= merchant.user&.name || "Sin usuario" %></p>
+                  <p class="text-xs text-[#2C3A43]/70"><%= merchant.user&.email %></p>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="<%= status_badge_classes(merchant.status) %>"><%= status_badge_label(merchant.status) %></span>
+                </td>
+                <td class="px-4 py-3 font-mono text-xs text-[#0D2F32]/80 break-all">
+                  <%= merchant.public_key %>
+                </td>
+                <td class="px-4 py-3 text-[#2C3A43]/70">
+                  <%= merchant.created_at.strftime("%d/%m/%Y") %>
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <div class="flex justify-end gap-2">
+                    <%= link_to "Detalles", admin_merchant_path(merchant), class: "papayal-btn-ghost text-sm" %>
+                    <%= link_to "Editar", edit_admin_merchant_path(merchant), class: "papayal-btn-secondary text-sm" %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="text-center py-10 text-sm text-[#2C3A43]/70">
+        Aún no hay comercios creados.
+      </div>
+    <% end %>
+  </div>
+</div>
+

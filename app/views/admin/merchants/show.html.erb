@@ -1,0 +1,151 @@
+<% avatar = @merchant.avatar_url.presence || "https://ui-avatars.com/api/?name=#{ERB::Util.url_encode(@merchant.store_name || 'Comercio')}&background=FCA50F&color=0D2F32" %>
+
+<div class="space-y-8">
+  <div class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div class="flex items-center gap-4">
+      <div class="h-20 w-20 rounded-full overflow-hidden bg-[#EBEBEB] border border-black/5">
+        <%= image_tag avatar, alt: @merchant.store_name, class: "h-full w-full object-cover" %>
+      </div>
+      <div>
+        <p class="papayal-meta text-[#0D2F32]">Panel Comercios</p>
+        <h1 class="text-2xl font-bold text-[#0D2F32]"><%= @merchant.store_name %></h1>
+        <p class="text-sm text-[#2C3A43]/70"><%= @merchant.contact_email.presence || @merchant.user&.email %></p>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <%= link_to "Volver al listado", admin_merchants_path, class: "papayal-btn-ghost" %>
+      <%= link_to "Editar comercio", edit_admin_merchant_path(@merchant), class: "papayal-btn-primary" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 md:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-5">
+      <p class="papayal-meta">Tarjetas emitidas</p>
+      <p class="text-3xl font-bold mt-2"><%= @stats[:total_cards] %></p>
+      <p class="text-xs text-[#2C3A43]/70 mt-1">Históricas</p>
+    </div>
+    <div class="col-span-12 md:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-5">
+      <p class="papayal-meta">Volumen emitido</p>
+      <p class="text-3xl font-bold mt-2"><%= number_to_currency(@stats[:issued_volume_cents] / 100.0, unit: '$') %></p>
+      <p class="text-xs text-[#2C3A43]/70 mt-1">Suma de montos emitidos</p>
+    </div>
+    <div class="col-span-12 md:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-5">
+      <p class="papayal-meta">Volumen canjeado</p>
+      <p class="text-3xl font-bold mt-2"><%= number_to_currency(@stats[:redemption_volume_cents] / 100.0, unit: '$') %></p>
+      <p class="text-xs text-[#2C3A43]/70 mt-1">Redenciones exitosas</p>
+    </div>
+    <div class="col-span-12 md:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-5">
+      <p class="papayal-meta">Saldo pendiente</p>
+      <p class="text-3xl font-bold mt-2"><%= number_to_currency(@stats[:remaining_balance_cents] / 100.0, unit: '$') %></p>
+      <p class="text-xs text-[#2C3A43]/70 mt-1">Saldo de tarjetas activas</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 lg:col-span-7 papayal-card p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="papayal-meta">Datos del comercio</p>
+          <h2 class="text-xl font-semibold text-[#0D2F32]">Información principal</h2>
+        </div>
+        <span class="<%= status_badge_classes(@merchant.status) %>"><%= status_badge_label(@merchant.status) %></span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+          <p class="papayal-meta">Nombre comercial</p>
+          <p class="font-semibold text-[#0D2F32]"><%= @merchant.store_name %></p>
+        </div>
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+          <p class="papayal-meta">Contacto</p>
+          <p class="font-semibold text-[#0D2F32]"><%= @merchant.contact_email.presence || "—" %></p>
+          <p class="text-xs text-[#2C3A43]/70"><%= @merchant.address.presence || "Sin dirección" %></p>
+        </div>
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+          <p class="papayal-meta">IBAN</p>
+          <p class="font-semibold text-[#0D2F32] break-words"><%= @merchant.bank_account_iban.presence || "No especificado" %></p>
+        </div>
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+          <p class="papayal-meta">Public Key</p>
+          <p class="font-mono text-xs text-[#0D2F32]/80 break-words"><%= @merchant.public_key %></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-span-12 lg:col-span-5 papayal-card p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="papayal-meta">Propietario</p>
+          <h2 class="text-xl font-semibold text-[#0D2F32]">Cuenta asociada</h2>
+        </div>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+          <p class="papayal-meta">Nombre</p>
+          <p class="font-semibold text-[#0D2F32]"><%= @user&.name %></p>
+        </div>
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+          <p class="papayal-meta">Correo</p>
+          <p class="font-semibold text-[#0D2F32]"><%= @user&.email %></p>
+        </div>
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+          <p class="papayal-meta">Teléfono</p>
+          <p class="font-semibold text-[#0D2F32]"><%= @user&.phone.presence || "No especificado" %></p>
+        </div>
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+          <p class="papayal-meta">Identificación</p>
+          <p class="font-semibold text-[#0D2F32]"><%= @user&.national_id %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="papayal-card p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <p class="papayal-meta">Actividad reciente</p>
+        <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Últimas tarjetas</h2>
+      </div>
+      <%= link_to "Editar comercio", edit_admin_merchant_path(@merchant), class: "papayal-btn-secondary text-sm" %>
+    </div>
+    <% if @recent_gift_cards.any? %>
+      <div class="overflow-hidden rounded-2xl border border-black/5">
+        <table class="min-w-full divide-y divide-black/5">
+          <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
+            <tr>
+              <th class="px-4 py-3">Tarjeta</th>
+              <th class="px-4 py-3">Monto</th>
+              <th class="px-4 py-3">Estado</th>
+              <th class="px-4 py-3">Fecha</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-black/5 text-sm">
+            <% @recent_gift_cards.each do |gift_card| %>
+              <tr class="hover:bg-[#EBEBEB]/40 transition">
+                <td class="px-4 py-3">
+                  <p class="font-medium text-[#2C3A43]">REM-<%= gift_card.id.to_s.last(6) %></p>
+                  <p class="text-xs text-[#2C3A43]/70">Para <%= gift_card.recipient&.name || "Sin destinatario" %></p>
+                </td>
+                <td class="px-4 py-3 font-medium">
+                  <%= number_to_currency(gift_card.amount / 100.0, unit: gift_card.currency == 'USD' ? '$' : gift_card.currency) %>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="<%= status_badge_classes(gift_card.status) %>">
+                    <%= status_badge_label(gift_card.status) %>
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-[#2C3A43]/70">
+                  <%= gift_card.created_at.strftime('%d/%m/%Y') %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="text-center py-10 text-sm text-[#2C3A43]/70">
+        Aún no hay tarjetas registradas para este comercio.
+      </div>
+    <% end %>
+  </div>
+</div>
+

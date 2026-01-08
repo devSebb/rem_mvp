@@ -4,6 +4,7 @@ services:
     env: ruby
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec puma -C config/puma.rb"
+    preDeployCommand: "bundle exec rails db:migrate"
     envVars:
       - key: RAILS_MASTER_KEY
         sync: false
@@ -89,12 +90,11 @@ services:
       - key: APP_HOST
         sync: false
 
+  - type: redis
+    name: rem-mvp-redis
+    plan: starter
+
 databases:
   - name: rem-mvp-db
     databaseName: rem_mvp
-    plan: starter
-
-services:
-  - type: redis
-    name: rem-mvp-redis
     plan: starter

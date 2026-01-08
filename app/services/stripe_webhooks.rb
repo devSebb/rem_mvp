@@ -106,7 +106,7 @@ class StripeWebhooks
     begin
       # Try async first, fallback to sync if Sidekiq not available
       begin
-        NotificationJob.perform_async(gift_card.id, raw_code)
+        NotificationJob.perform_later(gift_card.id, raw_code)
         Rails.logger.info "📤 Enqueued notification job for gift card #{gift_card.id} (async)"
       rescue NoMethodError, Redis::CannotConnectError => e
         # Sidekiq not available or Redis not running - use sync

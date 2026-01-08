@@ -1,0 +1,90 @@
+<div class="space-y-8">
+  <div class="papayal-card p-6 flex flex-col gap-2">
+    <p class="papayal-meta text-[#0D2F32]">Panel Comercios</p>
+    <h1 class="text-2xl font-bold text-[#0D2F32]">Crear nuevo comercio</h1>
+    <p class="text-sm text-[#2C3A43]/80">Completa los datos del propietario y del comercio. La clave secreta se generará automáticamente.</p>
+  </div>
+
+  <% if @merchant.errors.any? || @user.errors.any? %>
+    <div class="papayal-card border border-rose-200 bg-rose-50 text-rose-800 px-4 py-3">
+      <p class="font-semibold">Corrige los siguientes errores:</p>
+      <ul class="list-disc pl-5 text-sm mt-2 space-y-1">
+        <% (@merchant.errors.full_messages + @user.errors.full_messages).uniq.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="papayal-card p-6">
+    <%= form_with url: admin_merchants_path, local: true, class: "space-y-6" do |form| %>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8] space-y-4">
+          <div>
+            <p class="papayal-meta">Datos del comercio</p>
+            <h2 class="text-lg font-semibold text-[#0D2F32]">Información principal</h2>
+          </div>
+          <div>
+            <label class="papayal-label">Nombre de la tienda *</label>
+            <%= form.text_field :store_name, name: "merchant[store_name]", class: "papayal-input mt-2", value: @merchant.store_name, required: true, placeholder: "Café Central" %>
+          </div>
+          <div>
+            <label class="papayal-label">Dirección</label>
+            <%= form.text_field :address, name: "merchant[address]", class: "papayal-input mt-2", value: @merchant.address, placeholder: "Av. Siempre Viva 123" %>
+          </div>
+          <div>
+            <label class="papayal-label">Correo de contacto</label>
+            <%= form.email_field :contact_email, name: "merchant[contact_email]", class: "papayal-input mt-2", value: @merchant.contact_email || @user.email, placeholder: "contacto@comercio.com" %>
+          </div>
+          <div>
+            <label class="papayal-label">Cuenta IBAN</label>
+            <%= form.text_field :bank_account_iban, name: "merchant[bank_account_iban]", class: "papayal-input mt-2", value: @merchant.bank_account_iban, placeholder: "US1234567890..." %>
+          </div>
+          <div>
+            <label class="papayal-label">Avatar (URL de imagen)</label>
+            <%= form.url_field :avatar_url, name: "merchant[avatar_url]", class: "papayal-input mt-2", value: @merchant.avatar_url, placeholder: "https://..." %>
+            <p class="text-xs text-[#2C3A43]/70 mt-1">Opcional. Si lo dejas vacío se mostrará un avatar generado automáticamente.</p>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8] space-y-4">
+          <div>
+            <p class="papayal-meta">Propietario</p>
+            <h2 class="text-lg font-semibold text-[#0D2F32]">Cuenta del usuario</h2>
+          </div>
+          <div>
+            <label class="papayal-label">Nombre completo *</label>
+            <%= form.text_field :name, name: "user[name]", class: "papayal-input mt-2", value: @user.name, required: true, placeholder: "Mariana López" %>
+          </div>
+          <div>
+            <label class="papayal-label">Correo electrónico *</label>
+            <%= form.email_field :email, name: "user[email]", class: "papayal-input mt-2", value: @user.email, required: true, placeholder: "dueno@comercio.com" %>
+          </div>
+          <div>
+            <label class="papayal-label">Teléfono</label>
+            <%= form.telephone_field :phone, name: "user[phone]", class: "papayal-input mt-2", value: @user.phone, placeholder: "+593 99 999 9999" %>
+          </div>
+          <div>
+            <label class="papayal-label">Identificación (mínimo 7 caracteres) *</label>
+            <%= form.text_field :national_id, name: "user[national_id]", class: "papayal-input mt-2", value: @user.national_id, required: true, placeholder: "ABC1234" %>
+          </div>
+          <div>
+            <label class="papayal-label">Contraseña inicial (opcional)</label>
+            <%= form.password_field :password, name: "user[password]", class: "papayal-input mt-2", autocomplete: "new-password", placeholder: "Déjalo en blanco para generar" %>
+            <p class="text-xs text-[#2C3A43]/70 mt-1">Si lo dejas vacío se generará una contraseña segura automáticamente.</p>
+          </div>
+          <div>
+            <label class="papayal-label">Confirmación de contraseña</label>
+            <%= form.password_field :password_confirmation, name: "user[password_confirmation]", class: "papayal-input mt-2", autocomplete: "new-password", placeholder: "Repite la contraseña" %>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3">
+        <%= link_to "Cancelar", admin_merchants_path, class: "papayal-btn-ghost" %>
+        <%= form.submit "Crear comercio", class: "papayal-btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+

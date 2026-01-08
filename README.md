@@ -87,6 +87,23 @@ DATABASE_URL=postgresql://localhost/rem_mvp_development
 REDIS_URL=redis://localhost:6379/0
 ```
 
+### Production / Render environment variables
+
+Render deployments must not rely on local disk for uploads. Set these variables in Render (or your production environment):
+
+- `RAILS_MASTER_KEY` (required)
+- `APP_HOST` (public host, e.g., https://your-app.onrender.com)
+- `ACTIVE_STORAGE_SERVICE` (optional, defaults to `amazon`)
+- `AWS_S3_BUCKET` (required)
+- `AWS_ACCESS_KEY_ID` (required)
+- `AWS_SECRET_ACCESS_KEY` (required)
+- `AWS_REGION` (defaults to `us-east-1`)
+- `AWS_S3_ENDPOINT` (optional, e.g., for R2 or MinIO)
+- `AWS_S3_FORCE_PATH_STYLE` (optional, set to `true` if your provider requires it)
+- `SENDGRID_API_KEY` (required in production)
+- `SENDGRID_DOMAIN` (optional, defaults to `APP_HOST` or `rem.com`)
+- `DEFAULT_FROM_EMAIL` (optional, overrides the sender address)
+
 ## Running the Application
 
 ### Development
