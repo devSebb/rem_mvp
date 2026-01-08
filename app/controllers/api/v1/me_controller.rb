@@ -13,7 +13,9 @@ module Api
           email: user.email,
           name: user.name,
           phone: user.phone,
-          role: user.role
+          role: user.role,
+          avatar_url: attachment_url(user.avatar),
+          avatar_thumb_url: attachment_variant_url(user.avatar, resize_to_limit: [128, 128])
         }
       end
     end

@@ -13,6 +13,7 @@ class User < ApplicationRecord
   has_one :merchant, dependent: :destroy
   has_many :sent_gift_cards, class_name: 'GiftCard', foreign_key: 'sender_id', dependent: :nullify
   has_many :received_gift_cards, class_name: 'GiftCard', foreign_key: 'recipient_id', dependent: :nullify
+  has_one_attached :avatar
 
   # Validations
   validates :name, presence: true
@@ -25,6 +26,7 @@ class User < ApplicationRecord
               message: "must be at least 7 alphanumeric characters"
             },
             allow_blank: true
+  validate :validate_avatar
 
   before_validation :normalize_national_id
 
@@ -43,5 +45,17 @@ class User < ApplicationRecord
     return if national_id.nil?
 
     self.national_id = national_id.to_s.strip.gsub(/[\s-]+/, '').upcase
+  end
+
+  def validate_avatar
+    return unless avatar.attached?
+
+    if avatar.blob.byte_size > 5.megabytes
+      errors.add(:avatar, "is too large (max 5MB)")
+    end
+
+    return if avatar.content_type&.start_with?("image/")
+
+    errors.add(:avatar, "must be an image")
   end
 end

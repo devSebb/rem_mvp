@@ -122,6 +122,35 @@ module Api
         current_user
       end
 
+      def attachment_url(attachment)
+        return nil unless attachment&.attached?
+
+        Rails.application.routes.url_helpers.rails_blob_url(attachment, **url_options_with_host)
+      rescue => e
+        Rails.logger.warn("Failed to build attachment URL: #{e.class} - #{e.message}")
+        nil
+      end
+
+      def attachment_variant_url(attachment, resize_to_limit:)
+        return nil unless attachment&.attached? && attachment.variable?
+
+        variant = attachment.variant(resize_to_limit: resize_to_limit)
+        Rails.application.routes.url_helpers.rails_representation_url(variant.processed, **url_options_with_host)
+      rescue => e
+        Rails.logger.warn("Failed to build attachment variant URL: #{e.class} - #{e.message}")
+        nil
+      end
+
+      def url_options_with_host
+        host = ENV["APP_HOST"].presence || request&.host || "localhost"
+        protocol = ENV["APP_PROTOCOL"].presence || request&.protocol&.delete_suffix("://") || (Rails.env.production? ? "https" : "http")
+
+        options = { host:, protocol: }
+        port = request&.port
+        options[:port] = port if port && ![80, 443].include?(port)
+        options
+      end
+
       def render_internal_error(exception)
         Rails.logger.error("Mobile API error: #{exception.class} - #{exception.message}")
         Rails.logger.error(exception.backtrace.join("\n")) if exception.backtrace

@@ -6,7 +6,7 @@ module Api
 
         def index
           gift_cards = policy_scope(GiftCard)
-            .includes(:merchant)
+            .includes(merchant: { logo_attachment: :blob })
             .order(updated_at: :desc, id: :desc)
 
           render_success(data: gift_cards.map { |card| serialize_gift_card(card) })
@@ -42,7 +42,7 @@ module Api
 
         def set_gift_card
           @gift_card = policy_scope(GiftCard)
-            .includes(:merchant)
+            .includes(merchant: { logo_attachment: :blob })
             .find(params[:id])
         end
 
@@ -59,9 +59,11 @@ module Api
             sender_id: card.sender_id,
             recipient_id: card.recipient_id,
             merchant_id: card.merchant_id,
-            merchant: card.merchant ? { id: card.merchant.id, store_name: card.merchant.store_name } : nil,
+            merchant: card.merchant ? { id: card.merchant.id, store_name: card.merchant.store_name, logo_url: attachment_url(card.merchant.logo) } : nil,
             store_name: card.merchant&.store_name,
-            merchant_name: card.merchant&.store_name
+            merchant_name: card.merchant&.store_name,
+            merchant_store_name: card.merchant&.store_name,
+            merchant_logo_url: attachment_url(card.merchant&.logo)
           }
         end
       end

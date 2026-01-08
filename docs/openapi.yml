@@ -243,9 +243,57 @@ paths:
                   name: Jane Smith
                   phone: "+15551234567"
                   role: user
+                  avatar_url: null
+                  avatar_thumb_url: null
                 request_id: 123e4567
         "401":
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/me/avatar:
+    post:
+      summary: Upload or replace current user's avatar
+      tags: [Me]
+      security:
+        - AccessToken: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [avatar]
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Avatar uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      avatar_url:
+                        type: string
+                      avatar_thumb_url:
+                        type: string
+                        nullable: true
+                  request_id:
+                    type: string
+              example:
+                data:
+                  avatar_url: https://api.rem.com/rails/active_storage/blobs/.../avatar.png
+                  avatar_thumb_url: https://api.rem.com/rails/active_storage/representations/.../avatar.png
+                request_id: 123e4567
+        "422":
+          description: Upload failed
           content:
             application/json:
               schema:
@@ -285,12 +333,74 @@ paths:
                     merchant_id: 2
                     store_name: "Coffee Shop"
                     merchant_name: "Coffee Shop"
+                    merchant_store_name: "Coffee Shop"
+                    merchant_logo_url: null
                     merchant:
                       id: 2
                       store_name: "Coffee Shop"
                 request_id: 123e4567
         "401":
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/merchants/{id}/logo:
+    post:
+      summary: Upload or replace merchant logo
+      tags: [Merchants]
+      security:
+        - AccessToken: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [logo]
+              properties:
+                logo:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Logo uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      merchant_id:
+                        type: integer
+                      merchant_store_name:
+                        type: string
+                      merchant_logo_url:
+                        type: string
+                  request_id:
+                    type: string
+              example:
+                data:
+                  merchant_id: 2
+                  merchant_store_name: Coffee Shop
+                  merchant_logo_url: https://api.rem.com/rails/active_storage/blobs/.../logo.png
+                request_id: 123e4567
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -472,6 +582,12 @@ components:
         merchant_name:
           type: string
           nullable: true
+        merchant_store_name:
+          type: string
+          nullable: true
+        merchant_logo_url:
+          type: string
+          nullable: true
         merchant:
           type: object
           nullable: true
@@ -480,6 +596,9 @@ components:
               type: integer
             store_name:
               type: string
+            logo_url:
+              type: string
+              nullable: true
     User:
       type: object
       properties:
@@ -495,4 +614,10 @@ components:
           nullable: true
         role:
           type: string
+        avatar_url:
+          type: string
+          nullable: true
+        avatar_thumb_url:
+          type: string
+          nullable: true
 

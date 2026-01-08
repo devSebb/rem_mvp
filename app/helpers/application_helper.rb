@@ -31,4 +31,34 @@ module ApplicationHelper
   def merchant_nav_context?
     controller_path.start_with?("merchant/")
   end
+
+  def avatar_url_for(record, attachment_name: :avatar, resize_to_limit: [96, 96])
+    attachment = record.respond_to?(attachment_name) ? record.public_send(attachment_name) : nil
+    fallback = asset_path("default-avatar.svg")
+
+    return fallback unless attachment&.attached?
+
+    if attachment.variable?
+      begin
+        return url_for(attachment.variant(resize_to_limit: resize_to_limit))
+      rescue => e
+        Rails.logger.warn("Avatar variant failed: #{e.class} - #{e.message}")
+      end
+    end
+
+    url_for(attachment)
+  rescue => e
+    Rails.logger.warn("Avatar URL fallback triggered: #{e.class} - #{e.message}")
+    fallback
+  end
+
+  def avatar_image_for(record, attachment_name: :avatar, size: 48, classes: "")
+    url = avatar_url_for(record, attachment_name:, resize_to_limit: [size, size])
+    image_tag(
+      url,
+      alt: record.respond_to?(:name) ? record.name : "Avatar",
+      class: "rounded-full border border-black/10 bg-white object-cover h-#{size / 4 * 1} w-#{size / 4 * 1} #{classes}".squeeze(" "),
+      size: "#{size}x#{size}"
+    )
+  end
 end

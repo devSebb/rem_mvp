@@ -1,135 +1,125 @@
-<div class="px-4 sm:px-0">
-  <!-- Quick Actions -->
-  <div class="bg-white shadow rounded-lg mb-6">
-    <div class="px-4 py-5 sm:p-6">
-      <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <%= link_to "New Redemption", new_merchant_redemption_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
-        <%= link_to "Dashboard", merchant_root_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
-        <%= link_to "View Settlements", merchant_settlements_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
-      </div>
+<div class="space-y-8">
+  <div
+    class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+    style="background: linear-gradient(135deg, #FCA50F 0%, #FFC65C 45%, #EBEBE8 100%);"
+  >
+    <div>
+      <p class="papayal-meta text-[#0D2F32]/80">Canjes</p>
+      <h1 class="text-3xl font-bold text-[#0D2F32]">Confirmar canje</h1>
+      <p class="text-sm text-[#0D2F32]/80 mt-1">Revisa el saldo y confirma el monto a descontar.</p>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <%= link_to "← Buscar otra tarjeta", new_merchant_redemption_path, class: "papayal-btn-secondary" %>
+      <%= link_to "Panel", merchant_root_path, class: "papayal-btn-ghost" %>
     </div>
   </div>
 
-  <div class="max-w-md mx-auto">
-    <div class="bg-white shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
-      <h2 class="text-2xl font-bold text-gray-900 mb-6">Confirm Redemption</h2>
-    
-    <% if @gift_card %>
-      <div class="bg-gray-50 rounded-lg p-4 mb-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Gift Card Details</h3>
-        
-        <dl class="space-y-3">
-          <div>
-            <dt class="text-sm font-medium text-gray-500">Original Amount</dt>
-            <dd class="text-lg font-semibold text-gray-900">
-              <%= number_to_currency(@gift_card.amount / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
-            </dd>
+  <% if @gift_card %>
+    <div class="grid grid-cols-12 gap-6">
+      <div class="col-span-12 lg:col-span-5 papayal-card p-6 space-y-4">
+        <% if @redemption_mode == "token" %>
+          <div class="rounded-2xl border border-blue-100 bg-blue-50/70 p-3">
+            <p class="papayal-meta text-blue-800">Usando código dinámico</p>
+            <p class="text-sm text-blue-900 mt-1 font-mono tracking-[0.25em]"><%= @redemption_token_value %></p>
+            <% if @redemption_token&.expires_at %>
+              <p class="text-xs text-blue-700 mt-1">Vence <%= @redemption_token.expires_at.strftime('%I:%M %p') %></p>
+            <% end %>
           </div>
-          
-          <div>
-            <dt class="text-sm font-medium text-gray-500">Remaining Balance</dt>
-            <dd class="text-2xl font-bold text-green-600">
-              <%= number_to_currency(@gift_card.remaining_balance / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
-            </dd>
-          </div>
-          
-          <div>
-            <dt class="text-sm font-medium text-gray-500">From</dt>
-            <dd class="text-sm text-gray-900"><%= @gift_card.sender.name %></dd>
-          </div>
-          
-          <div>
-            <dt class="text-sm font-medium text-gray-500">To</dt>
-            <dd class="text-sm text-gray-900">
-              <%= @gift_card.recipient&.name || 'Unknown' %>
-              <% if @gift_card.recipient&.phone.present? %>
-                <span class="text-gray-500">(<%= @gift_card.recipient.phone %>)</span>
-              <% end %>
-            </dd>
-          </div>
-          
-          <% if @gift_card.expires_at.present? %>
+        <% end %>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
             <div>
-              <dt class="text-sm font-medium text-gray-500">Expires</dt>
-              <dd class="text-sm text-gray-900"><%= @gift_card.expires_at.strftime('%B %d, %Y') %></dd>
+              <p class="papayal-meta text-[#2C3A43]/60">Monto original</p>
+              <p class="text-2xl font-bold text-[#0D2F32]">
+                <%= number_to_currency(@gift_card.amount / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+              </p>
             </div>
-          <% end %>
-        </dl>
-      </div>
-      
-      <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6">
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-            </svg>
+            <div>
+              <p class="papayal-meta text-[#2C3A43]/60">Saldo restante</p>
+              <p class="text-2xl font-bold text-emerald-700">
+                <%= number_to_currency(@gift_card.remaining_balance / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+              </p>
+            </div>
           </div>
-          <div class="ml-3">
-            <h3 class="text-sm font-medium text-yellow-800">Please verify the details</h3>
-            <div class="mt-2 text-sm text-yellow-700">
-              <p>Make sure the amount and recipient information are correct before proceeding with the redemption.</p>
+
+          <div class="grid grid-cols-2 gap-3 text-sm text-[#2C3A43]/80">
+            <div>
+              <p class="papayal-meta text-[#2C3A43]/60">De</p>
+              <p class="font-semibold text-[#0D2F32]"><%= @gift_card.sender.name %></p>
             </div>
+            <div>
+              <p class="papayal-meta text-[#2C3A43]/60">Para</p>
+              <p class="font-semibold text-[#0D2F32]"><%= @gift_card.recipient&.name || 'Desconocido' %></p>
+            </div>
+            <% if @gift_card.expires_at.present? %>
+              <div>
+                <p class="papayal-meta text-[#2C3A43]/60">Vence</p>
+                <p class="text-[#0D2F32]"><%= @gift_card.expires_at.strftime('%d %b %Y') %></p>
+              </div>
+            <% end %>
+          </div>
+
+          <div class="rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
+            <p class="text-sm font-medium text-amber-800">Verifica los datos</p>
+            <p class="text-xs text-amber-700 mt-1">Confirma monto y destinatario antes de canjear.</p>
           </div>
         </div>
       </div>
-      
-      <%= form_with url: redeem_merchant_redemptions_path, method: :post, local: true, class: "space-y-6" do |form| %>
-        <%= form.hidden_field :gift_card_id, value: @gift_card.id %>
-        <%= form.hidden_field :idempotency_token, value: @idempotency_token %>
-        
-        <div class="space-y-4">
-          <div>
-            <%= form.label :redemption_amount, "Redemption Amount", class: "block text-sm font-medium text-gray-700 mb-2" %>
+
+      <div class="col-span-12 lg:col-span-7 papayal-card p-6 space-y-5">
+        <div>
+          <p class="papayal-meta text-[#2C3A43]/70">Monto a canjear</p>
+          <h2 class="text-2xl font-bold text-[#0D2F32] mt-1">Define el valor</h2>
+          <p class="text-sm text-[#2C3A43]/70 mt-1">Puedes canjear cualquier monto hasta el saldo disponible.</p>
+        </div>
+
+        <%= form_with url: redeem_merchant_redemptions_path, method: :post, local: true, class: "space-y-5" do |form| %>
+          <%= form.hidden_field :gift_card_id, value: @gift_card.id %>
+          <%= form.hidden_field :idempotency_token, value: @idempotency_token %>
+          <%= form.hidden_field :redemption_mode, value: @redemption_mode %>
+          <% if @redemption_mode == "token" %>
+            <%= form.hidden_field :redemption_token, value: @redemption_token_value %>
+          <% end %>
+
+          <div class="space-y-2">
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span class="text-gray-500 sm:text-sm"><%= @gift_card.currency == 'USD' ? '$' : @gift_card.currency %></span>
+                <span class="text-[#2C3A43]/60 sm:text-sm"><%= @gift_card.currency == 'USD' ? '$' : @gift_card.currency %></span>
               </div>
-              <%= form.number_field :redemption_amount, 
-                  value: @gift_card.remaining_balance / 100.0,
-                  step: 0.01,
-                  min: 0.01,
-                  max: @gift_card.remaining_balance / 100.0,
-                  class: "block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
-                  placeholder: "0.00" %>
+              <%= form.number_field :redemption_amount,
+                    value: @gift_card.remaining_balance / 100.0,
+                    step: 0.01,
+                    min: 0.01,
+                    max: @gift_card.remaining_balance / 100.0,
+                    class: "papayal-input pl-8 text-lg font-semibold",
+                    placeholder: "0.00" %>
             </div>
-            <p class="mt-1 text-sm text-gray-500">
-              Maximum: <%= number_to_currency(@gift_card.remaining_balance / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+            <p class="text-xs text-[#2C3A43]/60">
+              Máximo: <%= number_to_currency(@gift_card.remaining_balance / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
             </p>
           </div>
-          
-          <div class="bg-blue-50 border border-blue-200 rounded-md p-3">
-            <div class="flex">
-              <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                </svg>
-              </div>
-              <div class="ml-3">
-                <p class="text-sm text-blue-700">
-                  You can redeem any amount up to the remaining balance. The gift card will remain active for future use if not fully redeemed.
-                </p>
-              </div>
-            </div>
+
+          <div class="rounded-2xl border border-blue-100 bg-blue-50/60 p-3 text-sm text-blue-800">
+            El saldo restante seguirá disponible si no canjeas el total.
           </div>
-        </div>
-        
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <%= link_to "Cancel", new_merchant_redemption_path, class: "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full sm:w-auto text-center" %>
-          <%= form.submit "Confirm Redemption", 
-              class: "bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full sm:w-auto",
-              data: { 
-                disable_with: "Processing...",
-                turbo_confirm: "Are you sure you want to redeem this gift card? This action cannot be undone."
-              } %>
-        </div>
-      <% end %>
-    <% else %>
-      <div class="text-center">
-        <p class="text-gray-500">No gift card found to redeem.</p>
-        <%= link_to "Try Again", new_merchant_redemption_path, class: "mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
+
+          <div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+            <%= link_to "Cancelar", new_merchant_redemption_path, class: "papayal-btn-secondary w-full sm:w-auto justify-center" %>
+            <%= form.submit "Confirmar canje",
+                class: "papayal-btn-primary w-full sm:w-auto",
+                data: {
+                  disable_with: "Procesando...",
+                  turbo_confirm: "¿Confirmar canje? Esta acción no se puede deshacer."
+                } %>
+          </div>
+        <% end %>
       </div>
-    <% end %>
     </div>
-  </div>
+  <% else %>
+    <div class="papayal-card p-6 text-center">
+      <p class="text-[#2C3A43]/70">No encontramos la tarjeta para confirmar.</p>
+      <%= link_to "Intentar de nuevo", new_merchant_redemption_path, class: "papayal-btn-primary mt-4 inline-flex justify-center" %>
+    </div>
+  <% end %>
 </div>

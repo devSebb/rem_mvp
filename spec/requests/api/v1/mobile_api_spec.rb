@@ -135,6 +135,33 @@ RSpec.describe "Mobile API", type: :request do
     end
   end
 
+  describe "GET /api/v1/me" do
+    it "returns current user with avatar urls" do
+      get "/api/v1/me", headers: auth_headers(login_and_get_tokens[:access_token])
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data["id"]).to eq(user.id)
+      expect(parsed_data["avatar_url"]).to be_nil
+      expect(parsed_data["avatar_thumb_url"]).to be_nil
+    end
+  end
+
+  describe "POST /api/v1/me/avatar" do
+    let(:avatar_file) do
+      Rack::Test::UploadedFile.new(Rails.root.join("spec/fixtures/files/avatar.png"), "image/png")
+    end
+
+    it "uploads and returns avatar urls" do
+      post "/api/v1/me/avatar",
+           params: { avatar: avatar_file },
+           headers: { "Authorization" => "Bearer #{login_and_get_tokens[:access_token]}" }
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data["avatar_url"]).to be_present
+      expect(parsed_data).to have_key("avatar_thumb_url")
+    end
+  end
+
   describe "POST /api/v1/auth/logout" do
     it "revokes the supplied refresh token" do
       tokens = login_and_get_tokens
@@ -187,6 +214,8 @@ RSpec.describe "Mobile API", type: :request do
       expect(card["merchant"]).to include("id" => merchant.id, "store_name" => merchant.store_name)
       expect(card["store_name"]).to eq(merchant.store_name)
       expect(card["merchant_name"]).to eq(merchant.store_name)
+      expect(card["merchant_store_name"]).to eq(merchant.store_name)
+      expect(card["merchant_logo_url"]).to be_nil
     end
   end
 

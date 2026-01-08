@@ -5,6 +5,7 @@ class Merchant < ApplicationRecord
   has_many :gift_cards, dependent: :nullify
   has_many :transactions, through: :gift_cards
   has_many :settlements, dependent: :destroy
+  has_one_attached :logo
 
   enum status: { active: 0, suspended: 1 }
 
@@ -13,6 +14,7 @@ class Merchant < ApplicationRecord
   validates :public_key, presence: true, uniqueness: true
   validates :secret_key_digest, presence: true, uniqueness: true
   validates :contact_email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
+  validate :validate_logo
 
   before_validation :sync_display_name
   before_validation :ensure_api_keys
@@ -58,5 +60,17 @@ class Merchant < ApplicationRecord
     raw_secret = "sec_#{SecureRandom.hex(32)}"
     @generated_secret_key = raw_secret
     self.secret_key_digest = self.class.digest_secret(raw_secret)
+  end
+
+  def validate_logo
+    return unless logo.attached?
+
+    if logo.blob.byte_size > 5.megabytes
+      errors.add(:logo, "is too large (max 5MB)")
+    end
+
+    return if logo.content_type&.start_with?("image/")
+
+    errors.add(:logo, "must be an image")
   end
 end

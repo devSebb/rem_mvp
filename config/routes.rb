@@ -45,6 +45,9 @@ Rails.application.routes.draw do
           post :redemption_token, on: :member
         end
       end
+
+      post "me/avatar", to: "me/avatars#create"
+      post "merchants/:id/logo", to: "merchants#upload_logo"
     end
   end
 

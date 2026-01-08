@@ -8,7 +8,8 @@
       <h1 class="text-3xl font-bold text-[#0D2F32]">Hola, <%= @merchant.store_name %></h1>
       <p class="text-sm text-[#0D2F32]/80 mt-2">Administra tus canjes y liquidaciones desde un panel cálido y profesional.</p>
     </div>
-    <div class="flex flex-wrap gap-3">
+    <div class="flex flex-wrap items-center gap-3">
+      <%= avatar_image_for(@merchant, attachment_name: :logo, size: 48, classes: "shadow-sm") %>
       <%= link_to "Canjear Tarjeta", new_merchant_redemption_path,
           class: "papayal-btn-primary bg-[#EBEBE8] text-[#0D2F32] border border-[#0D2F32]/20 hover:bg-[#EBEBE8]/90" %>
     </div>

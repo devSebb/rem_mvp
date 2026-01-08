@@ -24,20 +24,23 @@
         <p class="papayal-meta text-[#2C3A43]/70">Código de la tarjeta</p>
         <h2 class="text-2xl font-bold text-[#0D2F32] mt-1">Busca la tarjeta a canjear</h2>
         <p class="text-sm text-[#2C3A43]/70 mt-2">
-          Ingresa el código completo tal como aparece en el correo o escanea el QR. Usamos
-          mayúsculas automáticamente.
+          Ingresa el código completo (REM-XXXX) o el token dinámico que aparece en el QR del cliente.
+          Usamos mayúsculas automáticamente.
         </p>
       </div>
 
       <%= form_with url: merchant_redemptions_path, method: :post, local: true, class: "space-y-4" do |form| %>
         <div class="space-y-2">
-          <%= form.label :code, "Código de la tarjeta", class: "papayal-label" %>
+          <%= form.label :code, "Código o token de la tarjeta", class: "papayal-label" %>
           <%= form.text_field :code,
                 class: "papayal-input uppercase tracking-[0.2em] font-semibold",
-                placeholder: "REM-XXXX-XXXX-XXXX",
+                placeholder: "REM-XXXX-XXXX-XXXX o TOKEN",
                 autofocus: true,
-                required: true %>
-          <p class="text-xs text-[#2C3A43]/60">Ejemplo: REM-1234-5678-90AB</p>
+                required: true,
+                autocapitalize: "characters" %>
+          <p class="text-xs text-[#2C3A43]/60">
+            Ejemplo código: REM-1234-5678-90AB · Ejemplo token: X1YZ-9ABC
+          </p>
         </div>
 
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

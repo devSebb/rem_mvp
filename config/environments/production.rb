@@ -36,14 +36,29 @@ Rails.application.configure do
   # config.action_dispatch.x_sendfile_header = "X-Sendfile" # for Apache
   # config.action_dispatch.x_sendfile_header = "X-Accel-Redirect" # for NGINX
 
-  # Store uploaded files in S3 by default (see config/storage.yml for options).
-  config.active_storage.service = (ENV["ACTIVE_STORAGE_SERVICE"].presence || "amazon").to_sym
+  # Store uploaded files; prefer S3 when configured, otherwise fall back to local.
+  requested_service = ENV["ACTIVE_STORAGE_SERVICE"].presence
+  inferred_service = if requested_service.present?
+    requested_service
+  elsif %w[AWS_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY].all? { |k| ENV[k].present? }
+    "amazon"
+  else
+    "local"
+  end
+
+  config.active_storage.service = inferred_service.to_sym
 
   if config.active_storage.service == :amazon
     required_s3_env = %w[AWS_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY]
     missing = required_s3_env.select { |key| ENV[key].blank? }
+
     if missing.any?
-      raise "Missing required AWS S3 environment variables: #{missing.join(', ')}"
+      if requested_service == "amazon"
+        raise "Missing required AWS S3 environment variables: #{missing.join(', ')}"
+      else
+        Rails.logger.warn("S3 env vars missing (#{missing.join(', ')}); falling back to :local for Active Storage")
+        config.active_storage.service = :local
+      end
     end
   end
 

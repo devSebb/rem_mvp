@@ -5,9 +5,12 @@
       <h1 class="text-3xl font-bold text-[#0D2F32] mt-1">Administra tu cuenta</h1>
       <p class="text-sm text-[#2C3A43]/70 mt-1">Actualiza tus datos personales y tu contraseña con la misma calidez del resto de Papayal.</p>
     </div>
-    <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0D2F32]/10 text-[#0D2F32] text-sm font-medium">
-      ID • <%= resource.id %>
-    </span>
+    <div class="inline-flex items-center gap-3">
+      <%= avatar_image_for(resource, size: 48, classes: "shadow-sm") %>
+      <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0D2F32]/10 text-[#0D2F32] text-sm font-medium">
+        ID • <%= resource.id %>
+      </span>
+    </div>
   </div>
 
   <div class="grid grid-cols-12 gap-6">
