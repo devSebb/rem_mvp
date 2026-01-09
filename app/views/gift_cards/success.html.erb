@@ -1,52 +1,124 @@
-<div class="max-w-md mx-auto text-center">
-  <div class="bg-white shadow-lg rounded-lg px-8 pt-6 pb-8 mb-4">
-    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-      <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-      </svg>
-    </div>
-    
-    <h1 class="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h1>
-    
-    <% if @gift_card %>
-      <p class="text-gray-600 mb-6">Your gift card has been created and sent to the recipient.</p>
-    <% else %>
-      <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-        <p class="text-yellow-800 text-sm">
-          <strong>Processing...</strong> Your payment was successful, but we're still processing your gift card.
-          <% if @session_id.present? %>
-            <br><br>If this message persists, please check:
-            <ul class="list-disc list-inside mt-2 space-y-1">
-              <li>Make sure Stripe webhook forwarding is running: <code class="bg-yellow-100 px-1 rounded">stripe listen --forward-to http://localhost:3000/webhooks/stripe</code></li>
-              <li>Check your Rails logs for webhook processing errors</li>
-              <li>Contact support if the issue persists</li>
-            </ul>
+<div class="max-w-4xl mx-auto space-y-6">
+  <div class="flex items-center">
+    <%= link_to gift_cards_path, class: "inline-flex items-center gap-2 text-sm text-[#0D2F32] hover:text-[#0B2528]" do %>
+      <span aria-hidden="true">←</span>
+      <span>Volver a la Billetera</span>
+    <% end %>
+  </div>
+
+  <div class="papayal-card p-6 md:p-8 space-y-6">
+    <div class="flex items-start gap-4">
+      <div class="h-12 w-12 rounded-2xl <%= @gift_card ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700' %> flex items-center justify-center">
+        <% if @gift_card %>
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        <% else %>
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        <% end %>
+      </div>
+      <div class="flex-1">
+        <p class="papayal-meta text-[#0D2F32]"><%= @gift_card ? "Pago confirmado" : "Pago recibido" %></p>
+        <h1 class="text-3xl font-bold text-[#0D2F32] mt-1">
+          <%= @gift_card ? "Tu tarjeta Papayal está lista" : "Estamos terminando tu tarjeta" %>
+        </h1>
+        <p class="text-sm text-[#2C3A43]/70 mt-2">
+          <% if @gift_card %>
+            Enviamos la tarjeta a <%= @gift_card.recipient&.name || 'el destinatario' %>. También la guardamos en tu billetera para que puedas compartirla o consultarla cuando quieras.
+          <% else %>
+            Recibimos el pago y estamos generando la tarjeta. Normalmente aparece en segundos; mantente en esta página o abre tu billetera para verla.
           <% end %>
         </p>
       </div>
-    <% end %>
-    
-    <% if @gift_card %>
-      <div class="bg-gray-50 rounded-lg p-4 mb-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-2">Gift Card Details</h3>
-        <p class="text-sm text-gray-600">
-          Amount: <span class="font-semibold"><%= number_to_currency(@gift_card.amount / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %></span>
-        </p>
-        <p class="text-sm text-gray-600">
-          To: <span class="font-semibold"><%= @gift_card.recipient&.name || 'Unknown' %></span>
-        </p>
-        <% if @gift_card.merchant.present? %>
-          <p class="text-sm text-gray-600">
-            Store: <span class="font-semibold"><%= @gift_card.merchant.store_name %></span>
-          </p>
-        <% end %>
-      </div>
-    <% end %>
-    
-    <div class="space-y-3">
-      <%= link_to "View Gift Card", @gift_card ? gift_card_path(@gift_card) : gift_cards_path, class: "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
-      <%= link_to "Buy Another Gift Card", new_gift_card_path, class: "w-full bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
-      <%= link_to "Back to Home", root_path, class: "w-full text-blue-600 hover:text-blue-500 font-medium" %>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+      <%= link_to (@gift_card ? "Ver tarjeta" : "Ir a mi billetera"), (@gift_card ? gift_card_path(@gift_card) : gift_cards_path), class: "papayal-btn-primary w-full sm:w-auto justify-center" %>
+      <%= link_to "Comprar otra", new_gift_card_path, class: "papayal-btn-secondary w-full sm:w-auto" %>
+      <%= link_to "Ir al inicio", root_path, class: "papayal-btn-ghost w-full sm:w-auto justify-center" %>
     </div>
   </div>
+
+  <% if @gift_card %>
+    <div class="papayal-card p-6 md:p-8 space-y-5">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <p class="papayal-meta text-[#2C3A43]/70">Resumen</p>
+          <h2 class="text-xl font-bold text-[#0D2F32] mt-1">Tarjeta de regalo</h2>
+          <p class="text-sm text-[#2C3A43]/70">Puedes verla y compartirla desde tu billetera.</p>
+        </div>
+        <span class="<%= status_badge_classes(@gift_card.status) %>"><%= status_badge_label(@gift_card.status) %></span>
+      </div>
+
+      <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-[#2C3A43]/80">
+        <div>
+          <dt class="papayal-meta text-[#2C3A43]/60">Monto</dt>
+          <dd class="text-lg font-semibold text-[#0D2F32] mt-1">
+            <%= number_to_currency(@gift_card.amount / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+          </dd>
+        </div>
+        <div>
+          <dt class="papayal-meta text-[#2C3A43]/60">Saldo inicial</dt>
+          <dd class="text-lg font-semibold text-[#0D2F32] mt-1">
+            <%= number_to_currency(@gift_card.remaining_balance / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+          </dd>
+        </div>
+        <div>
+          <dt class="papayal-meta text-[#2C3A43]/60">Para</dt>
+          <dd class="text-base text-[#2C3A43] mt-1"><%= @gift_card.recipient&.name || 'Destinatario sin nombre' %></dd>
+        </div>
+        <div>
+          <dt class="papayal-meta text-[#2C3A43]/60">De</dt>
+          <dd class="text-base text-[#2C3A43] mt-1"><%= @gift_card.sender&.name %></dd>
+        </div>
+        <% if @gift_card.merchant.present? %>
+          <div>
+            <dt class="papayal-meta text-[#2C3A43]/60">Tienda asociada</dt>
+            <dd class="text-base text-[#2C3A43] mt-1"><%= @gift_card.merchant.store_name %></dd>
+          </div>
+        <% end %>
+        <% if @gift_card.created_at.present? %>
+          <div>
+            <dt class="papayal-meta text-[#2C3A43]/60">Fecha de emisión</dt>
+            <dd class="text-base text-[#2C3A43] mt-1"><%= @gift_card.created_at.strftime('%d/%m/%Y %H:%M') %></dd>
+          </div>
+        <% end %>
+      </dl>
+    </div>
+  <% elsif @session_id.present? %>
+    <div class="papayal-card p-6 md:p-8 space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div>
+          <p class="papayal-meta text-amber-700">En proceso</p>
+          <h2 class="text-xl font-bold text-[#0D2F32] mt-1">Estamos validando el pago</h2>
+        </div>
+      </div>
+      <p class="text-sm text-[#2C3A43]/70">
+        Recibimos tu pago y estamos esperando la confirmación final de Stripe. Esto puede tardar unos segundos; la tarjeta aparecerá automáticamente en tu billetera.
+      </p>
+      <div class="rounded-xl border border-black/5 bg-[#EBEBEB]/60 p-4 space-y-2">
+        <p class="papayal-meta text-[#2C3A43]/60">Referencia de pago</p>
+        <p class="font-mono text-sm text-[#0D2F32] break-all"><%= @session_id %></p>
+        <p class="text-xs text-[#2C3A43]/60">
+          Si estás en modo prueba, asegúrate de tener activo el listener de Stripe y revisa los logs si no llega.
+        </p>
+        <code class="block w-full text-left bg-white rounded-lg px-3 py-2 border border-black/5 text-xs text-[#0D2F32]">
+          stripe listen --forward-to http://localhost:3000/webhooks/stripe
+        </code>
+      </div>
+    </div>
+  <% else %>
+    <div class="papayal-card p-6 md:p-8">
+      <p class="text-sm text-[#2C3A43]/70">
+        El pago fue exitoso. Si no ves la tarjeta todavía, revisa tu billetera o contáctanos.
+      </p>
+    </div>
+  <% end %>
 </div>
