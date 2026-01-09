@@ -2,15 +2,15 @@ module Messaging
   class Notifier
     include Rails.application.routes.url_helpers
 
-  def initialize(gift_card)
-    @gift_card = gift_card
-    @recipient = gift_card.recipient
-    @sender = gift_card.sender
-  end
+    def initialize(gift_card)
+      @gift_card = gift_card
+      @recipient = gift_card.recipient
+      @sender = gift_card.sender
+    end
 
     def send_all_notifications
       results = {}
-      
+
       # Send WhatsApp if recipient has phone
       if @recipient&.phone.present?
         results[:whatsapp] = send_whatsapp
@@ -34,15 +34,19 @@ module Messaging
 
     def send_whatsapp
       return { success: false, error: 'No phone number' } unless @recipient&.phone.present?
+      return twilio_disabled_response(:whatsapp) unless Messaging::TwilioConfig.enabled?
+
+      client = Messaging::TwilioConfig.client
+      return twilio_disabled_response(:whatsapp, 'Twilio client unavailable') unless client
+
+      from_number = Messaging::TwilioConfig.whatsapp_number
+      unless from_number.present?
+        return twilio_disabled_response(:whatsapp, 'TWILIO_WHATSAPP_NUMBER missing')
+      end
 
       begin
-        client = Twilio::REST::Client.new(
-          Rails.application.config.twilio[:account_sid],
-          Rails.application.config.twilio[:auth_token]
-        )
-
         message = client.messages.create(
-          from: "whatsapp:#{ENV['TWILIO_WHATSAPP_NUMBER']}",
+          from: "whatsapp:#{from_number}",
           to: "whatsapp:#{@recipient.phone}",
           body: whatsapp_message
         )
@@ -56,15 +60,19 @@ module Messaging
 
     def send_sms
       return { success: false, error: 'No phone number' } unless @recipient&.phone.present?
+      return twilio_disabled_response(:sms) unless Messaging::TwilioConfig.enabled?
+
+      client = Messaging::TwilioConfig.client
+      return twilio_disabled_response(:sms, 'Twilio client unavailable') unless client
+
+      from_number = Messaging::TwilioConfig.from_number
+      unless from_number.present?
+        return twilio_disabled_response(:sms, 'TWILIO_PHONE_NUMBER missing')
+      end
 
       begin
-        client = Twilio::REST::Client.new(
-          Rails.application.config.twilio[:account_sid],
-          Rails.application.config.twilio[:auth_token]
-        )
-
         message = client.messages.create(
-          from: Rails.application.config.twilio[:from_number],
+          from: from_number,
           to: @recipient.phone,
           body: sms_message
         )
@@ -76,33 +84,33 @@ module Messaging
       end
     end
 
-  def send_email
-    return { success: false, error: 'No email address' } unless @recipient&.email.present?
+    def send_email
+      return { success: false, error: 'No email address' } unless @recipient&.email.present?
 
-    begin
-      # Get the raw gift card code for email delivery
-      raw_code = @gift_card.raw_code || @gift_card.generate_code!
-      
-      # Try deliver_later first, fallback to deliver_now if Sidekiq not available
-      mail = GiftCardMailer.deliver_gift_card(@gift_card, raw_code)
-      
       begin
-        mail.deliver_later
-        Rails.logger.info "📧 Email queued for delivery to #{@recipient.email}"
-      rescue NoMethodError, Redis::CannotConnectError => e
-        # Sidekiq not available or Redis not running - use sync
-        Rails.logger.warn "⚠️ Sidekiq not available for email (#{e.class}), sending immediately"
-        mail.deliver_now
-        Rails.logger.info "📧 Email sent immediately to #{@recipient.email}"
+        # Get the raw gift card code for email delivery
+        raw_code = @gift_card.raw_code || @gift_card.generate_code!
+
+        # Try deliver_later first, fallback to deliver_now if Sidekiq not available
+        mail = GiftCardMailer.deliver_gift_card(@gift_card, raw_code)
+
+        begin
+          mail.deliver_later
+          Rails.logger.info "📧 Email queued for delivery to #{@recipient.email}"
+        rescue NoMethodError, Redis::CannotConnectError => e
+          # Sidekiq not available or Redis not running - use sync
+          Rails.logger.warn "⚠️ Sidekiq not available for email (#{e.class}), sending immediately"
+          mail.deliver_now
+          Rails.logger.info "📧 Email sent immediately to #{@recipient.email}"
+        end
+
+        { success: true }
+      rescue => e
+        Rails.logger.error "❌ Email delivery failed to #{@recipient.email}: #{e.class} - #{e.message}"
+        Rails.logger.error e.backtrace.join("\n")
+        { success: false, error: e.message }
       end
-      
-      { success: true }
-    rescue => e
-      Rails.logger.error "❌ Email delivery failed to #{@recipient.email}: #{e.class} - #{e.message}"
-      Rails.logger.error e.backtrace.join("\n")
-      { success: false, error: e.message }
     end
-  end
 
     private
 
@@ -140,7 +148,6 @@ module Messaging
       MESSAGE
     end
 
-
     def update_delivery_flags(results)
       updates = {}
       updates[:sent_via_whatsapp] = true if results[:whatsapp]&.dig(:success)
@@ -148,6 +155,11 @@ module Messaging
       updates[:sent_via_email] = true if results[:email]&.dig(:success)
 
       @gift_card.update!(updates) if updates.any?
+    end
+
+    def twilio_disabled_response(channel, reason = 'Twilio not configured')
+      Rails.logger.warn "[Twilio] #{reason}; #{channel} not sent"
+      { success: false, error: reason }
     end
   end
 end

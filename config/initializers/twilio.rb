@@ -1,13 +1,14 @@
 Rails.application.configure do
-  if Rails.env.production?
-    if ENV['TWILIO_AUTH_TOKEN'].blank? || ENV['TWILIO_ACCOUNT_SID'].blank?
-      raise "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN must be set in production"
-    end
+  account_sid = ENV['TWILIO_ACCOUNT_SID']
+  auth_token = ENV['TWILIO_AUTH_TOKEN']
+
+  if account_sid.blank? || auth_token.blank?
+    Rails.logger&.warn('[Twilio] Missing TWILIO_ACCOUNT_SID/AUTH_TOKEN; messaging disabled') if Rails.env.production?
   end
 
   config.twilio = {
-    account_sid: ENV['TWILIO_ACCOUNT_SID'],
-    auth_token: ENV['TWILIO_AUTH_TOKEN'],
+    account_sid: account_sid,
+    auth_token: auth_token,
     from_number: ENV['TWILIO_PHONE_NUMBER'],
     whatsapp_number: ENV['TWILIO_WHATSAPP_NUMBER']
   }

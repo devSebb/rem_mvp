@@ -37,15 +37,20 @@ class NotificationSender
   end
 
   def self.send_sms(phone, message)
-    return unless Rails.application.config.twilio[:account_sid].present?
+    unless Messaging::TwilioConfig.enabled?
+      return twilio_disabled("SMS to #{phone}")
+    end
 
-    client = Twilio::REST::Client.new(
-      Rails.application.config.twilio[:account_sid],
-      Rails.application.config.twilio[:auth_token]
-    )
+    client = Messaging::TwilioConfig.client
+    return twilio_disabled("SMS to #{phone}", 'Twilio client unavailable') unless client
+
+    from_number = Messaging::TwilioConfig.from_number
+    unless from_number.present?
+      return twilio_disabled("SMS to #{phone}", 'TWILIO_PHONE_NUMBER missing')
+    end
 
     client.messages.create(
-      from: Rails.application.config.twilio[:from_number],
+      from: from_number,
       to: phone,
       body: message
     )
@@ -62,5 +67,10 @@ class NotificationSender
     Rails.logger.info "Subject: Gift Card Received"
     Rails.logger.info "Body: #{message}"
     Rails.logger.info "Gift Card ID: #{gift_card.id}"
+  end
+
+  def self.twilio_disabled(context, reason = 'Twilio not configured')
+    Rails.logger.warn "[Twilio] #{reason}; #{context}"
+    nil
   end
 end

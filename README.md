@@ -63,7 +63,7 @@ A production-lean MVP for buying and sending gift cards, with merchant redemptio
 
 ### Environment Variables
 
-Required environment variables (see `.env.example`):
+Environment variables (Twilio/SendGrid optional; see `.env.example`):
 
 ```bash
 # Stripe Configuration
@@ -71,9 +71,11 @@ STRIPE_SECRET_KEY=sk_test_...
 STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 
-# Twilio Configuration
+# Twilio Configuration (optional for SMS/WhatsApp)
 TWILIO_ACCOUNT_SID=AC...
 TWILIO_AUTH_TOKEN=...
+TWILIO_PHONE_NUMBER=+1234567890
+TWILIO_WHATSAPP_NUMBER=+1234567890
 TWILIO_FROM_NUMBER=+1234567890
 
 # Application Configuration
@@ -109,6 +111,12 @@ Render deployments must not rely on local disk for uploads. Set these variables 
 - Email is optional; deployments will succeed without SendGrid variables.
 - To send real emails on Render, set `SENDGRID_API_KEY` and `DEFAULT_FROM_EMAIL`.
 - Without those variables, the app will deploy but emails will not be delivered.
+
+### Messaging (Twilio)
+
+- Twilio is optional; deployments will succeed without Twilio variables.
+- To send SMS/WhatsApp on Render, set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and your from numbers (`TWILIO_PHONE_NUMBER`, `TWILIO_WHATSAPP_NUMBER`, `TWILIO_FROM_NUMBER`).
+- Without those variables, messaging is disabled.
 
 ## Running the Application
 
