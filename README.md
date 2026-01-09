@@ -100,9 +100,15 @@ Render deployments must not rely on local disk for uploads. Set these variables 
 - `AWS_REGION` (defaults to `us-east-1`)
 - `AWS_S3_ENDPOINT` (optional, e.g., for R2 or MinIO)
 - `AWS_S3_FORCE_PATH_STYLE` (optional, set to `true` if your provider requires it)
-- `SENDGRID_API_KEY` (required in production)
+- `SENDGRID_API_KEY` (optional; set to send real emails)
 - `SENDGRID_DOMAIN` (optional, defaults to `APP_HOST` or `rem.com`)
-- `DEFAULT_FROM_EMAIL` (optional, overrides the sender address)
+- `DEFAULT_FROM_EMAIL` (recommended when enabling email delivery)
+
+### Email delivery (SendGrid)
+
+- Email is optional; deployments will succeed without SendGrid variables.
+- To send real emails on Render, set `SENDGRID_API_KEY` and `DEFAULT_FROM_EMAIL`.
+- Without those variables, the app will deploy but emails will not be delivered.
 
 ## Running the Application
 

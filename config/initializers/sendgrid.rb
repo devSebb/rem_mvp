@@ -1,35 +1,37 @@
 Rails.application.configure do
-  # SendGrid configuration for ActionMailer
-  if Rails.env.production?
-    required_env = %w[SENDGRID_API_KEY]
-    missing = required_env.select { |key| ENV[key].blank? }
+  sendgrid_api_key = ENV['SENDGRID_API_KEY']
 
-    if missing.any?
-      raise "Missing required SendGrid environment variables: #{missing.join(', ')}"
+  if sendgrid_api_key.present?
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.smtp_settings = {
+      address: 'smtp.sendgrid.net',
+      port: 587,
+      domain: ENV['SENDGRID_DOMAIN'] || ENV['APP_HOST'] || 'rem.com',
+      user_name: 'apikey',
+      password: sendgrid_api_key,
+      authentication: 'plain',
+      enable_starttls_auto: true
+    }
+  elsif Rails.env.production?
+    Rails.logger&.warn('[SendGrid] SENDGRID_API_KEY missing; email delivery disabled/fallback')
+
+    smtp_env_keys = %w[SMTP_ADDRESS SMTP_PORT SMTP_USERNAME SMTP_PASSWORD]
+
+    if smtp_env_keys.all? { |key| ENV[key].present? }
+      config.action_mailer.delivery_method = :smtp
+      config.action_mailer.smtp_settings = {
+        address: ENV['SMTP_ADDRESS'],
+        port: ENV['SMTP_PORT'],
+        domain: ENV['SMTP_DOMAIN'] || ENV['APP_HOST'] || 'rem.com',
+        user_name: ENV['SMTP_USERNAME'],
+        password: ENV['SMTP_PASSWORD'],
+        authentication: ENV['SMTP_AUTH_METHOD'] || 'plain',
+        enable_starttls_auto: ENV.fetch('SMTP_ENABLE_STARTTLS_AUTO', 'true') != 'false'
+      }
+    else
+      # Avoid disk writes or crashes when SendGrid/SMTP are absent in production
+      config.action_mailer.delivery_method = :test
     end
-
-    config.action_mailer.delivery_method = :smtp
-    config.action_mailer.smtp_settings = {
-      address: 'smtp.sendgrid.net',
-      port: 587,
-      domain: ENV['SENDGRID_DOMAIN'] || ENV['APP_HOST'] || 'rem.com',
-      user_name: 'apikey',
-      password: ENV['SENDGRID_API_KEY'],
-      authentication: 'plain',
-      enable_starttls_auto: true
-    }
-  elsif Rails.env.development? && ENV['SENDGRID_API_KEY'].present?
-    # Optional: Use SendGrid in development if API key is provided
-    config.action_mailer.delivery_method = :smtp
-    config.action_mailer.smtp_settings = {
-      address: 'smtp.sendgrid.net',
-      port: 587,
-      domain: ENV['SENDGRID_DOMAIN'] || ENV['APP_HOST'] || 'rem.com',
-      user_name: 'apikey',
-      password: ENV['SENDGRID_API_KEY'],
-      authentication: 'plain',
-      enable_starttls_auto: true
-    }
   else
     # Fallback to file delivery in development/test
     config.action_mailer.delivery_method = :file
