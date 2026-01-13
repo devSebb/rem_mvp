@@ -19,6 +19,9 @@ class Webhooks::StripeController < ApplicationController
       Rails.logger.error "   Make sure you're running: stripe listen --forward-to http://localhost:3000/webhooks/stripe"
       render json: { error: 'Invalid signature' }, status: :bad_request
     end
+  rescue StripeWebhooks::InvalidMerchantError => e
+    Rails.logger.error "❌ Stripe webhook merchant error: #{e.message}"
+    render json: { error: e.message }, status: :bad_request
   rescue => e
     Rails.logger.error "💥 Stripe webhook error: #{e.class} - #{e.message}"
     Rails.logger.error e.backtrace.join("\n")

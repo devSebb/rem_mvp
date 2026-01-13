@@ -38,9 +38,10 @@ module Api
             :email,
             :password,
             :password_confirmation,
+            :first_name,
+            :last_name,
             :name,
             :phone,
-            :national_id,
             :device_id
           )
         end
@@ -54,28 +55,41 @@ module Api
             user.password_confirmation = signup_params[:password_confirmation]
           end
 
-          assign_optional_attribute(user, :name)
-          assign_optional_attribute(user, :phone)
-          assign_optional_attribute(user, :national_id)
+          user.first_name = extracted_first_name if extracted_first_name.present?
+          user.last_name = extracted_last_name if extracted_last_name.present?
+          user.phone = signup_params[:phone] if signup_params.key?(:phone)
 
           user.role ||= :user if user.respond_to?(:role) && user.role.blank?
 
           user
         end
 
-        def assign_optional_attribute(user, attribute)
-          return unless signup_params.key?(attribute)
-
-          setter = "#{attribute}="
-          user.public_send(setter, signup_params[attribute]) if user.respond_to?(setter)
-        end
-
         def required_signup_field_errors
-          required_fields = %i[name phone national_id]
-          missing_fields = required_fields.select { |field| signup_params[field].blank? }
+          required_fields = {
+            first_name: extracted_first_name,
+            last_name: extracted_last_name,
+            email: signup_params[:email],
+            phone: signup_params[:phone]
+          }
+
+          missing_fields = required_fields.select { |_field, value| value.blank? }.keys
           return if missing_fields.empty?
 
           missing_fields.index_with { ["can't be blank"] }
+        end
+
+        def extracted_first_name
+          signup_params[:first_name].presence || split_name(signup_params[:name]).first
+        end
+
+        def extracted_last_name
+          signup_params[:last_name].presence || split_name(signup_params[:name]).second
+        end
+
+        def split_name(full_name)
+          return [] if full_name.blank?
+
+          full_name.to_s.strip.split(/\s+/, 2)
         end
 
         def render_signup_error(details:)

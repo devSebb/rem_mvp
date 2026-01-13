@@ -53,20 +53,20 @@
             <h2 class="text-lg font-semibold text-[#0D2F32]">Cuenta del usuario</h2>
           </div>
           <div>
-            <label class="papayal-label">Nombre completo *</label>
-            <%= form.text_field :name, name: "user[name]", class: "papayal-input mt-2", value: @user.name, required: true %>
+            <label class="papayal-label">Nombre *</label>
+            <%= form.text_field :first_name, name: "user[first_name]", class: "papayal-input mt-2", value: @user.first_name, required: true %>
+          </div>
+          <div>
+            <label class="papayal-label">Apellido *</label>
+            <%= form.text_field :last_name, name: "user[last_name]", class: "papayal-input mt-2", value: @user.last_name, required: true %>
           </div>
           <div>
             <label class="papayal-label">Correo electrónico *</label>
             <%= form.email_field :email, name: "user[email]", class: "papayal-input mt-2", value: @user.email, required: true %>
           </div>
           <div>
-            <label class="papayal-label">Teléfono</label>
-            <%= form.telephone_field :phone, name: "user[phone]", class: "papayal-input mt-2", value: @user.phone %>
-          </div>
-          <div>
-            <label class="papayal-label">Identificación (mínimo 7 caracteres) *</label>
-            <%= form.text_field :national_id, name: "user[national_id]", class: "papayal-input mt-2", value: @user.national_id, required: true %>
+            <label class="papayal-label">Teléfono *</label>
+            <%= form.telephone_field :phone, name: "user[phone]", class: "papayal-input mt-2", value: @user.phone, required: true %>
           </div>
         </div>
       </div>

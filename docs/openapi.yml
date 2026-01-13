@@ -15,32 +15,32 @@ paths:
           application/json:
             schema:
               type: object
-              required: [email, password, name, phone, national_id]
+              required: [email, password, first_name, last_name, phone]
               properties:
                 email:
                   type: string
                   format: email
+                first_name:
+                  type: string
+                last_name:
+                  type: string
                 password:
                   type: string
                   format: password
                 password_confirmation:
                   type: string
                   format: password
-                name:
-                  type: string
                 phone:
-                  type: string
-                national_id:
                   type: string
                 device_id:
                   type: string
             example:
               email: user@example.com
+              first_name: Jane
+              last_name: Smith
               password: Password!23
               password_confirmation: Password!23
-              name: Jane Smith
               phone: "+15551234567"
-              national_id: ABC12345
               device_id: ios-device-id
       responses:
         "200":
@@ -239,15 +239,78 @@ paths:
               example:
                 data:
                   id: 1
+                  first_name: Jane
+                  last_name: Smith
                   email: user@example.com
                   name: Jane Smith
                   phone: "+15551234567"
+                  address: "123 Main St"
+                  country_of_residence: "PE"
+                  date_of_birth: "1990-01-01"
                   role: user
                   avatar_url: null
                   avatar_thumb_url: null
                 request_id: 123e4567
         "401":
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      summary: Update current user profile
+      tags: [Me]
+      security:
+        - AccessToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                address:
+                  type: string
+                  nullable: true
+                country_of_residence:
+                  type: string
+                date_of_birth:
+                  type: string
+                  format: date
+                  example: "1990-01-01"
+                phone:
+                  type: string
+                  nullable: true
+      responses:
+        "200":
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+              example:
+                data:
+                  id: 1
+                  first_name: Jane
+                  last_name: Smith
+                  email: user@example.com
+                  name: Jane Smith
+                  phone: "+15551234567"
+                  address: "Calle Falsa 123"
+                  country_of_residence: "PE"
+                  date_of_birth: "1990-01-01"
+                  role: user
+                  avatar_url: null
+                  avatar_thumb_url: null
+                request_id: 123e4567
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation failed
           content:
             application/json:
               schema:
@@ -294,6 +357,48 @@ paths:
                 request_id: 123e4567
         "422":
           description: Upload failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/checkout/validate_kyc:
+    post:
+      summary: Validate KYC fields required for checkout
+      tags: [Checkout]
+      security:
+        - AccessToken: []
+      responses:
+        "200":
+          description: KYC validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      ok:
+                        type: boolean
+                      missing:
+                        type: array
+                        items:
+                          type: string
+                      errors:
+                        type: object
+                        additionalProperties: true
+                  request_id:
+                    type: string
+              example:
+                data:
+                  ok: false
+                  missing: ["address", "country_of_residence", "date_of_birth"]
+                  errors:
+                    address:
+                      - "can't be blank"
+                request_id: 123e4567
+        "401":
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -607,10 +712,23 @@ components:
         email:
           type: string
           format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
         name:
           type: string
         phone:
           type: string
+        address:
+          type: string
+          nullable: true
+        country_of_residence:
+          type: string
+          nullable: true
+        date_of_birth:
+          type: string
+          format: date
           nullable: true
         role:
           type: string

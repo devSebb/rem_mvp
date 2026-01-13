@@ -31,11 +31,11 @@
                 class: "papayal-input mt-2" %>
         </div>
         <div>
-          <%= form.label :merchant_id, "Tienda (opcional)", class: "papayal-label" %>
+          <%= form.label :merchant_id, "Tienda", class: "papayal-label" %>
           <%= form.select :merchant_id,
-                options_for_select([['Cualquier Tienda', '']] + Merchant.all.map { |m| [m.store_name, m.id] }, params[:merchant_id]),
-                {},
-                class: "papayal-input mt-2" %>
+                options_for_select(Merchant.all.map { |m| [m.store_name, m.id] }, params[:merchant_id]),
+                class: "papayal-input mt-2",
+                required: true %>
         </div>
       </div>
 

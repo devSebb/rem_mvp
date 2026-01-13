@@ -2,6 +2,7 @@ module Api
   module V1
     class GiftCardsController < MerchantBaseController
       before_action :set_token_context
+      before_action :ensure_merchant_owns_gift_card!, only: [:validate, :show]
 
       def validate
         return unless ensure_token_active!(include_validation_payload: true)
@@ -38,6 +39,12 @@ module Api
 
         @redemption_token = RedemptionToken.includes(:gift_card).find_by!(token_digest: digest)
         @gift_card = @redemption_token.gift_card || raise(ActiveRecord::RecordNotFound)
+      end
+
+      def ensure_merchant_owns_gift_card!
+        return if gift_card&.merchant_id == current_merchant.id
+
+        render json: { error: "merchant_mismatch" }, status: :forbidden
       end
 
       def normalize_amount_cents

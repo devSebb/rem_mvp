@@ -3,7 +3,7 @@ require "digest"
 class GiftCard < ApplicationRecord
   belongs_to :sender, class_name: "User"
   belongs_to :recipient, class_name: "User"
-  belongs_to :merchant, optional: true
+  belongs_to :merchant
   has_many :transactions, dependent: :destroy
   has_many :redemption_tokens, dependent: :destroy
   class RedemptionError < StandardError
@@ -32,6 +32,7 @@ class GiftCard < ApplicationRecord
   validates :status, presence: true
   validates :link_token_digest, uniqueness: true, allow_nil: true
   validates :otp_digest, uniqueness: true, allow_nil: true
+  validates :merchant, presence: true
 
   # Callbacks
   before_validation :set_defaults, on: :create
@@ -124,6 +125,16 @@ class GiftCard < ApplicationRecord
       return false
     end
 
+    if merchant_id.nil?
+      Rails.logger.error "❌ Gift card has no merchant assigned"
+      return false
+    end
+
+    if merchant.id != merchant_id
+      Rails.logger.error "❌ Merchant mismatch: card merchant #{merchant_id}, attempted merchant #{merchant.id}"
+      return false
+    end
+
     if actor.nil?
       Rails.logger.error "❌ Actor is nil"
       return false
@@ -163,8 +174,7 @@ class GiftCard < ApplicationRecord
       # Update remaining balance
       new_balance = remaining_balance - redemption_amount
       update!(
-        remaining_balance: new_balance,
-        merchant: merchant
+        remaining_balance: new_balance
       )
 
       Rails.logger.info "   ✅ Updated balance: #{new_balance}"

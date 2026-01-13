@@ -574,7 +574,7 @@
         </div>
         
         <!-- Dates -->
-        <div class="space-y-1 text-sm text-gray-500">
+        <div class="space-y- text-sm text-gray-500">
           ${card.redeemed_at ? `<div>Canjeada: ${new Date(card.redeemed_at).toLocaleDateString('es-EC')}</div>` : ''}
           ${card.expires_at && !card.redeemed ? `<div>Vence: ${new Date(card.expires_at).toLocaleDateString('es-EC')}</div>` : ''}
           <div>Creada: ${new Date(card.created_at).toLocaleDateString('es-EC')}</div>

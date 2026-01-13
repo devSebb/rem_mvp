@@ -16,10 +16,9 @@ class User < ApplicationRecord
   has_one_attached :avatar
 
   # Validations
-  validates :name, presence: true
-  validates :phone, uniqueness: true, allow_blank: true
+  validates :first_name, :last_name, :email, :phone, presence: true
+  validates :phone, uniqueness: true
   validates :role, presence: true
-  validates :national_id, presence: true, on: :create, unless: :skip_national_id_validation
   validates :national_id,
             format: {
               with: /\A[a-zA-Z0-9]{7,}\z/,
@@ -27,7 +26,12 @@ class User < ApplicationRecord
             },
             allow_blank: true
   validate :validate_avatar
+  with_options on: :checkout_kyc do
+    validates :address, :country_of_residence, :date_of_birth, presence: true
+  end
 
+  before_validation :normalize_contact_fields
+  before_validation :sync_name_fields
   before_validation :normalize_national_id
 
   # Methods
@@ -39,12 +43,42 @@ class User < ApplicationRecord
     role == 'admin'
   end
 
+  def full_name
+    [first_name, last_name].compact_blank.join(" ")
+  end
+
   private
 
+  def normalize_contact_fields
+    self.first_name = first_name.to_s.strip.presence if has_attribute?(:first_name)
+    self.last_name = last_name.to_s.strip.presence if has_attribute?(:last_name)
+    self.name = name.to_s.strip.presence if has_attribute?(:name)
+    self.address = address.to_s.strip.presence if has_attribute?(:address)
+    self.country_of_residence = country_of_residence.to_s.strip.presence if has_attribute?(:country_of_residence)
+    self.phone = phone.to_s.strip.presence if has_attribute?(:phone)
+    self.email = email.to_s.strip.downcase if has_attribute?(:email) && email.present?
+  end
+
+  def sync_name_fields
+    if first_name.blank? && last_name.blank? && name.present?
+      self.first_name, self.last_name = split_name(name)
+    end
+
+    return unless first_name.present? || last_name.present?
+
+    combined_name = [first_name, last_name].compact_blank.join(" ")
+    self.name = combined_name if has_attribute?(:name)
+  end
+
   def normalize_national_id
-    return if national_id.nil?
+    return if national_id.blank?
 
     self.national_id = national_id.to_s.strip.gsub(/[\s-]+/, '').upcase
+  end
+
+  def split_name(full_name)
+    parts = full_name.to_s.strip.split(/\s+/, 2)
+    [parts.first, parts.second.to_s]
   end
 
   def validate_avatar

@@ -11,9 +11,9 @@ RSpec.describe "Mobile API", type: :request do
         email: "new_user@example.com",
         password: "Password!23",
         password_confirmation: "Password!23",
-        name: "New User",
-        phone: "+15555550123",
-        national_id: "ABC12345"
+        first_name: "New",
+        last_name: "User",
+        phone: "+15555550123"
       }
     end
 
@@ -46,18 +46,6 @@ RSpec.describe "Mobile API", type: :request do
       expect(parsed_error.dig("details", "email")&.first).to match(/taken/)
     end
 
-    it "returns 422 when national_id is missing" do
-      expect do
-        post "/api/v1/auth/signup",
-             params: signup_params.except(:national_id).to_json,
-             headers: json_headers
-      end.not_to change(User, :count)
-
-      expect(response).to have_http_status(:unprocessable_entity)
-      expect(parsed_error["code"]).to eq("auth.signup_failed")
-      expect(parsed_error.dig("details", "national_id")&.first).to match(/blank/i)
-    end
-
     it "returns 422 when phone is missing" do
       expect do
         post "/api/v1/auth/signup",
@@ -70,16 +58,28 @@ RSpec.describe "Mobile API", type: :request do
       expect(parsed_error.dig("details", "phone")&.first).to match(/blank/i)
     end
 
-    it "returns 422 when name is missing" do
+    it "returns 422 when first_name is missing" do
       expect do
         post "/api/v1/auth/signup",
-             params: signup_params.except(:name).to_json,
+             params: signup_params.except(:first_name).to_json,
              headers: json_headers
       end.not_to change(User, :count)
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(parsed_error["code"]).to eq("auth.signup_failed")
-      expect(parsed_error.dig("details", "name")&.first).to match(/blank/i)
+      expect(parsed_error.dig("details", "first_name")&.first).to match(/blank/i)
+    end
+
+    it "returns 422 when last_name is missing" do
+      expect do
+        post "/api/v1/auth/signup",
+             params: signup_params.except(:last_name).to_json,
+             headers: json_headers
+      end.not_to change(User, :count)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(parsed_error["code"]).to eq("auth.signup_failed")
+      expect(parsed_error.dig("details", "last_name")&.first).to match(/blank/i)
     end
 
     it "returns 422 for weak password" do
@@ -141,8 +141,68 @@ RSpec.describe "Mobile API", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(parsed_data["id"]).to eq(user.id)
+      expect(parsed_data["first_name"]).to eq(user.first_name)
+      expect(parsed_data["last_name"]).to eq(user.last_name)
+      expect(parsed_data["name"]).to eq(user.full_name)
+      expect(parsed_data["address"]).to be_nil
+      expect(parsed_data["country_of_residence"]).to be_nil
+      expect(parsed_data["date_of_birth"]).to be_nil
+      expect(parsed_data).not_to have_key("national_id")
       expect(parsed_data["avatar_url"]).to be_nil
       expect(parsed_data["avatar_thumb_url"]).to be_nil
+    end
+  end
+
+  describe "PATCH /api/v1/me" do
+    let(:update_params) do
+      {
+        address: "Calle Falsa 123",
+        country_of_residence: "PE",
+        date_of_birth: "1990-01-01"
+      }
+    end
+
+    it "updates profile fields and returns the profile" do
+      tokens = login_and_get_tokens
+
+      patch "/api/v1/me",
+            params: update_params.to_json,
+            headers: auth_headers(tokens[:access_token])
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data["address"]).to eq("Calle Falsa 123")
+      expect(parsed_data["country_of_residence"]).to eq("PE")
+      expect(parsed_data["date_of_birth"]).to eq("1990-01-01")
+      expect(parsed_data).not_to have_key("national_id")
+      user.reload
+      expect(user.address).to eq("Calle Falsa 123")
+      expect(user.country_of_residence).to eq("PE")
+      expect(user.date_of_birth.to_s).to eq("1990-01-01")
+    end
+  end
+
+  describe "POST /api/v1/checkout/validate_kyc" do
+    it "returns missing fields when profile is incomplete" do
+      tokens = login_and_get_tokens
+
+      post "/api/v1/checkout/validate_kyc",
+           headers: auth_headers(tokens[:access_token])
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data["ok"]).to be(false)
+      expect(parsed_data["missing"]).to match_array(%w[address country_of_residence date_of_birth])
+    end
+
+    it "returns ok when profile has all KYC fields" do
+      tokens = login_and_get_tokens
+      user.update!(address: "123 Main St", country_of_residence: "PE", date_of_birth: Date.new(1990, 1, 1))
+
+      post "/api/v1/checkout/validate_kyc",
+           headers: auth_headers(tokens[:access_token])
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data["ok"]).to be(true)
+      expect(parsed_data["missing"]).to eq([])
     end
   end
 

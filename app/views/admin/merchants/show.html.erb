@@ -81,7 +81,7 @@
       <div class="space-y-3 text-sm">
         <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
           <p class="papayal-meta">Nombre</p>
-          <p class="font-semibold text-[#0D2F32]"><%= @user&.name %></p>
+          <p class="font-semibold text-[#0D2F32]"><%= @user&.full_name %></p>
         </div>
         <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
           <p class="papayal-meta">Correo</p>
@@ -90,10 +90,6 @@
         <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
           <p class="papayal-meta">Teléfono</p>
           <p class="font-semibold text-[#0D2F32]"><%= @user&.phone.presence || "No especificado" %></p>
-        </div>
-        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
-          <p class="papayal-meta">Identificación</p>
-          <p class="font-semibold text-[#0D2F32]"><%= @user&.national_id %></p>
         </div>
       </div>
     </div>

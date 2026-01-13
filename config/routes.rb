@@ -39,6 +39,8 @@ Rails.application.routes.draw do
       end
 
       get "me", to: "me#show"
+      patch "me", to: "me#update"
+      post "checkout/validate_kyc", to: "checkout#validate_kyc"
 
       namespace :me do
         resources :gift_cards, only: [:index, :show] do

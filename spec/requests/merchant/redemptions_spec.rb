@@ -6,6 +6,7 @@ RSpec.describe "Merchant::Redemptions", type: :request do
 
   let(:merchant_user) { create(:user, role: :merchant) }
   let!(:merchant) { create(:merchant, user: merchant_user) }
+let(:other_merchant) { create(:merchant) }
   let(:recipient) { create(:user) }
   let(:sender) { create(:user) }
   let!(:gift_card) do
@@ -13,7 +14,7 @@ RSpec.describe "Merchant::Redemptions", type: :request do
       :gift_card,
       sender: sender,
       recipient: recipient,
-      merchant: nil,
+      merchant: merchant,
       amount: 5_000,
       remaining_balance: 5_000,
       status: :active
@@ -53,5 +54,31 @@ RSpec.describe "Merchant::Redemptions", type: :request do
     redemption_txn = gift_card.transactions.redemptions.succeeded.last
     expect(redemption_txn).to be_present
     expect(redemption_txn.redemption_token_id).to eq(token_record.id)
+  end
+
+  it "rejects redemption attempts for gift cards that belong to another merchant" do
+    other_gift_card = create(
+      :gift_card,
+      sender: sender,
+      recipient: recipient,
+      merchant: other_merchant,
+      amount: 5_000,
+      remaining_balance: 5_000,
+      status: :active
+    )
+    other_token = RedemptionTokens::Issue.call(gift_card: other_gift_card)[:token]
+    formatted_token = other_token.scan(/.{1,4}/).join("-")
+
+    get confirm_merchant_redemptions_path(
+      gift_card_id: other_gift_card.id,
+      redemption_mode: "token",
+      redemption_token: formatted_token
+    )
+
+    expect(response).to redirect_to(new_merchant_redemption_path)
+    expect(flash[:alert]).to eq("This gift card is not redeemable by your store.")
+    expect(other_gift_card.reload.remaining_balance).to eq(5_000)
+    token_record = RedemptionToken.find_by(token_digest: RedemptionToken.digest(other_token))
+    expect(token_record&.used_at).to be_nil
   end
 end

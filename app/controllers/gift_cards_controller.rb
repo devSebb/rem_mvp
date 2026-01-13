@@ -17,6 +17,12 @@ class GiftCardsController < ApplicationController
 
   def checkout
     authorize GiftCard, :checkout?
+
+    kyc_result = Kyc::CheckoutValidator.call(user: current_user)
+    if kyc_result[:missing].present?
+      flash[:alert] = "Please complete your details (#{kyc_result[:missing].join(', ')}) before checkout."
+      redirect_to new_gift_card_path and return
+    end
     
     amount_input = params[:amount_cents].to_s
     amount_cents = begin
@@ -28,7 +34,8 @@ class GiftCardsController < ApplicationController
     recipient_phone = params[:recipient_phone]
     recipient_email = params[:recipient_email]
     recipient_name = params[:recipient_name]
-    merchant_id = params[:merchant_id]
+    merchant_id_param = params[:merchant_id]
+    merchant_id_value = merchant_id_param.to_s.strip
 
     if amount_cents <= 0
       flash[:alert] = 'Amount must be greater than 0'
@@ -42,6 +49,28 @@ class GiftCardsController < ApplicationController
 
     if recipient_phone.blank? && recipient_email.blank?
       flash[:alert] = 'Recipient phone or email is required'
+      redirect_to new_gift_card_path and return
+    end
+
+    if merchant_id_value.blank?
+      flash[:alert] = 'Merchant is required'
+      redirect_to new_gift_card_path and return
+    end
+
+    unless merchant_id_value.match?(/\A\d+\z/)
+      flash[:alert] = 'Please select a valid merchant'
+      redirect_to new_gift_card_path and return
+    end
+
+    merchant_id = Integer(merchant_id_value) rescue nil
+    unless merchant_id
+      flash[:alert] = 'Please select a valid merchant'
+      redirect_to new_gift_card_path and return
+    end
+
+    merchant = Merchant.find_by(id: merchant_id)
+    unless merchant
+      flash[:alert] = 'Please select a valid merchant'
       redirect_to new_gift_card_path and return
     end
 
@@ -64,7 +93,7 @@ class GiftCardsController < ApplicationController
         recipient_email: recipient_email,
         recipient_phone: recipient_phone,
         recipient_name: recipient_name,
-        merchant_id: merchant_id
+        merchant_id: merchant.id
       }
     )
 

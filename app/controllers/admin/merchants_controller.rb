@@ -102,7 +102,7 @@ class Admin::MerchantsController < ApplicationController
   end
 
   def user_params
-    params.require(:user).permit(:name, :email, :phone, :national_id, :password, :password_confirmation)
+    params.require(:user).permit(:first_name, :last_name, :email, :phone, :password, :password_confirmation)
   end
 
   def merchant_stats(merchant)

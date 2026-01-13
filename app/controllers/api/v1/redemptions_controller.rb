@@ -10,7 +10,15 @@ module Api
           merchant_reference: redemption_params[:merchant_reference]
         )
 
-        render json: format_response(result), status: :ok
+        status = if result[:approved]
+          :ok
+        elsif result[:decline_reason] == "merchant_mismatch"
+          :forbidden
+        else
+          :unprocessable_entity
+        end
+
+        render json: format_response(result), status: status
       end
 
       def show

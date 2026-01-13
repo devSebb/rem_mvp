@@ -81,6 +81,11 @@ class Merchant::RedemptionsController < ApplicationController
     @redemption_token_value = normalized_token(params[:redemption_token]) if @redemption_mode == "token"
     @redemption_token = active_redemption_token_for(@redemption_token_value) if @redemption_token_value.present?
 
+    unless redeemable_for_merchant?(@gift_card)
+      flash[:alert] = 'This gift card is not redeemable by your store.'
+      redirect_to new_merchant_redemption_path and return
+    end
+
     if @redemption_mode == "token"
       unless @redemption_token && @redemption_token.gift_card_id == @gift_card.id
         flash[:alert] = 'The dynamic code is invalid, expired, or does not match this gift card.'
@@ -156,9 +161,6 @@ class Merchant::RedemptionsController < ApplicationController
 
       if result[:approved]
         @gift_card = GiftCard.find(result[:gift_card_id])
-        # Ensure the gift card is linked to this merchant for future visibility
-        @gift_card.update!(merchant: current_user.merchant) if @gift_card.merchant.nil?
-
         begin
           RedemptionIdempotencyService.consume_token(idempotency_token)
         rescue => e
@@ -300,6 +302,6 @@ class Merchant::RedemptionsController < ApplicationController
 
   def redeemable_for_merchant?(gift_card)
     return false unless gift_card
-    gift_card.merchant.nil? || gift_card.merchant == current_user.merchant
+    gift_card.merchant_id == current_user.merchant_id
   end
 end

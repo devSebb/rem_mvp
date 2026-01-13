@@ -1,4 +1,6 @@
 class StripeWebhooks
+  class InvalidMerchantError < StandardError; end
+
   def self.verify_signature(payload, signature)
     webhook_secret = Rails.application.config.stripe[:webhook_secret]
     return false if webhook_secret.blank?
@@ -26,6 +28,24 @@ class StripeWebhooks
   def self.handle_checkout_session_completed(session)
     metadata = session.metadata || {}
     Rails.logger.info "🔔 checkout.session.completed received with metadata: #{metadata.inspect}"
+    merchant_id_raw = metadata["merchant_id"]
+    merchant_id = merchant_id_raw.to_s.strip
+
+    if merchant_id.blank?
+      Rails.logger.error "❌ Missing merchant_id for session #{session.id}"
+      raise InvalidMerchantError, "Missing merchant for session #{session.id}"
+    end
+
+    unless merchant_id.match?(/\A\d+\z/)
+      Rails.logger.error "❌ Non-numeric merchant_id #{merchant_id.inspect} for session #{session.id}"
+      raise InvalidMerchantError, "Invalid merchant for session #{session.id}"
+    end
+
+    merchant = Merchant.find_by(id: merchant_id)
+    unless merchant
+      Rails.logger.error "❌ Invalid merchant_id #{merchant_id} for session #{session.id}"
+      raise InvalidMerchantError, "Invalid merchant for session #{session.id}"
+    end
 
     # Find sender user
     sender = User.find_by(id: metadata['sender_id'])
@@ -43,8 +63,6 @@ class StripeWebhooks
     end
     Rails.logger.info "✅ Found/created recipient: #{recipient.email} (ID: #{recipient.id})"
 
-    # Find merchant if specified
-    merchant = Merchant.find_by(id: metadata['merchant_id']) if metadata['merchant_id']
     Rails.logger.info "✅ Merchant: #{merchant ? merchant.store_name : 'none'}"
 
     # Check if gift card already exists for this session (idempotency)
