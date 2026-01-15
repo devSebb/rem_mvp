@@ -70,6 +70,7 @@ RSpec.describe StripeWebhooks do
       card = GiftCard.last
       expect(card.merchant_id).to eq(merchant.id)
       expect(card.checkout_session_id).to eq(session.id)
+      expect(card.expires_at).to be_nil # Gift cards never expire
     end
 
     context "when amount exceeds maximum" do

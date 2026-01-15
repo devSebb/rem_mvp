@@ -101,6 +101,16 @@ RSpec.describe "Api::V1::GiftCards", type: :request do
       body = JSON.parse(response.body)
       expect(body["error"]).to eq("Not Found")
     end
+
+    it "does not update last_owner_activity_at (merchant endpoint, not owner activity)" do
+      original_activity_at = gift_card.last_owner_activity_at
+
+      get "/api/v1/gift_cards/#{raw_token}", headers: auth_headers
+
+      expect(response).to have_http_status(:ok)
+      gift_card.reload
+      expect(gift_card.last_owner_activity_at).to eq(original_activity_at)
+    end
   end
 
   def auth_headers(secret = merchant_secret)
@@ -146,7 +156,7 @@ RSpec.describe "Api::V1::GiftCards", type: :request do
       currency: "USD",
       code_digest: BCrypt::Password.create(SecureRandom.hex(8)),
       status: :active,
-      expires_at: 1.year.from_now
+      expires_at: nil # Gift cards never expire
     )
   end
 

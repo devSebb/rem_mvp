@@ -97,7 +97,7 @@ class StripeWebhooks
       return
     end
 
-    # Create gift card safely
+    # Create gift card safely (no expiration - gift cards never expire)
     gift_card = GiftCard.create!(
       sender: sender,
       recipient: recipient,
@@ -105,7 +105,7 @@ class StripeWebhooks
       amount: session.amount_total, # Stripe gives amount in cents
       currency: session.currency&.upcase || "USD",
       checkout_session_id: session.id,
-      expires_at: 1.year.from_now
+      expires_at: nil # Gift cards never expire
     )
 
     # Generate code after saving

@@ -170,6 +170,9 @@ class GiftCard < ApplicationRecord
         remaining_balance: new_balance
       )
 
+      # Track owner activity for redemption
+      touch_owner_activity!
+
       Rails.logger.info "   ✅ Updated balance: #{new_balance}"
 
       # Mark as fully redeemed if balance is zero
@@ -190,8 +193,18 @@ class GiftCard < ApplicationRecord
     raise
   end
 
+  # Gift cards never expire (no-expiration policy)
   def expired?
-    expires_at.present? && expires_at < Time.current
+    false
+  end
+
+  # Update last_owner_activity_at without touching updated_at
+  # Safe to call frequently and will not raise if record is invalid
+  def touch_owner_activity!(time = Time.current)
+    update_columns(last_owner_activity_at: time) if persisted?
+  rescue => e
+    Rails.logger.warn "⚠️ Failed to touch owner activity for gift card #{id}: #{e.message}"
+    # Silently fail to avoid breaking the request flow
   end
 
   def can_be_redeemed?
@@ -234,6 +247,9 @@ class GiftCard < ApplicationRecord
 
       # Restore balance
       update!(remaining_balance: remaining_balance + refund_amount)
+
+      # Track owner activity for refund
+      touch_owner_activity!
 
       # Revert to active if any balance is restored (or fully refunded)
       if redeemed? && remaining_balance.positive?
@@ -278,6 +294,9 @@ class GiftCard < ApplicationRecord
 
       # Update recipient
       update!(recipient: new_recipient)
+
+      # Track owner activity for transfer
+      touch_owner_activity!
 
       # Send notification to new recipient
       send_notifications!

@@ -47,12 +47,7 @@
               <dd class="text-base text-[#2C3A43] mt-1"><%= @gift_card.merchant.store_name %></dd>
             </div>
           <% end %>
-          <% if @gift_card.expires_at.present? %>
-            <div>
-              <dt class="papayal-meta text-[#2C3A43]/60">Vence</dt>
-              <dd class="text-base text-[#2C3A43] mt-1"><%= @gift_card.expires_at.strftime('%d/%m/%Y %H:%M') %></dd>
-            </div>
-          <% end %>
+          <%# Expiration removed - gift cards never expire %>
           <% if @gift_card.redeemed_at.present? %>
             <div>
               <dt class="papayal-meta text-[#2C3A43]/60">Canjeada</dt>
@@ -103,15 +98,7 @@
               </div>
             </div>
           <% end %>
-          <% if @gift_card.expires_at.present? %>
-            <div class="flex items-center gap-3">
-              <span class="h-10 w-10 rounded-2xl bg-[#0D2F32]/10 flex items-center justify-center text-[#0D2F32] font-semibold">∞</span>
-              <div>
-                <p class="font-medium text-[#2C3A43]">Expira</p>
-                <p><%= @gift_card.expires_at.strftime('%d/%m/%Y %H:%M') %></p>
-              </div>
-            </div>
-          <% end %>
+          <%# Expiration timeline item removed - gift cards never expire %>
         </div>
       </div>
     </div>

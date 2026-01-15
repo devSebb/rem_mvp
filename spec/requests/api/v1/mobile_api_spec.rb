@@ -277,6 +277,34 @@ RSpec.describe "Mobile API", type: :request do
       expect(card["merchant_store_name"]).to eq(merchant.store_name)
       expect(card["merchant_logo_url"]).to be_nil
     end
+
+    it "updates last_owner_activity_at for all accessed gift cards" do
+      card1 = create(:gift_card, recipient: user, sender: user)
+      card2 = create(:gift_card, recipient: user, sender: user)
+      expect(card1.last_owner_activity_at).to be_nil
+      expect(card2.last_owner_activity_at).to be_nil
+
+      get "/api/v1/me/gift_cards", headers: auth_headers(login_and_get_tokens[:access_token])
+
+      expect(response).to have_http_status(:ok)
+      card1.reload
+      card2.reload
+      expect(card1.last_owner_activity_at).to be_present
+      expect(card2.last_owner_activity_at).to be_present
+      expect(card1.last_owner_activity_at).to be_within(5.seconds).of(Time.current)
+      expect(card2.last_owner_activity_at).to be_within(5.seconds).of(Time.current)
+    end
+
+    it "does not include expires_at in response (gift cards never expire)" do
+      create(:gift_card, recipient: user, sender: user)
+
+      get "/api/v1/me/gift_cards", headers: auth_headers(login_and_get_tokens[:access_token])
+
+      expect(response).to have_http_status(:ok)
+      parsed_data.each do |card|
+        expect(card).not_to have_key("expires_at")
+      end
+    end
   end
 
   describe "GET /api/v1/me/gift_cards/:id" do
@@ -296,6 +324,27 @@ RSpec.describe "Mobile API", type: :request do
       expect(card["merchant"]).to include("id" => merchant.id, "store_name" => merchant.store_name)
       expect(card["store_name"]).to eq(merchant.store_name)
       expect(card["merchant_name"]).to eq(merchant.store_name)
+    end
+
+    it "updates last_owner_activity_at when viewing gift card" do
+      gift_card = create(:gift_card, recipient: user, sender: user)
+      expect(gift_card.last_owner_activity_at).to be_nil
+
+      get "/api/v1/me/gift_cards/#{gift_card.id}", headers: auth_headers(login_and_get_tokens[:access_token])
+
+      expect(response).to have_http_status(:ok)
+      gift_card.reload
+      expect(gift_card.last_owner_activity_at).to be_present
+      expect(gift_card.last_owner_activity_at).to be_within(5.seconds).of(Time.current)
+    end
+
+    it "does not include expires_at in response (gift cards never expire)" do
+      gift_card = create(:gift_card, recipient: user, sender: user)
+
+      get "/api/v1/me/gift_cards/#{gift_card.id}", headers: auth_headers(login_and_get_tokens[:access_token])
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data).not_to have_key("expires_at")
     end
   end
 

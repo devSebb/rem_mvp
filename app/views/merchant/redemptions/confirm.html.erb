@@ -52,12 +52,7 @@
               <p class="papayal-meta text-[#2C3A43]/60">Para</p>
               <p class="font-semibold text-[#0D2F32]"><%= @gift_card.recipient&.name || 'Desconocido' %></p>
             </div>
-            <% if @gift_card.expires_at.present? %>
-              <div>
-                <p class="papayal-meta text-[#2C3A43]/60">Vence</p>
-                <p class="text-[#0D2F32]"><%= @gift_card.expires_at.strftime('%d %b %Y') %></p>
-              </div>
-            <% end %>
+            <%# Gift card expiration removed - gift cards never expire %>
           </div>
 
           <div class="rounded-2xl border border-amber-100 bg-amber-50/60 p-4">

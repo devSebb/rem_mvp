@@ -9,11 +9,17 @@ module Api
             .includes(merchant: { logo_attachment: :blob })
             .order(updated_at: :desc, id: :desc)
 
+          # Track owner activity for balance check (batch update to avoid N+1)
+          gift_card_ids = gift_cards.pluck(:id)
+          GiftCard.where(id: gift_card_ids).update_all(last_owner_activity_at: Time.current) if gift_card_ids.any?
+
           render_success(data: gift_cards.map { |card| serialize_gift_card(card) })
         end
 
         def show
           authorize @gift_card, :show?
+          # Track owner activity for balance check
+          @gift_card.touch_owner_activity!
           render_success(data: serialize_gift_card(@gift_card))
         end
 
@@ -53,7 +59,7 @@ module Api
             remaining_balance_cents: card.remaining_balance,
             currency: card.currency,
             status: card.status,
-            expires_at: card.expires_at&.iso8601,
+            # expires_at removed - gift cards never expire
             created_at: card.created_at&.iso8601,
             updated_at: card.updated_at&.iso8601,
             sender_id: card.sender_id,

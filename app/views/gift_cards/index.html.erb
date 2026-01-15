@@ -276,7 +276,8 @@
     }
 
     const merchantName = card.merchant ? card.merchant.store_name : 'Cualquier comercio Papayal';
-    const expiresText = card.expires_at && !card.redeemed ? `Vence: ${new Date(card.expires_at).toLocaleDateString('es-EC')}` : '';
+    // Expiration removed - gift cards never expire
+    const expiresText = '';
     const redeemedText = card.redeemed_at ? `Canjeada: ${new Date(card.redeemed_at).toLocaleDateString('es-EC')}` : '';
     const updatedAt = new Date(card.updated_at).toLocaleDateString('es-EC');
 
@@ -576,7 +577,7 @@
         <!-- Dates -->
         <div class="space-y- text-sm text-gray-500">
           ${card.redeemed_at ? `<div>Canjeada: ${new Date(card.redeemed_at).toLocaleDateString('es-EC')}</div>` : ''}
-          ${card.expires_at && !card.redeemed ? `<div>Vence: ${new Date(card.expires_at).toLocaleDateString('es-EC')}</div>` : ''}
+          <%# Expiration removed - gift cards never expire %>
           <div>Creada: ${new Date(card.created_at).toLocaleDateString('es-EC')}</div>
         </div>
         

@@ -42,7 +42,7 @@ namespace :gift_cards do
       end
     end
 
-    desc "Cancel and expire gift cards that have no merchant assigned"
+    desc "Cancel gift cards that have no merchant assigned (expiration removed - gift cards never expire)"
     task expire: :environment do
       scope = GiftCard.where(merchant_id: nil)
       count = scope.count
@@ -56,11 +56,10 @@ namespace :gift_cards do
       now = Time.current
       updated = scope.update_all(
         status: GiftCard.statuses[:canceled],
-        expires_at: now,
         updated_at: now
       )
 
-      puts "✅ Marked #{updated} gift cards as canceled and expired"
+      puts "✅ Marked #{updated} gift cards as canceled (expiration removed - gift cards never expire)"
     end
   end
 end

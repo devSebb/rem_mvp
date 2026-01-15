@@ -5,10 +5,15 @@ class GiftCardsController < ApplicationController
 
   def index
     @gift_cards = policy_scope(GiftCard).includes(:sender, :recipient, :merchant).order(created_at: :desc)
+    # Track owner activity for balance check (batch update to avoid N+1)
+    gift_card_ids = @gift_cards.pluck(:id)
+    GiftCard.where(id: gift_card_ids).update_all(last_owner_activity_at: Time.current) if gift_card_ids.any? && current_user.present?
   end
 
   def show
     authorize @gift_card
+    # Track owner activity for balance check (only if current_user is owner)
+    @gift_card.touch_owner_activity! if current_user.present? && (current_user == @gift_card.sender || current_user == @gift_card.recipient)
   end
 
   def new

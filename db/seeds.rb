@@ -81,7 +81,7 @@ puts "✅ Created regular user: #{regular_user.email}"
 
 # Create some demo gift cards
 if GiftCard.count == 0
-  # Active gift card
+  # Active gift card (no expiration - gift cards never expire)
   active_gift_card = GiftCard.new(
     sender: admin,
     recipient: regular_user,
@@ -89,7 +89,7 @@ if GiftCard.count == 0
     amount: 5000, # $50.00
     currency: 'USD',
     checkout_session_id: 'cs_demo_active',
-    expires_at: 1.year.from_now
+    expires_at: nil
   )
   active_gift_card.generate_code!
   
@@ -100,7 +100,7 @@ if GiftCard.count == 0
     amount: 3000, # $30.00
     currency: 'USD',
     checkout_session_id: 'cs_demo_test',
-    expires_at: 1.year.from_now
+    expires_at: nil
   )
   test_gift_card.generate_code!
   
@@ -111,7 +111,7 @@ if GiftCard.count == 0
     amount: 2000, # $20.00
     currency: 'USD',
     checkout_session_id: 'cs_demo_test_2',
-    expires_at: 1.year.from_now
+    expires_at: nil
   )
   test_gift_card_2.generate_code!
   
@@ -130,18 +130,8 @@ if GiftCard.count == 0
   redeemed_gift_card.save!
   redeemed_gift_card.redeem!(merchant: merchant, actor: merchant_user)
   
-  # Expired gift card
-  expired_gift_card = GiftCard.new(
-    sender: admin,
-    recipient: regular_user,
-    merchant: merchant,
-    amount: 1000, # $10.00
-    currency: 'USD',
-    checkout_session_id: 'cs_demo_expired',
-    status: :expired,
-    expires_at: 1.day.ago
-  )
-  expired_gift_card.generate_code!
+  # Note: Removed expired gift card demo since gift cards never expire
+  # Old expired cards may exist in database but new cards cannot expire
   
   puts "✅ Created demo gift cards"
 end
