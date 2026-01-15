@@ -45,11 +45,7 @@ module Redemptions
           return decline_without_transaction!("merchant_missing", gift_card: gift_card)
         end
 
-        set_transaction_merchant(gift_card)
-
-        unless gift_card.merchant_id == merchant.id
-          return decline_without_transaction!("merchant_mismatch", gift_card: gift_card)
-        end
+        set_transaction_merchant
 
         return decline!("expired_token", token: token, gift_card: gift_card) if token_expired?(token)
         return decline!("token_used", token: token, gift_card: gift_card) if token.used_at.present?
@@ -95,8 +91,8 @@ module Redemptions
       build_payload(txn)
     end
 
-    def set_transaction_merchant(gift_card)
-      @transaction_merchant_id = gift_card&.merchant_id
+    def set_transaction_merchant
+      @transaction_merchant_id = merchant&.id
     end
 
     def decline_without_transaction!(reason, gift_card:)

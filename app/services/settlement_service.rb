@@ -1,8 +1,7 @@
 class SettlementService
   def self.create_settlement_for_period(merchant, period_start, period_end, notes: nil)
     # Get all redemption transactions for the merchant in the specified period
-    transactions = Transaction.joins(:gift_card)
-                            .where(gift_cards: { merchant: merchant })
+    transactions = Transaction.where(merchant: merchant)
                             .where(txn_type: :redemption, status: :succeeded)
                             .where(created_at: period_start..period_end)
     
@@ -25,14 +24,11 @@ class SettlementService
   
   def self.calculate_pending_settlement(merchant)
     # Get all redemption transactions that haven't been settled yet
-    all_redemption_transactions = Transaction.joins(:gift_card)
-                                           .where(gift_cards: { merchant: merchant })
+    all_redemption_transactions = Transaction.where(merchant: merchant)
                                            .where(txn_type: :redemption, status: :succeeded)
     
     # Get all transactions that are already included in settlements
-    settled_transactions = Transaction.joins(:gift_card, :settlements)
-                                    .where(gift_cards: { merchant: merchant })
-                                    .where(txn_type: :redemption, status: :succeeded)
+    settled_transactions = Transaction.where(merchant: merchant, txn_type: :redemption, status: :succeeded)
     
     # Calculate pending amount (simplified for MVP)
     all_redemption_transactions.sum(:amount)

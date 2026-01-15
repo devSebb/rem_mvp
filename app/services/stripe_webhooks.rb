@@ -65,6 +65,19 @@ class StripeWebhooks
 
     Rails.logger.info "✅ Merchant: #{merchant ? merchant.store_name : 'none'}"
 
+    # Validate amount (defense in depth - should already be validated at checkout)
+    if session.amount_total > GiftCard::MAX_AMOUNT_CENTS
+      Rails.logger.error "❌ Amount exceeds maximum: #{session.amount_total} cents (max: #{GiftCard::MAX_AMOUNT_CENTS})"
+      raise InvalidMerchantError, "Amount exceeds maximum allowed per gift card"
+    end
+
+    # Validate purchase limit (defense in depth - should already be validated at checkout)
+    limit_check = GiftCardPurchaseLimiter.can_purchase?(user: sender)
+    unless limit_check[:allowed]
+      Rails.logger.error "❌ Purchase limit exceeded for user #{sender.id}: #{limit_check[:count]}/#{limit_check[:limit]} in last 24h"
+      raise InvalidMerchantError, "Purchase limit exceeded: #{limit_check[:reason]}"
+    end
+
     # Check if gift card already exists for this session (idempotency)
     existing_gift_card = GiftCard.find_by(checkout_session_id: session.id)
     if existing_gift_card

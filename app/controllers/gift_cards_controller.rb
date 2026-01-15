@@ -13,6 +13,8 @@ class GiftCardsController < ApplicationController
 
   def new
     authorize GiftCard, :create?
+    @purchases_in_last_24h = current_user ? GiftCardPurchaseLimiter.purchases_in_last_24h(user: current_user) : 0
+    @purchase_limit = GiftCardPurchaseLimiter::MAX_PURCHASES_PER_24H
   end
 
   def checkout
@@ -44,6 +46,18 @@ class GiftCardsController < ApplicationController
 
     if amount_cents < 100
       flash[:alert] = 'Amount must be at least $1.00'
+      redirect_to new_gift_card_path and return
+    end
+
+    if amount_cents > GiftCard::MAX_AMOUNT_CENTS
+      flash[:alert] = "El monto máximo por tarjeta de regalo es $#{GiftCard::MAX_AMOUNT_CENTS / 100.0} USD"
+      redirect_to new_gift_card_path and return
+    end
+
+    # Check purchase limit (5 gift cards per 24 hours)
+    limit_check = GiftCardPurchaseLimiter.can_purchase?(user: current_user)
+    unless limit_check[:allowed]
+      flash[:alert] = "Has alcanzado el límite de #{limit_check[:limit]} tarjetas de regalo en las últimas 24 horas. Por favor intenta de nuevo mañana."
       redirect_to new_gift_card_path and return
     end
 

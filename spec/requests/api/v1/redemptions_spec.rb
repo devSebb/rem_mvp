@@ -9,7 +9,7 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
   let(:raw_token) { issue_token_for(gift_card) }
 
   describe "POST /api/v1/redemptions" do
-    it "returns forbidden when attempting to redeem another merchant's gift card" do
+    it "allows redemption by a different merchant and records the redeemer" do
       other_merchant # ensure created
 
       expect {
@@ -20,19 +20,21 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
                idempotency_key: SecureRandom.uuid
              }.to_json,
              headers: auth_headers(other_merchant_secret)
-      }.not_to change { Transaction.count }
+      }.to change { Transaction.count }.by(1)
 
-      expect(response).to have_http_status(:forbidden)
+      expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)
-      expect(body["approved"]).to be(false)
-      expect(body["decline_reason"]).to eq("merchant_mismatch")
-      expect(body["transaction_id"]).to be_nil
+      expect(body["approved"]).to be(true)
+      expect(body["decline_reason"]).to be_nil
+      expect(body["transaction_id"]).not_to be_nil
       expect(body["gift_card_id"]).to eq(gift_card.id)
-      expect(body["remaining_balance_cents"]).to eq(gift_card.amount)
+      expect(body["remaining_balance_cents"]).to eq(gift_card.amount - 1_000)
 
-      expect(gift_card.reload.remaining_balance).to eq(10_000)
+      expect(gift_card.reload.remaining_balance).to eq(9_000)
       token_record = RedemptionToken.find_by(token_digest: RedemptionToken.digest(raw_token))
-      expect(token_record&.used_at).to be_nil
+      expect(token_record&.used_at).to be_present
+      redemption_txn = Transaction.find(body["transaction_id"])
+      expect(redemption_txn.merchant_id).to eq(other_merchant.id)
     end
   end
 

@@ -41,9 +41,9 @@ class Merchant::GiftCardsController < ApplicationController
   def find_gift_card
     @gift_card = GiftCard.find(params[:id])
 
-    # Ensure this gift card belongs to this merchant and has been redeemed
-    unless @gift_card.merchant == current_user.merchant && @gift_card.transactions.where(txn_type: :redemption).exists?
-      flash[:alert] = 'You can only view gift cards that belong to your store and have been redeemed.'
+    # Ensure this gift card has been redeemed at this merchant
+    unless @gift_card.transactions.where(txn_type: :redemption, merchant: current_user.merchant).exists?
+      flash[:alert] = 'You can only view gift cards that have been redeemed at your store.'
       redirect_to merchant_root_path
     end
   rescue ActiveRecord::RecordNotFound

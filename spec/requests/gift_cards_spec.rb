@@ -71,5 +71,82 @@ RSpec.describe "GiftCards", type: :request do
 
       expect(response).to redirect_to(session_double.url)
     end
+
+    context "when amount exceeds maximum" do
+      it "rejects amount greater than $200" do
+        expect(Stripe::Checkout::Session).not_to receive(:create)
+
+        post endpoint, params: base_params.merge(amount_cents: "201")
+
+        expect(response).to redirect_to(new_gift_card_path)
+        expect(flash[:alert]).to include("monto máximo")
+        expect(flash[:alert]).to include("$200")
+      end
+
+      it "allows amount exactly $200" do
+        session_double = instance_double(Stripe::Checkout::Session, url: "https://stripe.test/checkout")
+        expect(Stripe::Checkout::Session).to receive(:create).and_return(session_double)
+
+        post endpoint, params: base_params.merge(amount_cents: "200")
+
+        expect(response).to redirect_to(session_double.url)
+      end
+    end
+
+    context "when purchase limit is exceeded" do
+      before do
+        # Create 5 gift cards in the last 24 hours
+        5.times do
+          create(:gift_card, sender: user, merchant: merchant, created_at: 1.hour.ago)
+        end
+      end
+
+      it "rejects checkout when user has reached 24h limit" do
+        expect(Stripe::Checkout::Session).not_to receive(:create)
+
+        post endpoint, params: base_params
+
+        expect(response).to redirect_to(new_gift_card_path)
+        expect(flash[:alert]).to include("límite")
+        expect(flash[:alert]).to include("24 horas")
+      end
+
+      it "allows checkout when user has 4 purchases (under limit)" do
+        # Delete one to have 4
+        GiftCard.where(sender: user).last.destroy
+
+        session_double = instance_double(Stripe::Checkout::Session, url: "https://stripe.test/checkout")
+        expect(Stripe::Checkout::Session).to receive(:create).and_return(session_double)
+
+        post endpoint, params: base_params
+
+        expect(response).to redirect_to(session_double.url)
+      end
+
+      it "allows checkout when oldest purchase is more than 24 hours ago" do
+        # Update the oldest gift card to be 25 hours ago (use update_column to bypass callbacks)
+        oldest_card = GiftCard.where(sender: user).order(created_at: :asc).first
+        oldest_card.update_column(:created_at, 25.hours.ago)
+
+        session_double = instance_double(Stripe::Checkout::Session, url: "https://stripe.test/checkout")
+        expect(Stripe::Checkout::Session).to receive(:create).and_return(session_double)
+
+        post endpoint, params: base_params
+
+        expect(response).to redirect_to(session_double.url)
+      end
+
+      it "does not count canceled gift cards toward limit" do
+        # Cancel one gift card
+        GiftCard.where(sender: user).first.update!(status: :canceled)
+
+        session_double = instance_double(Stripe::Checkout::Session, url: "https://stripe.test/checkout")
+        expect(Stripe::Checkout::Session).to receive(:create).and_return(session_double)
+
+        post endpoint, params: base_params
+
+        expect(response).to redirect_to(session_double.url)
+      end
+    end
   end
 end

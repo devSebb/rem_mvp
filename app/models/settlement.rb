@@ -20,8 +20,7 @@ class Settlement < ApplicationRecord
 
   # Get all transactions included in this settlement
   def transactions
-    Transaction.joins(:gift_card)
-              .where(gift_cards: { merchant: merchant })
+    Transaction.where(merchant: merchant)
               .where(txn_type: :redemption, status: :succeeded)
               .where(created_at: period_start..period_end)
   end
@@ -29,8 +28,7 @@ class Settlement < ApplicationRecord
   # Get all gift cards included in this settlement
   def gift_cards
     GiftCard.joins(:transactions)
-            .where(merchant: merchant)
-            .where(transactions: { txn_type: :redemption, status: :succeeded })
+            .where(transactions: { merchant: merchant, txn_type: :redemption, status: :succeeded })
             .where(transactions: { created_at: period_start..period_end })
             .distinct
   end

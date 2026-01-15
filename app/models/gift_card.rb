@@ -22,10 +22,13 @@ class GiftCard < ApplicationRecord
   # Enums
   enum status: { active: 0, redeemed: 1, expired: 2, canceled: 3 }
 
+  # Constants
+  MAX_AMOUNT_CENTS = 20_000 # $200.00 USD
+
   # Validations
   validates :sender, presence: true
   validates :recipient, presence: true
-  validates :amount, presence: true, numericality: { greater_than: 0 }
+  validates :amount, presence: true, numericality: { greater_than: 0, less_than_or_equal_to: MAX_AMOUNT_CENTS }
   validates :remaining_balance, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :currency, presence: true
   validates :code_digest, presence: true, uniqueness: true
@@ -122,16 +125,6 @@ class GiftCard < ApplicationRecord
 
     if merchant.nil?
       Rails.logger.error "❌ Merchant is nil"
-      return false
-    end
-
-    if merchant_id.nil?
-      Rails.logger.error "❌ Gift card has no merchant assigned"
-      return false
-    end
-
-    if merchant.id != merchant_id
-      Rails.logger.error "❌ Merchant mismatch: card merchant #{merchant_id}, attempted merchant #{merchant.id}"
       return false
     end
 

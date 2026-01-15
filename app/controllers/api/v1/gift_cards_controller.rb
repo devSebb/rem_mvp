@@ -42,9 +42,8 @@ module Api
       end
 
       def ensure_merchant_owns_gift_card!
-        return if gift_card&.merchant_id == current_merchant.id
-
-        render json: { error: "merchant_mismatch" }, status: :forbidden
+        # Gift cards can be redeemed by any merchant; keep token validation only
+        true
       end
 
       def normalize_amount_cents

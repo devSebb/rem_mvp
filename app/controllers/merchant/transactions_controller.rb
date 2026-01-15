@@ -5,7 +5,7 @@ class Merchant::TransactionsController < ApplicationController
   def refund
     authorize @gift_card, :refund?
 
-    redemption = @gift_card.transactions.successful.redemptions.find(params[:transaction_id])
+    redemption = @gift_card.transactions.successful.redemptions.find_by!(id: params[:transaction_id], merchant_id: current_user.merchant_id)
     reason = params[:reason].to_s.strip.presence || "Refund requested by merchant"
 
     Refunds::Issue.call(
@@ -38,8 +38,8 @@ class Merchant::TransactionsController < ApplicationController
   def find_gift_card
     @gift_card = GiftCard.find(params[:gift_card_id])
 
-    unless @gift_card.merchant == current_user.merchant && @gift_card.transactions.redemptions.exists?
-      flash[:alert] = "You can only view gift cards that belong to your store and have been redeemed."
+    unless @gift_card.transactions.redemptions.where(merchant: current_user.merchant).exists?
+      flash[:alert] = "You can only view gift cards redeemed at your store."
       redirect_to merchant_root_path
     end
   rescue ActiveRecord::RecordNotFound

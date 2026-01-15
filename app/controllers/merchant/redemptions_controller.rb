@@ -21,11 +21,6 @@ class Merchant::RedemptionsController < ApplicationController
     if (active_token = active_redemption_token_for(token_candidate))
       @gift_card = active_token.gift_card
 
-      unless redeemable_for_merchant?(@gift_card)
-        flash[:alert] = 'This gift card is not redeemable by your store.'
-        redirect_to new_merchant_redemption_path and return
-      end
-
       unless @gift_card.can_be_redeemed?
         Rails.logger.warn "❌ Gift card #{@gift_card.id} cannot be redeemed - Status: #{@gift_card.status}, Expired: #{@gift_card.expired?}, Balance: #{@gift_card.remaining_balance}"
         flash[:alert] = 'This gift card cannot be redeemed (expired, inactive, or has no remaining balance).'
@@ -53,11 +48,6 @@ class Merchant::RedemptionsController < ApplicationController
       redirect_to new_merchant_redemption_path and return
     end
 
-    unless redeemable_for_merchant?(@gift_card)
-      flash[:alert] = 'This gift card is not redeemable by your store.'
-      redirect_to new_merchant_redemption_path and return
-    end
-
     Rails.logger.info "✅ Found gift card #{@gift_card.id} - Status: #{@gift_card.status}, Balance: #{@gift_card.remaining_balance}"
 
     unless @gift_card.can_be_redeemed?
@@ -80,11 +70,6 @@ class Merchant::RedemptionsController < ApplicationController
     @redemption_mode = params[:redemption_mode].presence || "code"
     @redemption_token_value = normalized_token(params[:redemption_token]) if @redemption_mode == "token"
     @redemption_token = active_redemption_token_for(@redemption_token_value) if @redemption_token_value.present?
-
-    unless redeemable_for_merchant?(@gift_card)
-      flash[:alert] = 'This gift card is not redeemable by your store.'
-      redirect_to new_merchant_redemption_path and return
-    end
 
     if @redemption_mode == "token"
       unless @redemption_token && @redemption_token.gift_card_id == @gift_card.id
@@ -133,11 +118,6 @@ class Merchant::RedemptionsController < ApplicationController
     
     @gift_card = GiftCard.find(gift_card_id)
     Rails.logger.info "✅ Found gift card #{@gift_card.id} - Balance: #{@gift_card.remaining_balance}"
-
-    unless redeemable_for_merchant?(@gift_card)
-      flash[:alert] = 'This gift card is not redeemable by your store.'
-      redirect_to new_merchant_redemption_path and return
-    end
 
     # If we are redeeming with a dynamic token, use the centralized service
     if redemption_mode == "token"
@@ -300,8 +280,7 @@ class Merchant::RedemptionsController < ApplicationController
     RedemptionToken.find_by(token_digest: RedemptionToken.digest(raw_value))
   end
 
-  def redeemable_for_merchant?(gift_card)
-    return false unless gift_card
-    gift_card.merchant_id == current_user.merchant_id
+  def redeemable_for_merchant?(_gift_card)
+    true
   end
 end

@@ -68,7 +68,7 @@ RSpec.describe "Api::V1::GiftCards", type: :request do
       expect(body["error"]).to eq("Unauthorized")
     end
 
-    it "returns forbidden when the gift card belongs to another merchant" do
+    it "allows validation even when the gift card was issued by another merchant" do
       other_secret = "other-secret"
       create_merchant(secret: other_secret)
 
@@ -76,9 +76,9 @@ RSpec.describe "Api::V1::GiftCards", type: :request do
            params: { token: raw_token, amount_cents: 2_000 }.to_json,
            headers: auth_headers(other_secret)
 
-      expect(response).to have_http_status(:forbidden)
+      expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)
-      expect(body["error"]).to eq("merchant_mismatch")
+      expect(body["approved"]).to eq(true)
     end
   end
 
