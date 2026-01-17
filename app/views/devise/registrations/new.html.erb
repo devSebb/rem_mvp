@@ -42,7 +42,28 @@
         <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "papayal-input mt-2" %>
       </div>
 
-      <%= f.submit "Registrarme", class: "papayal-btn-primary w-full" %>
+      <div class="pt-2">
+        <label class="flex items-start gap-3 cursor-pointer group">
+          <%= f.check_box :terms_accepted, { 
+            class: "mt-1 h-4 w-4 rounded border-black/20 text-[#FCA50F] focus:ring-[#FCA50F] focus:ring-2 cursor-pointer transition",
+            required: true,
+            id: "user_terms_accepted"
+          }, "1", "0" %>
+          <span class="text-sm text-[#2C3A43] leading-relaxed">
+            Acepto los 
+            <%= link_to "Términos y Condiciones", legal_terminos_path, target: "_blank", class: "text-[#FCA50F] hover:text-[#0D2F32] underline font-medium" %> 
+            y la 
+            <%= link_to "Política de Privacidad", legal_privacidad_path, target: "_blank", class: "text-[#FCA50F] hover:text-[#0D2F32] underline font-medium" %> 
+            de Papayal. También acepto todos los 
+            <%= link_to "documentos legales", legal_path, target: "_blank", class: "text-[#FCA50F] hover:text-[#0D2F32] underline font-medium" %>.
+          </span>
+        </label>
+        <% if resource.errors[:terms_accepted].any? %>
+          <p class="text-xs text-rose-600 mt-1"><%= resource.errors[:terms_accepted].first %></p>
+        <% end %>
+      </div>
+
+      <%= f.submit "Registrarme", class: "papayal-btn-primary w-full", id: "registration-submit-btn", disabled: true %>
     <% end %>
 
     <div class="mt-6 text-center text-sm text-[#2C3A43]/80">
@@ -50,3 +71,32 @@
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const termsCheckbox = document.getElementById('user_terms_accepted');
+    const submitButton = document.getElementById('registration-submit-btn');
+    
+    if (termsCheckbox && submitButton) {
+      // Update button state on checkbox change
+      termsCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+          submitButton.disabled = false;
+          submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+          submitButton.classList.add('hover:brightness-95');
+        } else {
+          submitButton.disabled = true;
+          submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+          submitButton.classList.remove('hover:brightness-95');
+        }
+      });
+      
+      // Initial state check
+      if (!termsCheckbox.checked) {
+        submitButton.disabled = true;
+        submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+        submitButton.classList.remove('hover:brightness-95');
+      }
+    }
+  });
+</script>

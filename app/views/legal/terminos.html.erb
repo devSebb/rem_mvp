@@ -1,0 +1,141 @@
+<div class="max-w-7xl mx-auto">
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- Sidebar -->
+    <div class="lg:col-span-1">
+      <%= render 'sidebar' %>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:col-span-3">
+      <div class="papayal-card p-8">
+        <div class="mb-6">
+          <h1 class="text-3xl font-bold text-[#0D2F32] mb-2">Términos y Condiciones de Uso</h1>
+          <p class="text-sm text-[#2C3A43]/70">Última actualización: <%= Date.today.strftime("%d de %B de %Y") %></p>
+        </div>
+
+        <div class="prose prose-slate max-w-none text-[#2C3A43]">
+          <div class="mb-6 p-4 bg-[#0D2F32]/5 rounded-xl border border-[#0D2F32]/10">
+            <p class="text-sm"><strong>Entidad responsable:</strong> Papayal LLC (Delaware, EE. UU.)</p>
+          </div>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">1. Introducción</h2>
+            <p class="mb-4">
+              Estos Términos y Condiciones ("Términos") regulan el acceso y uso de la aplicación móvil y plataforma digital Papayal (la "Aplicación"), operada por Papayal LLC ("Papayal", "nosotros").
+            </p>
+            <p>
+              Al crear una cuenta, acceder o utilizar la Aplicación, el usuario ("Usuario") acepta estos Términos de manera expresa y vinculante.
+            </p>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">2. Elegibilidad</h2>
+            <p class="mb-4">Para utilizar la Aplicación, el Usuario debe:</p>
+            <ul class="list-disc pl-6 space-y-2 mb-4">
+              <li>Tener al menos 18 años de edad</li>
+              <li>Tener capacidad legal para contratar</li>
+              <li>Utilizar la Aplicación únicamente para fines personales y lícitos</li>
+            </ul>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">3. Creación y Uso de Cuenta</h2>
+            <p class="mb-4">El Usuario es responsable de:</p>
+            <ul class="list-disc pl-6 space-y-2 mb-4">
+              <li>Proveer información veraz y actualizada</li>
+              <li>Mantener la confidencialidad de sus credenciales</li>
+              <li>Notificar cualquier uso no autorizado</li>
+            </ul>
+            <p>
+              Papayal puede suspender o cerrar cuentas que presenten actividad fraudulenta o incumplan estos Términos.
+            </p>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">4. Descripción del Servicio</h2>
+            <p class="mb-4">
+              Papayal permite la compra, envío, recepción y redención de tarjetas de regalo digitales ("Tarjetas de Regalo") canjeables únicamente en comercios afiliados dentro de Ecuador.
+            </p>
+            <p>
+              Papayal no es una institución financiera, banco, emisor de dinero electrónico ni proveedor de servicios de custodia.
+            </p>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">5. Tarjetas de Regalo y Saldo</h2>
+            <p class="mb-4">Las Tarjetas de Regalo representan un saldo de valor limitado para consumo en comercios afiliados.</p>
+            <ul class="list-disc pl-6 space-y-2">
+              <li>No constituyen dinero en efectivo</li>
+              <li>No generan intereses</li>
+              <li>No son convertibles a efectivo</li>
+              <li>No tienen fecha de expiración</li>
+              <li>Solo pueden utilizarse según las reglas del comercio afiliado</li>
+            </ul>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">6. Pagos y Transacciones</h2>
+            <ul class="list-disc pl-6 space-y-2">
+              <li>Los pagos se procesan a través de proveedores externos de pago.</li>
+              <li>Papayal no almacena información completa de tarjetas.</li>
+              <li>Las transacciones pueden ser rechazadas o revertidas por motivos técnicos, regulatorios o de seguridad.</li>
+            </ul>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">7. Uso Prohibido</h2>
+            <p class="mb-4">Está prohibido:</p>
+            <ul class="list-disc pl-6 space-y-2">
+              <li>Usar la Aplicación para fraude, lavado de activos o evasión</li>
+              <li>Revender Tarjetas de Regalo</li>
+              <li>Intentar eludir controles de seguridad</li>
+              <li>Utilizar la plataforma con fines comerciales no autorizados</li>
+            </ul>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">8. Suspensión y Terminación</h2>
+            <p class="mb-4">Papayal puede suspender o terminar el acceso:</p>
+            <ul class="list-disc pl-6 space-y-2">
+              <li>Por incumplimiento de estos Términos</li>
+              <li>Por requerimiento legal</li>
+              <li>Para prevenir riesgos operativos o legales</li>
+            </ul>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">9. Limitación de Responsabilidad</h2>
+            <p class="mb-4">Papayal no será responsable por:</p>
+            <ul class="list-disc pl-6 space-y-2">
+              <li>Decisiones de los comercios afiliados</li>
+              <li>Uso indebido por terceros</li>
+              <li>Interrupciones técnicas fuera de su control</li>
+            </ul>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">10. Cambios al Servicio</h2>
+            <p>
+              Papayal puede modificar estos Términos notificando al Usuario mediante la Aplicación o correo electrónico.
+            </p>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">11. Ley Aplicable y Jurisdicción</h2>
+            <p>
+              Estos Términos se rigen por las leyes del Estado de Delaware, EE. UU., sin perjuicio de derechos del consumidor aplicables.
+            </p>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">12. Contacto</h2>
+            <p>
+              Para consultas sobre estos Términos, contáctanos en: <a href="mailto:soporte@papayal.app" class="text-[#FCA50F] hover:underline">📧 soporte@papayal.app</a>
+            </p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,34 @@
+<div class="max-w-7xl mx-auto">
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- Sidebar -->
+    <div class="lg:col-span-1">
+      <%= render 'sidebar' %>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:col-span-3">
+      <div class="papayal-card p-8">
+        <div class="mb-6">
+          <h1 class="text-3xl font-bold text-[#0D2F32] mb-2">Política de Uso Aceptable</h1>
+          <p class="text-sm text-[#2C3A43]/70">Última actualización: <%= Date.today.strftime("%d de %B de %Y") %></p>
+        </div>
+
+        <div class="prose prose-slate max-w-none text-[#2C3A43]">
+          <section class="mb-8">
+            <p class="mb-4">Está prohibido:</p>
+            <ul class="list-disc pl-6 space-y-2">
+              <li>Fraude</li>
+              <li>Actividades ilícitas</li>
+              <li>Uso automatizado</li>
+              <li>Manipulación de sistemas</li>
+            </ul>
+            <p class="mt-4">
+              Papayal puede tomar acciones inmediatas.
+            </p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

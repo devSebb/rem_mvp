@@ -1,0 +1,26 @@
+<nav class="papayal-card p-4 sticky top-24 h-fit">
+  <h2 class="text-sm font-semibold text-[#0D2F32] mb-4 uppercase tracking-wider">Documentos Legales</h2>
+  <ul class="space-y-2">
+    <% 
+      current_action = action_name
+      nav_items = [
+        { path: legal_path, label: "📋 Resumen", action: "index" },
+        { path: legal_terminos_path, label: "1️⃣ Términos y Condiciones", action: "terminos" },
+        { path: legal_privacidad_path, label: "2️⃣ Política de Privacidad", action: "privacidad" },
+        { path: legal_tarjetas_regalo_path, label: "3️⃣ Términos de Tarjetas de Regalo", action: "tarjetas_regalo" },
+        { path: legal_pagos_reembolsos_path, label: "4️⃣ Política de Pagos y Reembolsos", action: "pagos_reembolsos" },
+        { path: legal_uso_aceptable_path, label: "5️⃣ Política de Uso Aceptable", action: "uso_aceptable" },
+        { path: legal_eliminacion_datos_path, label: "6️⃣ Política de Eliminación de Cuenta y Datos", action: "eliminacion_datos" }
+      ]
+    %>
+    <% nav_items.each do |item| %>
+      <li>
+        <% is_active = current_action == item[:action] %>
+        <%= link_to item[:path], class: "block px-3 py-2 rounded-xl text-sm font-medium transition #{is_active ? 'bg-[#FCA50F]/10 text-[#0D2F32] border border-[#FCA50F]/20' : 'text-[#2C3A43]/70 hover:bg-black/5 hover:text-[#0D2F32]'}" do %>
+          <%= item[:label] %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+</nav>
+

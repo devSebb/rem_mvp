@@ -4,6 +4,15 @@ Rails.application.routes.draw do
   root to: redirect("/users/sign_in")
   
   get "home", to: "home#index", as: :home
+  
+  # Legal Hub routes
+  get "legal", to: "legal#index", as: :legal
+  get "legal/terminos", to: "legal#terminos", as: :legal_terminos
+  get "legal/privacidad", to: "legal#privacidad", as: :legal_privacidad
+  get "legal/tarjetas-regalo", to: "legal#tarjetas_regalo", as: :legal_tarjetas_regalo
+  get "legal/pagos-reembolsos", to: "legal#pagos_reembolsos", as: :legal_pagos_reembolsos
+  get "legal/uso-aceptable", to: "legal#uso_aceptable", as: :legal_uso_aceptable
+  get "legal/eliminacion-datos", to: "legal#eliminacion_datos", as: :legal_eliminacion_datos
 
   resources :gift_cards, only: [:index, :show, :new] do
     collection do

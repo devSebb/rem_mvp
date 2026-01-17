@@ -126,6 +126,30 @@
           <%= yield %>
         </div>
       </main>
+
+      <!-- Footer -->
+      <footer class="bg-white/95 backdrop-blur border-t border-black/5 mt-auto">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+          <div class="flex items-center justify-between gap-4">
+            <!-- Logo -->
+            <div class="flex items-center gap-2">
+              <div class="h-8 w-8 rounded-xl bg-[#FCA50F] flex items-center justify-center shadow-sm overflow-hidden">
+                <%= image_tag "/Papayal_favicon1.png", alt: "Papayal", class: "h-8 w-8 object-cover" %>
+              </div>
+            </div>
+
+            <!-- Copyright -->
+            <div class="flex-1 text-center">
+              <p class="text-xs text-[#2C3A43]/70">© Todos los derechos reservados Papayal 2026</p>
+            </div>
+
+            <!-- Legal Hub Link -->
+            <div class="flex items-center">
+              <%= link_to "Hub Legal", legal_path, class: "text-xs text-[#2C3A43]/70 hover:text-[#0D2F32] transition-colors" %>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
 
     <script>

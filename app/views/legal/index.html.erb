@@ -1,0 +1,105 @@
+<div class="max-w-7xl mx-auto">
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- Sidebar -->
+    <div class="lg:col-span-1">
+      <%= render 'sidebar' %>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:col-span-3">
+      <div class="papayal-card p-8">
+        <div class="mb-6">
+          <h1 class="text-3xl font-bold text-[#0D2F32] mb-2">Hub Legal</h1>
+          <p class="text-[#2C3A43]/70">Documentos legales y políticas de Papayal</p>
+        </div>
+
+        <div class="prose prose-slate max-w-none">
+          <p class="text-[#2C3A43] mb-6">
+            Bienvenido al Hub Legal de Papayal. Aquí encontrarás todos los documentos legales que rigen el uso de nuestra plataforma. 
+            Te recomendamos leer estos documentos cuidadosamente antes de utilizar nuestros servicios.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+            <div class="papayal-card p-6 border-2 border-transparent hover:border-[#FCA50F]/20 transition">
+              <%= link_to legal_terminos_path, class: "block" do %>
+                <div class="flex items-start gap-3">
+                  <span class="text-2xl">1️⃣</span>
+                  <div>
+                    <h3 class="font-semibold text-[#0D2F32] mb-1">Términos y Condiciones de Uso</h3>
+                    <p class="text-sm text-[#2C3A43]/70">Reglas y condiciones para el uso de la plataforma Papayal</p>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+
+            <div class="papayal-card p-6 border-2 border-transparent hover:border-[#FCA50F]/20 transition">
+              <%= link_to legal_privacidad_path, class: "block" do %>
+                <div class="flex items-start gap-3">
+                  <span class="text-2xl">2️⃣</span>
+                  <div>
+                    <h3 class="font-semibold text-[#0D2F32] mb-1">Política de Privacidad</h3>
+                    <p class="text-sm text-[#2C3A43]/70">Cómo recopilamos, usamos y protegemos tu información</p>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+
+            <div class="papayal-card p-6 border-2 border-transparent hover:border-[#FCA50F]/20 transition">
+              <%= link_to legal_tarjetas_regalo_path, class: "block" do %>
+                <div class="flex items-start gap-3">
+                  <span class="text-2xl">3️⃣</span>
+                  <div>
+                    <h3 class="font-semibold text-[#0D2F32] mb-1">Términos de Tarjetas de Regalo</h3>
+                    <p class="text-sm text-[#2C3A43]/70">Condiciones específicas para tarjetas de regalo (stored value)</p>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+
+            <div class="papayal-card p-6 border-2 border-transparent hover:border-[#FCA50F]/20 transition">
+              <%= link_to legal_pagos_reembolsos_path, class: "block" do %>
+                <div class="flex items-start gap-3">
+                  <span class="text-2xl">4️⃣</span>
+                  <div>
+                    <h3 class="font-semibold text-[#0D2F32] mb-1">Política de Pagos y Reembolsos</h3>
+                    <p class="text-sm text-[#2C3A43]/70">Procesamiento de pagos y políticas de reembolso</p>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+
+            <div class="papayal-card p-6 border-2 border-transparent hover:border-[#FCA50F]/20 transition">
+              <%= link_to legal_uso_aceptable_path, class: "block" do %>
+                <div class="flex items-start gap-3">
+                  <span class="text-2xl">5️⃣</span>
+                  <div>
+                    <h3 class="font-semibold text-[#0D2F32] mb-1">Política de Uso Aceptable</h3>
+                    <p class="text-sm text-[#2C3A43]/70">Reglas de conducta y uso prohibido de la plataforma</p>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+
+            <div class="papayal-card p-6 border-2 border-transparent hover:border-[#FCA50F]/20 transition">
+              <%= link_to legal_eliminacion_datos_path, class: "block" do %>
+                <div class="flex items-start gap-3">
+                  <span class="text-2xl">6️⃣</span>
+                  <div>
+                    <h3 class="font-semibold text-[#0D2F32] mb-1">Política de Eliminación de Cuenta y Datos</h3>
+                    <p class="text-sm text-[#2C3A43]/70">Proceso para eliminar tu cuenta y datos personales</p>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="mt-8 p-4 bg-[#0D2F32]/5 rounded-xl border border-[#0D2F32]/10">
+            <p class="text-sm text-[#2C3A43]">
+              <strong class="text-[#0D2F32]">🔒 Cláusula de Prevalencia de Idioma:</strong> En caso de conflicto entre versiones, la versión en español prevalece.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

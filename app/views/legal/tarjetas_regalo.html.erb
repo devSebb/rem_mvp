@@ -1,0 +1,58 @@
+<div class="max-w-7xl mx-auto">
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- Sidebar -->
+    <div class="lg:col-span-1">
+      <%= render 'sidebar' %>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:col-span-3">
+      <div class="papayal-card p-8">
+        <div class="mb-6">
+          <h1 class="text-3xl font-bold text-[#0D2F32] mb-2">Términos de Tarjetas de Regalo (Stored Value)</h1>
+          <p class="text-sm text-[#2C3A43]/70">Última actualización: <%= Date.today.strftime("%d de %B de %Y") %></p>
+        </div>
+
+        <div class="prose prose-slate max-w-none text-[#2C3A43]">
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">1. Naturaleza del Saldo</h2>
+            <p>
+              Las Tarjetas de Regalo representan valor prepagado, no dinero.
+            </p>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">2. Redención</h2>
+            <p>
+              Solo canjeables en comercios afiliados mediante los métodos autorizados por Papayal.
+            </p>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">3. No Expiración</h2>
+            <p>
+              Las Tarjetas de Regalo no tienen fecha de expiración, salvo que la ley aplicable disponga lo contrario.
+            </p>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">4. Pérdida o Uso No Autorizado</h2>
+            <p class="mb-4">Papayal no es responsable por:</p>
+            <ul class="list-disc pl-6 space-y-2">
+              <li>Pérdida de acceso</li>
+              <li>Uso no autorizado por terceros</li>
+            </ul>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">5. No Reembolsables</h2>
+            <p>
+              Salvo obligación legal, las Tarjetas de Regalo no son reembolsables.
+            </p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -8,6 +8,7 @@ class User < ApplicationRecord
   enum role: { user: 0, merchant: 1, admin: 2 }
 
   attr_accessor :skip_national_id_validation
+  attr_accessor :terms_accepted
 
   # Associations
   has_one :merchant, dependent: :destroy
@@ -19,6 +20,7 @@ class User < ApplicationRecord
   validates :first_name, :last_name, :email, :phone, presence: true
   validates :phone, uniqueness: true
   validates :role, presence: true
+  validates :terms_accepted, acceptance: { message: "debes aceptar los términos y condiciones para registrarte" }, on: :create
   validates :national_id,
             format: {
               with: /\A[a-zA-Z0-9]{7,}\z/,

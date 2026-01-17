@@ -1,0 +1,49 @@
+<div class="max-w-7xl mx-auto">
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- Sidebar -->
+    <div class="lg:col-span-1">
+      <%= render 'sidebar' %>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:col-span-3">
+      <div class="papayal-card p-8">
+        <div class="mb-6">
+          <h1 class="text-3xl font-bold text-[#0D2F32] mb-2">Política de Eliminación de Cuenta y Datos</h1>
+          <p class="text-sm text-[#2C3A43]/70">Última actualización: <%= Date.today.strftime("%d de %B de %Y") %></p>
+        </div>
+
+        <div class="prose prose-slate max-w-none text-[#2C3A43]">
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">1. Solicitud</h2>
+            <p>
+              El Usuario puede solicitar la eliminación desde la app o por correo.
+            </p>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">2. Proceso</h2>
+            <p>
+              La cuenta será desactivada y los datos eliminados salvo obligación legal.
+            </p>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">3. Saldo Remanente</h2>
+            <p>
+              Los saldos no utilizados pueden perderse tras la eliminación de la cuenta.
+            </p>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">4. Confirmación</h2>
+            <p>
+              El Usuario recibirá confirmación por correo electrónico (SendGrid).
+            </p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
