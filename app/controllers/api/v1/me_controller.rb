@@ -38,7 +38,7 @@ module Api
       end
 
       def me_params
-        permitted = params.permit(:address, :country_of_residence, :date_of_birth, :phone)
+        permitted = params.permit(:address, :country_of_residence, :date_of_birth, :phone, :first_name, :last_name)
         permitted[:date_of_birth] = permitted[:date_of_birth].presence if permitted.key?(:date_of_birth)
         permitted
       end

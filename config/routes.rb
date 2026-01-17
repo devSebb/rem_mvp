@@ -1,7 +1,9 @@
 Rails.application.routes.draw do
-  root "home#index"
-
   devise_for :users
+  
+  root to: redirect("/users/sign_in")
+  
+  get "home", to: "home#index", as: :home
 
   resources :gift_cards, only: [:index, :show, :new] do
     collection do
@@ -36,11 +38,14 @@ Rails.application.routes.draw do
         post :refresh, to: "sessions#refresh"
         post :logout, to: "sessions#logout"
         post :logout_all, to: "sessions#logout_all"
+        post :forgot_password, to: "passwords#forgot_password"
+        post :reset_password, to: "passwords#reset_password"
       end
 
       get "me", to: "me#show"
       patch "me", to: "me#update"
       post "checkout/validate_kyc", to: "checkout#validate_kyc"
+      post "checkout/payment_intent", to: "checkout#payment_intent"
 
       namespace :me do
         resources :gift_cards, only: [:index, :show] do
@@ -49,6 +54,7 @@ Rails.application.routes.draw do
       end
 
       post "me/avatar", to: "me/avatars#create"
+      resources :merchants, only: [:index]
       post "merchants/:id/logo", to: "merchants#upload_logo"
     end
   end

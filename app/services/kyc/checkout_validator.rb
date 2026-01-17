@@ -14,10 +14,16 @@ module Kyc
       missing = REQUIRED_FIELDS.select { |field| user.public_send(field).blank? }
 
       user.valid?(:checkout_kyc)
+      # Rails 7.2: errors.slice was removed, use select instead
+      error_hash = REQUIRED_FIELDS.each_with_object({}) do |field, hash|
+        if user.errors[field].any?
+          hash[field] = user.errors[field]
+        end
+      end
       {
         ok: missing.empty?,
         missing: missing.map(&:to_s),
-        errors: user.errors.slice(*REQUIRED_FIELDS).to_hash(full_messages: true)
+        errors: error_hash
       }
     end
 

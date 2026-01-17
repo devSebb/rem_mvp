@@ -369,10 +369,11 @@ class GiftCard < ApplicationRecord
   end
 
   # For non-Stripe issuance (seeds, admin-issued, manual test cards), record an issuance transaction
-  # so the ledger is complete. Stripe-created cards will have checkout_session_id and are handled
-  # by `StripeWebhooks`, which creates a `purchase` transaction instead.
+  # so the ledger is complete. Stripe-created cards will have checkout_session_id or payment_intent_id
+  # and are handled by `StripeWebhooks`, which creates a `purchase` transaction instead.
   def record_issuance_transaction_unless_stripe!
     return if checkout_session_id.present?
+    return if payment_intent_id.present?
     return if transactions.purchases.exists?
     return if amount.blank? || amount.to_i <= 0
 

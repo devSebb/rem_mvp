@@ -78,7 +78,7 @@ RSpec.describe "Api::V1::GiftCards", type: :request do
 
       expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)
-      expect(body["approved"]).to eq(true)
+      expect(body["valid"]).to eq(true)
     end
   end
 
@@ -140,6 +140,9 @@ RSpec.describe "Api::V1::GiftCards", type: :request do
       email: "#{role}-#{SecureRandom.hex(6)}@example.com",
       password: "Password!23",
       name: "#{role.to_s.capitalize} #{SecureRandom.hex(4)}",
+      first_name: role.to_s.capitalize,
+      last_name: SecureRandom.hex(4),
+      phone: "+#{SecureRandom.rand(1..999)}#{SecureRandom.rand(1000000..9999999)}", # Random country code + number
       role: role,
       national_id: "TEST#{SecureRandom.hex(4)}".upcase
     )

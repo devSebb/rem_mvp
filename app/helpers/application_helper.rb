@@ -19,13 +19,17 @@ module ApplicationHelper
   def navbar_subtitle
     return tag.span("comercio", class: "italic") if merchant_nav_context?
 
-    "Tu billetera de regalos cálida"
+    "Tu billetera de regalos"
   end
 
   def navbar_home_path
+    # If not logged in, redirect to www.papayal.app
+    return "https://www.papayal.app" unless user_signed_in?
+    
+    # If logged in, use normal behavior
     return merchant_root_path if current_user&.merchant? || merchant_nav_context?
 
-    root_path
+    home_path
   end
 
   def merchant_nav_context?

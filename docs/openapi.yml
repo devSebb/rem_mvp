@@ -269,6 +269,10 @@ paths:
             schema:
               type: object
               properties:
+                first_name:
+                  type: string
+                last_name:
+                  type: string
                 address:
                   type: string
                   nullable: true
