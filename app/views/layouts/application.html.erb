@@ -79,7 +79,7 @@
           </div>
 
           <!-- Mobile menu -->
-          <div class="md:hidden hidden pb-6" id="mobile-menu" style="display: none;">
+          <div class="md:hidden hidden pb-6" id="mobile-menu">
             <div class="space-y-2 border-t border-black/5 pt-4">
               <% if user_signed_in? %>
                 <% unless current_user&.merchant? || merchant_nav_context? %>
@@ -153,56 +153,64 @@
     </div>
 
     <script>
-      // Mobile menu toggle
-      document.addEventListener('DOMContentLoaded', function() {
+      // Mobile menu toggle - works with Turbo
+      function setupMobileMenu() {
         const mobileMenuButton = document.querySelector('.mobile-menu-button');
         const mobileMenu = document.getElementById('mobile-menu');
         
         if (mobileMenuButton && mobileMenu) {
+          // Remove any existing listeners by cloning the button
+          const newButton = mobileMenuButton.cloneNode(true);
+          mobileMenuButton.parentNode.replaceChild(newButton, mobileMenuButton);
+          
           // Ensure menu starts hidden
-          mobileMenu.style.display = 'none';
           mobileMenu.classList.add('hidden');
           
-          mobileMenuButton.addEventListener('click', function(e) {
+          newButton.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             
-            const isCurrentlyHidden = mobileMenu.style.display === 'none' || mobileMenu.classList.contains('hidden');
+            const isHidden = mobileMenu.classList.contains('hidden');
             
-            if (isCurrentlyHidden) {
+            if (isHidden) {
               // Show menu
-              mobileMenu.style.display = 'block';
               mobileMenu.classList.remove('hidden');
-              mobileMenuButton.setAttribute('aria-expanded', 'true');
+              newButton.setAttribute('aria-expanded', 'true');
             } else {
               // Hide menu
-              mobileMenu.style.display = 'none';
               mobileMenu.classList.add('hidden');
-              mobileMenuButton.setAttribute('aria-expanded', 'false');
+              newButton.setAttribute('aria-expanded', 'false');
             }
             
             // Toggle hamburger and close icons
-            const hamburgerIcon = mobileMenuButton.querySelector('.hamburger-icon');
-            const closeIcon = mobileMenuButton.querySelector('.close-icon');
+            const hamburgerIcon = newButton.querySelector('.hamburger-icon');
+            const closeIcon = newButton.querySelector('.close-icon');
             
             if (hamburgerIcon && closeIcon) {
-              if (isCurrentlyHidden) {
+              if (isHidden) {
                 // Menu is opening - show close icon, hide hamburger
-                hamburgerIcon.style.display = 'none';
-                closeIcon.style.display = 'block';
                 hamburgerIcon.classList.add('hidden');
                 closeIcon.classList.remove('hidden');
               } else {
                 // Menu is closing - show hamburger icon, hide close
-                hamburgerIcon.style.display = 'block';
-                closeIcon.style.display = 'none';
                 hamburgerIcon.classList.remove('hidden');
                 closeIcon.classList.add('hidden');
               }
             }
           });
         }
-      });
+      }
+      
+      // Setup on initial load and Turbo navigation
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupMobileMenu);
+      } else {
+        setupMobileMenu();
+      }
+      
+      // Also setup on Turbo navigation
+      document.addEventListener('turbo:load', setupMobileMenu);
+      document.addEventListener('turbo:render', setupMobileMenu);
     </script>
   </body>
 </html>
