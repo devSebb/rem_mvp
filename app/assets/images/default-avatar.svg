@@ -1,8 +1,30 @@
 <svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Default avatar">
-  <rect width="160" height="160" rx="80" fill="#F5F7FB"/>
-  <circle cx="80" cy="64" r="34" fill="#E3E8F0" stroke="#D4DAE4" stroke-width="4"/>
-  <path d="M34 136c6-24 24-40 46-40s40 16 46 40" fill="#E3E8F0" stroke="#D4DAE4" stroke-width="4" stroke-linecap="round"/>
-  <path d="M98 72c0 9.941-8.059 18-18 18s-18-8.059-18-18 8.059-18 18-18 18 8.059 18 18Z" fill="#F5F7FB" opacity="0.65"/>
-  <path d="M62 102c5.333-6.667 12-10 20-10s14.667 3.333 20 10" stroke="#D4DAE4" stroke-width="4" stroke-linecap="round"/>
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FCA50F;stop-opacity:0.1" />
+      <stop offset="100%" style="stop-color:#0D2F32;stop-opacity:0.05" />
+    </linearGradient>
+  </defs>
+  <circle cx="80" cy="80" r="80" fill="url(#bgGradient)"/>
+  <circle cx="80" cy="80" r="80" fill="none" stroke="#FCA50F" stroke-width="2" stroke-opacity="0.2"/>
+  
+  <!-- User icon - more modern and friendly -->
+  <g transform="translate(80, 80)">
+    <!-- Head circle -->
+    <circle cx="0" cy="-15" r="28" fill="#FCA50F" fill-opacity="0.15" stroke="#FCA50F" stroke-width="2.5" stroke-opacity="0.4"/>
+    
+    <!-- Body/shoulders -->
+    <path d="M-35 25 Q-35 15 -25 15 Q-15 15 -15 25 L-15 45 Q-15 55 -25 55 Q-35 55 -35 45 Z" 
+          fill="#FCA50F" fill-opacity="0.15" stroke="#FCA50F" stroke-width="2.5" stroke-opacity="0.4" 
+          transform="scale(1, 1.2)"/>
+    
+    <!-- Simplified face features -->
+    <circle cx="-8" cy="-20" r="2.5" fill="#0D2F32" fill-opacity="0.3"/>
+    <circle cx="8" cy="-20" r="2.5" fill="#0D2F32" fill-opacity="0.3"/>
+    <path d="M-10 -8 Q0 -4 10 -8" stroke="#0D2F32" stroke-width="2" stroke-linecap="round" fill="none" stroke-opacity="0.3"/>
+  </g>
+  
+  <!-- Decorative accent -->
+  <circle cx="80" cy="80" r="75" fill="none" stroke="#FCA50F" stroke-width="1" stroke-opacity="0.1" stroke-dasharray="4 4"/>
 </svg>
-

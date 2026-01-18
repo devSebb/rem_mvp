@@ -93,18 +93,40 @@ REDIS_URL=redis://localhost:6379/0
 
 Render deployments must not rely on local disk for uploads. Set these variables in Render (or your production environment):
 
+**Required:**
 - `RAILS_MASTER_KEY` (required)
 - `APP_HOST` (public host, e.g., https://your-app.onrender.com)
-- `ACTIVE_STORAGE_SERVICE` (optional, defaults to `amazon`)
+- `APP_PROTOCOL` (set to `https` for production)
+
+**Active Storage Configuration (choose one):**
+
+**Option 1: Cloudflare R2 (Recommended)**
+- `R2_BUCKET` (e.g., `papayal-uploads`)
+- `R2_ACCESS_KEY_ID` (from Cloudflare dashboard)
+- `R2_SECRET_ACCESS_KEY` (from Cloudflare dashboard)
+- `R2_ENDPOINT` (e.g., `https://27fb8c1d1e6df048c9439098ab630c5d.r2.cloudflarestorage.com`)
+- `ACTIVE_STORAGE_SERVICE=cloudflare_r2` (optional override; auto-detected if all R2_* vars are present)
+
+**Option 2: Amazon S3**
 - `AWS_S3_BUCKET` (required)
 - `AWS_ACCESS_KEY_ID` (required)
 - `AWS_SECRET_ACCESS_KEY` (required)
 - `AWS_REGION` (defaults to `us-east-1`)
-- `AWS_S3_ENDPOINT` (optional, e.g., for R2 or MinIO)
+- `AWS_S3_ENDPOINT` (optional, e.g., for MinIO)
 - `AWS_S3_FORCE_PATH_STYLE` (optional, set to `true` if your provider requires it)
+- `ACTIVE_STORAGE_SERVICE=amazon` (optional override; auto-detected if all AWS_* vars are present)
+
+**Other:**
 - `SENDGRID_API_KEY` (optional; set to send real emails)
 - `SENDGRID_DOMAIN` (optional, defaults to `APP_HOST` or `rem.com`)
 - `DEFAULT_FROM_EMAIL` (recommended when enabling email delivery)
+
+**Active Storage Service Selection:**
+The app automatically selects the storage service based on environment variables:
+1. If `ACTIVE_STORAGE_SERVICE` is explicitly set, it uses that service
+2. If all `R2_*` variables are present, it uses Cloudflare R2
+3. If all `AWS_*` variables are present, it uses Amazon S3
+4. Otherwise, it falls back to local disk storage (not recommended for production)
 
 ### Email delivery (SendGrid)
 
@@ -369,6 +391,50 @@ Approved/declined redemption responses both return `200 OK` with an `approved` b
 
 ### Webhooks
 - `POST /webhooks/stripe` - Stripe webhook handler
+
+## Active Storage & Cloudflare R2
+
+### Configuration
+
+The application uses Rails Active Storage for user avatars and merchant logos. In production, it's configured to use Cloudflare R2 for file storage.
+
+### Required Environment Variables for R2
+
+Set these in your production environment (e.g., Render dashboard):
+
+```bash
+R2_BUCKET=papayal-uploads
+R2_ACCESS_KEY_ID=your_access_key_id
+R2_SECRET_ACCESS_KEY=your_secret_access_key
+R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
+APP_HOST=https://your-app.onrender.com
+APP_PROTOCOL=https
+ACTIVE_STORAGE_SERVICE=cloudflare_r2  # Optional: auto-detected if all R2_* vars are present
+```
+
+### Verifying Uploads
+
+After uploading a user avatar or merchant logo:
+
+1. **Check the API response**: Upload endpoints return URLs like:
+   - `avatar_url`: Full URL to the uploaded image
+   - `avatar_thumb_url`: Thumbnail variant URL (128x128)
+
+2. **Verify in Cloudflare R2**:
+   - Log into Cloudflare dashboard
+   - Navigate to R2 > Your Bucket (`papayal-uploads`)
+   - Check the `active_storage/blobs/` directory
+   - Files are stored with unique keys
+
+3. **Check Rails logs**: Look for Active Storage attachment logs during upload
+
+### URL Generation
+
+Active Storage URLs are generated using `APP_HOST` and `APP_PROTOCOL` environment variables. These ensure correct absolute URLs are returned in API responses, even when the app is behind a proxy (like Render's load balancer).
+
+### Local Development
+
+Local and test environments continue using disk storage (`storage/` directory). No R2 credentials needed for development.
 
 ## Deployment
 

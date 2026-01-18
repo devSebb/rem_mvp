@@ -6,10 +6,7 @@ Rails.application.configure do
   # Code is not reloaded between requests.
   config.enable_reloading = false
 
-  # Eager load code on boot. This eager loads most of Rails and
-  # your application in memory, allowing both threaded web servers
-  # and those relying on copy on write to perform better.
-  # Rake tasks automatically ignore this option for performance.
+  # Eager load code on boot.
   config.eager_load = true
 
   # Full error reports are disabled and caching is turned on.
@@ -17,46 +14,63 @@ Rails.application.configure do
   config.action_controller.perform_caching = true
 
   # Ensures that a master key has been made available in ENV["RAILS_MASTER_KEY"], config/master.key, or an environment
-  # key such as config/credentials/production.key. This key is used to decrypt credentials (and other encrypted files).
+  # key such as config/credentials/production.key.
   config.require_master_key = true
-
-  # Disable serving static files from `public/`, relying on NGINX/Apache to do so instead.
-  # config.public_file_server.enabled = false
-
-  # Compress CSS using a preprocessor.
-  # config.assets.css_compressor = :sass
 
   # Do not fall back to assets pipeline if a precompiled asset is missed.
   config.assets.compile = false
-
-  # Enable serving of images, stylesheets, and JavaScripts from an asset server.
-  # config.asset_host = "http://assets.example.com"
 
   # Specifies the header that your server uses for sending files.
   # config.action_dispatch.x_sendfile_header = "X-Sendfile" # for Apache
   # config.action_dispatch.x_sendfile_header = "X-Accel-Redirect" # for NGINX
 
-  # Store uploaded files; prefer S3 when configured, otherwise fall back to local.
+  # ---------------------------------------------------------------------------
+  # Active Storage service selection (Production)
+  #
+  # Priority:
+  # 1) ACTIVE_STORAGE_SERVICE (explicit override)
+  # 2) Cloudflare R2 if all required R2_* env vars are present
+  # 3) Amazon S3 if all required AWS_* env vars are present
+  # 4) Fallback to local
+  # ---------------------------------------------------------------------------
   requested_service = ENV["ACTIVE_STORAGE_SERVICE"].presence
-  inferred_service = if requested_service.present?
-    requested_service
-  elsif %w[AWS_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY].all? { |k| ENV[k].present? }
-    "amazon"
-  else
-    "local"
-  end
+
+  inferred_service =
+    if requested_service.present?
+      requested_service
+    elsif %w[R2_BUCKET R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_ENDPOINT].all? { |k| ENV[k].present? }
+      "cloudflare_r2"
+    elsif %w[AWS_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY].all? { |k| ENV[k].present? }
+      "amazon"
+    else
+      "local"
+    end
 
   config.active_storage.service = inferred_service.to_sym
 
-  if config.active_storage.service == :amazon
-    required_s3_env = %w[AWS_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY]
-    missing = required_s3_env.select { |key| ENV[key].blank? }
+  # Fail loudly only when the service was explicitly requested; otherwise warn + fallback.
+  case config.active_storage.service
+  when :cloudflare_r2
+    required_env = %w[R2_BUCKET R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_ENDPOINT]
+    missing = required_env.select { |key| ENV[key].blank? }
+
+    if missing.any?
+      if requested_service == "cloudflare_r2"
+        raise "Missing required Cloudflare R2 environment variables: #{missing.join(', ')}"
+      else
+        Rails.logger.warn("R2 env vars missing (#{missing.join(', ')}); falling back to :local for Active Storage")
+        config.active_storage.service = :local
+      end
+    end
+  when :amazon
+    required_env = %w[AWS_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY]
+    missing = required_env.select { |key| ENV[key].blank? }
 
     if missing.any?
       if requested_service == "amazon"
         raise "Missing required AWS S3 environment variables: #{missing.join(', ')}"
       else
-        Rails.logger.warn("S3 env vars missing (#{missing.join(', ')}); falling back to :local for Active Storage")
+        Rails.logger.warn("AWS S3 env vars missing (#{missing.join(', ')}); falling back to :local for Active Storage")
         config.active_storage.service = :local
       end
     end
@@ -64,18 +78,9 @@ Rails.application.configure do
 
   # Mount Action Cable outside main process or domain.
   # config.action_cable.mount_path = nil
-  # config.action_cable.url = "wss://example.com/cable"
-  # config.action_cable.allowed_request_origins = [ "http://example.com", /http:\/\/example.*/ ]
 
-  # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  # Can be used together with config.force_ssl for Strict-Transport-Security and secure cookies.
-  # config.assume_ssl = true
-
-  # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
+  # Force all access to the app over SSL.
   config.force_ssl = true
-
-  # Skip http-to-https redirect for the default health check endpoint.
-  # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
 
   # Log to STDOUT by default
   config.logger = ActiveSupport::Logger.new(STDOUT)
@@ -85,53 +90,39 @@ Rails.application.configure do
   # Prepend all log lines with the following tags.
   config.log_tags = [ :request_id ]
 
-  # "info" includes generic and useful information about system operation, but avoids logging too much
-  # information to avoid inadvertent exposure of personally identifiable information (PII). If you
-  # want to log everything, set the level to "debug".
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
 
   # Use a different cache store in production.
-  # Redis is required to keep redemption token cache coherent across nodes.
   config.cache_store = :redis_cache_store, {
     url: ENV["REDIS_URL"],
     namespace: "rem_mvp:cache",
     reconnect_attempts: 1
   }
 
-  # Use a real queuing backend for Active Job (and separate queues per environment).
+  # Use a real queuing backend for Active Job.
   config.active_job.queue_adapter = :sidekiq
-  # config.active_job.queue_name_prefix = "rem_mvp_production"
 
-  # Disable caching for Action Mailer templates even if Action Controller
-  # caching is enabled.
   config.action_mailer.perform_caching = false
-
-  # Ignore bad email addresses and do not raise email delivery errors.
-  # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   config.action_mailer.raise_delivery_errors = true
-  config.action_mailer.default_url_options = { 
-    host: ENV['APP_HOST'] || 'rem.com',
-    protocol: 'https'
+  config.action_mailer.default_url_options = {
+    host: ENV["APP_HOST"] || "rem.com",
+    protocol: "https"
   }
 
-  # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
-  # the I18n.default_locale when a translation cannot be found).
+  # Configure default URL options for Active Storage URL generation
+  # This ensures rails_blob_url and rails_representation_url generate correct absolute URLs
+  config.action_controller.default_url_options = {
+    host: ENV["APP_HOST"] || "rem.com",
+    protocol: ENV["APP_PROTOCOL"] || "https"
+  }
+
+  config.routes.default_url_options = {
+    host: ENV["APP_HOST"] || "rem.com",
+    protocol: ENV["APP_PROTOCOL"] || "https"
+  }
+
   config.i18n.fallbacks = true
-
-  # Don't log any deprecations.
   config.active_support.report_deprecations = false
-
-  # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
-
-  # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
-
-  # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
-  # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end

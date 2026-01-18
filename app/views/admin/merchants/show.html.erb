@@ -1,10 +1,8 @@
-<% avatar = @merchant.avatar_url.presence || "https://ui-avatars.com/api/?name=#{ERB::Util.url_encode(@merchant.store_name || 'Comercio')}&background=FCA50F&color=0D2F32" %>
-
 <div class="space-y-8">
   <div class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
     <div class="flex items-center gap-4">
       <div class="h-20 w-20 rounded-full overflow-hidden bg-[#EBEBEB] border border-black/5">
-        <%= image_tag avatar, alt: @merchant.store_name, class: "h-full w-full object-cover" %>
+        <%= avatar_image_for(@merchant, attachment_name: :logo, size: 80, classes: "") %>
       </div>
       <div>
         <p class="papayal-meta text-[#0D2F32]">Panel Comercios</p>

@@ -1,64 +1,143 @@
-<div class="px-4 sm:px-0">
-  <!-- Quick Actions -->
-  <div class="bg-white shadow rounded-lg mb-6">
-    <div class="px-4 py-5 sm:p-6">
-      <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <%= link_to "Redeem Gift Card", new_merchant_redemption_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
-        <%= link_to "Dashboard", merchant_root_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
-        <%= link_to "View Settlements", merchant_settlements_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
-      </div>
+<div class="space-y-8">
+  <div class="papayal-card p-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p class="papayal-meta text-[#0D2F32]">Perfil Comercio</p>
+      <h1 class="text-3xl font-bold text-[#0D2F32] mt-1">Información del comercio</h1>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">Administra los datos de tu comercio y tu logo.</p>
+    </div>
+    <div class="inline-flex items-center gap-3">
+      <%= avatar_image_for(@merchant, attachment_name: :logo, size: 48, classes: "shadow-sm") %>
+      <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FCA50F]/20 text-[#0D2F32] text-sm font-medium">
+        Comercio
+      </span>
     </div>
   </div>
 
-  <div class="max-w-4xl mx-auto">
-    <div class="bg-white shadow rounded-lg">
-      <div class="px-4 py-5 sm:p-6">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">Merchant Profile</h1>
-        
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div>
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Store Information</h3>
-            <dl class="space-y-3">
-              <div>
-                <dt class="text-sm font-medium text-gray-500">Store Name</dt>
-                <dd class="text-sm text-gray-900"><%= current_user.merchant.store_name %></dd>
-              </div>
-              <div>
-                <dt class="text-sm font-medium text-gray-500">Contact Email</dt>
-                <dd class="text-sm text-gray-900"><%= current_user.merchant.contact_email || 'Not provided' %></dd>
-              </div>
-              <div>
-                <dt class="text-sm font-medium text-gray-500">Account Created</dt>
-                <dd class="text-sm text-gray-900"><%= current_user.merchant.created_at.strftime('%B %d, %Y') %></dd>
-              </div>
-            </dl>
+  <div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 lg:col-span-8 space-y-6">
+      <%= form_with model: [:merchant, @merchant], url: merchant_profile_path, local: true, multipart: true, class: "space-y-6" do |f| %>
+        <% if @merchant.errors.any? %>
+          <div class="papayal-card border border-rose-200 bg-rose-50 text-rose-800 px-4 py-3">
+            <p class="font-semibold">Corrige los siguientes errores:</p>
+            <ul class="list-disc pl-5 text-sm mt-2 space-y-1">
+              <% @merchant.errors.full_messages.each do |msg| %>
+                <li><%= msg %></li>
+              <% end %>
+            </ul>
           </div>
-          
+        <% end %>
+
+        <div class="papayal-card p-6 space-y-4">
           <div>
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Account Information</h3>
-            <dl class="space-y-3">
-              <div>
-                <dt class="text-sm font-medium text-gray-500">User Name</dt>
-                <dd class="text-sm text-gray-900"><%= current_user.full_name %></dd>
-              </div>
-              <div>
-                <dt class="text-sm font-medium text-gray-500">Email</dt>
-                <dd class="text-sm text-gray-900"><%= current_user.email %></dd>
-              </div>
-              <div>
-                <dt class="text-sm font-medium text-gray-500">Member Since</dt>
-                <dd class="text-sm text-gray-900"><%= current_user.created_at.strftime('%B %d, %Y') %></dd>
-              </div>
-            </dl>
+            <p class="papayal-meta text-[#2C3A43]/60">Logo del comercio</p>
+            <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Imagen de tu tienda</h2>
+          </div>
+          <div class="flex items-center gap-6">
+            <div class="flex-shrink-0">
+              <%= avatar_image_for(@merchant, attachment_name: :logo, size: 96, classes: "shadow-md") %>
+            </div>
+            <div class="flex-1">
+              <%= f.label :logo, "Cambiar logo", class: "papayal-label" %>
+              <%= f.file_field :logo, accept: "image/*", class: "papayal-input mt-2", onchange: "previewLogo(this)" %>
+              <p class="text-xs text-[#2C3A43]/70 mt-1">Formato: JPG, PNG o GIF. Tamaño máximo: 5MB.</p>
+              <% if @merchant.logo.attached? %>
+                <p class="text-xs text-emerald-600 mt-1">✓ Tienes un logo subido</p>
+              <% end %>
+            </div>
+          </div>
+          <div id="logo-preview" class="hidden mt-4">
+            <p class="text-sm text-[#2C3A43]/70 mb-2">Vista previa:</p>
+            <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-[#FCA50F]">
+              <img id="logo-preview-img" src="" alt="Preview" class="w-full h-full object-cover">
+            </div>
           </div>
         </div>
-        
-        <div class="mt-6">
-          <%= link_to "Edit Profile", edit_user_registration_path, 
-              class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
+
+        <div class="papayal-card p-6 space-y-4">
+          <div>
+            <p class="papayal-meta text-[#2C3A43]/60">Datos del comercio</p>
+            <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Información principal</h2>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+              <%= f.label :store_name, "Nombre de la tienda", class: "papayal-label" %>
+              <%= f.text_field :store_name, class: "papayal-input mt-2", placeholder: "Café Central" %>
+            </div>
+            <div class="md:col-span-2">
+              <%= f.label :address, "Dirección", class: "papayal-label" %>
+              <%= f.text_field :address, class: "papayal-input mt-2", placeholder: "Av. Siempre Viva 123" %>
+            </div>
+            <div class="md:col-span-2">
+              <%= f.label :contact_email, "Correo de contacto", class: "papayal-label" %>
+              <%= f.email_field :contact_email, class: "papayal-input mt-2", placeholder: "contacto@comercio.com" %>
+            </div>
+            <div class="md:col-span-2">
+              <%= f.label :bank_account_iban, "Cuenta IBAN", class: "papayal-label" %>
+              <%= f.text_field :bank_account_iban, class: "papayal-input mt-2", placeholder: "US1234567890..." %>
+            </div>
+          </div>
         </div>
+
+        <div class="pt-6">
+          <div class="flex flex-col sm:flex-row gap-3">
+            <%= link_to "Volver al panel", merchant_root_path, class: "papayal-btn-secondary w-full sm:w-auto text-center py-3" %>
+            <%= f.submit "Guardar cambios", class: "papayal-btn-primary w-full sm:w-auto py-3" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="col-span-12 lg:col-span-4 space-y-6">
+      <div class="papayal-card p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="papayal-meta text-[#2C3A43]/60">Estado</p>
+            <h3 class="text-xl font-bold text-[#2C3A43]">Tu comercio</h3>
+          </div>
+          <span class="<%= status_badge_classes(@merchant.status) %>"><%= status_badge_label(@merchant.status) %></span>
+        </div>
+        <div class="space-y-3 text-sm text-[#2C3A43]/80">
+          <div class="flex items-center justify-between">
+            <span>Tienda</span>
+            <span class="font-semibold text-[#0D2F32]"><%= @merchant.store_name %></span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span>Contacto</span>
+            <span class="font-semibold text-[#0D2F32]"><%= @merchant.contact_email.presence || "No especificado" %></span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span>Miembro desde</span>
+            <span class="font-semibold text-[#0D2F32]"><%= @merchant.created_at.strftime("%d/%m/%Y") %></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="papayal-card p-6 space-y-3">
+        <p class="papayal-meta text-[#2C3A43]/60">Cuenta personal</p>
+        <h3 class="text-xl font-bold text-[#2C3A43]">Datos del usuario</h3>
+        <p class="text-sm text-[#2C3A43]/70">Para actualizar tu nombre, email o contraseña, edita tu perfil de usuario.</p>
+        <%= link_to "Editar perfil de usuario", edit_user_registration_path, class: "papayal-btn-secondary w-full text-center" %>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+  function previewLogo(input) {
+    const preview = document.getElementById('logo-preview');
+    const previewImg = document.getElementById('logo-preview-img');
+    
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        previewImg.src = e.target.result;
+        preview.classList.remove('hidden');
+      };
+      
+      reader.readAsDataURL(input.files[0]);
+    } else {
+      preview.classList.add('hidden');
+    }
+  }
+</script>

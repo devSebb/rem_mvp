@@ -28,13 +28,16 @@ class Admin::MerchantsController < ApplicationController
 
   def create
     @user = build_user_from_params
-    @merchant = Merchant.new(merchant_params)
+    merchant_attrs = merchant_params.to_h
+    logo_file = merchant_attrs.delete(:logo)
+    @merchant = Merchant.new(merchant_attrs)
     @merchant.user = @user
     @merchant.contact_email ||= @user.email
 
     generated_password, password_generated = ensure_password_for(@user)
 
     if @merchant.save
+      @merchant.logo.attach(logo_file) if logo_file.present?
       secret_key = @merchant.generated_secret_key
       redirect_params = {
         created_id: @merchant.id,
@@ -57,9 +60,13 @@ class Admin::MerchantsController < ApplicationController
     user_attrs[:phone] = user_attrs[:phone].presence
     user_attrs.compact_blank!
 
+    merchant_attrs = merchant_params.to_h
+    logo_file = merchant_attrs.delete(:logo)
+
     ActiveRecord::Base.transaction do
       @user.update!(user_attrs)
-      @merchant.update!(merchant_params)
+      @merchant.update!(merchant_attrs)
+      @merchant.logo.attach(logo_file) if logo_file.present?
     end
 
     redirect_to admin_merchant_path(@merchant), notice: "Comercio actualizado correctamente."
@@ -98,7 +105,7 @@ class Admin::MerchantsController < ApplicationController
   end
 
   def merchant_params
-    params.require(:merchant).permit(:store_name, :address, :contact_email, :bank_account_iban, :avatar_url)
+    params.require(:merchant).permit(:store_name, :address, :contact_email, :bank_account_iban, :avatar_url, :logo)
   end
 
   def user_params

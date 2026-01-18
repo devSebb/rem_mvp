@@ -17,7 +17,7 @@
   <% end %>
 
   <div class="papayal-card p-6">
-    <%= form_with model: [:admin, @merchant], local: true, class: "space-y-6" do |form| %>
+    <%= form_with model: [:admin, @merchant], local: true, multipart: true, class: "space-y-6" do |form| %>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8] space-y-4">
           <div>
@@ -41,9 +41,19 @@
             <%= form.text_field :bank_account_iban, name: "merchant[bank_account_iban]", class: "papayal-input mt-2", value: @merchant.bank_account_iban %>
           </div>
           <div>
-            <label class="papayal-label">Avatar (URL de imagen)</label>
+            <label class="papayal-label">Logo del comercio</label>
+            <% if @merchant.logo.attached? %>
+              <div class="mt-2 mb-2">
+                <%= avatar_image_for(@merchant, attachment_name: :logo, size: 64, classes: "") %>
+              </div>
+            <% end %>
+            <%= form.file_field :logo, name: "merchant[logo]", class: "papayal-input mt-2", accept: "image/*" %>
+            <p class="text-xs text-[#2C3A43]/70 mt-1">Sube una imagen (máx. 5MB). Si no subes una, se mostrará un avatar por defecto.</p>
+          </div>
+          <div>
+            <label class="papayal-label">Avatar (URL de imagen) - Legacy</label>
             <%= form.url_field :avatar_url, name: "merchant[avatar_url]", class: "papayal-input mt-2", value: @merchant.avatar_url, placeholder: "https://..." %>
-            <p class="text-xs text-[#2C3A43]/70 mt-1">Si lo dejas vacío se mostrará un avatar generado automáticamente.</p>
+            <p class="text-xs text-[#2C3A43]/70 mt-1">Campo legacy. Usa el campo "Logo del comercio" arriba para subir imágenes.</p>
           </div>
         </div>
 

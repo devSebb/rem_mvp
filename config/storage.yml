@@ -15,12 +15,23 @@ amazon:
   endpoint: <%= ENV["AWS_S3_ENDPOINT"] if ENV["AWS_S3_ENDPOINT"].present? %>
   force_path_style: <%= ENV["AWS_S3_FORCE_PATH_STYLE"] == "true" %>
 
+cloudflare_r2:
+  service: S3
+  access_key_id: <%= ENV["R2_ACCESS_KEY_ID"] %>
+  secret_access_key: <%= ENV["R2_SECRET_ACCESS_KEY"] %>
+  region: auto
+  bucket: <%= ENV["R2_BUCKET"] %>
+  endpoint: <%= ENV["R2_ENDPOINT"] %>
+  force_path_style: true
+
+
 # Remember not to checkin your GCS keyfile to a repository
 # google:
 #   service: GCS
 #   project: your_project
 #   credentials: <%= Rails.root.join("path/to/gcs.keyfile") %>
 #   bucket: your_own_bucket-<%= Rails.env %>
+
 
 # Use bin/rails credentials:edit to set the Azure Storage secret (as azure_storage:storage_access_key)
 # microsoft:

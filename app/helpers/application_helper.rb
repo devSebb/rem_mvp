@@ -42,18 +42,28 @@ module ApplicationHelper
 
     return fallback unless attachment&.attached?
 
-    if attachment.variable?
+    # For small avatars (48px or less), use original to avoid variant processing issues
+    # For larger sizes, try to use variant for optimization
+    use_variant = resize_to_limit.any? { |dim| dim > 48 } && attachment.variable?
+
+    if use_variant
       begin
-        return url_for(attachment.variant(resize_to_limit: resize_to_limit))
+        variant = attachment.variant(resize_to_limit: resize_to_limit)
+        # Generate URL - Rails will process the variant on-demand
+        return url_for(variant)
       rescue => e
-        Rails.logger.warn("Avatar variant failed: #{e.class} - #{e.message}")
+        Rails.logger.warn("Avatar variant failed: #{e.class} - #{e.message}, falling back to original")
+        # Fall back to original image if variant fails
       end
     end
 
-    url_for(attachment)
-  rescue => e
-    Rails.logger.warn("Avatar URL fallback triggered: #{e.class} - #{e.message}")
-    fallback
+    # Use original image (for small sizes or if variant failed)
+    begin
+      url_for(attachment)
+    rescue => e
+      Rails.logger.warn("Avatar URL fallback triggered: #{e.class} - #{e.message}")
+      fallback
+    end
   end
 
   def avatar_image_for(record, attachment_name: :avatar, size: 48, classes: "")

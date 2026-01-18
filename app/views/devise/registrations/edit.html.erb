@@ -15,6 +15,38 @@
 
   <div class="grid grid-cols-12 gap-6">
     <div class="col-span-12 lg:col-span-8 space-y-6">
+      <div class="papayal-card p-6 space-y-4">
+        <div>
+          <p class="papayal-meta text-[#2C3A43]/60">Foto de perfil</p>
+          <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Tu avatar</h2>
+        </div>
+        <div class="flex items-center gap-6">
+          <div class="flex-shrink-0">
+            <%= avatar_image_for(resource, size: 48, classes: "shadow-sm") %>
+          </div>
+          <div class="flex-1">
+            <%= form_with url: registration_path(resource_name), method: :put, local: true, multipart: true, class: "space-y-4" do |avatar_form| %>
+              <%= hidden_field_tag :avatar_only, true %>
+              <label for="user_avatar" class="papayal-label">Cambiar foto de perfil</label>
+              <%= file_field_tag "user[avatar]", accept: "image/*", class: "papayal-input mt-2", onchange: "previewAvatar(this)", id: "user_avatar" %>
+              <p class="text-xs text-[#2C3A43]/70 mt-1">Formato: JPG, PNG o GIF. Tamaño máximo: 5MB.</p>
+              <% if resource.avatar.attached? %>
+                <p class="text-xs text-emerald-600 mt-1">✓ Tienes una foto de perfil</p>
+              <% end %>
+              <div id="avatar-preview" class="hidden mt-4 flex items-center gap-3">
+                <p class="text-sm text-[#2C3A43]/70">Vista previa:</p>
+                <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-[#FCA50F]">
+                  <img id="avatar-preview-img" src="" alt="Preview" class="w-full h-full object-cover">
+                </div>
+              </div>
+              <div class="mt-4">
+                <%= submit_tag "Guardar foto", class: "papayal-btn-primary text-sm py-2 px-4" %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
       <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }, class: "space-y-6") do |f| %>
         <%= render "devise/shared/error_messages", resource: resource %>
 
@@ -142,3 +174,23 @@
     </div>
   </div>
 </div>
+
+<script>
+  function previewAvatar(input) {
+    const preview = document.getElementById('avatar-preview');
+    const previewImg = document.getElementById('avatar-preview-img');
+    
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        previewImg.src = e.target.result;
+        preview.classList.remove('hidden');
+      };
+      
+      reader.readAsDataURL(input.files[0]);
+    } else {
+      preview.classList.add('hidden');
+    }
+  }
+</script>

@@ -6,11 +6,15 @@ class Merchant::ProfilesController < ApplicationController
   end
 
   def update
-    if @merchant.update(merchant_params)
-      flash[:notice] = 'Profile updated successfully.'
+    merchant_attrs = merchant_params.to_h
+    logo_file = merchant_attrs.delete(:logo)
+
+    if @merchant.update(merchant_attrs)
+      @merchant.logo.attach(logo_file) if logo_file.present?
+      flash[:notice] = 'Perfil actualizado correctamente.'
       redirect_to merchant_profile_path
     else
-      flash[:alert] = 'Failed to update profile.'
+      flash[:alert] = 'No se pudo actualizar el perfil. Revisa los campos.'
       render :show
     end
   end
@@ -29,6 +33,6 @@ class Merchant::ProfilesController < ApplicationController
   end
 
   def merchant_params
-    params.require(:merchant).permit(:store_name, :address, :contact_email, :bank_account_iban)
+    params.require(:merchant).permit(:store_name, :address, :contact_email, :bank_account_iban, :logo)
   end
 end
