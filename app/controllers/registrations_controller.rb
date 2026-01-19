@@ -7,18 +7,40 @@ class RegistrationsController < Devise::RegistrationsController
     if params[:avatar_only].present?
       avatar_file = params[:user][:avatar] if params[:user].present?
       if avatar_file.present?
+        # Attach the avatar first
         resource.avatar.attach(avatar_file)
-        if resource.valid?
-          resource.save
+        
+        # Manually validate only the avatar (check size and type)
+        # We skip other validations since this is an avatar-only update
+        avatar_valid = true
+        if resource.avatar.attached?
+          blob = resource.avatar.blob
+          if blob.byte_size > 5.megabytes
+            resource.errors.add(:avatar, "is too large (max 5MB)")
+            avatar_valid = false
+          elsif !blob.content_type&.start_with?("image/")
+            resource.errors.add(:avatar, "must be an image")
+            avatar_valid = false
+          end
+        end
+        
+        if avatar_valid
+          # Save without running validations on other fields
+          # The avatar attachment will be persisted
+          resource.save(validate: false)
+          # Reload to ensure we have the latest data including the avatar
+          resource.reload
           flash[:notice] = "Foto de perfil actualizada correctamente."
-          redirect_to edit_user_registration_path
-          return
         else
+          # Purge the avatar if validation failed
           resource.avatar.purge if resource.avatar.attached?
           flash[:alert] = resource.errors.full_messages.to_sentence
-          redirect_to edit_user_registration_path
-          return
         end
+        
+        # Force a full page reload to show the updated avatar
+        # Use status: :see_other to ensure Turbo doesn't intercept and forces a GET request
+        redirect_to edit_user_registration_path, status: :see_other
+        return
       end
     end
 
