@@ -116,11 +116,6 @@ Rails.application.configure do
     protocol: ENV["APP_PROTOCOL"] || "https"
   }
 
-  config.routes.default_url_options = {
-    host: ENV["APP_HOST"] || "rem.com",
-    protocol: ENV["APP_PROTOCOL"] || "https"
-  }
-
   config.i18n.fallbacks = true
   config.active_support.report_deprecations = false
   config.active_record.dump_schema_after_migration = false
