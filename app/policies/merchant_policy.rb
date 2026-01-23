@@ -3,6 +3,14 @@ class MerchantPolicy < ApplicationPolicy
     user.present?
   end
 
+  def show?
+    return true if user&.admin?
+    return true if owns_merchant?
+
+    # Regular authenticated users can view active merchants
+    user.present? && record.active?
+  end
+
   def update_logo?
     user.present? && (user.admin? || owns_merchant?)
   end

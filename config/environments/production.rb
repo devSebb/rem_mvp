@@ -28,10 +28,20 @@ Rails.application.configure do
   # Active Storage service selection (Production)
   #
   # Priority:
-  # 1) ACTIVE_STORAGE_SERVICE (explicit override)
+  # 1) ACTIVE_STORAGE_SERVICE (explicit override, e.g. "cloudflare_r2", "amazon", "local")
   # 2) Cloudflare R2 if all required R2_* env vars are present
   # 3) Amazon S3 if all required AWS_* env vars are present
-  # 4) Fallback to local
+  # 4) Fallback to local (not recommended for production)
+  #
+  # Cloudflare R2 - Required env vars:
+  #   R2_BUCKET, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_ENDPOINT
+  #
+  # Amazon S3 - Minimum required env vars for auto-selection:
+  #   AWS_S3_BUCKET, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+  # Optional:
+  #   AWS_REGION (defaults to us-east-1 in storage.yml)
+  #   AWS_S3_ENDPOINT (only for S3-compatible services like MinIO)
+  #   AWS_S3_FORCE_PATH_STYLE (set to "true" only if needed for compatibility)
   # ---------------------------------------------------------------------------
   requested_service = ENV["ACTIVE_STORAGE_SERVICE"].presence
 
@@ -109,12 +119,26 @@ Rails.application.configure do
     protocol: "https"
   }
 
-  # Configure default URL options for Active Storage URL generation
-  # This ensures rails_blob_url and rails_representation_url generate correct absolute URLs
+  # ---------------------------------------------------------------------------
+  # URL Generation for ActiveStorage and Controllers
+  #
+  # Required env vars for correct absolute URLs:
+  #   APP_HOST - The production hostname (e.g., "papayal.app")
+  # Optional:
+  #   APP_PROTOCOL - Defaults to "https"
+  #
+  # Without APP_HOST, ActiveStorage URLs (logos, avatars) will use the fallback
+  # domain which may be incorrect.
+  # ---------------------------------------------------------------------------
   config.action_controller.default_url_options = {
     host: ENV["APP_HOST"] || "rem.com",
     protocol: ENV["APP_PROTOCOL"] || "https"
   }
+
+  # Warn if APP_HOST is missing (URLs will be broken)
+  if ENV["APP_HOST"].blank?
+    Rails.logger.warn("[CONFIG] APP_HOST is not set; ActiveStorage URLs may be incorrect in production")
+  end
 
   config.i18n.fallbacks = true
   config.active_support.report_deprecations = false

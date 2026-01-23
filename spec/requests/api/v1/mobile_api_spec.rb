@@ -348,6 +348,69 @@ RSpec.describe "Mobile API", type: :request do
     end
   end
 
+  describe "GET /api/v1/merchants" do
+    it "returns list of active merchants with categories" do
+      merchant = create(:merchant, categories: ["Café", "Panadería"])
+
+      get "/api/v1/merchants", headers: auth_headers(login_and_get_tokens[:access_token])
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data).to be_an(Array)
+      merchant_data = parsed_data.find { |m| m["id"] == merchant.id }
+      expect(merchant_data).to be_present
+      expect(merchant_data["store_name"]).to eq(merchant.store_name)
+      expect(merchant_data["categories"]).to eq(["Café", "Panadería"])
+    end
+  end
+
+  describe "GET /api/v1/merchants/:id" do
+    it "returns merchant details with categories" do
+      merchant = create(:merchant, categories: ["Café", "Panadería", "Desayunos"])
+
+      get "/api/v1/merchants/#{merchant.id}", headers: auth_headers(login_and_get_tokens[:access_token])
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data["id"]).to eq(merchant.id)
+      expect(parsed_data["store_name"]).to eq(merchant.store_name)
+      expect(parsed_data["name"]).to eq(merchant.name)
+      expect(parsed_data["status"]).to eq("active")
+      expect(parsed_data["categories"]).to eq(["Café", "Panadería", "Desayunos"])
+      expect(parsed_data["address"]).to eq(merchant.address)
+      expect(parsed_data["contact_email"]).to eq(merchant.contact_email)
+      expect(parsed_data["logo_url"]).to be_nil
+      expect(parsed_data["created_at"]).to be_present
+      expect(parsed_data["updated_at"]).to be_present
+      expect(parsed_body["request_id"]).to be_present
+    end
+
+    it "returns 404 for non-existent merchant" do
+      get "/api/v1/merchants/99999", headers: auth_headers(login_and_get_tokens[:access_token])
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "returns 404 for suspended merchant if not admin (reduces enumeration)" do
+      merchant = create(:merchant, status: :suspended)
+
+      get "/api/v1/merchants/#{merchant.id}", headers: auth_headers(login_and_get_tokens[:access_token])
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "allows admin to view suspended merchant" do
+      admin = create(:user, role: :admin, password: password)
+      merchant = create(:merchant, status: :suspended)
+
+      admin_tokens = login_and_get_tokens(login_user: admin, login_password: password)
+
+      get "/api/v1/merchants/#{merchant.id}", headers: auth_headers(admin_tokens[:access_token])
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data["id"]).to eq(merchant.id)
+      expect(parsed_data["status"]).to eq("suspended")
+    end
+  end
+
   describe "POST /api/v1/me/gift_cards/:id/redemption_token" do
     it "respects GiftCardPolicy#view_code? authorization" do
       # User is sender, not recipient -> should be forbidden

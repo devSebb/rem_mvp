@@ -63,10 +63,13 @@ Rails.application.routes.draw do
       end
 
       post "me/avatar", to: "me/avatars#create"
-      resources :merchants, only: [:index]
+      resources :merchants, only: [:index, :show]
       post "merchants/:id/logo", to: "merchants#upload_logo"
     end
   end
+
+  # Public merchant profile (for regular users browsing)
+  resources :merchants, only: [:show]
 
   namespace :webhooks do
     post :stripe, to: "stripe#receive"

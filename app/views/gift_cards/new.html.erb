@@ -39,11 +39,24 @@
                 class: "papayal-input mt-2" %>
         </div>
         <div>
+          <% preselected_merchant = params[:merchant_id].present? ? Merchant.active.find_by(id: params[:merchant_id]) : nil %>
           <%= form.label :merchant_id, "Tienda", class: "papayal-label" %>
           <%= form.select :merchant_id,
-                options_for_select(Merchant.all.map { |m| [m.store_name, m.id] }, params[:merchant_id]),
+                options_for_select(Merchant.active.order(:store_name).map { |m| [m.store_name, m.id] }, params[:merchant_id]),
+                {},
                 class: "papayal-input mt-2",
                 required: true %>
+          <% if preselected_merchant %>
+            <div class="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-100">
+              <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              <p class="text-xs text-emerald-700">
+                <span class="font-medium">Comercio preseleccionado desde el perfil.</span>
+                Puedes cambiarlo si lo deseas.
+              </p>
+            </div>
+          <% end %>
         </div>
       </div>
 

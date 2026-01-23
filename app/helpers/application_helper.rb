@@ -71,8 +71,45 @@ module ApplicationHelper
     image_tag(
       url,
       alt: record.respond_to?(:name) ? record.name : "Avatar",
-      class: "rounded-full border border-black/10 bg-white object-cover h-#{size / 4 * 1} w-#{size / 4 * 1} #{classes}".squeeze(" "),
-      size: "#{size}x#{size}"
+      class: "rounded-full border border-black/10 bg-white object-cover #{classes}".squeeze(" "),
+      style: "width: #{size}px; height: #{size}px; min-width: #{size}px; min-height: #{size}px;"
+    )
+  end
+
+  def merchant_logo_url(merchant, resize_to_limit: [96, 96])
+    fallback = asset_path("merchant-default.svg")
+
+    return fallback unless merchant.logo.attached?
+
+    use_variant = resize_to_limit.any? { |dim| dim > 48 } && merchant.logo.variable?
+
+    if use_variant
+      begin
+        variant = merchant.logo.variant(resize_to_limit: resize_to_limit)
+        return url_for(variant)
+      rescue => e
+        Rails.logger.warn("Merchant logo variant failed: #{e.class} - #{e.message}")
+      end
+    end
+
+    begin
+      url_for(merchant.logo)
+    rescue => e
+      Rails.logger.warn("Merchant logo URL fallback: #{e.class} - #{e.message}")
+      fallback
+    end
+  end
+
+  def merchant_logo_image(merchant, size: 64, classes: "", rounded: "2xl")
+    url = merchant_logo_url(merchant, resize_to_limit: [size, size])
+    content_tag(:div,
+      image_tag(
+        url,
+        alt: merchant.store_name,
+        class: "max-w-full max-h-full w-auto h-auto object-contain"
+      ),
+      class: "rounded-#{rounded} border border-black/10 bg-white flex items-center justify-center overflow-hidden #{classes}".squeeze(" "),
+      style: "width: #{size}px; height: #{size}px;"
     )
   end
 end

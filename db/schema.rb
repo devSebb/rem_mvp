@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_01_14_000000) do
+ActiveRecord::Schema[7.2].define(version: 2026_01_23_211407) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -92,6 +92,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_14_000000) do
     t.string "public_key", null: false
     t.string "secret_key_digest", null: false
     t.string "avatar_url"
+    t.string "categories", default: [], array: true
     t.index ["public_key"], name: "index_merchants_on_public_key", unique: true
     t.index ["secret_key_digest"], name: "index_merchants_on_secret_key_digest", unique: true
     t.index ["store_name"], name: "index_merchants_on_store_name"

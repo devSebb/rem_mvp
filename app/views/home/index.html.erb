@@ -218,6 +218,25 @@
       </div>
     </div>
 
+    <%# Merchant Grid Section %>
+    <% if @merchants&.any? %>
+      <div class="papayal-card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="papayal-meta">Comercios</p>
+            <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Dónde comprar</h2>
+          </div>
+        </div>
+        <div class="grid grid-cols-12 gap-4">
+          <% @merchants.each do |merchant| %>
+            <div class="col-span-12 sm:col-span-6 lg:col-span-4 xl:col-span-3">
+              <%= render partial: "merchants/merchant_card", locals: { merchant: merchant } %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
     <% if @recent_gift_cards&.any? %>
       <div class="papayal-card p-6">
         <div class="flex items-center justify-between mb-4">
@@ -252,7 +271,7 @@
           <% end %>
         </div>
       </div>
-    <% else %>
+    <% elsif @merchants.blank? || @merchants.empty? %>
       <div class="papayal-card p-8 text-center space-y-3">
         <p class="text-xl font-semibold text-[#2C3A43]">Aún no tienes tarjetas recientes</p>
         <p class="text-sm text-[#2C3A43]/70">Compra o recibe una tarjeta para ver tu actividad aquí.</p>

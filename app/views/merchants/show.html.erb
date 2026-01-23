@@ -1,0 +1,66 @@
+<div class="max-w-3xl mx-auto space-y-5">
+  <%# Header Card with Logo and Store Name %>
+  <div class="papayal-card p-6">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-5">
+      <div class="flex-shrink-0">
+        <%= merchant_logo_image(@merchant, size: 96, classes: "shadow-md border border-black/5") %>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <h1 class="text-2xl font-bold text-[#0D2F32]"><%= @merchant.store_name %></h1>
+          <span class="<%= status_badge_classes(@merchant.status) %>">
+            <%= status_badge_label(@merchant.status) %>
+          </span>
+        </div>
+        <% if @merchant.address.present? %>
+          <p class="text-[#2C3A43]/70 mt-2 flex items-center gap-2 text-sm">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span class="truncate"><%= @merchant.address %></span>
+          </p>
+        <% end %>
+        <% if @merchant.contact_email.present? %>
+          <p class="text-[#2C3A43]/70 mt-1 flex items-center gap-2 text-sm">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <%= mail_to @merchant.contact_email, @merchant.contact_email, class: "hover:text-[#0D2F32] transition truncate" %>
+          </p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%# Categories Section %>
+  <% if @merchant.categories.present? && @merchant.categories.any? %>
+    <div class="papayal-card p-5">
+      <p class="papayal-meta text-[#0D2F32]">Qué ofrecemos</p>
+      <h2 class="text-lg font-bold text-[#0D2F32] mt-1 mb-3">Categorías y productos</h2>
+      <div class="flex flex-wrap gap-2">
+        <% @merchant.categories.each do |category| %>
+          <span class="inline-flex items-center px-3 py-1.5 rounded-full bg-[#FCA50F]/10 text-[#0D2F32] text-sm font-medium border border-[#FCA50F]/20">
+            <%= category %>
+          </span>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# CTA Section %>
+  <div class="papayal-card p-5 bg-gradient-to-r from-[#FCA50F]/10 to-[#FCA50F]/5 border border-[#FCA50F]/10">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h2 class="text-lg font-bold text-[#0D2F32]">¿Quieres regalar una tarjeta?</h2>
+        <p class="text-[#2C3A43]/70 text-sm mt-1">Compra una tarjeta de regalo para usar en <%= @merchant.store_name %>.</p>
+      </div>
+      <%= link_to "Comprar tarjeta", new_gift_card_path(merchant_id: @merchant.id), class: "papayal-btn-primary whitespace-nowrap flex-shrink-0" %>
+    </div>
+  </div>
+
+  <%# Back Link %>
+  <div class="text-center pt-2">
+    <%= link_to "← Volver al inicio", home_path, class: "text-sm text-[#2C3A43]/60 hover:text-[#0D2F32] transition" %>
+  </div>
+</div>

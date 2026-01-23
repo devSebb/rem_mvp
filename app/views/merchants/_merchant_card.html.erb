@@ -1,0 +1,50 @@
+<%# Credit-card style merchant card %>
+<%# Local: merchant %>
+<%= link_to merchant_path(merchant), class: "block group" do %>
+  <div class="papayal-card papayal-card-hover p-4 relative overflow-hidden transition-all duration-200 group-hover:shadow-lg border border-black/5">
+    <%# Top accent bar %>
+    <div class="absolute top-0 left-0 right-0 h-1 bg-[#FCA50F]"></div>
+
+    <div class="flex items-start gap-3 pt-1">
+      <%# Logo %>
+      <div class="flex-shrink-0">
+        <%= merchant_logo_image(merchant, size: 48, classes: "shadow-sm border border-black/5") %>
+      </div>
+
+      <%# Content %>
+      <div class="flex-1 min-w-0">
+        <h3 class="font-bold text-[#0D2F32] text-sm truncate group-hover:text-[#FCA50F] transition-colors leading-tight">
+          <%= merchant.store_name %>
+        </h3>
+        <% if merchant.address.present? %>
+          <p class="text-xs text-[#2C3A43]/60 truncate mt-0.5 leading-tight">
+            <%= merchant.address.truncate(35) %>
+          </p>
+        <% end %>
+
+        <%# Categories preview %>
+        <% if merchant.categories.present? && merchant.categories.any? %>
+          <div class="flex flex-wrap gap-1 mt-1.5">
+            <% merchant.categories.first(2).each do |cat| %>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-[#FCA50F]/10 text-[#0D2F32] text-xs font-medium">
+                <%= cat %>
+              </span>
+            <% end %>
+            <% if merchant.categories.size > 2 %>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-[#0D2F32]/5 text-[#2C3A43]/60 text-xs">
+                +<%= merchant.categories.size - 2 %>
+              </span>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
+      <%# Amount badge (static denomination) %>
+      <div class="flex-shrink-0 self-start">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-[#0D2F32] text-white text-xs font-bold">
+          $50
+        </span>
+      </div>
+    </div>
+  </div>
+<% end %>

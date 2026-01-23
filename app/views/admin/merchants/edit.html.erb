@@ -44,11 +44,16 @@
             <label class="papayal-label">Logo del comercio</label>
             <% if @merchant.logo.attached? %>
               <div class="mt-2 mb-2">
-                <%= avatar_image_for(@merchant, attachment_name: :logo, size: 64, classes: "") %>
+                <%= merchant_logo_image(@merchant, size: 64, classes: "shadow-sm") %>
               </div>
             <% end %>
             <%= form.file_field :logo, name: "merchant[logo]", class: "papayal-input mt-2", accept: "image/*" %>
             <p class="text-xs text-[#2C3A43]/70 mt-1">Sube una imagen (máx. 5MB). Si no subes una, se mostrará un avatar por defecto.</p>
+          </div>
+          <div>
+            <label class="papayal-label">Categorías (separadas por coma)</label>
+            <%= form.text_field :categories_string, name: "merchant[categories_string]", class: "papayal-input mt-2", value: @merchant.categories_string, placeholder: "Café, Panadería, Desayunos" %>
+            <p class="text-xs text-[#2C3A43]/70 mt-1">Lista de categorías o productos que ofrece el comercio.</p>
           </div>
           <div>
             <label class="papayal-label">Avatar (URL de imagen) - Legacy</label>

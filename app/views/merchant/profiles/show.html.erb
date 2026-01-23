@@ -6,7 +6,7 @@
       <p class="text-sm text-[#2C3A43]/70 mt-1">Administra los datos de tu comercio y tu logo.</p>
     </div>
     <div class="inline-flex items-center gap-3">
-      <%= avatar_image_for(@merchant, attachment_name: :logo, size: 48, classes: "shadow-sm") %>
+      <%= merchant_logo_image(@merchant, size: 48, classes: "shadow-sm") %>
       <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FCA50F]/20 text-[#0D2F32] text-sm font-medium">
         Comercio
       </span>
@@ -34,7 +34,7 @@
           </div>
           <div class="flex items-center gap-6">
             <div class="flex-shrink-0">
-              <%= avatar_image_for(@merchant, attachment_name: :logo, size: 96, classes: "shadow-md") %>
+              <%= merchant_logo_image(@merchant, size: 96, classes: "shadow-md") %>
             </div>
             <div class="flex-1">
               <%= f.label :logo, "Cambiar logo", class: "papayal-label" %>

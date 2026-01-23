@@ -46,6 +46,11 @@
             <p class="text-xs text-[#2C3A43]/70 mt-1">Opcional. Sube una imagen (máx. 5MB). Si no subes una, se mostrará un avatar por defecto.</p>
           </div>
           <div>
+            <label class="papayal-label">Categorías (separadas por coma)</label>
+            <%= form.text_field :categories_string, name: "merchant[categories_string]", class: "papayal-input mt-2", value: @merchant.categories_string, placeholder: "Café, Panadería, Desayunos" %>
+            <p class="text-xs text-[#2C3A43]/70 mt-1">Lista de categorías o productos que ofrece el comercio.</p>
+          </div>
+          <div>
             <label class="papayal-label">Avatar (URL de imagen) - Legacy</label>
             <%= form.url_field :avatar_url, name: "merchant[avatar_url]", class: "papayal-input mt-2", value: @merchant.avatar_url, placeholder: "https://..." %>
             <p class="text-xs text-[#2C3A43]/70 mt-1">Campo legacy. Usa el campo "Logo del comercio" arriba para subir imágenes.</p>

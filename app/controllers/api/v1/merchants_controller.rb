@@ -9,6 +9,19 @@ module Api
         render_success(data: merchants.map { |merchant| serialize_merchant(merchant) })
       end
 
+      def show
+        merchant = Merchant.includes(logo_attachment: :blob).find(params[:id])
+
+        # Return 404 for inactive merchants to non-admin users (reduces enumeration)
+        unless current_user.admin? || merchant.active?
+          raise ActiveRecord::RecordNotFound, "Merchant not found"
+        end
+
+        authorize merchant
+
+        render_success(data: serialize_merchant(merchant))
+      end
+
       def upload_logo
         merchant = Merchant.find(params[:id])
         authorize merchant, :update_logo?
@@ -44,6 +57,7 @@ module Api
           logo_url: attachment_url(merchant.logo),
           contact_email: merchant.contact_email,
           address: merchant.address,
+          categories: merchant.categories || [],
           created_at: merchant.created_at&.iso8601,
           updated_at: merchant.updated_at&.iso8601
         }
