@@ -27,8 +27,14 @@ class GiftCardsController < ApplicationController
 
     kyc_result = Kyc::CheckoutValidator.call(user: current_user)
     if kyc_result[:missing].present?
-      flash[:alert] = "Please complete your details (#{kyc_result[:missing].join(', ')}) before checkout."
-      redirect_to new_gift_card_path and return
+      missing_labels = {
+        'address' => 'dirección',
+        'country_of_residence' => 'país de residencia',
+        'date_of_birth' => 'fecha de nacimiento'
+      }
+      missing_readable = kyc_result[:missing].map { |f| missing_labels[f] || f }.join(', ')
+      flash[:alert] = "Para comprar tarjetas de regalo, completa tu perfil: #{missing_readable}."
+      redirect_to edit_user_registration_path(anchor: 'kyc-section') and return
     end
     
     amount_input = params[:amount_cents].to_s

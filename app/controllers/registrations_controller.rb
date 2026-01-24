@@ -66,11 +66,22 @@ class RegistrationsController < Devise::RegistrationsController
     # Handle avatar separately if present
     avatar_file = params.delete(:avatar)
     
-    # Update other attributes (password update handled by Devise)
-    if params[:password].present?
+    # Determine if this update requires password verification
+    # Password is required only for: changing password or changing email
+    changing_password = params[:password].present?
+    changing_email = params[:email].present? && params[:email] != resource.email
+    requires_password = changing_password || changing_email
+    
+    if requires_password
+      # Sensitive changes require current password
       result = resource.update_with_password(params)
     else
-      result = resource.update_without_password(params)
+      # Non-sensitive changes (name, phone, KYC fields) don't require password
+      # Remove password fields to avoid validation issues
+      params.delete(:current_password)
+      params.delete(:password)
+      params.delete(:password_confirmation)
+      result = resource.update(params)
     end
     
     # Attach avatar if provided (after other updates)
@@ -87,7 +98,7 @@ class RegistrationsController < Devise::RegistrationsController
   end
 
   def account_update_params
-    params.require(:user).permit(:first_name, :last_name, :email, :phone, :password, :password_confirmation, :current_password)
+    params.require(:user).permit(:first_name, :last_name, :email, :phone, :password, :password_confirmation, :current_password, :date_of_birth, :address, :country_of_residence, :national_id)
   end
 end
 
