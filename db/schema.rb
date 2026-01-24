@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_01_23_211407) do
+ActiveRecord::Schema[7.2].define(version: 2026_01_24_223150) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -66,6 +66,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_23_211407) do
     t.text "encrypted_raw_code"
     t.datetime "last_owner_activity_at"
     t.string "payment_intent_id"
+    t.text "note"
     t.index ["checkout_session_id"], name: "index_gift_cards_on_checkout_session_id", unique: true
     t.index ["code_digest"], name: "index_gift_cards_on_code_digest", unique: true
     t.index ["encrypted_raw_code"], name: "index_gift_cards_on_encrypted_raw_code", where: "(encrypted_raw_code IS NOT NULL)"

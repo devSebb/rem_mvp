@@ -71,11 +71,11 @@ class Merchant::RedemptionsController < ApplicationController
     @redemption_token_value = normalized_token(params[:redemption_token]) if @redemption_mode == "token"
     @redemption_token = active_redemption_token_for(@redemption_token_value) if @redemption_token_value.present?
 
-    # Check if gift card belongs to this merchant (business rule: merchants can only redeem their own gift cards)
-    if @gift_card.merchant_id != current_user.merchant.id
-      flash[:alert] = 'This gift card is not redeemable by your store.'
-      redirect_to new_merchant_redemption_path and return
-    end
+    # Network redemption: any merchant in the network can redeem any gift card.
+    # Track issuing vs redeeming merchant for transparency in UI.
+    @issuing_merchant = @gift_card.merchant
+    @redeeming_merchant = current_user.merchant
+    @is_cross_merchant = @issuing_merchant.id != @redeeming_merchant.id
 
     if @redemption_mode == "token"
       unless @redemption_token && @redemption_token.gift_card_id == @gift_card.id

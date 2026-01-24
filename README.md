@@ -346,6 +346,141 @@ After running `rails db:seed`:
 
 Approved/declined redemption responses both return `200 OK` with an `approved` boolean, the resulting balances, and an optional `decline_reason`. Refund responses return `200 OK` with `refund_transaction_id`, `original_transaction_id`, and the restored `remaining_balance_cents`. Suspended or unknown merchants receive `403/401`, and malformed input returns `422`.
 
+## Mobile Checkout (PaymentIntent)
+
+Mobile apps use this endpoint to create a Stripe PaymentIntent for gift card purchases. The returned `client_secret` is used with the Stripe SDK to confirm the payment on the client side.
+
+### Endpoint
+
+```
+POST /api/v1/checkout/payment_intent
+```
+
+### Headers
+
+```
+Authorization: Bearer <JWT_ACCESS_TOKEN>
+Content-Type: application/json
+```
+
+### Prerequisites
+
+Before calling this endpoint, the user must have completed KYC fields:
+- `address` - User's address
+- `country_of_residence` - ISO country code (e.g., "PE", "US")
+- `date_of_birth` - Date in YYYY-MM-DD format
+
+Use `POST /api/v1/checkout/validate_kyc` to check if KYC is complete.
+
+### Request Body
+
+```json
+{
+  "merchant_id": 123,
+  "amount_cents": 2500,
+  "currency": "USD",
+  "recipient": {
+    "name": "John Doe",
+    "email": "recipient@example.com",
+    "phone": "+15551234567",
+    "note": "Happy birthday!"
+  },
+  "draft_id": "optional-uuid-from-mobile-draft"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `merchant_id` | integer | Yes | ID of the merchant |
+| `amount_cents` | integer | Yes | Amount in cents (100-20000, i.e., $1.00-$200.00) |
+| `currency` | string | Yes | Currency code (e.g., "USD") |
+| `recipient.name` | string | No | Recipient's name (defaults to "Gift Card Recipient") |
+| `recipient.email` | string | Conditional | Recipient's email (required if phone not provided) |
+| `recipient.phone` | string | Conditional | Recipient's phone (required if email not provided) |
+| `recipient.note` | string | No | Personal note to recipient |
+| `draft_id` | string | No | Optional draft UUID for idempotency (recommended for mobile) |
+
+### Success Response (200 OK)
+
+```json
+{
+  "data": {
+    "client_secret": "pi_3ABC123_secret_XYZ",
+    "payment_intent_id": "pi_3ABC123"
+  },
+  "request_id": "abc-123-def"
+}
+```
+
+### Error Responses
+
+| Status | Code | Description |
+|--------|------|-------------|
+| 401 | `auth.missing_token` | Missing or invalid Authorization header |
+| 422 | `kyc_incomplete` | User hasn't completed KYC fields |
+| 422 | `invalid_merchant` | Merchant ID is invalid or not found |
+| 422 | `invalid_amount` | Amount is out of bounds ($1.00-$200.00) |
+| 422 | `invalid_recipient` | Neither email nor phone provided |
+| 422 | `purchase_limit_exceeded` | User has reached 5 purchases per 24 hours |
+| 500 | `payment_error` | Stripe API error (safe message, details logged server-side) |
+
+### Example curl
+
+```bash
+# 1. Login to get access token
+ACCESS_TOKEN=$(curl -s -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"password123"}' \
+  | jq -r '.data.access_token')
+
+# 2. Create PaymentIntent
+curl -X POST http://localhost:3000/api/v1/checkout/payment_intent \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "merchant_id": 1,
+    "amount_cents": 2500,
+    "currency": "USD",
+    "recipient": {
+      "name": "John Doe",
+      "email": "john@example.com"
+    }
+  }'
+```
+
+### Stripe SDK Integration (Mobile)
+
+After receiving the `client_secret`, use it with the Stripe SDK:
+
+```swift
+// iOS (Swift)
+let paymentIntentParams = STPPaymentIntentParams(clientSecret: clientSecret)
+paymentIntentParams.paymentMethodParams = cardParams
+STPPaymentHandler.shared().confirmPayment(paymentIntentParams, ...)
+```
+
+```kotlin
+// Android (Kotlin)
+val confirmParams = ConfirmPaymentIntentParams.createWithPaymentMethodId(
+    paymentMethodId = paymentMethodId,
+    clientSecret = clientSecret
+)
+stripe.confirmPayment(activity, confirmParams)
+```
+
+### Webhook Flow
+
+After successful payment confirmation on the client, Stripe sends a `payment_intent.succeeded` webhook to `/webhooks/stripe`. The server then:
+1. Creates the GiftCard record
+2. Creates a purchase Transaction
+3. Sends notifications to the recipient (SMS/WhatsApp/Email)
+
+### Idempotency
+
+- If `draft_id` is provided, it's used as the idempotency key for Stripe (recommended for mobile apps with local draft storage)
+- Without `draft_id`, the server generates a deterministic key based on (user, merchant, amount, recipient, 10-minute time bucket)
+- This prevents duplicate PaymentIntents on network retries while allowing legitimate repeated purchases
+
 ## Security Notes
 
 ### Code Security

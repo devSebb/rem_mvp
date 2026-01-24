@@ -5,20 +5,21 @@ class Merchant::SettlementsController < ApplicationController
   def index
     @merchant = current_user.merchant
     
-    # Get all settlements for this merchant
+    # Get all settlements for this merchant (redeemer)
     @settlements = @merchant.settlements.order(created_at: :desc)
     
-    # Get all gift cards that have been redeemed at this merchant
+    # Get all gift cards that have been REDEEMED BY this merchant (redeemer-paid model)
+    # Note: This finds gift cards where THIS merchant performed a redemption,
+    # regardless of who issued the gift card.
     @redeemed_gift_cards = GiftCard.joins(:transactions)
-                                  .where(merchant: @merchant)
-                                  .where(transactions: { txn_type: :redemption, status: :succeeded })
-                                  .includes(:sender, :recipient, :transactions)
+                                  .where(transactions: { merchant: @merchant, txn_type: :redemption, status: :succeeded })
+                                  .includes(:sender, :recipient, :merchant, :transactions)
                                   .distinct
                                   .order(created_at: :desc)
     
-    # Calculate settlement data for each gift card using the service
+    # Calculate settlement data for each gift card using the service (redeemer-based)
     @gift_card_settlements = @redeemed_gift_cards.map do |gift_card|
-      summary = SettlementService.gift_card_settlement_summary(gift_card)
+      summary = SettlementService.gift_card_settlement_summary_for_redeemer(gift_card, @merchant)
       {
         gift_card: gift_card,
         **summary
@@ -36,12 +37,13 @@ class Merchant::SettlementsController < ApplicationController
   end
 
   def show
-    # Get all transactions for this settlement period
-    @settlement_transactions = Transaction.joins(:gift_card)
-                                        .where(gift_cards: { merchant: @merchant })
+    @merchant = current_user.merchant
+    
+    # Get all transactions REDEEMED BY this merchant for this settlement period (redeemer-paid model)
+    @settlement_transactions = Transaction.where(merchant: @merchant)
                                         .where(txn_type: :redemption, status: :succeeded)
                                         .where(created_at: @settlement.period_start..@settlement.period_end)
-                                        .includes(gift_card: [:sender, :recipient])
+                                        .includes(gift_card: [:sender, :recipient, :merchant])
                                         .order(created_at: :desc)
     
     # Group by gift card for detailed view

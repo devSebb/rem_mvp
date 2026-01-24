@@ -6,7 +6,7 @@ module Api
 
         def index
           gift_cards = policy_scope(GiftCard)
-            .includes(merchant: { logo_attachment: :blob })
+            .includes(:sender, sender: { avatar_attachment: :blob }, merchant: { logo_attachment: :blob })
             .order(updated_at: :desc, id: :desc)
 
           # Track owner activity for balance check (batch update to avoid N+1)
@@ -48,7 +48,7 @@ module Api
 
         def set_gift_card
           @gift_card = policy_scope(GiftCard)
-            .includes(merchant: { logo_attachment: :blob })
+            .includes(:sender, sender: { avatar_attachment: :blob }, merchant: { logo_attachment: :blob })
             .find(params[:id])
         end
 
@@ -69,7 +69,22 @@ module Api
             store_name: card.merchant&.store_name,
             merchant_name: card.merchant&.store_name,
             merchant_store_name: card.merchant&.store_name,
-            merchant_logo_url: attachment_url(card.merchant&.logo)
+            merchant_logo_url: attachment_url(card.merchant&.logo),
+            note: card.note,
+            sender: serialize_sender(card.sender)
+          }
+        end
+
+        def serialize_sender(sender)
+          return nil unless sender
+
+          {
+            id: sender.id,
+            name: sender.first_name,
+            last_name: sender.last_name,
+            full_name: sender.full_name.presence,
+            email: sender.email,
+            avatar_url: attachment_url(sender.avatar)
           }
         end
       end

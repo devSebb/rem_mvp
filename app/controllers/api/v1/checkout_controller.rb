@@ -29,6 +29,7 @@ module Api
         amount_cents = params.require(:amount_cents).to_i
         currency = params.require(:currency).to_s.upcase
         recipient_params = params.require(:recipient).permit(:name, :email, :phone, :note)
+        draft_id = params[:draft_id].to_s.strip.presence
 
         # Validate merchant
         unless merchant_id.match?(/\A\d+\z/)
@@ -92,20 +93,49 @@ module Api
           )
         end
 
+        # Generate Stripe-level idempotency key to prevent duplicate PaymentIntents on retries
+        idempotency_key = generate_stripe_idempotency_key(
+          draft_id: draft_id,
+          user_id: current_user.id,
+          merchant_id: merchant.id,
+          amount_cents: amount_cents,
+          currency: currency,
+          recipient_params: recipient_params
+        )
+
+        # Log the payment intent creation attempt
+        Rails.logger.info(
+          "[PaymentIntent] Creating: request_id=#{request.request_id} " \
+          "user_id=#{current_user.id} merchant_id=#{merchant.id} " \
+          "amount_cents=#{amount_cents} currency=#{currency} " \
+          "idempotency_key=#{idempotency_key[0..15]}..."
+        )
+
         # Create Stripe PaymentIntent
         begin
           payment_intent = Stripe::PaymentIntent.create(
-            amount: amount_cents,
-            currency: currency.downcase,
-            payment_method_types: ['card'],
-            metadata: {
-              sender_id: current_user.id.to_s,
-              recipient_email: recipient_params[:email] || '',
-              recipient_phone: recipient_params[:phone] || '',
-              recipient_name: recipient_params[:name] || 'Gift Card Recipient',
-              recipient_note: recipient_params[:note] || '',
-              merchant_id: merchant.id.to_s
-            }
+            {
+              amount: amount_cents,
+              currency: currency.downcase,
+              payment_method_types: ['card'],
+              metadata: {
+                sender_id: current_user.id.to_s,
+                recipient_email: recipient_params[:email] || '',
+                recipient_phone: recipient_params[:phone] || '',
+                recipient_name: recipient_params[:name] || 'Gift Card Recipient',
+                recipient_note: recipient_params[:note] || '',
+                merchant_id: merchant.id.to_s
+              }
+            },
+            { idempotency_key: idempotency_key }
+          )
+
+          # Log success with Stripe request ID for debugging
+          stripe_request_id = payment_intent.respond_to?(:last_response) ? payment_intent.last_response&.request_id : nil
+          Rails.logger.info(
+            "[PaymentIntent] Created: request_id=#{request.request_id} " \
+            "payment_intent_id=#{payment_intent.id} " \
+            "stripe_request_id=#{stripe_request_id || 'N/A'}"
           )
 
           render_success(data: {
@@ -113,13 +143,59 @@ module Api
             payment_intent_id: payment_intent.id
           })
         rescue Stripe::StripeError => e
-          Rails.logger.error "Stripe PaymentIntent creation error: #{e.message}"
+          log_stripe_error(e)
           render_error(
             code: "payment_error",
             message: "Unable to process payment. Please try again.",
             status: :internal_server_error
           )
         end
+      end
+
+      private
+
+      # Generate a deterministic idempotency key for Stripe PaymentIntent creation.
+      # This prevents duplicate PaymentIntents when the mobile client retries on network errors.
+      #
+      # If draft_id is provided (e.g., from mobile app's local draft), use that directly.
+      # Otherwise, use a hash of the purchase inputs + a 10-minute time bucket to allow
+      # legitimate repeated purchases while preventing accidental duplicates.
+      def generate_stripe_idempotency_key(draft_id:, user_id:, merchant_id:, amount_cents:, currency:, recipient_params:)
+        if draft_id.present?
+          "mobile_pi:draft:#{draft_id}"
+        else
+          # Time bucket: 10 minutes (600 seconds)
+          time_bucket = Time.now.to_i / 600
+          recipient_identifier = recipient_params[:email].presence || recipient_params[:phone].presence || ''
+          recipient_name = recipient_params[:name].presence || ''
+
+          raw_key = [
+            user_id,
+            merchant_id,
+            amount_cents,
+            currency,
+            recipient_identifier,
+            recipient_name,
+            time_bucket
+          ].join(':')
+
+          "mobile_pi:#{Digest::SHA256.hexdigest(raw_key)[0..31]}"
+        end
+      end
+
+      # Log Stripe error details for debugging without leaking internals to client
+      def log_stripe_error(error)
+        error_details = {
+          message: error.message,
+          code: error.respond_to?(:code) ? error.code : nil,
+          type: error.respond_to?(:error) && error.error.respond_to?(:type) ? error.error.type : nil,
+          stripe_request_id: error.respond_to?(:request_id) ? error.request_id : nil
+        }.compact
+
+        Rails.logger.error(
+          "[PaymentIntent] Stripe error: request_id=#{request.request_id} " \
+          "user_id=#{current_user&.id} #{error_details.map { |k, v| "#{k}=#{v}" }.join(' ')}"
+        )
       end
     end
   end

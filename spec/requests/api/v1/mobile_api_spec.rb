@@ -305,6 +305,23 @@ RSpec.describe "Mobile API", type: :request do
         expect(card).not_to have_key("expires_at")
       end
     end
+
+    it "returns note and sender details in list response" do
+      sender = create(:user, first_name: "Alice", last_name: "Wonder")
+      create(:gift_card, recipient: user, sender: sender, note: "Enjoy your gift!")
+
+      get "/api/v1/me/gift_cards", headers: auth_headers(login_and_get_tokens[:access_token])
+
+      expect(response).to have_http_status(:ok)
+      card = parsed_data.first
+      expect(card["note"]).to eq("Enjoy your gift!")
+      expect(card["sender"]).to be_present
+      expect(card["sender"]["id"]).to eq(sender.id)
+      expect(card["sender"]["name"]).to eq("Alice")
+      expect(card["sender"]["last_name"]).to eq("Wonder")
+      expect(card["sender"]["full_name"]).to eq("Alice Wonder")
+      expect(card["sender"]["email"]).to eq(sender.email)
+    end
   end
 
   describe "GET /api/v1/me/gift_cards/:id" do
@@ -345,6 +362,46 @@ RSpec.describe "Mobile API", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(parsed_data).not_to have_key("expires_at")
+    end
+
+    it "returns note and sender details in response" do
+      sender = create(:user, first_name: "John", last_name: "Doe", email: "john.doe@example.com")
+      gift_card = create(:gift_card, recipient: user, sender: sender, note: "Happy birthday!")
+
+      get "/api/v1/me/gift_cards/#{gift_card.id}", headers: auth_headers(login_and_get_tokens[:access_token])
+
+      expect(response).to have_http_status(:ok)
+      card = parsed_data
+      expect(card["note"]).to eq("Happy birthday!")
+      expect(card["sender"]).to be_present
+      expect(card["sender"]["id"]).to eq(sender.id)
+      expect(card["sender"]["name"]).to eq("John")
+      expect(card["sender"]["last_name"]).to eq("Doe")
+      expect(card["sender"]["full_name"]).to eq("John Doe")
+      expect(card["sender"]["email"]).to eq("john.doe@example.com")
+      expect(card["sender"]).to have_key("avatar_url")
+    end
+
+    it "returns null note when no note is present" do
+      gift_card = create(:gift_card, recipient: user, sender: user, note: nil)
+
+      get "/api/v1/me/gift_cards/#{gift_card.id}", headers: auth_headers(login_and_get_tokens[:access_token])
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data["note"]).to be_nil
+      expect(parsed_data["sender"]).to be_present
+    end
+
+    it "returns sender avatar_url when avatar is attached" do
+      sender = create(:user, first_name: "Jane", last_name: "Smith")
+      sender.avatar.attach(io: File.open(Rails.root.join("spec/fixtures/files/avatar.png")), filename: "avatar.png")
+      gift_card = create(:gift_card, recipient: user, sender: sender)
+
+      get "/api/v1/me/gift_cards/#{gift_card.id}", headers: auth_headers(login_and_get_tokens[:access_token])
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data["sender"]["avatar_url"]).to be_present
+      expect(parsed_data["sender"]["avatar_url"]).to include("avatar.png")
     end
   end
 

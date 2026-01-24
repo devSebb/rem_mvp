@@ -73,6 +73,39 @@ RSpec.describe StripeWebhooks do
       expect(card.expires_at).to be_nil # Gift cards never expire
     end
 
+    it "stores the recipient_note from metadata as the gift card note" do
+      session = build_session("recipient_note" => "Happy birthday from mom!")
+
+      expect {
+        described_class.send(:handle_checkout_session_completed, session)
+      }.to change { GiftCard.count }.by(1)
+
+      card = GiftCard.last
+      expect(card.note).to eq("Happy birthday from mom!")
+    end
+
+    it "stores nil note when recipient_note is not provided" do
+      session = build_session
+
+      expect {
+        described_class.send(:handle_checkout_session_completed, session)
+      }.to change { GiftCard.count }.by(1)
+
+      card = GiftCard.last
+      expect(card.note).to be_nil
+    end
+
+    it "stores nil note when recipient_note is empty string" do
+      session = build_session("recipient_note" => "")
+
+      expect {
+        described_class.send(:handle_checkout_session_completed, session)
+      }.to change { GiftCard.count }.by(1)
+
+      card = GiftCard.last
+      expect(card.note).to be_nil
+    end
+
     context "when amount exceeds maximum" do
       it "raises error when amount is greater than MAX_AMOUNT_CENTS" do
         session = build_session

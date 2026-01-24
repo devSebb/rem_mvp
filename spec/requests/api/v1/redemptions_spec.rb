@@ -11,11 +11,12 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
   describe "POST /api/v1/redemptions" do
     it "allows redemption by a different merchant and records the redeemer" do
       other_merchant # ensure created
+      token_value = raw_token # force gift card + issuance txn creation before the expect block
 
       expect {
         post "/api/v1/redemptions",
              params: {
-               token: raw_token,
+               token: token_value,
                amount_cents: 1_000,
                idempotency_key: SecureRandom.uuid
              }.to_json,

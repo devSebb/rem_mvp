@@ -136,6 +136,8 @@
         <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Gift Cards in Settlement</h3>
         <div class="space-y-6">
           <% @gift_cards_in_settlement.each do |gift_card, transactions| %>
+            <% issuing_merchant = gift_card.merchant %>
+            <% is_cross_merchant = issuing_merchant&.id != @merchant.id %>
             <div class="border border-gray-200 rounded-lg p-4">
               <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center">
@@ -147,6 +149,13 @@
                     <p class="text-sm text-gray-500">
                       From: <%= gift_card.sender.name %> • To: <%= gift_card.recipient.name %>
                     </p>
+                    <% if is_cross_merchant %>
+                      <p class="text-xs text-purple-700 mt-1">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-purple-50 border border-purple-100">
+                          Emitida por: <%= issuing_merchant&.store_name || "Otro comercio" %>
+                        </span>
+                      </p>
+                    <% end %>
                   </div>
                 </div>
                 <div class="text-right">

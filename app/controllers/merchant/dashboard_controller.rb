@@ -4,16 +4,16 @@ class Merchant::DashboardController < ApplicationController
   def index
     @merchant = current_user.merchant
     
-    # Get all redemption transactions for this merchant
-    @redemption_transactions = Transaction.joins(:gift_card)
-                                        .where(gift_cards: { merchant: @merchant })
+    # Get all redemption transactions REDEEMED BY this merchant (redeemer-paid model)
+    # This now correctly shows redemptions performed by this merchant, not cards issued by them.
+    @redemption_transactions = Transaction.where(merchant: @merchant)
                                         .where(txn_type: :redemption, status: :succeeded)
-                                        .includes(gift_card: [:sender, :recipient])
+                                        .includes(gift_card: [:sender, :recipient, :merchant])
     
     # Today's redemptions (count of transactions, not gift cards)
     @today_redemptions = @redemption_transactions.where(created_at: Date.current.all_day).count
     
-    # Pending settlement (sum of all redemption amounts)
+    # Pending settlement (sum of all redemption amounts redeemed by this merchant)
     @pending_settlement = @redemption_transactions.sum(:amount)
     
     # Recent redemptions (transactions, not gift cards)
@@ -21,7 +21,7 @@ class Merchant::DashboardController < ApplicationController
     
     # Additional stats for partial redemptions
     @total_redemption_amount = @redemption_transactions.sum(:amount)
-    @unique_gift_cards_redeemed = @redemption_transactions.joins(:gift_card).distinct.count('gift_cards.id')
+    @unique_gift_cards_redeemed = @redemption_transactions.select(:gift_card_id).distinct.count
   end
 
   private

@@ -105,7 +105,8 @@ class StripeWebhooks
       amount: session.amount_total, # Stripe gives amount in cents
       currency: session.currency&.upcase || "USD",
       checkout_session_id: session.id,
-      expires_at: nil # Gift cards never expire
+      expires_at: nil, # Gift cards never expire
+      note: metadata['recipient_note'].presence
     )
 
     # Generate code after saving
@@ -240,7 +241,8 @@ class StripeWebhooks
       amount: payment_intent.amount, # Stripe gives amount in cents
       currency: payment_intent.currency&.upcase || "USD",
       payment_intent_id: payment_intent.id,
-      expires_at: nil # Gift cards never expire
+      expires_at: nil, # Gift cards never expire
+      note: metadata['recipient_note'].presence
     )
 
     # Generate code after saving

@@ -104,6 +104,7 @@
             <tr>
               <th class="px-4 py-3">Detalle</th>
               <th class="px-4 py-3">Cliente</th>
+              <th class="px-4 py-3">Emisor</th>
               <th class="px-4 py-3">Monto</th>
               <th class="px-4 py-3">Estado</th>
               <th class="px-4 py-3 text-right">Detalle</th>
@@ -111,6 +112,7 @@
           </thead>
           <tbody class="bg-white divide-y divide-black/5">
             <% @recent_redemptions.each do |transaction| %>
+              <% is_cross_merchant = transaction.gift_card.merchant_id != @merchant.id %>
               <tr class="hover:bg-[#EBEBEB]/40 transition">
                 <td class="px-4 py-4">
                   <p class="font-semibold text-[#0D2F32]">
@@ -122,6 +124,15 @@
                 </td>
                 <td class="px-4 py-4 text-[#2C3A43]/80">
                   De <%= transaction.gift_card.sender.name %>
+                </td>
+                <td class="px-4 py-4">
+                  <% if is_cross_merchant %>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
+                      <%= transaction.gift_card.merchant&.store_name || "Red" %>
+                    </span>
+                  <% else %>
+                    <span class="text-xs text-[#2C3A43]/50">Tu comercio</span>
+                  <% end %>
                 </td>
                 <td class="px-4 py-4">
                   <% if transaction.gift_card.remaining_balance > 0 %>

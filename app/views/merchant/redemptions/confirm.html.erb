@@ -55,6 +55,16 @@
             <%# Gift card expiration removed - gift cards never expire %>
           </div>
 
+          <% if @is_cross_merchant %>
+            <div class="rounded-2xl border border-purple-100 bg-purple-50/60 p-4">
+              <p class="text-sm font-medium text-purple-800">Canje en red</p>
+              <div class="text-xs text-purple-700 mt-2 space-y-1">
+                <p><span class="font-medium">Emitida por:</span> <%= @issuing_merchant.store_name %></p>
+                <p><span class="font-medium">Canjeando en:</span> <%= @redeeming_merchant.store_name %></p>
+              </div>
+            </div>
+          <% end %>
+
           <div class="rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
             <p class="text-sm font-medium text-amber-800">Verifica los datos</p>
             <p class="text-xs text-amber-700 mt-1">Confirma monto y destinatario antes de canjear.</p>

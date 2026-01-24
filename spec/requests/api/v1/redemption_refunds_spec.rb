@@ -58,12 +58,12 @@ RSpec.describe "Api::V1::Redemption refunds", type: :request do
     end
 
     it "rejects refunds for non-successful or non-redemption transactions" do
-      # Create a failed redemption (invalid token)
+      # Create a failed redemption (invalid token) - API returns 422 for declined redemptions
       post "/api/v1/redemptions",
            params: { token: "INVALID", amount_cents: 500, idempotency_key: "idem-fail-1" }.to_json,
            headers: auth_headers
 
-      expect(response).to have_http_status(:ok)
+      expect(response).to have_http_status(:unprocessable_entity)
       failed_txn_id = JSON.parse(response.body)["transaction_id"]
       failed_txn = Transaction.find(failed_txn_id)
       expect(failed_txn.failed?).to be(true)
