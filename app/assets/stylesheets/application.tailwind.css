@@ -105,7 +105,7 @@
   }
 
   .marketing-signup-btn {
-    @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-b from-[#F4B126] to-[#D99111] px-5 text-sm font-bold text-[#16363B] shadow-[0_10px_20px_-10px_rgba(244,177,38,.9)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-14px_rgba(244,177,38,.95)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4B126]/55;
+    @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-b from-[#F4B126] to-[#D99111] px-5 py-4 text-sm font-bold text-[#16363B] shadow-[0_10px_20px_-10px_rgba(244,177,38,.9)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-14px_rgba(244,177,38,.95)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4B126]/55;
   }
 
   .marketing-secondary-btn {
@@ -179,7 +179,7 @@
   }
 
   .marketing-step-card {
-    @apply rounded-[2rem] border border-[#17363C]/8 bg-white/80 p-8 shadow-[0_30px_70px_-50px_rgba(16,38,45,0.6)];
+    @apply rounded-[2rem] border border-[#17363C]/8 bg-white/80 p-6 shadow-[0_30px_70px_-50px_rgba(16,38,45,0.6)];
   }
 
   .marketing-step-icon {

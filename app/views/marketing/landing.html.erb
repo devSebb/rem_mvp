@@ -52,31 +52,35 @@
       <p class="mt-3 text-lg text-[#6D7580]" data-reveal>El proceso más simple para enviar tarjetas de regalo a Ecuador.</p>
     </div>
 
-    <div class="mt-14 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10">
-      <div data-reveal>
-        <img src="/mockups/Mockup_1.png" alt="Pantalla de inicio de la app Papayal" class="mx-auto w-[88%]" />
+    <%# Grid: items-center so step cards hug content and center vertically next to images %>
+    <div class="mt-14 grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-10">
+      <%# Mockup_1: 1817×1903 — scene mockup, cap at 420px for consistency %>
+      <div class="flex justify-center" data-reveal>
+        <img src="/mockups/Mockup_1.png" alt="Pantalla de inicio de la app Papayal" class="w-full max-w-[320px] sm:max-w-[380px] lg:max-w-[420px] h-auto object-contain" />
       </div>
-      <article class="marketing-step-card" data-reveal>
+      <article class="marketing-step-card self-center" data-reveal>
         <span class="marketing-step-icon">🛍️</span>
         <p class="marketing-step-kicker">Paso 1</p>
         <h3 class="marketing-step-title">Elige una Tienda</h3>
         <p class="marketing-step-body">Selecciona entre farmacias, supermercados y más.</p>
       </article>
 
-      <article class="marketing-step-card" data-reveal>
+      <article class="marketing-step-card self-center" data-reveal>
         <span class="marketing-step-icon">✈️</span>
         <p class="marketing-step-kicker">Paso 2</p>
         <h3 class="marketing-step-title">Envía la Tarjeta</h3>
         <p class="marketing-step-body">Regístrate en segundos y envía desde cualquier parte del mundo.</p>
       </article>
-      <div data-reveal>
-        <img src="/mockups/Mockup_3.png" alt="Pantalla de destinatario y seguimiento" class="mx-auto w-[34%]" />
+      <%# Mockup_3: 1771×1980 — similar proportions to Mockup_1 %>
+      <div class="flex justify-center" data-reveal>
+        <img src="/mockups/Mockup_3.png" alt="Pantalla de destinatario y seguimiento" class="w-full max-w-[320px] sm:max-w-[380px] lg:max-w-[420px] h-auto object-contain" />
       </div>
 
-      <div class="lg:order-none" data-reveal>
-        <img src="/mockups/Mockup_2.png" alt="Tarjetas Papayal para comercios locales" class="mx-auto w-[80%] max-w-xs md:max-w-sm lg:max-w-md h-auto" />
+      <%# Mockup_2: 810×1650 — narrow portrait (phone/card), cap at 260px width %>
+      <div class="flex justify-center lg:order-none" data-reveal>
+        <img src="/mockups/Mockup_2.png" alt="Tarjetas Papayal para comercios locales" class="w-full max-w-[180px] sm:max-w-[240px] h-auto object-contain" />
       </div>
-      <article class="marketing-step-card" data-reveal>
+      <article class="marketing-step-card self-center" data-reveal>
         <span class="marketing-step-icon">✅</span>
         <p class="marketing-step-kicker">Paso 3</p>
         <h3 class="marketing-step-title">Gasta Localmente</h3>
