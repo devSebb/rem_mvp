@@ -1,7 +1,9 @@
 Rails.application.routes.draw do
   devise_for :users, controllers: { registrations: 'registrations' }
   
-  root to: redirect("/users/sign_in")
+  root to: "marketing#landing"
+  get "about", to: "marketing#about", as: :about
+  get "contact", to: "marketing#contact", as: :contact
   
   get "home", to: "home#index", as: :home
   

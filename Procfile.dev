@@ -1,5 +1,5 @@
 web: env RUBY_DEBUG_OPEN=true bin/rails server
-js: npm run build -- --watch
-css: npm run build:css:watch
+js: npm run build -- --watch=forever
+css: npx @tailwindcss/cli -i ./app/assets/stylesheets/application.tailwind.css -o ./app/assets/builds/application.css --watch=always
 sidekiq: bundle exec sidekiq
 

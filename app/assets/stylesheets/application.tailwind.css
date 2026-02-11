@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@source "./app/views/**/*.erb";
+@source "./app/javascript/**/*.js";
+@source "./public/**/*.html";
 
 /* Papayal Design System */
 @layer base {
@@ -63,5 +66,252 @@
   
   .papayal-meta {
     @apply text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider;
+  }
+
+  .marketing-body {
+    @apply min-h-screen bg-[#ECEBE7] text-[#2C3A43] antialiased;
+    scroll-behavior: smooth;
+  }
+
+  .marketing-nav-wrap {
+    @apply sticky top-0 z-50;
+  }
+
+  .marketing-nav {
+    @apply border-b border-[#16363B]/8 bg-[#ECEBE7]/82 backdrop-blur-xl;
+  }
+
+  /* Logo text: nav has font-weight 500 in base layer; force heavy weight. Subtle same-color shadow makes 900 read bolder on screen. */
+  .marketing-logo-text {
+    font-weight: var(--font-weight-black, 900);
+    text-shadow: 0 0 0.5px currentColor;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .marketing-nav-link {
+    @apply inline-flex h-10 items-center rounded-lg px-4 text-sm font-medium text-[#17363C] transition hover:bg-[#16363B]/6 hover:text-[#0E2F34];
+  }
+
+  .marketing-nav-link.is-active {
+    @apply bg-[#16363B]/7;
+  }
+
+  .marketing-mobile-link {
+    @apply rounded-lg px-3 py-2 text-sm font-medium text-[#17363C] transition hover:bg-[#16363B]/7;
+  }
+
+  .marketing-login-btn {
+    @apply inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-semibold text-[#17363C] transition hover:bg-[#16363B]/7;
+  }
+
+  .marketing-signup-btn {
+    @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-b from-[#F4B126] to-[#D99111] px-5 text-sm font-bold text-[#16363B] shadow-[0_10px_20px_-10px_rgba(244,177,38,.9)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-14px_rgba(244,177,38,.95)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4B126]/55;
+  }
+
+  .marketing-secondary-btn {
+    @apply inline-flex items-center justify-center rounded-xl border border-[#17363C]/14 bg-white/70 text-[#17363C] shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#17363C]/30;
+  }
+
+  .marketing-deep-btn {
+    @apply rounded-xl bg-[#17363C] font-bold text-white shadow-[0_20px_30px_-20px_rgba(23,54,60,1)] transition hover:-translate-y-0.5 hover:bg-[#0f2b2f];
+  }
+
+  .marketing-pill {
+    @apply inline-flex items-center rounded-2xl bg-gradient-to-b from-[#F6C14A] to-[#DB9A1A] px-5 py-2 text-sm font-bold text-[#1B3940] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)];
+  }
+
+  .marketing-section {
+    @apply bg-[#ECEBE7];
+  }
+
+  .marketing-hero {
+    @apply relative bg-[#ECEBE7];
+  }
+
+  .hero-gradient {
+    @apply pointer-events-none absolute rounded-full blur-3xl;
+    width: 26rem;
+    height: 26rem;
+  }
+
+  .hero-gradient-left {
+    top: -8rem;
+    left: -6rem;
+    background: radial-gradient(circle at center, rgba(244, 177, 38, 0.34), rgba(244, 177, 38, 0));
+  }
+
+  .hero-gradient-right {
+    right: -7rem;
+    top: 8rem;
+    background: radial-gradient(circle at center, rgba(21, 53, 58, 0.22), rgba(21, 53, 58, 0));
+  }
+
+  .hero-card-wrap {
+    @apply relative mx-auto max-w-xl rounded-[2.2rem] border border-white/70 bg-white/75 p-4 shadow-[0_35px_90px_-60px_rgba(20,52,58,0.85)] sm:p-5;
+  }
+
+  .hero-card-image {
+    @apply relative z-10 w-full object-contain drop-shadow-[0_25px_45px_rgba(20,52,58,0.28)];
+    transition: transform 0.35s ease-out;
+  }
+
+  .hero-chip {
+    @apply absolute z-20 inline-flex items-center rounded-2xl border border-[#17363C]/8 bg-white/92 px-4 py-2 text-sm font-semibold text-[#17363C] shadow-lg;
+    transition: transform 0.35s ease-out;
+  }
+
+  .hero-chip-top-right {
+    right: -0.4rem;
+    top: 2.3rem;
+  }
+
+  .hero-chip-bottom-left {
+    bottom: 0.9rem;
+    left: -0.8rem;
+    background: #17363c;
+    color: #f3f2ef;
+  }
+
+  .hero-chip-bottom-center {
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .marketing-step-card {
+    @apply rounded-[2rem] border border-[#17363C]/8 bg-white/80 p-8 shadow-[0_30px_70px_-50px_rgba(16,38,45,0.6)];
+  }
+
+  .marketing-step-icon {
+    @apply inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-b from-[#F4B126] to-[#D99111] text-2xl shadow-[0_18px_25px_-18px_rgba(244,177,38,1)];
+  }
+
+  .marketing-step-kicker {
+    @apply mt-6 text-3xl font-black text-[#D99915];
+  }
+
+  .marketing-step-title {
+    @apply mt-1 text-4xl font-black text-[#17363C];
+  }
+
+  .marketing-step-body {
+    @apply mt-3 text-xl text-[#64707A];
+  }
+
+  .marketing-offer-banner {
+    @apply rounded-[2rem] border border-[#E6B449]/30 px-6 py-10 text-center shadow-[0_35px_70px_-60px_rgba(36,30,12,0.95)] sm:px-12;
+    background: linear-gradient(90deg, rgba(237, 178, 52, 0.95), rgba(228, 165, 32, 0.96), rgba(239, 187, 78, 0.95));
+  }
+
+  .marketing-features {
+    @apply relative overflow-hidden;
+    background: radial-gradient(ellipse at 15% 0%, rgba(35, 94, 106, 0.35), transparent 50%),
+      radial-gradient(ellipse at 85% 100%, rgba(27, 105, 101, 0.25), transparent 60%),
+      #15353a;
+  }
+
+  .marketing-feature-card {
+    @apply rounded-3xl border border-white/55 bg-white/88 p-6 shadow-[0_25px_60px_-50px_rgba(8,35,45,0.95)] transition duration-300 hover:-translate-y-1.5 hover:shadow-[0_30px_60px_-40px_rgba(8,35,45,0.7)];
+  }
+
+  .marketing-feature-icon {
+    @apply inline-flex h-13 w-13 items-center justify-center rounded-2xl bg-[#EFF3F7] text-2xl transition;
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+
+  .marketing-feature-card:hover .marketing-feature-icon {
+    box-shadow: 0 0 0 3px rgba(244, 177, 38, 0.2), 0 0 26px rgba(244, 177, 38, 0.45);
+    background: #fff6e5;
+  }
+
+  .marketing-benefit-float-card {
+    @apply flex items-start gap-4 rounded-3xl border border-[#17363C]/8 bg-white/85 p-6 shadow-[0_25px_55px_-45px_rgba(12,35,43,0.9)] transition hover:-translate-y-1;
+  }
+
+  .marketing-stats-bar {
+    @apply mt-6 grid grid-cols-3 gap-3 rounded-3xl bg-gradient-to-r from-[#EFB83F] via-[#E2A729] to-[#D99819] p-6 text-center text-[#15353A] shadow-[0_28px_60px_-50px_rgba(45,31,0,1)];
+  }
+
+  .marketing-stat-value {
+    @apply text-3xl font-black sm:text-4xl;
+  }
+
+  .marketing-stat-label {
+    @apply mt-1 text-sm font-medium uppercase tracking-[0.12em] text-[#15353A]/75;
+  }
+
+  .marketing-market {
+    background: radial-gradient(circle at 15% 20%, rgba(244, 177, 38, 0.16), transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(47, 87, 98, 0.12), transparent 35%),
+      #e9ecea;
+  }
+
+  .marketing-testimonial-card {
+    @apply rounded-3xl border border-[#17363C]/10 bg-white/86 p-6 shadow-[0_25px_55px_-45px_rgba(12,35,43,0.8)] transition hover:-translate-y-1;
+  }
+
+  .marketing-footer {
+    background: linear-gradient(160deg, #13323a 0%, #112f36 55%, #0d2530 100%);
+  }
+
+  .marketing-newsletter {
+    @apply rounded-[1.8rem] border border-white/10 bg-white/5 p-7 backdrop-blur-xl sm:p-9;
+  }
+}
+
+@layer utilities {
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  [data-reveal].is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .marketing-float-slow {
+    animation: marketing-float-slow 6.5s ease-in-out infinite;
+  }
+
+  .marketing-float-medium {
+    animation: marketing-float-medium 4.7s ease-in-out infinite;
+  }
+}
+
+@keyframes marketing-float-slow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes marketing-float-medium {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-body {
+    scroll-behavior: auto;
+  }
+
+  [data-reveal],
+  .marketing-float-slow,
+  .marketing-float-medium,
+  .hero-chip,
+  .hero-card-image {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
   }
 }

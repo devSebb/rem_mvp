@@ -1,0 +1,48 @@
+<header class="marketing-nav-wrap">
+  <nav class="marketing-nav" aria-label="Principal">
+    <div class="mx-auto flex w-full max-w-7xl items-center justify-between gap-6 px-5 py-4 sm:px-6 lg:px-8">
+      <%= link_to root_path, class: "flex items-center gap-3", aria: { label: "Ir al inicio de Papayal" } do %>
+        <img src="/Papayal-logoV2Tag.png" alt="Papayal" class="h-9 w-9 " />
+        <span class="marketing-logo-text text-2xl font-black tracking-tight text-[#14343A]">Papayal</span>
+      <% end %>
+
+      <button
+        type="button"
+        class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#14343A]/15 bg-white/85 text-[#14343A] md:hidden"
+        aria-controls="marketing-mobile-menu"
+        aria-expanded="false"
+        data-marketing-target="menuButton"
+        data-action="click->marketing#toggleMenu">
+        <span class="sr-only">Abrir menú</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 7h16M4 12h16M4 17h16" />
+        </svg>
+      </button>
+
+      <div class="hidden items-center gap-1 md:flex">
+        <%= link_to "Inicio", root_path, class: "marketing-nav-link #{current_page?(root_path) ? "is-active" : ""}" %>
+        <%= link_to "Como Funciona", root_path(anchor: "como-funciona"), class: "marketing-nav-link", data: { action: "click->marketing#handleAnchorClick" } %>
+        <%= link_to "Beneficios", root_path(anchor: "beneficios"), class: "marketing-nav-link", data: { action: "click->marketing#handleAnchorClick" } %>
+        <%= link_to "Contacto", contact_path, class: "marketing-nav-link #{current_page?(contact_path) ? "is-active" : ""}" %>
+      </div>
+
+      <div class="hidden items-center gap-2 md:flex">
+        <%= link_to "Iniciar Sesión", new_user_session_path, class: "marketing-login-btn" %>
+        <%= link_to "Registrarse", new_user_registration_path, class: "marketing-signup-btn" %>
+      </div>
+    </div>
+
+    <div id="marketing-mobile-menu" class="hidden border-t border-[#14343A]/10 bg-white/95 md:hidden" data-marketing-target="mobileMenu">
+      <div class="mx-auto flex w-full max-w-7xl flex-col gap-1 px-5 py-4 sm:px-6">
+        <%= link_to "Inicio", root_path, class: "marketing-mobile-link", data: { action: "click->marketing#closeMenu" } %>
+        <%= link_to "Como Funciona", root_path(anchor: "como-funciona"), class: "marketing-mobile-link", data: { action: "click->marketing#handleAnchorClick click->marketing#closeMenu" } %>
+        <%= link_to "Beneficios", root_path(anchor: "beneficios"), class: "marketing-mobile-link", data: { action: "click->marketing#handleAnchorClick click->marketing#closeMenu" } %>
+        <%= link_to "Contacto", contact_path, class: "marketing-mobile-link", data: { action: "click->marketing#closeMenu" } %>
+        <div class="mt-3 grid grid-cols-2 gap-2">
+          <%= link_to "Iniciar Sesión", new_user_session_path, class: "marketing-login-btn text-center" %>
+          <%= link_to "Registrarse", new_user_registration_path, class: "marketing-signup-btn text-center" %>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>

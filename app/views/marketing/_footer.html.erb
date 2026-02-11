@@ -1,0 +1,73 @@
+<footer class="marketing-footer" id="contacto">
+  <div class="mx-auto w-full max-w-7xl px-5 py-14 sm:px-6 lg:px-8">
+    <div class="marketing-newsletter">
+      <div>
+        <p class="marketing-pill">Newsletter</p>
+        <h2 class="mt-3 text-2xl font-black text-white sm:text-3xl">Suscribete para ofertas y novedades</h2>
+        <p class="mt-2 max-w-2xl text-sm text-white/75 sm:text-base">
+          Recibe noticias, actualizaciones de producto y promociones exclusivas para enviar ayuda a Ecuador.
+        </p>
+      </div>
+      <form class="mt-6 flex flex-col gap-3 sm:flex-row" data-action="submit->marketing#handleNewsletterSubmit">
+        <label for="newsletter-email" class="sr-only">Correo electrónico</label>
+        <input
+          id="newsletter-email"
+          type="email"
+          required
+          placeholder="Tu correo electrónico"
+          class="h-12 w-full rounded-xl border border-white/20 bg-white/10 px-4 text-white placeholder:text-white/50 focus:border-[#F4B126] focus:outline-none focus:ring-2 focus:ring-[#F4B126]/35" />
+        <button type="submit" class="marketing-signup-btn h-12 whitespace-nowrap px-6">Suscribir</button>
+      </form>
+      <p class="mt-2 hidden text-sm text-emerald-200" data-marketing-target="newsletterStatus">Gracias por suscribirte. Pronto recibirás novedades.</p>
+    </div>
+
+    <div class="mt-12 grid gap-10 md:grid-cols-4">
+      <div class="md:col-span-1">
+        <%= link_to root_path, class: "inline-flex items-center gap-3" do %>
+          <img src="/Papayal-logoV2Tag.png" alt="Papayal" class="h-10 w-10 " />
+          <span class="text-xl font-black text-white">Papayal</span>
+        <% end %>
+        <p class="mt-4 text-sm text-white/70">
+          Conectando familias a traves de tarjetas de regalo digitales para apoyo real en Ecuador.
+        </p>
+        <div class="mt-5 flex items-center gap-2 text-xs text-white/60">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">IG</span>
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">FB</span>
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">X</span>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-sm font-bold uppercase tracking-[0.2em] text-[#F4B126]">Producto</h3>
+        <ul class="mt-4 space-y-2 text-sm text-white/75">
+          <li><%= link_to "Como Funciona", root_path(anchor: "como-funciona"), class: "hover:text-white transition-colors" %></li>
+          <li><%= link_to "Beneficios", root_path(anchor: "beneficios"), class: "hover:text-white transition-colors" %></li>
+          <li><%= link_to "Nuestro Mercado", root_path(anchor: "mercado"), class: "hover:text-white transition-colors" %></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="text-sm font-bold uppercase tracking-[0.2em] text-[#F4B126]">Compañía</h3>
+        <ul class="mt-4 space-y-2 text-sm text-white/75">
+          <li><%= link_to "Sobre Nosotros", about_path, class: "hover:text-white transition-colors" %></li>
+          <li><%= link_to "Contacto", contact_path, class: "hover:text-white transition-colors" %></li>
+          <li><a href="mailto:papayalapp@gmail.com" class="hover:text-white transition-colors">papayalapp@gmail.com</a></li>
+          <li><a href="tel:+593992228365" class="hover:text-white transition-colors">+593 99-222-8365</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="text-sm font-bold uppercase tracking-[0.2em] text-[#F4B126]">Legal</h3>
+        <ul class="mt-4 space-y-2 text-sm text-white/75">
+          <li><%= link_to "Terminos de Servicio", legal_terminos_path, class: "hover:text-white transition-colors" %></li>
+          <li><%= link_to "Privacidad", legal_privacidad_path, class: "hover:text-white transition-colors" %></li>
+          <li><%= link_to "Cookies", legal_path, class: "hover:text-white transition-colors" %></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-10 border-t border-white/10 pt-6 text-xs text-white/55">
+      © <%= Time.current.year %> Papayal. Todos los derechos reservados.
+    </div>
+  </div>
+</footer>
