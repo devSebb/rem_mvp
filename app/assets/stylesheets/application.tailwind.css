@@ -117,7 +117,7 @@
   }
 
   .marketing-pill {
-    @apply inline-flex items-center rounded-2xl bg-gradient-to-b from-[#F6C14A] to-[#DB9A1A] px-5 py-2 text-sm font-bold text-[#1B3940] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)];
+    @apply inline-flex items-center rounded-xl bg-gradient-to-b from-[#F6C14A] to-[#DB9A1A] px-5 py-2 text-sm font-bold text-[#1B3940] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)];
   }
 
   .marketing-section {
@@ -257,6 +257,15 @@
 
   .marketing-newsletter {
     @apply rounded-[1.8rem] border border-white/10 bg-white/5 p-7 backdrop-blur-xl sm:p-9;
+  }
+
+  /* ── About Page ── */
+
+  .about-gradient-text {
+    background: linear-gradient(135deg, #F4B126, #D99111, #E6B449);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }
 

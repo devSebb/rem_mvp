@@ -21,6 +21,7 @@
 
       <div class="hidden items-center gap-1 md:flex">
         <%= link_to "Inicio", root_path, class: "marketing-nav-link #{current_page?(root_path) ? "is-active" : ""}" %>
+        <%= link_to "Sobre Nosotros", about_path, class: "marketing-nav-link #{current_page?(about_path) ? "is-active" : ""}" %>
         <%= link_to "Como Funciona", root_path(anchor: "como-funciona"), class: "marketing-nav-link", data: { action: "click->marketing#handleAnchorClick" } %>
         <%= link_to "Beneficios", root_path(anchor: "beneficios"), class: "marketing-nav-link", data: { action: "click->marketing#handleAnchorClick" } %>
         <%= link_to "Contacto", contact_path, class: "marketing-nav-link #{current_page?(contact_path) ? "is-active" : ""}" %>
@@ -35,6 +36,7 @@
     <div id="marketing-mobile-menu" class="hidden border-t border-[#14343A]/10 bg-white/95 md:hidden" data-marketing-target="mobileMenu">
       <div class="mx-auto flex w-full max-w-7xl flex-col gap-1 px-5 py-4 sm:px-6">
         <%= link_to "Inicio", root_path, class: "marketing-mobile-link", data: { action: "click->marketing#closeMenu" } %>
+        <%= link_to "Sobre Nosotros", about_path, class: "marketing-mobile-link", data: { action: "click->marketing#closeMenu" } %>
         <%= link_to "Como Funciona", root_path(anchor: "como-funciona"), class: "marketing-mobile-link", data: { action: "click->marketing#handleAnchorClick click->marketing#closeMenu" } %>
         <%= link_to "Beneficios", root_path(anchor: "beneficios"), class: "marketing-mobile-link", data: { action: "click->marketing#handleAnchorClick click->marketing#closeMenu" } %>
         <%= link_to "Contacto", contact_path, class: "marketing-mobile-link", data: { action: "click->marketing#closeMenu" } %>
