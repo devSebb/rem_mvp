@@ -229,6 +229,37 @@
     @apply flex items-start gap-4 rounded-3xl border border-[#17363C]/8 bg-white/85 p-6 shadow-[0_25px_55px_-45px_rgba(12,35,43,0.9)] transition hover:-translate-y-1;
   }
 
+  /* Beneficios / Por Qué Existimos section (landing redesign) */
+  .marketing-beneficios-section {
+    background: #F7F8F5;
+  }
+
+  .marketing-beneficios-pill {
+    @apply inline-flex items-center rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white;
+    background: #16363B;
+  }
+
+  .marketing-beneficio-badge {
+    @apply inline-flex items-center gap-2 rounded-xl border border-[#17363C]/12 bg-white px-4 py-2.5 text-sm font-medium text-[#17363C] shadow-sm;
+  }
+
+  .marketing-beneficio-float-card {
+    @apply relative z-0 overflow-hidden rounded-2xl border border-[#17363C]/8 bg-white p-6 shadow-[0_20px_50px_-35px_rgba(12,35,43,0.5)] transition duration-300 hover:-translate-y-0.5 hover:shadow-xl;
+  }
+
+  .marketing-beneficio-float-card::before {
+    content: "";
+    @apply absolute bottom-0 right-0 h-24 w-24 rounded-tl-full opacity-30;
+  }
+
+  .marketing-beneficio-float-card.orange-edge::before {
+    background: radial-gradient(circle at 100% 100%, #F4B126, transparent 70%);
+  }
+
+  .marketing-beneficio-float-card.teal-edge::before {
+    background: radial-gradient(circle at 100% 100%, #16363B, transparent 70%);
+  }
+
   .marketing-stats-bar {
     @apply mt-6 grid grid-cols-3 gap-3 rounded-3xl bg-gradient-to-r from-[#EFB83F] via-[#E2A729] to-[#D99819] p-6 text-center text-[#15353A] shadow-[0_28px_60px_-50px_rgba(45,31,0,1)];
   }
