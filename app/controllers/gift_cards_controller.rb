@@ -8,6 +8,13 @@ class GiftCardsController < ApplicationController
     # Track owner activity for balance check (batch update to avoid N+1)
     gift_card_ids = @gift_cards.pluck(:id)
     GiftCard.where(id: gift_card_ids).update_all(last_owner_activity_at: Time.current) if gift_card_ids.any? && current_user.present?
+
+    respond_to do |format|
+      format.html
+      format.json do
+        render json: @gift_cards.as_json(include: [:sender, :recipient, :merchant])
+      end
+    end
   end
 
   def show
@@ -137,11 +144,8 @@ class GiftCardsController < ApplicationController
       # Try to find gift card - webhook might not have arrived yet
       @gift_card = GiftCard.find_by(checkout_session_id: @session_id)
       
-      # If not found, wait a moment and try again (webhook might be processing)
-      unless @gift_card
-        sleep(1) # Give webhook a moment to process
-        @gift_card = GiftCard.find_by(checkout_session_id: @session_id)
-      end
+      # If not found, try once more without blocking (webhook may have just completed)
+      @gift_card = GiftCard.find_by(checkout_session_id: @session_id) unless @gift_card
       
       # Log for debugging
       if @gift_card

@@ -17,9 +17,10 @@ class Merchant::SettlementsController < ApplicationController
                                   .distinct
                                   .order(created_at: :desc)
     
-    # Calculate settlement data for each gift card using the service (redeemer-based)
+    # Batch settlement summaries to avoid N+1 (redeemer-based)
+    summaries = SettlementService.gift_card_settlement_summaries_for_redeemer(@redeemed_gift_cards, @merchant)
     @gift_card_settlements = @redeemed_gift_cards.map do |gift_card|
-      summary = SettlementService.gift_card_settlement_summary_for_redeemer(gift_card, @merchant)
+      summary = summaries[gift_card.id] || {}
       {
         gift_card: gift_card,
         **summary

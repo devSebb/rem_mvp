@@ -129,232 +129,6 @@
 
 <!-- JavaScript for tab functionality -->
 <script>
-  function toggleTabClasses(button, isActive) {
-    if (isActive) {
-      button.classList.add('active-tab');
-      button.classList.remove('bg-[#EBEBEB]', 'text-[#2C3A43]/70', 'border-transparent');
-      button.classList.add('bg-[#0D2F32]', 'text-white', 'border-[#0D2F32]', 'shadow-sm');
-    } else {
-      button.classList.remove('active-tab', 'bg-[#0D2F32]', 'text-white', 'border-[#0D2F32]', 'shadow-sm');
-      button.classList.add('bg-[#EBEBEB]', 'text-[#2C3A43]/70', 'border-transparent');
-    }
-  }
-
-  function showTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
-    document.querySelectorAll('.tab-button').forEach(button => toggleTabClasses(button, false));
-    document.getElementById(tabName + '-content').classList.remove('hidden');
-    toggleTabClasses(document.getElementById(tabName + '-tab'), true);
-  }
-
-  let allCards = [];
-  let currentUserId = 0;
-  let currentTab = new URLSearchParams(window.location.search).get('tab') || 'sent';
-  let filteredCards = { sent: [], received: [], redeemed: [] };
-
-  function categorizeCards() {
-    allCards = <%= raw @gift_cards.to_json(include: [:sender, :recipient, :merchant]) %>;
-    currentUserId = <%= current_user.id %>;
-
-    const sentCards = allCards.filter(card => card.sender_id === currentUserId);
-    const receivedCards = allCards.filter(card => card.recipient_id === currentUserId);
-    const redeemedCards = allCards.filter(card => card.status === 'redeemed');
-
-    filteredCards.sent = sentCards;
-    filteredCards.received = receivedCards;
-    filteredCards.redeemed = redeemedCards;
-
-    updateSummaryStats(sentCards, receivedCards, redeemedCards);
-    applyFilters();
-
-    toggleEmptyState('sent-empty', sentCards.length === 0);
-    toggleEmptyState('received-empty', receivedCards.length === 0);
-    toggleEmptyState('redeemed-empty', redeemedCards.length === 0);
-  }
-
-  function updateSummaryStats(sentCards, receivedCards, redeemedCards) {
-    document.getElementById('sent-count').textContent = sentCards.length;
-    document.getElementById('received-count').textContent = receivedCards.length;
-    document.getElementById('redeemed-count').textContent = redeemedCards.length;
-
-    document.getElementById('sent-summary-count').textContent = sentCards.length;
-    document.getElementById('received-summary-count').textContent = receivedCards.length;
-    document.getElementById('redeemed-summary-count').textContent = redeemedCards.length;
-
-    const totalValue = allCards.reduce((sum, card) => sum + (card.amount / 100), 0);
-    document.getElementById('total-value').textContent = '$' + totalValue.toFixed(2);
-  }
-
-  function applyFilters() {
-    const searchTerm = document.getElementById('search-input').value.toLowerCase();
-    const statusFilter = document.getElementById('status-filter').value;
-    const sortFilter = document.getElementById('sort-filter').value;
-
-    ['sent', 'received', 'redeemed'].forEach(category => {
-      let cards = filteredCards[category];
-
-      if (searchTerm) {
-        cards = cards.filter(card => {
-          const senderName = card.sender ? card.sender.name.toLowerCase() : '';
-          const recipientName = card.recipient ? card.recipient.name.toLowerCase() : '';
-          const merchantName = card.merchant ? card.merchant.store_name.toLowerCase() : '';
-          const amount = (card.amount / 100).toString();
-          return senderName.includes(searchTerm) ||
-                 recipientName.includes(searchTerm) ||
-                 merchantName.includes(searchTerm) ||
-                 amount.includes(searchTerm);
-        });
-      }
-
-      if (statusFilter) {
-        cards = cards.filter(card => card.status === statusFilter);
-      }
-
-      cards = sortCards(cards, sortFilter);
-      renderCards(category + '-cards', cards, category);
-
-      const hasCardsInCategory = filteredCards[category] && filteredCards[category].length > 0;
-      toggleEmptyState(category + '-empty', !hasCardsInCategory);
-    });
-  }
-
-  function sortCards(cards, sortType) {
-    switch(sortType) {
-      case 'newest':
-        return cards.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      case 'oldest':
-        return cards.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-      case 'amount-high':
-        return cards.sort((a, b) => b.amount - a.amount);
-      case 'amount-low':
-        return cards.sort((a, b) => a.amount - b.amount);
-      case 'status':
-        return cards.sort((a, b) => a.status.localeCompare(b.status));
-      default:
-        return cards;
-    }
-  }
-
-  function renderCards(containerId, cards, type) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    container.innerHTML = '';
-    cards.forEach(card => container.appendChild(createCardElement(card, type)));
-  }
-
-  function createCardElement(card, type) {
-    const div = document.createElement('div');
-    div.className = 'col-span-12 md:col-span-6 xl:col-span-4';
-
-    const statusClasses = {
-      'active': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100',
-      'redeemed': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100',
-      'expired': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-100',
-      'canceled': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200'
-    };
-
-    const statusLabels = {
-      'active': 'Activa',
-      'redeemed': 'Canjeada',
-      'expired': 'Vencida',
-      'canceled': 'Cancelada'
-    };
-
-    const amount = (card.amount / 100).toFixed(2);
-    const remainingBalance = (card.remaining_balance / 100).toFixed(2);
-    const currency = card.currency === 'USD' ? '$' : card.currency;
-
-    let recipientInfo = '';
-    if (type === 'sent') {
-      recipientInfo = `Para: ${card.recipient ? card.recipient.name : 'Desconocido'}`;
-    } else if (type === 'received') {
-      recipientInfo = `De: ${card.sender.name}`;
-    } else {
-      recipientInfo = card.sender_id === currentUserId ? 
-        `Para: ${card.recipient ? card.recipient.name : 'Desconocido'}` : 
-        `De: ${card.sender.name}`;
-    }
-
-    const merchantName = card.merchant ? card.merchant.store_name : 'Cualquier comercio Papayal';
-    // Expiration removed - gift cards never expire
-    const expiresText = '';
-    const redeemedText = card.redeemed_at ? `Canjeada: ${new Date(card.redeemed_at).toLocaleDateString('es-EC')}` : '';
-    const updatedAt = new Date(card.updated_at).toLocaleDateString('es-EC');
-
-    div.innerHTML = `
-      <article class="papayal-card papayal-card-hover h-full flex flex-col p-5">
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <p class="papayal-meta text-[#2C3A43]/60">${type === 'sent' ? 'Tarjeta enviada' : type === 'received' ? 'Tarjeta recibida' : 'Historial de canje'}</p>
-            <p class="text-3xl font-bold text-[#0D2F32] mt-1">${currency}${amount}</p>
-            <p class="text-sm text-[#2C3A43]/70 mt-1">${merchantName}</p>
-            ${card.remaining_balance < card.amount ? `<p class="text-xs text-[#0D2F32] mt-1">Restante: ${currency}${remainingBalance}</p>` : ''}
-          </div>
-          <span class="${statusClasses[card.status]}">
-            ${statusLabels[card.status] || card.status}
-          </span>
-        </div>
-
-        <div class="mt-4 space-y-2 text-sm text-[#2C3A43]/80">
-          <p>${recipientInfo}</p>
-          ${card.redeemed ? `<p class="text-[#0D2F32]/90 font-medium">${card.merchant ? `Canjeada en ${card.merchant.store_name}` : 'Canjeada parcialmente'}</p>` : ''}
-          ${redeemedText ? `<p>${redeemedText}</p>` : ''}
-          ${expiresText ? `<p>${expiresText}</p>` : ''}
-          <p>Creada: ${new Date(card.created_at).toLocaleDateString('es-EC')}</p>
-        </div>
-
-        <div class="mt-6 flex items-center justify-between text-xs text-[#2C3A43]/60">
-          <span>Actualizado ${updatedAt}</span>
-          <a href="/gift_cards/${card.id}?tab=${type}" class="papayal-btn-secondary text-sm">Ver detalles</a>
-        </div>
-      </article>
-    `;
-
-    return div;
-  }
-
-  function toggleEmptyState(emptyId, isEmpty) {
-    const emptyElement = document.getElementById(emptyId);
-    if (!emptyElement) return;
-    if (isEmpty) {
-      emptyElement.classList.remove('hidden');
-      emptyElement.style.display = '';
-    } else {
-      emptyElement.classList.add('hidden');
-      emptyElement.style.display = 'none';
-    }
-  }
-
-  function initializeWallet() {
-    showTab(currentTab);
-    categorizeCards();
-    const searchInput = document.getElementById('search-input');
-    const statusFilter = document.getElementById('status-filter');
-    const sortFilter = document.getElementById('sort-filter');
-
-    if (searchInput) searchInput.addEventListener('input', applyFilters);
-    if (statusFilter) statusFilter.addEventListener('change', applyFilters);
-    if (sortFilter) sortFilter.addEventListener('change', applyFilters);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeWallet);
-  } else {
-    initializeWallet();
-  }
-
-  document.addEventListener('turbo:load', initializeWallet);
-</script>
-
-<style>
-  .tab-button.active-tab {
-    box-shadow: 0px 15px 30px -15px rgba(13, 47, 50, 0.4);
-  }
-</style>
-
-
-<!-- JavaScript for tab functionality -->
-<script>
   // Tab switching functionality
   function showTab(tabName) {
     // Hide all tab contents
@@ -389,11 +163,10 @@
     redeemed: []
   };
 
-  // Card categorization and rendering
+  // Card categorization and rendering (data loaded via fetch to reduce initial payload)
   function categorizeCards() {
-    allCards = <%= raw @gift_cards.to_json(include: [:sender, :recipient, :merchant]) %>;
     currentUserId = <%= current_user.id %>;
-    
+
     const sentCards = allCards.filter(card => card.sender_id === currentUserId);
     const receivedCards = allCards.filter(card => card.recipient_id === currentUserId);
     const redeemedCards = allCards.filter(card => card.status === 'redeemed');
@@ -571,7 +344,7 @@
         <!-- Recipient/From info -->
         <div class="mb-4">
           <div class="text-sm text-gray-600">${recipientInfo}</div>
-          ${card.merchant ? `<div class="text-sm text-gray-500 mt-1">${card.redeemed ? 'Canjeada en: ' : 'Tienda: '}${card.merchant.store_name}</div>` : ''}
+          ${card.merchant ? `<div class="text-sm text-gray-500 mt-1">${card.status === 'redeemed' ? 'Canjeada en: ' : 'Tienda: '}${card.merchant.store_name}</div>` : ''}
         </div>
         
         <!-- Dates -->
@@ -613,11 +386,27 @@
     }
   }
 
+  // Load wallet data from JSON endpoint (reduces initial HTML payload and parse cost)
+  function loadWalletData() {
+    fetch('<%= gift_cards_path(format: :json) %>', {
+      headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+    })
+      .then(res => res.ok ? res.json() : Promise.reject(new Error('Failed to load wallet')))
+      .then(data => {
+        allCards = Array.isArray(data) ? data : [];
+        categorizeCards();
+      })
+      .catch(err => {
+        console.error('Wallet load error:', err);
+        document.querySelectorAll('[id$="-empty"]').forEach(el => { el.classList.remove('hidden'); el.style.display = ''; });
+      });
+  }
+
   // Initialize function
   function initializeWallet() {
     showTab(currentTab);
-    categorizeCards();
-    
+    loadWalletData();
+
     // Add event listeners for search and filtering
     const searchInput = document.getElementById('search-input');
     const statusFilter = document.getElementById('status-filter');

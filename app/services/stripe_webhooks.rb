@@ -87,11 +87,7 @@ class StripeWebhooks
       # Try to send notification if it wasn't sent yet
       if !existing_gift_card.sent_via_email && !existing_gift_card.sent_via_sms && !existing_gift_card.sent_via_whatsapp
         raw_code = existing_gift_card.generate_code!
-        begin
-          NotificationJob.perform_now(existing_gift_card.id, raw_code)
-        rescue => e
-          Rails.logger.error "❌ Failed to send notification for existing gift card: #{e.message}"
-        end
+        enqueue_notification(existing_gift_card.id, raw_code)
       end
       
       return
@@ -134,23 +130,8 @@ class StripeWebhooks
       Rails.logger.warn "⚠️ GiftCard #{gift_card.id} has no transactions association"
     end
 
-    # Enqueue notification (use perform_now if Sidekiq is not available)
-    begin
-      # Try async first, fallback to sync if Sidekiq not available
-      begin
-        NotificationJob.perform_later(gift_card.id, raw_code)
-        Rails.logger.info "📤 Enqueued notification job for gift card #{gift_card.id} (async)"
-      rescue NoMethodError, Redis::CannotConnectError => e
-        # Sidekiq not available or Redis not running - use sync
-        Rails.logger.warn "⚠️ Sidekiq not available (#{e.class}), sending notification synchronously"
-        NotificationJob.perform_now(gift_card.id, raw_code)
-        Rails.logger.info "📤 Sent notification for gift card #{gift_card.id} (sync)"
-      end
-    rescue => e
-      Rails.logger.error "❌ Failed to send notification: #{e.message}"
-      Rails.logger.error e.backtrace.join("\n")
-      # Don't fail the webhook if notification fails
-    end
+    # Enqueue notification; in production never block webhook on sync send
+    enqueue_notification(gift_card.id, raw_code)
 
     Rails.logger.info "✅ Successfully created gift card #{gift_card.id} for session #{session.id}"
     Rails.logger.info "   Recipient: #{recipient.email}, Amount: #{gift_card.currency} #{gift_card.amount / 100.0}"
@@ -223,11 +204,7 @@ class StripeWebhooks
       # Try to send notification if it wasn't sent yet
       if !existing_gift_card.sent_via_email && !existing_gift_card.sent_via_sms && !existing_gift_card.sent_via_whatsapp
         raw_code = existing_gift_card.generate_code!
-        begin
-          NotificationJob.perform_now(existing_gift_card.id, raw_code)
-        rescue => e
-          Rails.logger.error "❌ Failed to send notification for existing gift card: #{e.message}"
-        end
+        enqueue_notification(existing_gift_card.id, raw_code)
       end
       
       return
@@ -269,23 +246,7 @@ class StripeWebhooks
       Rails.logger.warn "⚠️ GiftCard #{gift_card.id} has no transactions association"
     end
 
-    # Enqueue notification (use perform_now if Sidekiq is not available)
-    begin
-      # Try async first, fallback to sync if Sidekiq not available
-      begin
-        NotificationJob.perform_later(gift_card.id, raw_code)
-        Rails.logger.info "📤 Enqueued notification job for gift card #{gift_card.id} (async)"
-      rescue NoMethodError, Redis::CannotConnectError => e
-        # Sidekiq not available or Redis not running - use sync
-        Rails.logger.warn "⚠️ Sidekiq not available (#{e.class}), sending notification synchronously"
-        NotificationJob.perform_now(gift_card.id, raw_code)
-        Rails.logger.info "📤 Sent notification for gift card #{gift_card.id} (sync)"
-      end
-    rescue => e
-      Rails.logger.error "❌ Failed to send notification: #{e.message}"
-      Rails.logger.error e.backtrace.join("\n")
-      # Don't fail the webhook if notification fails
-    end
+    enqueue_notification(gift_card.id, raw_code)
 
     Rails.logger.info "✅ Successfully created gift card #{gift_card.id} for payment intent #{payment_intent.id}"
     Rails.logger.info "   Recipient: #{recipient.email}, Amount: #{gift_card.currency} #{gift_card.amount / 100.0}"
@@ -293,6 +254,25 @@ class StripeWebhooks
     Rails.logger.error "💥 Error handling payment_intent.succeeded: #{e.class} - #{e.message}"
     Rails.logger.error e.backtrace.join("\n")
     raise # re-raise so you still see the 500 during dev
+  end
+
+  # Enqueue notification job. In production we never block the webhook on sync send;
+  # in development/test we fall back to perform_now if Sidekiq/Redis is unavailable.
+  def self.enqueue_notification(gift_card_id, raw_code)
+    NotificationJob.perform_later(gift_card_id, raw_code)
+    Rails.logger.info "📤 Enqueued notification job for gift card #{gift_card_id} (async)"
+  rescue NoMethodError, Redis::CannotConnectError => e
+    if Rails.env.production?
+      Rails.logger.error "❌ Sidekiq/Redis unavailable (#{e.class}); notification not sent for gift_card_id=#{gift_card_id}. Fix Redis and retry manually if needed."
+      # Do not block webhook; notification can be retried via support or cron
+    else
+      Rails.logger.warn "⚠️ Sidekiq not available (#{e.class}), sending notification synchronously"
+      NotificationJob.perform_now(gift_card_id, raw_code)
+      Rails.logger.info "📤 Sent notification for gift card #{gift_card_id} (sync)"
+    end
+  rescue => e
+    Rails.logger.error "❌ Failed to enqueue/send notification: #{e.message}"
+    Rails.logger.error e.backtrace.first(5).join("\n")
   end
 
   def self.find_or_create_recipient(metadata)

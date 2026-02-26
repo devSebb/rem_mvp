@@ -45,6 +45,15 @@ services:
         sync: false
       - key: APP_HOST
         sync: false
+      # Optional: tune concurrency and observability (defaults in puma/database apply if unset)
+      - key: RAILS_MAX_THREADS
+        sync: false
+      - key: WEB_CONCURRENCY
+        sync: false
+      - key: RAILS_DB_POOL
+        sync: false
+      - key: REQUEST_METRICS_ENABLED
+        sync: false
 
   - type: worker
     name: rem-mvp-sidekiq

@@ -18,17 +18,43 @@ RSpec.describe "GiftCards", type: :request do
 
   before { sign_in user }
 
+  describe "GET /gift_cards (wallet)" do
+    it "returns 200 and wallet page content" do
+      get "/gift_cards"
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Mi Billetera", "Billetera")
+    end
+
+    it "returns wallet data as JSON with same contract (array, include sender/recipient/merchant)" do
+      get "/gift_cards", as: :json
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("application/json")
+      data = response.parsed_body
+      expect(data).to be_an(Array)
+      data.each do |card|
+        expect(card).to have_key("id")
+        expect(card).to have_key("amount")
+        expect(card).to have_key("status")
+        expect(card).to have_key("sender_id")
+        expect(card).to have_key("recipient_id")
+        expect(card).to have_key("sender")
+        expect(card).to have_key("recipient")
+        expect(card).to have_key("merchant")
+      end
+    end
+  end
+
   describe "POST /gift_cards/checkout" do
     context "when KYC details are missing" do
       let(:user) { create(:user, address: nil, country_of_residence: nil, date_of_birth: nil) }
 
-      it "redirects to new gift card page without creating a Stripe session" do
+      it "redirects to profile edit with KYC section anchor without creating a Stripe session" do
         expect(Stripe::Checkout::Session).not_to receive(:create)
 
         post endpoint, params: base_params
 
-        expect(response).to redirect_to(new_gift_card_path)
-        expect(flash[:alert]).to include("complete your details")
+        expect(response).to redirect_to(edit_user_registration_path(anchor: "kyc-section"))
+        expect(flash[:alert]).to match(/completa tu perfil|complete your details/i)
       end
     end
 

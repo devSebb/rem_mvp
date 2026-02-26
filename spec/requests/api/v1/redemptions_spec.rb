@@ -37,6 +37,22 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
       redemption_txn = Transaction.find(body["transaction_id"])
       expect(redemption_txn.merchant_id).to eq(other_merchant.id)
     end
+
+    it "returns response contract: approved, transaction_id, gift_card_id, remaining_balance_cents, currency" do
+      post "/api/v1/redemptions",
+           params: {
+             token: raw_token,
+             amount_cents: 500,
+             idempotency_key: SecureRandom.uuid
+           }.to_json,
+           headers: auth_headers(merchant_secret)
+
+      expect(response).to have_http_status(:ok)
+      body = JSON.parse(response.body)
+      expect(body).to include("approved", "transaction_id", "gift_card_id", "remaining_balance_cents", "currency")
+      expect(body["approved"]).to be(true).or be(false)
+      expect(body["currency"]).to be_a(String)
+    end
   end
 
   def auth_headers(secret)

@@ -45,32 +45,49 @@ class GiftCard < ApplicationRecord
   def self.find_active_by_code(code)
     return nil if code.blank?
 
-    # Normalize code - remove spaces and ensure uppercase
-    normalized_code = code.strip.upcase.gsub(/\s+/, "")
+    normalized_code = normalize_code_for_lookup(code)
     code_fingerprint = fingerprint_for_code(normalized_code)
+    lookup_hash = Digest::SHA256.hexdigest(normalized_code)
 
     if Rails.env.development?
       Rails.logger.debug "🔍 Looking for gift card with code fingerprint: #{code_fingerprint}"
     end
 
+    # Indexed path: use code_lookup_hash when present (new and backfilled records)
+    candidate = where(status: :active).find_by(code_lookup_hash: lookup_hash)
+    if candidate
+      begin
+        if BCrypt::Password.new(candidate.code_digest) == normalized_code
+          Rails.logger.info "✅ Found gift card #{candidate.id} (indexed lookup) for code fingerprint #{code_fingerprint}"
+          return candidate
+        end
+      rescue BCrypt::Errors::InvalidHash => e
+        Rails.logger.error "❌ Invalid code_digest for gift card #{candidate.id}: #{e.message}"
+      end
+      return nil # Hash matched but BCrypt failed; no need to try legacy
+    end
+
+    # Legacy path: for records without code_lookup_hash set yet
+    found_card = legacy_find_active_by_code(normalized_code, code_fingerprint)
+    Rails.logger.warn "[PARITY] find_active_by_code used legacy path for fingerprint #{code_fingerprint}" if found_card
+    found_card
+  end
+
+  def self.legacy_find_active_by_code(normalized_code, code_fingerprint = fingerprint_for_code(normalized_code))
     gift_cards = where(status: :active)
-    found_card = gift_cards.find { |gc|
+    found = gift_cards.find do |gc|
       begin
         BCrypt::Password.new(gc.code_digest) == normalized_code
       rescue BCrypt::Errors::InvalidHash => e
         Rails.logger.error "❌ Invalid code_digest for gift card #{gc.id}: #{e.message}"
         false
       end
-    }
-
-    if found_card
-      Rails.logger.info "✅ Found gift card #{found_card.id} for code fingerprint #{code_fingerprint}"
-    else
-      Rails.logger.warn "❌ No active gift card found for provided code (fingerprint: #{code_fingerprint})"
     end
-
-    found_card
+    Rails.logger.info "✅ Found gift card #{found.id} (legacy) for code fingerprint #{code_fingerprint}" if found
+    Rails.logger.warn "❌ No active gift card found for provided code (fingerprint: #{code_fingerprint})" unless found
+    found
   end
+  private_class_method :legacy_find_active_by_code
 
   def self.fingerprint_for_code(code)
     return "[blank]" if code.blank?
@@ -87,6 +104,7 @@ class GiftCard < ApplicationRecord
       new_raw_code = CodeGenerator.generate
       self.code_digest = BCrypt::Password.create(new_raw_code)
       self.raw_code = new_raw_code  # Store encrypted
+      self.code_lookup_hash = Digest::SHA256.hexdigest(GiftCard.normalize_code_for_lookup(new_raw_code))
       save!
       new_raw_code
     else
@@ -358,14 +376,19 @@ class GiftCard < ApplicationRecord
     self.currency ||= "USD"
     self.status ||= :active
 
-    # Generate code and store digest + encrypted raw code
+    # Generate code and store digest + encrypted raw code + lookup hash for fast redemption
     if code_digest.blank?
       raw_code_value = CodeGenerator.generate
       self.code_digest = BCrypt::Password.create(raw_code_value)
       self.raw_code = raw_code_value  # Store encrypted
+      self.code_lookup_hash = Digest::SHA256.hexdigest(GiftCard.normalize_code_for_lookup(raw_code_value))
     end
 
     self.remaining_balance = amount if amount.present? && remaining_balance == 0
+  end
+
+  def self.normalize_code_for_lookup(code)
+    code.to_s.strip.upcase.gsub(/\s+/, "")
   end
 
   # For non-Stripe issuance (seeds, admin-issued, manual test cards), record an issuance transaction

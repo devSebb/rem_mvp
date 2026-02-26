@@ -26,6 +26,12 @@ RSpec.describe "Merchant::Dashboards", type: :request do
         expect(response).to have_http_status(:ok)
       end
 
+      it "returns response contract: dashboard page with key sections" do
+        get "/merchant"
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Comercio", "Canjear", "Liquidaciones")
+      end
+
       it "shows redemptions REDEEMED BY this merchant (redeemer-paid model)" do
         # Create a gift card issued by OTHER merchant
         gift_card_from_other = create(:gift_card, merchant: other_merchant, sender: sender, recipient: recipient, amount: 5000)

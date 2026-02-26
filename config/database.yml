@@ -81,4 +81,5 @@ test:
 production:
   <<: *default
   url: <%= ENV['DATABASE_URL'] %>
-  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  # Pool must be >= RAILS_MAX_THREADS * WEB_CONCURRENCY to avoid connection starvation.
+  pool: <%= ENV.fetch("RAILS_DB_POOL") { (ENV["RAILS_MAX_THREADS"] || "5").to_i * [(ENV["WEB_CONCURRENCY"] || "2").to_i, 1].max } %>

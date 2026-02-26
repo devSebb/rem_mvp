@@ -139,6 +139,19 @@ RSpec.describe "POST /api/v1/checkout/payment_intent", type: :request do
       expect(parsed_body["request_id"]).to be_present
     end
 
+    it "returns response contract: data.client_secret, data.payment_intent_id, request_id" do
+      post "/api/v1/checkout/payment_intent",
+           params: valid_params.to_json,
+           headers: auth_headers(access_token)
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_body).to include("data", "request_id")
+      expect(parsed_data).to include("client_secret", "payment_intent_id")
+      expect(parsed_data["client_secret"]).to be_a(String)
+      expect(parsed_data["payment_intent_id"]).to be_a(String)
+      expect(parsed_body["request_id"]).to be_a(String)
+    end
+
     it "passes correct parameters to Stripe including metadata" do
       expect(Stripe::PaymentIntent).to receive(:create).with(
         hash_including(

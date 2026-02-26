@@ -1,6 +1,8 @@
 require_relative "boot"
 
 require "rails"
+require File.expand_path("../lib/request_metrics", __dir__)
+require File.expand_path("../lib/request_metrics_middleware", __dir__)
 # Pick the frameworks you want:
 require "active_model/railtie"
 require "active_job/railtie"
@@ -38,6 +40,9 @@ module RemMvp
 
     # Don't generate system test files.
     config.generators.system_tests = nil
+
+    # Request baseline metrics for critical paths (query count, slow queries, timing)
+    config.middleware.use RequestMetricsMiddleware
 
     # Configure Rack::Attack
     config.middleware.use Rack::Attack

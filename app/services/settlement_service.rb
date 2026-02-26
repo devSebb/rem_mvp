@@ -74,38 +74,65 @@ class SettlementService
   # @param redeemer_merchant [Merchant] The merchant who performed the redemption(s)
   # @return [Hash] Settlement summary with :total_redeemed, :settled_amount, etc.
   def self.gift_card_settlement_summary_for_redeemer(gift_card, redeemer_merchant)
-    # Get redemption transactions for this gift card performed BY the specified redeemer
-    redemption_transactions = gift_card.transactions
-                                       .where(merchant: redeemer_merchant)
-                                       .where(txn_type: :redemption, status: :succeeded)
-    
-    total_redeemed = redemption_transactions.sum(:amount)
-    
-    # Calculate settled amount by checking the REDEEMER's settlements (not issuer's)
-    settled_amount = 0
+    batch = gift_card_settlement_summaries_for_redeemer([gift_card], redeemer_merchant)
+    batch[gift_card.id] || {
+      total_redeemed: 0,
+      settled_amount: 0,
+      remaining_to_settle: 0,
+      settlement_status: "pending",
+      last_redemption: nil,
+      issuing_merchant: gift_card.merchant
+    }
+  end
+
+  # Batch version: compute settlement summaries for multiple gift cards in a fixed number of queries.
+  # Use this from the settlements index to avoid N+1.
+  #
+  # @param gift_cards [Array<GiftCard>]
+  # @param redeemer_merchant [Merchant]
+  # @return [Hash] gift_card_id => summary hash (same shape as gift_card_settlement_summary_for_redeemer)
+  def self.gift_card_settlement_summaries_for_redeemer(gift_cards, redeemer_merchant)
+    gift_card_ids = gift_cards.map(&:id).uniq
+    return {} if gift_card_ids.empty?
+
+    base_scope = Transaction.where(merchant: redeemer_merchant, txn_type: :redemption, status: :succeeded)
+
+    # Total redeemed per gift card (one query)
+    total_redeemed_by_gc = base_scope.where(gift_card_id: gift_card_ids).group(:gift_card_id).sum(:amount)
+
+    # Last redemption per gift card (one query)
+    last_redemption_by_gc = base_scope.where(gift_card_id: gift_card_ids).group(:gift_card_id).maximum(:created_at)
+
+    # Settled amount: for each settlement, get per-gift-card amounts and total (2 queries per settlement)
+    settled_by_gc = Hash.new(0)
     redeemer_merchant.settlements.each do |settlement|
-      # settlement.transactions already scopes by settlement.merchant (redeemer)
-      gift_card_transactions = settlement.transactions.where(gift_card: gift_card)
-      if gift_card_transactions.any?
-        total_settlement_transactions = settlement.transactions.sum(:amount)
-        gift_card_amount_in_settlement = gift_card_transactions.sum(:amount)
-        
-        if total_settlement_transactions > 0
-          proportion = gift_card_amount_in_settlement.to_f / total_settlement_transactions
-          settled_amount += (settlement.amount * proportion).round
-        end
+      period_scope = base_scope.where(created_at: settlement.period_start..settlement.period_end)
+      total_settlement = period_scope.sum(:amount)
+      next if total_settlement.zero?
+
+      by_gift_card = period_scope.where(gift_card_id: gift_card_ids).group(:gift_card_id).sum(:amount)
+      by_gift_card.each do |gift_card_id, amount|
+        proportion = amount.to_f / total_settlement
+        settled_by_gc[gift_card_id] += (settlement.amount * proportion).round
       end
     end
-    
-    remaining_to_settle = total_redeemed - settled_amount
-    
-    {
-      total_redeemed: total_redeemed,
-      settled_amount: settled_amount,
-      remaining_to_settle: remaining_to_settle,
-      settlement_status: remaining_to_settle > 0 ? 'pending' : 'settled',
-      last_redemption: redemption_transactions.order(created_at: :desc).first&.created_at,
-      issuing_merchant: gift_card.merchant # Include issuer info for transparency
-    }
+
+    gift_cards_by_id = gift_cards.index_by(&:id)
+    gift_card_ids.map { |id|
+      total_redeemed = total_redeemed_by_gc[id] || 0
+      settled = settled_by_gc[id] || 0
+      remaining = total_redeemed - settled
+      [
+        id,
+        {
+          total_redeemed: total_redeemed,
+          settled_amount: settled,
+          remaining_to_settle: remaining,
+          settlement_status: remaining > 0 ? "pending" : "settled",
+          last_redemption: last_redemption_by_gc[id],
+          issuing_merchant: gift_cards_by_id[id]&.merchant
+        }
+      ]
+    }.to_h
   end
 end

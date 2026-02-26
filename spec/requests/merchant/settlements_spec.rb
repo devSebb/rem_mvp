@@ -88,6 +88,12 @@ RSpec.describe "Merchant::Settlements", type: :request do
       end
     end
 
+    it "returns response contract: settlements page with key sections" do
+      get merchant_settlements_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Liquidaciones", "canjes")
+    end
+
     context "when not logged in" do
       before { sign_out merchant_user }
 

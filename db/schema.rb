@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_01_24_223150) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_26_033506) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -67,15 +67,20 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_24_223150) do
     t.datetime "last_owner_activity_at"
     t.string "payment_intent_id"
     t.text "note"
+    t.string "code_lookup_hash"
     t.index ["checkout_session_id"], name: "index_gift_cards_on_checkout_session_id", unique: true
     t.index ["code_digest"], name: "index_gift_cards_on_code_digest", unique: true
+    t.index ["code_lookup_hash"], name: "index_gift_cards_on_code_lookup_hash", unique: true, where: "(code_lookup_hash IS NOT NULL)"
     t.index ["encrypted_raw_code"], name: "index_gift_cards_on_encrypted_raw_code", where: "(encrypted_raw_code IS NOT NULL)"
     t.index ["last_owner_activity_at"], name: "index_gift_cards_on_last_owner_activity_at"
     t.index ["link_token_digest"], name: "index_gift_cards_on_link_token_digest", unique: true
     t.index ["merchant_id"], name: "index_gift_cards_on_merchant_id"
     t.index ["otp_digest"], name: "index_gift_cards_on_otp_digest", unique: true
     t.index ["payment_intent_id"], name: "index_gift_cards_on_payment_intent_id", unique: true, where: "(payment_intent_id IS NOT NULL)"
+    t.index ["recipient_id", "updated_at", "id"], name: "index_gift_cards_on_recipient_updated_id"
     t.index ["recipient_id"], name: "index_gift_cards_on_recipient_id"
+    t.index ["sender_id", "status", "created_at"], name: "index_gift_cards_on_sender_status_created"
+    t.index ["sender_id", "updated_at", "id"], name: "index_gift_cards_on_sender_updated_id"
     t.index ["sender_id"], name: "index_gift_cards_on_sender_id"
     t.index ["status"], name: "index_gift_cards_on_status"
   end
@@ -145,6 +150,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_24_223150) do
     t.string "merchant_reference"
     t.index ["gift_card_id"], name: "index_transactions_on_gift_card_id"
     t.index ["merchant_id", "idempotency_key"], name: "index_transactions_on_merchant_id_and_idempotency_key", unique: true, where: "(idempotency_key IS NOT NULL)"
+    t.index ["merchant_id", "txn_type", "status", "created_at"], name: "index_transactions_on_merchant_txn_status_created"
     t.index ["merchant_id"], name: "index_transactions_on_merchant_id"
     t.index ["metadata"], name: "index_transactions_on_metadata", using: :gin
     t.index ["redemption_token_id"], name: "index_transactions_on_redemption_token_id"

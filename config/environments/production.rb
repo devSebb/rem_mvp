@@ -106,7 +106,10 @@ Rails.application.configure do
   config.cache_store = :redis_cache_store, {
     url: ENV["REDIS_URL"],
     namespace: "rem_mvp:cache",
-    reconnect_attempts: 1
+    reconnect_attempts: 2,
+    connect_timeout: 2,
+    read_timeout: 2,
+    write_timeout: 2
   }
 
   # Use a real queuing backend for Active Job.
