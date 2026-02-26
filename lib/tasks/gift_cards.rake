@@ -27,6 +27,28 @@ namespace :gift_cards do
     puts "⚠️  Note: These gift cards now have NEW codes. Recipients will need to be notified of the new codes."
   end
 
+  desc "Backfill code_lookup_hash for existing gift cards without changing codes"
+  task backfill_code_lookup_hash: :environment do
+    pending = GiftCard.where(code_lookup_hash: nil).count
+    puts "🔄 Enqueuing code_lookup_hash backfill for #{pending} gift cards..."
+    BackfillGiftCardCodeLookupHashJob.perform_later
+    puts "✅ Backfill job enqueued"
+  end
+
+  desc "Report code_lookup_hash coverage"
+  task report_code_lookup_hash_coverage: :environment do
+    total = GiftCard.count
+    with_hash = GiftCard.where.not(code_lookup_hash: nil).count
+    without_hash = total - with_hash
+    pct = total.zero? ? 100.0 : ((with_hash.to_f / total.to_f) * 100).round(2)
+
+    puts "📊 GiftCard code lookup coverage"
+    puts "   Total: #{total}"
+    puts "   With code_lookup_hash: #{with_hash}"
+    puts "   Without code_lookup_hash: #{without_hash}"
+    puts "   Coverage: #{pct}%"
+  end
+
   namespace :merchantless do
     desc "Report gift cards that have no merchant assigned"
     task report: :environment do

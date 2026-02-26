@@ -201,16 +201,8 @@
         }
       }
       
-      // Setup on initial load and Turbo navigation
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupMobileMenu);
-      } else {
-        setupMobileMenu();
-      }
-      
-      // Also setup on Turbo navigation
+      // Setup on Turbo navigation (includes first load)
       document.addEventListener('turbo:load', setupMobileMenu);
-      document.addEventListener('turbo:render', setupMobileMenu);
     </script>
   </body>
 </html>

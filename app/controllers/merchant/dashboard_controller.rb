@@ -14,13 +14,14 @@ class Merchant::DashboardController < ApplicationController
     @today_redemptions = @redemption_transactions.where(created_at: Date.current.all_day).count
     
     # Pending settlement (sum of all redemption amounts redeemed by this merchant)
-    @pending_settlement = @redemption_transactions.sum(:amount)
+    total_redemption_amount = @redemption_transactions.sum(:amount)
+    @pending_settlement = total_redemption_amount
     
     # Recent redemptions (transactions, not gift cards)
     @recent_redemptions = @redemption_transactions.order(created_at: :desc).limit(10)
     
     # Additional stats for partial redemptions
-    @total_redemption_amount = @redemption_transactions.sum(:amount)
+    @total_redemption_amount = total_redemption_amount
     @unique_gift_cards_redeemed = @redemption_transactions.select(:gift_card_id).distinct.count
   end
 

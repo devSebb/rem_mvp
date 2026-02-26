@@ -5,9 +5,12 @@ class GiftCardsController < ApplicationController
 
   def index
     @gift_cards = policy_scope(GiftCard).includes(:sender, :recipient, :merchant).order(created_at: :desc)
-    # Track owner activity for balance check (batch update to avoid N+1)
-    gift_card_ids = @gift_cards.pluck(:id)
-    GiftCard.where(id: gift_card_ids).update_all(last_owner_activity_at: Time.current) if gift_card_ids.any? && current_user.present?
+    # Track owner activity once on HTML wallet load to avoid duplicate writes
+    # when the page immediately requests JSON data.
+    if request.format.html? && current_user.present?
+      gift_card_ids = @gift_cards.pluck(:id)
+      GiftCard.where(id: gift_card_ids).update_all(last_owner_activity_at: Time.current) if gift_card_ids.any?
+    end
 
     respond_to do |format|
       format.html

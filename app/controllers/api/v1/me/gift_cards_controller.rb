@@ -53,6 +53,8 @@ module Api
         end
 
         def serialize_gift_card(card)
+          merchant_logo_url = attachment_url(card.merchant&.logo)
+
           {
             id: card.id,
             amount_cents: card.amount,
@@ -65,11 +67,11 @@ module Api
             sender_id: card.sender_id,
             recipient_id: card.recipient_id,
             merchant_id: card.merchant_id,
-            merchant: card.merchant ? { id: card.merchant.id, store_name: card.merchant.store_name, logo_url: attachment_url(card.merchant.logo) } : nil,
+            merchant: card.merchant ? { id: card.merchant.id, store_name: card.merchant.store_name, logo_url: merchant_logo_url } : nil,
             store_name: card.merchant&.store_name,
             merchant_name: card.merchant&.store_name,
             merchant_store_name: card.merchant&.store_name,
-            merchant_logo_url: attachment_url(card.merchant&.logo),
+            merchant_logo_url: merchant_logo_url,
             note: card.note,
             sender: serialize_sender(card.sender)
           }

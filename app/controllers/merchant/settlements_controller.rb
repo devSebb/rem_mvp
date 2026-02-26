@@ -13,7 +13,7 @@ class Merchant::SettlementsController < ApplicationController
     # regardless of who issued the gift card.
     @redeemed_gift_cards = GiftCard.joins(:transactions)
                                   .where(transactions: { merchant: @merchant, txn_type: :redemption, status: :succeeded })
-                                  .includes(:sender, :recipient, :merchant, :transactions)
+                                  .includes(:sender, :recipient, :merchant)
                                   .distinct
                                   .order(created_at: :desc)
     

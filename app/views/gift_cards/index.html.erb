@@ -413,25 +413,26 @@
     const sortFilter = document.getElementById('sort-filter');
     
     if (searchInput) {
-      searchInput.addEventListener('input', applyFilters);
+      if (!searchInput.dataset.walletBound) {
+        searchInput.addEventListener('input', applyFilters);
+        searchInput.dataset.walletBound = '1';
+      }
     }
     if (statusFilter) {
-      statusFilter.addEventListener('change', applyFilters);
+      if (!statusFilter.dataset.walletBound) {
+        statusFilter.addEventListener('change', applyFilters);
+        statusFilter.dataset.walletBound = '1';
+      }
     }
     if (sortFilter) {
-      sortFilter.addEventListener('change', applyFilters);
+      if (!sortFilter.dataset.walletBound) {
+        sortFilter.addEventListener('change', applyFilters);
+        sortFilter.dataset.walletBound = '1';
+      }
     }
   }
 
-  // Initialize on page load (for full page loads)
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeWallet);
-  } else {
-    // DOM is already ready
-    initializeWallet();
-  }
-
-  // Initialize on Turbo navigation (for Turbo-driven page loads)
+  // Initialize on Turbo navigation (includes first load)
   document.addEventListener('turbo:load', initializeWallet);
 </script>
 

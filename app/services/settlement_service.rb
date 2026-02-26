@@ -103,17 +103,37 @@ class SettlementService
     # Last redemption per gift card (one query)
     last_redemption_by_gc = base_scope.where(gift_card_id: gift_card_ids).group(:gift_card_id).maximum(:created_at)
 
-    # Settled amount: for each settlement, get per-gift-card amounts and total (2 queries per settlement)
+    # Settled amount:
+    # Load settlement periods and relevant redemption transactions once, then compute
+    # per-settlement totals in memory to avoid 2 queries per settlement.
     settled_by_gc = Hash.new(0)
-    redeemer_merchant.settlements.each do |settlement|
-      period_scope = base_scope.where(created_at: settlement.period_start..settlement.period_end)
-      total_settlement = period_scope.sum(:amount)
-      next if total_settlement.zero?
+    settlements = redeemer_merchant.settlements.select(:id, :amount, :period_start, :period_end).to_a
+    if settlements.any?
+      min_start = settlements.map(&:period_start).min
+      max_end = settlements.map(&:period_end).max
+      gift_card_id_set = gift_card_ids.each_with_object({}) { |id, memo| memo[id] = true }
 
-      by_gift_card = period_scope.where(gift_card_id: gift_card_ids).group(:gift_card_id).sum(:amount)
-      by_gift_card.each do |gift_card_id, amount|
-        proportion = amount.to_f / total_settlement
-        settled_by_gc[gift_card_id] += (settlement.amount * proportion).round
+      tx_rows = base_scope
+                .where(created_at: min_start..max_end)
+                .pluck(:created_at, :amount, :gift_card_id)
+
+      settlements.each do |settlement|
+        total_settlement = 0
+        by_gift_card = Hash.new(0)
+
+        tx_rows.each do |created_at, amount, gift_card_id|
+          next if created_at < settlement.period_start || created_at > settlement.period_end
+
+          total_settlement += amount
+          by_gift_card[gift_card_id] += amount if gift_card_id_set[gift_card_id]
+        end
+
+        next if total_settlement.zero?
+
+        by_gift_card.each do |gift_card_id, amount|
+          proportion = amount.to_f / total_settlement
+          settled_by_gc[gift_card_id] += (settlement.amount * proportion).round
+        end
       end
     end
 
