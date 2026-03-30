@@ -26,6 +26,9 @@ module Messaging
         results[:email] = send_email
       end
 
+      # Send push notification if recipient has active push tokens
+      results[:push] = send_push
+
       # Update delivery flags
       update_delivery_flags(results)
 
@@ -82,6 +85,23 @@ module Messaging
         Rails.logger.error "SMS delivery failed: #{e.message}"
         { success: false, error: e.message }
       end
+    end
+
+    def send_push
+      return { success: false, error: "No recipient" } unless @recipient
+
+      amount_label = "#{@gift_card.currency} #{"%.2f" % (@gift_card.amount / 100.0)}"
+      merchant_name = @gift_card.merchant&.store_name || "Papayal"
+
+      Messaging::PushSender.new.send_to_user(
+        @recipient,
+        title: "#{merchant_name} — #{amount_label}",
+        body: "#{@sender&.name || "Alguien"} te envi\u00F3 una tarjeta de regalo",
+        data: { type: "gift_card_received", gift_card_id: @gift_card.id.to_s }
+      )
+    rescue => e
+      Rails.logger.error "[Push] Failed: #{e.class} - #{e.message}"
+      { success: false, error: e.message }
     end
 
     def send_email
@@ -153,6 +173,7 @@ module Messaging
       updates[:sent_via_whatsapp] = true if results[:whatsapp]&.dig(:success)
       updates[:sent_via_sms] = true if results[:sms]&.dig(:success)
       updates[:sent_via_email] = true if results[:email]&.dig(:success)
+      updates[:sent_via_push] = true if results[:push]&.dig(:success)
 
       @gift_card.update!(updates) if updates.any?
     end

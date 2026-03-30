@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_26_033506) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_29_100001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -68,6 +68,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_26_033506) do
     t.string "payment_intent_id"
     t.text "note"
     t.string "code_lookup_hash"
+    t.boolean "sent_via_push", default: false
     t.index ["checkout_session_id"], name: "index_gift_cards_on_checkout_session_id", unique: true
     t.index ["code_digest"], name: "index_gift_cards_on_code_digest", unique: true
     t.index ["code_lookup_hash"], name: "index_gift_cards_on_code_lookup_hash", unique: true, where: "(code_lookup_hash IS NOT NULL)"
@@ -103,6 +104,18 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_26_033506) do
     t.index ["secret_key_digest"], name: "index_merchants_on_secret_key_digest", unique: true
     t.index ["store_name"], name: "index_merchants_on_store_name"
     t.index ["user_id"], name: "index_merchants_on_user_id"
+  end
+
+  create_table "push_tokens", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "token", null: false
+    t.string "platform", null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["token"], name: "index_push_tokens_on_token", unique: true
+    t.index ["user_id", "active"], name: "index_push_tokens_on_user_id_and_active"
+    t.index ["user_id"], name: "index_push_tokens_on_user_id"
   end
 
   create_table "redemption_tokens", force: :cascade do |t|
@@ -204,6 +217,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_26_033506) do
   add_foreign_key "gift_cards", "users", column: "recipient_id"
   add_foreign_key "gift_cards", "users", column: "sender_id"
   add_foreign_key "merchants", "users"
+  add_foreign_key "push_tokens", "users"
   add_foreign_key "redemption_tokens", "gift_cards"
   add_foreign_key "settlements", "merchants"
   add_foreign_key "transactions", "gift_cards"

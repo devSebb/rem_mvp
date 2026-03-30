@@ -43,6 +43,8 @@ gem "twilio-ruby"
 # Email delivery
 gem "sendgrid-ruby"
 
+# Push notifications via Expo Push API (uses Net::HTTP directly, no gem needed)
+
 # File storage (Active Storage - S3)
 gem "aws-sdk-s3"
 

@@ -35,6 +35,12 @@ class NotificationJob < ApplicationJob
     elsif results[:whatsapp]
       Rails.logger.warn "   ✗ WhatsApp failed: #{results[:whatsapp][:error]}"
     end
+
+    if results[:push]&.dig(:success)
+      Rails.logger.info "   ✓ Push notification sent successfully"
+    elsif results[:push]
+      Rails.logger.warn "   ✗ Push failed: #{results[:push][:error]}"
+    end
     
     results
   rescue ActiveRecord::RecordNotFound

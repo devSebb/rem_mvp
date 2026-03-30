@@ -14,6 +14,7 @@ class User < ApplicationRecord
   has_one :merchant, dependent: :destroy
   has_many :sent_gift_cards, class_name: 'GiftCard', foreign_key: 'sender_id', dependent: :nullify
   has_many :received_gift_cards, class_name: 'GiftCard', foreign_key: 'recipient_id', dependent: :nullify
+  has_many :push_tokens, dependent: :destroy
   has_one_attached :avatar
 
   # Validations

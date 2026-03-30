@@ -62,6 +62,7 @@ Rails.application.routes.draw do
         resources :gift_cards, only: [:index, :show] do
           post :redemption_token, on: :member
         end
+        resource :push_tokens, only: [:create, :destroy]
       end
 
       post "me/avatar", to: "me/avatars#create"
