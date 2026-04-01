@@ -42,7 +42,8 @@ module Api
             :last_name,
             :name,
             :phone,
-            :device_id
+            :device_id,
+            interests: []
           )
         end
 
@@ -58,6 +59,7 @@ module Api
           user.first_name = extracted_first_name if extracted_first_name.present?
           user.last_name = extracted_last_name if extracted_last_name.present?
           user.phone = signup_params[:phone] if signup_params.key?(:phone)
+          user.interests = signup_params[:interests] if signup_params[:interests].present?
 
           user.role ||= :user if user.respond_to?(:role) && user.role.blank?
 

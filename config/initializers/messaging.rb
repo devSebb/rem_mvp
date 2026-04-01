@@ -11,7 +11,7 @@ Rails.application.configure do
     # Email configuration
     email: {
       from: ENV['DEFAULT_FROM_EMAIL'] || 'papayalapp@gmail.com',
-      sendgrid_api_key: ENV['SENDGRID_API_KEY']
+      resend_api_key: ENV['RESEND_API_KEY']
     },
     
     # App configuration

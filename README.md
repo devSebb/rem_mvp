@@ -63,7 +63,7 @@ A production-lean MVP for buying and sending gift cards, with merchant redemptio
 
 ### Environment Variables
 
-Environment variables (Twilio/SendGrid optional; see `.env.example`):
+Environment variables (Twilio/Resend optional; see `.env.example`):
 
 ```bash
 # Stripe Configuration
@@ -117,8 +117,7 @@ Render deployments must not rely on local disk for uploads. Set these variables 
 - `ACTIVE_STORAGE_SERVICE=amazon` (optional override; auto-detected if all AWS_* vars are present)
 
 **Other:**
-- `SENDGRID_API_KEY` (optional; set to send real emails)
-- `SENDGRID_DOMAIN` (optional, defaults to `APP_HOST` or `rem.com`)
+- `RESEND_API_KEY` (optional; set to send real emails via Resend)
 - `DEFAULT_FROM_EMAIL` (recommended when enabling email delivery)
 
 **Active Storage Service Selection:**
@@ -128,10 +127,10 @@ The app automatically selects the storage service based on environment variables
 3. If all `AWS_*` variables are present, it uses Amazon S3
 4. Otherwise, it falls back to local disk storage (not recommended for production)
 
-### Email delivery (SendGrid)
+### Email delivery (Resend)
 
-- Email is optional; deployments will succeed without SendGrid variables.
-- To send real emails on Render, set `SENDGRID_API_KEY` and `DEFAULT_FROM_EMAIL`.
+- Email is optional; deployments will succeed without Resend variables.
+- To send real emails on Render, set `RESEND_API_KEY` and `DEFAULT_FROM_EMAIL`.
 - Without those variables, the app will deploy but emails will not be delivered.
 
 ### Messaging (Twilio)

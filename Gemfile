@@ -41,7 +41,7 @@ gem "stripe"
 gem "twilio-ruby"
 
 # Email delivery
-gem "sendgrid-ruby"
+gem "resend", "~> 0.17"
 
 # Push notifications via Expo Push API (uses Net::HTTP directly, no gem needed)
 

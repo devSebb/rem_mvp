@@ -39,7 +39,7 @@ services:
         sync: false
       - key: TWILIO_WHATSAPP_NUMBER
         sync: false
-      - key: SENDGRID_API_KEY
+      - key: RESEND_API_KEY
         sync: false
       - key: DEFAULT_FROM_EMAIL
         sync: false
@@ -92,7 +92,7 @@ services:
         sync: false
       - key: TWILIO_WHATSAPP_NUMBER
         sync: false
-      - key: SENDGRID_API_KEY
+      - key: RESEND_API_KEY
         sync: false
       - key: DEFAULT_FROM_EMAIL
         sync: false
