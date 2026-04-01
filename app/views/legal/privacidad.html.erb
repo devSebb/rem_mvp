@@ -1,82 +1,82 @@
+<% set_locale_titles es: "Política de Privacidad | Papayal", en: "Privacy Policy | Papayal" %>
+
 <div class="max-w-7xl mx-auto">
   <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-    <!-- Sidebar -->
     <div class="lg:col-span-1">
-      <%= render 'sidebar' %>
+      <%= render "legal/sidebar" %>
     </div>
 
-    <!-- Main Content -->
     <div class="lg:col-span-3">
       <div class="papayal-card p-8">
         <div class="mb-6">
-          <h1 class="text-3xl font-bold text-[#0D2F32] mb-2">Política de Privacidad</h1>
-          <p class="text-sm text-[#2C3A43]/70">Última actualización: <%= Date.today.strftime("%d de %B de %Y") %></p>
+          <h1 class="text-3xl font-bold text-[#0D2F32] mb-2"><%= localized_text es: "Política de Privacidad", en: "Privacy Policy" %></h1>
+          <p class="text-sm text-[#2C3A43]/70">
+            <%= locale_tag :es, tag: :span do %>Última actualización: <%= localized_date(:es) %><% end %>
+            <%= locale_tag :en, tag: :span do %>Last updated: <%= localized_date(:en) %><% end %>
+          </p>
         </div>
 
         <div class="prose prose-slate max-w-none text-[#2C3A43]">
           <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">1. Información que Recopilamos</h2>
-            <p class="mb-4">Recopilamos:</p>
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "1. Información que Recopilamos", en: "1. Information We Collect" %></h2>
+            <p class="mb-4"><%= localized_text es: "Recopilamos:", en: "We may collect:" %></p>
             <ul class="list-disc pl-6 space-y-2">
-              <li>Nombre, correo, teléfono</li>
-              <li>Información de cuenta</li>
-              <li>Historial de transacciones</li>
-              <li>Datos técnicos (IP, dispositivo)</li>
+              <li><%= localized_text es: "Nombre, correo, teléfono", en: "Name, email address, and phone number" %></li>
+              <li><%= localized_text es: "Información de cuenta", en: "Account and profile information" %></li>
+              <li><%= localized_text es: "Historial de transacciones", en: "Purchase and redemption history" %></li>
+              <li><%= localized_text es: "Datos técnicos (IP, dispositivo)", en: "Technical data such as IP address and device information" %></li>
             </ul>
           </section>
 
           <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">2. Uso de la Información</h2>
-            <p class="mb-4">Utilizamos la información para:</p>
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "2. Uso de la Información", en: "2. How We Use Information" %></h2>
+            <p class="mb-4"><%= localized_text es: "Utilizamos la información para:", en: "We use information to:" %></p>
             <ul class="list-disc pl-6 space-y-2">
-              <li>Operar la Aplicación</li>
-              <li>Procesar pagos</li>
-              <li>Enviar notificaciones</li>
-              <li>Prevenir fraude</li>
-              <li>Cumplir obligaciones legales</li>
+              <li><%= localized_text es: "Operar la Aplicación", en: "Operate the App and website" %></li>
+              <li><%= localized_text es: "Procesar pagos", en: "Process prepaid gift card purchases" %></li>
+              <li><%= localized_text es: "Enviar notificaciones", en: "Send service notifications" %></li>
+              <li><%= localized_text es: "Prevenir fraude", en: "Detect and prevent fraud or abuse" %></li>
+              <li><%= localized_text es: "Cumplir obligaciones legales", en: "Comply with legal and compliance obligations" %></li>
             </ul>
           </section>
 
           <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">3. Compartición de Datos</h2>
-            <p class="mb-4">Podemos compartir datos con:</p>
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "3. Compartición de Datos", en: "3. Information Sharing" %></h2>
+            <p class="mb-4"><%= localized_text es: "Podemos compartir datos con:", en: "We may share information with:" %></p>
             <ul class="list-disc pl-6 space-y-2">
-              <li>Proveedores de pago</li>
-              <li>Comercios afiliados</li>
-              <li>Twilio (SMS, verificación y notificaciones)</li>
-              <li>Resend (envío de correos electrónicos)</li>
-              <li>Autoridades cuando sea legalmente requerido</li>
+              <li><%= localized_text es: "Proveedores de pago", en: "Payment service providers" %></li>
+              <li><%= localized_text es: "Comercios afiliados", en: "Partner merchants when needed for redemption support" %></li>
+              <li><%= localized_text es: "Twilio (SMS, verificación y notificaciones)", en: "Twilio for SMS, verification, and notifications" %></li>
+              <li><%= localized_text es: "Resend (envío de correos electrónicos)", en: "Resend for email delivery" %></li>
+              <li><%= localized_text es: "Autoridades cuando sea legalmente requerido", en: "Government or regulatory authorities when legally required" %></li>
             </ul>
           </section>
 
           <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">4. Almacenamiento y Seguridad</h2>
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "4. Almacenamiento y Seguridad", en: "4. Storage and Security" %></h2>
+            <p><%= localized_text es: "Aplicamos medidas técnicas y organizativas razonables para proteger los datos.", en: "We use reasonable technical and organizational safeguards to protect personal information." %></p>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "5. Derechos del Usuario", en: "5. User Rights" %></h2>
+            <p class="mb-4"><%= localized_text es: "El Usuario puede:", en: "Users may request to:" %></p>
+            <ul class="list-disc pl-6 space-y-2">
+              <li><%= localized_text es: "Acceder a sus datos", en: "Access their information" %></li>
+              <li><%= localized_text es: "Solicitar corrección", en: "Correct inaccurate information" %></li>
+              <li><%= localized_text es: "Solicitar eliminación", en: "Request deletion, subject to legal retention requirements" %></li>
+            </ul>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "6. Retención", en: "6. Retention" %></h2>
+            <p><%= localized_text es: "Conservamos datos mientras exista la cuenta o por obligaciones legales.", en: "We retain information while the account remains active and as otherwise required for legal, compliance, or operational purposes." %></p>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "7. Contacto", en: "7. Contact" %></h2>
             <p>
-              Aplicamos medidas técnicas y organizativas razonables para proteger los datos.
-            </p>
-          </section>
-
-          <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">5. Derechos del Usuario</h2>
-            <p class="mb-4">El Usuario puede:</p>
-            <ul class="list-disc pl-6 space-y-2">
-              <li>Acceder a sus datos</li>
-              <li>Solicitar corrección</li>
-              <li>Solicitar eliminación</li>
-            </ul>
-          </section>
-
-          <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">6. Retención</h2>
-            <p>
-              Conservamos datos mientras exista la cuenta o por obligaciones legales.
-            </p>
-          </section>
-
-          <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">7. Contacto</h2>
-            <p>
-              Para consultas sobre privacidad, contáctanos en: <a href="mailto:privacidad@papayal.app" class="text-[#FCA50F] hover:underline">📧 privacidad@papayal.app</a>
+              <%= locale_tag :es, tag: :span do %>Para consultas sobre privacidad, contáctanos en: <a href="mailto:privacidad@papayal.app" class="text-[#FCA50F] hover:underline">privacidad@papayal.app</a><% end %>
+              <%= locale_tag :en, tag: :span do %>For privacy questions, contact us at: <a href="mailto:privacidad@papayal.app" class="text-[#FCA50F] hover:underline">privacidad@papayal.app</a><% end %>
             </p>
           </section>
         </div>
@@ -84,4 +84,3 @@
     </div>
   </div>
 </div>
-

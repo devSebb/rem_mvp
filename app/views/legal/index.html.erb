@@ -1,22 +1,23 @@
+<% set_locale_titles es: "Hub Legal | Papayal", en: "Legal Hub | Papayal" %>
+
 <div class="max-w-7xl mx-auto">
   <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
     <!-- Sidebar -->
     <div class="lg:col-span-1">
-      <%= render 'sidebar' %>
+      <%= render "legal/sidebar" %>
     </div>
 
     <!-- Main Content -->
     <div class="lg:col-span-3">
       <div class="papayal-card p-8">
         <div class="mb-6">
-          <h1 class="text-3xl font-bold text-[#0D2F32] mb-2">Hub Legal</h1>
-          <p class="text-[#2C3A43]/70">Documentos legales y políticas de Papayal</p>
+          <h1 class="text-3xl font-bold text-[#0D2F32] mb-2"><%= localized_text es: "Hub Legal", en: "Legal Hub" %></h1>
+          <p class="text-[#2C3A43]/70"><%= localized_text es: "Documentos legales y políticas de Papayal", en: "Papayal legal documents and policies" %></p>
         </div>
 
         <div class="prose prose-slate max-w-none">
           <p class="text-[#2C3A43] mb-6">
-            Bienvenido al Hub Legal de Papayal. Aquí encontrarás todos los documentos legales que rigen el uso de nuestra plataforma. 
-            Te recomendamos leer estos documentos cuidadosamente antes de utilizar nuestros servicios.
+            <%= localized_text es: "Bienvenido al Hub Legal de Papayal. Aquí encontrarás todos los documentos legales que rigen el uso de nuestra plataforma. Te recomendamos leer estos documentos cuidadosamente antes de utilizar nuestros servicios.", en: "Welcome to the Papayal Legal Hub. Here you can review the legal documents that apply to the use of our platform and our prepaid digital gift cards for partner merchants." %>
           </p>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
@@ -25,8 +26,8 @@
                 <div class="flex items-start gap-3">
                   <span class="text-2xl">1️⃣</span>
                   <div>
-                    <h3 class="font-semibold text-[#0D2F32] mb-1">Términos y Condiciones de Uso</h3>
-                    <p class="text-sm text-[#2C3A43]/70">Reglas y condiciones para el uso de la plataforma Papayal</p>
+                    <h3 class="font-semibold text-[#0D2F32] mb-1"><%= localized_text es: "Términos y Condiciones de Uso", en: "Terms of Service" %></h3>
+                    <p class="text-sm text-[#2C3A43]/70"><%= localized_text es: "Reglas y condiciones para el uso de la plataforma Papayal", en: "Rules and conditions for using the Papayal platform" %></p>
                   </div>
                 </div>
               <% end %>
@@ -37,8 +38,8 @@
                 <div class="flex items-start gap-3">
                   <span class="text-2xl">2️⃣</span>
                   <div>
-                    <h3 class="font-semibold text-[#0D2F32] mb-1">Política de Privacidad</h3>
-                    <p class="text-sm text-[#2C3A43]/70">Cómo recopilamos, usamos y protegemos tu información</p>
+                    <h3 class="font-semibold text-[#0D2F32] mb-1"><%= localized_text es: "Política de Privacidad", en: "Privacy Policy" %></h3>
+                    <p class="text-sm text-[#2C3A43]/70"><%= localized_text es: "Cómo recopilamos, usamos y protegemos tu información", en: "How we collect, use, and protect information" %></p>
                   </div>
                 </div>
               <% end %>
@@ -49,8 +50,8 @@
                 <div class="flex items-start gap-3">
                   <span class="text-2xl">3️⃣</span>
                   <div>
-                    <h3 class="font-semibold text-[#0D2F32] mb-1">Términos de Tarjetas de Regalo</h3>
-                    <p class="text-sm text-[#2C3A43]/70">Condiciones específicas para tarjetas de regalo (stored value)</p>
+                    <h3 class="font-semibold text-[#0D2F32] mb-1"><%= localized_text es: "Términos de Tarjetas de Regalo", en: "Gift Card Terms" %></h3>
+                    <p class="text-sm text-[#2C3A43]/70"><%= localized_text es: "Condiciones específicas para tarjetas de regalo (stored value)", en: "Terms specific to stored-value gift cards" %></p>
                   </div>
                 </div>
               <% end %>
@@ -61,8 +62,8 @@
                 <div class="flex items-start gap-3">
                   <span class="text-2xl">4️⃣</span>
                   <div>
-                    <h3 class="font-semibold text-[#0D2F32] mb-1">Política de Pagos y Reembolsos</h3>
-                    <p class="text-sm text-[#2C3A43]/70">Procesamiento de pagos y políticas de reembolso</p>
+                    <h3 class="font-semibold text-[#0D2F32] mb-1"><%= localized_text es: "Política de Pagos y Reembolsos", en: "Payments and Refunds Policy" %></h3>
+                    <p class="text-sm text-[#2C3A43]/70"><%= localized_text es: "Procesamiento de pagos y políticas de reembolso", en: "Payment processing and refund terms" %></p>
                   </div>
                 </div>
               <% end %>
@@ -73,8 +74,8 @@
                 <div class="flex items-start gap-3">
                   <span class="text-2xl">5️⃣</span>
                   <div>
-                    <h3 class="font-semibold text-[#0D2F32] mb-1">Política de Uso Aceptable</h3>
-                    <p class="text-sm text-[#2C3A43]/70">Reglas de conducta y uso prohibido de la plataforma</p>
+                    <h3 class="font-semibold text-[#0D2F32] mb-1"><%= localized_text es: "Política de Uso Aceptable", en: "Acceptable Use Policy" %></h3>
+                    <p class="text-sm text-[#2C3A43]/70"><%= localized_text es: "Reglas de conducta y uso prohibido de la plataforma", en: "Rules of conduct and prohibited platform use" %></p>
                   </div>
                 </div>
               <% end %>
@@ -85,8 +86,8 @@
                 <div class="flex items-start gap-3">
                   <span class="text-2xl">6️⃣</span>
                   <div>
-                    <h3 class="font-semibold text-[#0D2F32] mb-1">Política de Eliminación de Cuenta y Datos</h3>
-                    <p class="text-sm text-[#2C3A43]/70">Proceso para eliminar tu cuenta y datos personales</p>
+                    <h3 class="font-semibold text-[#0D2F32] mb-1"><%= localized_text es: "Política de Eliminación de Cuenta y Datos", en: "Account and Data Deletion Policy" %></h3>
+                    <p class="text-sm text-[#2C3A43]/70"><%= localized_text es: "Proceso para eliminar tu cuenta y datos personales", en: "How to request deletion of your account and personal data" %></p>
                   </div>
                 </div>
               <% end %>
@@ -95,7 +96,8 @@
 
           <div class="mt-8 p-4 bg-[#0D2F32]/5 rounded-xl border border-[#0D2F32]/10">
             <p class="text-sm text-[#2C3A43]">
-              <strong class="text-[#0D2F32]">🔒 Cláusula de Prevalencia de Idioma:</strong> En caso de conflicto entre versiones, la versión en español prevalece.
+              <%= locale_tag :es, tag: :span do %><strong class="text-[#0D2F32]">🔒 Cláusula de Prevalencia de Idioma:</strong> En caso de conflicto entre versiones, la versión en español prevalece.<% end %>
+              <%= locale_tag :en, tag: :span do %><strong class="text-[#0D2F32]">🔒 Language Priority Clause:</strong> If there is a conflict between versions, the Spanish version controls.<% end %>
             </p>
           </div>
         </div>

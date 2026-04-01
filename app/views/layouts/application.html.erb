@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
   <head>
     <title><%= content_for(:title) || "Papayal" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -22,7 +22,12 @@
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
   </head>
 
-  <body class="min-h-screen bg-[#EBEBEB] text-[#2C3A43]">
+  <body
+    class="min-h-screen bg-[#EBEBEB] text-[#2C3A43]"
+    data-controller="locale"
+    data-locale-default="es"
+    data-title-es="<%= content_for(:title_es) || content_for(:title) || 'Papayal' %>"
+    data-title-en="<%= content_for(:title_en) || content_for(:title) || 'Papayal' %>">
     <div class="min-h-screen flex flex-col">
       <!-- Navigation -->
       <nav class="bg-white/95 backdrop-blur border-b border-black/5 sticky top-0 z-40">
@@ -45,6 +50,9 @@
             
             <!-- Desktop Navigation -->
             <div class="desktop-navigation hidden md:flex items-center gap-2">
+              <% if public_legal_page? %>
+                <%= render "shared/language_toggle" %>
+              <% end %>
               <% if user_signed_in? %>
                 <% unless current_user&.merchant? || merchant_nav_context? %>
                   <%= link_to "Inicio", navbar_home_path, class: "papayal-btn-ghost text-sm" %>
@@ -65,7 +73,10 @@
             </div>
 
             <!-- Mobile menu button -->
-            <div class="md:hidden flex items-center">
+            <div class="md:hidden flex items-center gap-2">
+              <% if public_legal_page? %>
+                <%= render "shared/language_toggle" %>
+              <% end %>
               <button type="button" class="mobile-menu-button bg-white inline-flex items-center justify-center p-2 rounded-xl text-[#0D2F32] hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCA50F]" aria-controls="mobile-menu" aria-expanded="false">
                 <span class="sr-only">Abrir menú principal</span>
                 <svg class="hamburger-icon block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -140,12 +151,16 @@
 
             <!-- Copyright -->
             <div class="flex-1 text-center">
-              <p class="text-xs text-[#2C3A43]/70">© Todos los derechos reservados Papayal 2026</p>
+              <p class="text-xs text-[#2C3A43]/70">
+                <%= localized_text es: "© Todos los derechos reservados Papayal 2026", en: "© All rights reserved Papayal 2026" %>
+              </p>
             </div>
 
             <!-- Legal Hub Link -->
             <div class="flex items-center">
-              <%= link_to "Hub Legal", legal_path, class: "text-xs text-[#2C3A43]/70 hover:text-[#0D2F32] transition-colors" %>
+              <%= link_to legal_path, class: "text-xs text-[#2C3A43]/70 hover:text-[#0D2F32] transition-colors" do %>
+                <%= localized_text es: "Hub Legal", en: "Legal Hub" %>
+              <% end %>
             </div>
           </div>
         </div>

@@ -104,6 +104,18 @@
     @apply inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-semibold text-[#17363C] transition hover:bg-[#16363B]/7;
   }
 
+  .locale-toggle {
+    @apply inline-flex items-center rounded-full border border-[#17363C]/12 bg-white/70 p-1 shadow-sm;
+  }
+
+  .locale-toggle-btn {
+    @apply inline-flex h-8 min-w-10 items-center justify-center rounded-full px-3 text-xs font-bold tracking-[0.18em] text-[#17363C]/60 transition;
+  }
+
+  .locale-toggle-btn.is-active {
+    @apply bg-[#17363C] text-white shadow-sm;
+  }
+
   .marketing-signup-btn {
     @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-b from-[#F4B126] to-[#D99111] px-5 py-4 text-sm font-bold text-[#16363B] shadow-[0_10px_20px_-10px_rgba(244,177,38,.9)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-14px_rgba(244,177,38,.95)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4B126]/55;
   }

@@ -1,4 +1,4 @@
-<% content_for :title, "Papayal | Envía Tarjetas de Regalo al Ecuador" %>
+<% set_locale_titles es: "Papayal | Envía Tarjetas de Regalo al Ecuador", en: "Papayal | Prepaid Digital Gift Cards for Partner Merchants" %>
 
 <section class="marketing-hero overflow-hidden">
   <div class="hero-gradient hero-gradient-left"></div>
@@ -6,18 +6,31 @@
 
   <div class="mx-auto grid w-full max-w-7xl grid-cols-1 gap-14 px-5 pb-20 pt-16 sm:px-6 md:pt-20 lg:grid-cols-12 lg:gap-10 lg:px-8 lg:pb-28">
     <div class="relative z-10 lg:col-span-6">
-      <p class="marketing-pill" data-reveal>Ayuda directa a Ecuador</p>
-      <h1 class="mt-5 text-4xl font-black leading-tight tracking-tight text-[#16363B] sm:text-5xl lg:text-6xl" data-reveal>
+      <p class="marketing-pill" data-reveal>
+        <%= localized_text es: "Ayuda directa a Ecuador", en: "Prepaid digital gift cards" %>
+      </p>
+
+      <%= locale_tag :es, tag: :h1, class: "mt-5 text-4xl font-black leading-tight tracking-tight text-[#16363B] sm:text-5xl lg:text-6xl", data: { reveal: true } do %>
         Envía Tarjetas de Regalo al Ecuador <span class="text-[#6A7280]">desde donde sea</span>
-      </h1>
+      <% end %>
+      <%= locale_tag :en, tag: :h1, class: "mt-5 text-4xl font-black leading-tight tracking-tight text-[#16363B] sm:text-5xl lg:text-6xl", data: { reveal: true } do %>
+        Prepaid digital gift cards for <span class="text-[#6A7280]">partner merchants</span>
+      <% end %>
+
       <p class="mt-6 max-w-xl text-base text-[#2B3C43]/78 sm:text-lg" data-reveal>
-        Ayuda a tus seres queridos con lo que realmente necesitan: medicinas, alimentos y productos esenciales.
-        Papayal transforma remesas en tarjetas digitales para usar en tiendas locales de confianza.
+        <%= localized_text es: "Ayuda a tus seres queridos con lo que realmente necesitan: medicinas, alimentos y productos esenciales. Papayal transforma remesas en tarjetas digitales para usar en tiendas locales de confianza.", en: "Papayal lets customers purchase prepaid digital gift cards that can be redeemed with partner merchants in Ecuador. Simple, clear, and designed for everyday purchases." %>
+      </p>
+      <p class="mt-3 max-w-xl text-sm font-medium uppercase tracking-[0.18em] text-[#17363C]/60" data-reveal>
+        <%= localized_text es: "Disponible en comercios afiliados de confianza", en: "Based in the United States" %>
       </p>
 
       <div class="mt-9 flex flex-col gap-3 sm:flex-row" data-reveal>
-        <%= link_to "Comenzar Ahora", new_user_registration_path, class: "marketing-signup-btn h-12 px-7 text-base" %>
-        <%= link_to "Ver Demo", root_path(anchor: "como-funciona"), class: "marketing-secondary-btn h-12 px-7 text-base", data: { action: "click->marketing#handleAnchorClick" } %>
+        <%= link_to new_user_registration_path, class: "marketing-signup-btn h-12 px-7 text-base" do %>
+          <%= localized_text es: "Comenzar Ahora", en: "Get Started" %>
+        <% end %>
+        <%= link_to root_path(anchor: "como-funciona"), class: "marketing-secondary-btn h-12 px-7 text-base", data: { action: "click->marketing#handleAnchorClick" } do %>
+          <%= localized_text es: "Ver Demo", en: "See How It Works" %>
+        <% end %>
       </div>
 
       <div class="mt-8 flex flex-wrap items-center gap-4 text-[#16363B]" data-reveal>
@@ -27,57 +40,48 @@
           <% end %>
         </div>
         <div>
-          <p class="text-sm font-semibold">+5,000 usuarios</p>
-          <p class="text-sm text-[#67707C]">★★★★★ <span class="font-medium text-[#16363B]">4.9/5</span></p>
+          <p class="text-sm font-semibold"><%= localized_text es: "+5,000 usuarios", en: "+5,000 users" %></p>
+          <p class="text-sm text-[#67707C]">
+            <span data-locale-content="es">★★★★★ <span class="font-medium text-[#16363B]">4.9/5</span></span>
+            <span class="hidden" data-locale-content="en">USD purchases • <span class="font-medium text-[#16363B]">partner merchant redemption</span></span>
+          </p>
         </div>
       </div>
     </div>
 
     <div class="relative lg:col-span-6" data-action="mousemove->marketing#handleHeroParallax mouseleave->marketing#resetHeroParallax">
       <div class="hero-card-wrap" data-reveal>
-        <img src="/landing/Hero_card_group.png" alt="Tarjetas Papayal apiladas" class="hero-card-image" data-marketing-target="heroParallaxItem" data-speed="6" />
+        <img src="/landing/Hero_card_group.png" alt="Papayal gift cards" class="hero-card-image" data-marketing-target="heroParallaxItem" data-speed="6" />
         <div class="hero-chip hero-chip-bottom-left marketing-float-slow" data-marketing-target="heroParallaxItem" data-speed="10">30%</div>
         <div class="hero-chip hero-chip-top-right marketing-float-medium" data-marketing-target="heroParallaxItem" data-speed="12">🎁</div>
-        <div class="hero-chip hero-chip-bottom-center marketing-float-slow" data-marketing-target="heroParallaxItem" data-speed="8">Seguro • Confiable • Rápido</div>
+        <div class="hero-chip hero-chip-bottom-center marketing-float-slow" data-marketing-target="heroParallaxItem" data-speed="8">
+          <%= localized_text es: "Seguro • Confiable • Rápido", en: "Simple • Clear • Reliable" %>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class=" py-10 sm:py-14" aria-labelledby="availability-heading">
+<section class="py-10 sm:py-14" aria-labelledby="availability-heading">
   <div class="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8" data-reveal>
-    <p id="availability-heading" class="text-center text-sm font-medium uppercase tracking-[0.2em] text-[#15353A]/65">Disponible en tiendas como:</p>
+    <p id="availability-heading" class="text-center text-sm font-medium uppercase tracking-[0.2em] text-[#15353A]/65">
+      <%= localized_text es: "Disponible en tiendas como:", en: "Accepted by partner merchant categories such as:" %>
+    </p>
     <div class="mt-6 flex flex-wrap justify-center items-center gap-6 sm:gap-8 md:gap-10">
-      <div class="flex items-center gap-2 text-[#4E5E67]">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5" />
-        </svg>
-        <span class="font-medium">Farmacias</span>
-      </div>
-      <div class="flex items-center gap-2 text-[#4E5E67]">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-        <span class="font-medium">Supermercados</span>
-      </div>
-      <div class="flex items-center gap-2 text-[#4E5E67]">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-        <span class="font-medium">Servicios</span>
-      </div>
-      <div class="flex items-center gap-2 text-[#4E5E67]">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008H17.25v-.008zm0 3h.008v.008H17.25v-.008z" />
-        </svg>
-        <span class="font-medium">Tiendas</span>
-      </div>
-      <div class="flex items-center gap-2 text-[#4E5E67]">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.007M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-        </svg>
-        <span class="font-medium">Recargas</span>
-      </div>
+      <% [
+        ["Farmacias", "Pharmacies", "M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5"],
+        ["Supermercados", "Grocery stores", "M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"],
+        ["Servicios", "Services", "M13 10V3L4 14h7v7l9-11h-7z"],
+        ["Tiendas", "Retail stores", "M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008H17.25v-.008zm0 3h.008v.008H17.25v-.008z"],
+        ["Recargas", "Top-ups", "M12 18h.007M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"]
+      ].each do |es_label, en_label, path| %>
+        <div class="flex items-center gap-2 text-[#4E5E67]">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="<%= path %>" />
+          </svg>
+          <span class="font-medium"><%= localized_text es: es_label, en: en_label %></span>
+        </div>
+      <% end %>
     </div>
   </div>
 </section>
@@ -85,44 +89,44 @@
 <section id="como-funciona" class="marketing-section py-20 sm:py-24">
   <div class="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-3xl text-center">
-      <p class="marketing-pill mx-auto" data-reveal>Como Funciona</p>
-      <h2 class="mt-5 text-3xl font-black text-[#17363C] sm:text-4xl" data-reveal>Tres pasos simples para enviar ayuda</h2>
-      <p class="mt-3 text-lg text-[#6D7580]" data-reveal>El proceso más simple para enviar tarjetas de regalo a Ecuador.</p>
+      <p class="marketing-pill mx-auto" data-reveal><%= localized_text es: "Como Funciona", en: "How It Works" %></p>
+      <h2 class="mt-5 text-3xl font-black text-[#17363C] sm:text-4xl" data-reveal>
+        <%= localized_text es: "Tres pasos simples para enviar ayuda", en: "Three simple steps to purchase and redeem" %>
+      </h2>
+      <p class="mt-3 text-lg text-[#6D7580]" data-reveal>
+        <%= localized_text es: "El proceso más simple para enviar tarjetas de regalo a Ecuador.", en: "A clear flow for prepaid digital gift cards at partner merchants." %>
+      </p>
     </div>
 
-    <%# Grid: items-center so step cards hug content and center vertically next to images %>
     <div class="mt-14 grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-10">
-      <%# Mockup_1: 1817×1903 — scene mockup, cap at 420px for consistency %>
       <div class="flex justify-center" data-reveal>
-        <img src="/mockups/Mockup_1.png" alt="Pantalla de inicio de la app Papayal" class="w-full max-w-[320px] sm:max-w-[380px] lg:max-w-[420px] h-auto object-contain" />
+        <img src="/mockups/Mockup_1.png" alt="Papayal app home screen" class="w-full max-w-[320px] sm:max-w-[380px] lg:max-w-[420px] h-auto object-contain" />
       </div>
       <article class="marketing-step-card self-center" data-reveal>
         <span class="marketing-step-icon">🛍️</span>
-        <p class="marketing-step-kicker">Paso 1</p>
-        <h3 class="marketing-step-title">Elige una Tienda</h3>
-        <p class="marketing-step-body">Selecciona entre farmacias, supermercados y más.</p>
+        <p class="marketing-step-kicker"><%= localized_text es: "Paso 1", en: "Step 1" %></p>
+        <h3 class="marketing-step-title"><%= localized_text es: "Elige una Tienda", en: "Choose a partner merchant" %></h3>
+        <p class="marketing-step-body"><%= localized_text es: "Selecciona entre farmacias, supermercados y más.", en: "Select from pharmacies, grocery stores, and other approved merchants." %></p>
       </article>
 
       <article class="marketing-step-card self-center" data-reveal>
-        <span class="marketing-step-icon">✈️</span>
-        <p class="marketing-step-kicker">Paso 2</p>
-        <h3 class="marketing-step-title">Envía la Tarjeta</h3>
-        <p class="marketing-step-body">Regístrate en segundos y envía desde cualquier parte del mundo.</p>
+        <span class="marketing-step-icon">💳</span>
+        <p class="marketing-step-kicker"><%= localized_text es: "Paso 2", en: "Step 2" %></p>
+        <h3 class="marketing-step-title"><%= localized_text es: "Envía la Tarjeta", en: "Buy in USD" %></h3>
+        <p class="marketing-step-body"><%= localized_text es: "Regístrate en segundos y envía desde cualquier parte del mundo.", en: "Purchase a prepaid digital gift card in USD with a simple checkout flow." %></p>
       </article>
-      <%# Mockup_3: 1771×1980 — similar proportions to Mockup_1 %>
       <div class="flex justify-center" data-reveal>
-        <img src="/mockups/Mockup_3.png" alt="Pantalla de destinatario y seguimiento" class="w-full max-w-[320px] sm:max-w-[380px] lg:max-w-[420px] h-auto object-contain" />
+        <img src="/mockups/Mockup_3.png" alt="Recipient and tracking screen" class="w-full max-w-[320px] sm:max-w-[380px] lg:max-w-[420px] h-auto object-contain" />
       </div>
 
-      <%# Mockup_2: 810×1650 — narrow portrait (phone/card), cap at 260px width %>
       <div class="flex justify-center lg:order-none" data-reveal>
-        <img src="/mockups/Mockup_2.png" alt="Tarjetas Papayal para comercios locales" class="w-full max-w-[180px] sm:max-w-[240px] h-auto object-contain" />
+        <img src="/mockups/Mockup_2.png" alt="Papayal cards for partner merchants" class="w-full max-w-[180px] sm:max-w-[240px] h-auto object-contain" />
       </div>
       <article class="marketing-step-card self-center" data-reveal>
         <span class="marketing-step-icon">✅</span>
-        <p class="marketing-step-kicker">Paso 3</p>
-        <h3 class="marketing-step-title">Gasta Localmente</h3>
-        <p class="marketing-step-body">Guarda destinatarios, revisa recibos y rastrea tus envíos en un solo lugar.</p>
+        <p class="marketing-step-kicker"><%= localized_text es: "Paso 3", en: "Step 3" %></p>
+        <h3 class="marketing-step-title"><%= localized_text es: "Gasta Localmente", en: "Redeem with confidence" %></h3>
+        <p class="marketing-step-body"><%= localized_text es: "Guarda destinatarios, revisa recibos y rastrea tus envíos en un solo lugar.", en: "Recipients redeem the gift card with partner merchants for everyday purchases." %></p>
       </article>
     </div>
   </div>
@@ -131,10 +135,12 @@
 <section class="px-5 pb-10 sm:px-6 lg:px-8">
   <div class="mx-auto w-full max-w-7xl">
     <div class="marketing-offer-banner" data-reveal>
-      <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#15353A]/70">Oferta Especial</p>
-      <h2 class="mt-4 text-3xl font-black text-[#15353A] sm:text-4xl">Ahorra un 30% en tu primer envío</h2>
-      <p class="mt-3 text-lg text-[#15353A]/80">Regístrate hoy y obtén un descuento del 30% en productos seleccionados.</p>
-      <%= link_to "Comenzar Ahora", new_user_registration_path, class: "marketing-deep-btn mt-7 inline-flex h-12 items-center px-8 text-base" %>
+      <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#15353A]/70"><%= localized_text es: "Oferta Especial", en: "Simple Pricing" %></p>
+      <h2 class="mt-4 text-3xl font-black text-[#15353A] sm:text-4xl"><%= localized_text es: "Ahorra un 30% en tu primer envío", en: "Clear USD checkout for prepaid gift cards" %></h2>
+      <p class="mt-3 text-lg text-[#15353A]/80"><%= localized_text es: "Regístrate hoy y obtén un descuento del 30% en productos seleccionados.", en: "Purchase digital gift cards in USD and redeem them only with approved partner merchants." %></p>
+      <%= link_to new_user_registration_path, class: "marketing-deep-btn mt-7 inline-flex h-12 items-center px-8 text-base" do %>
+        <%= localized_text es: "Comenzar Ahora", en: "Create Account" %>
+      <% end %>
     </div>
   </div>
 </section>
@@ -142,26 +148,26 @@
 <section class="marketing-features py-20 sm:py-24">
   <div class="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-3xl text-center">
-      <p class="marketing-pill mx-auto">Características</p>
-      <h2 class="mt-5 text-3xl font-black text-white sm:text-4xl">Todo lo que necesitas en un solo lugar</h2>
+      <p class="marketing-pill mx-auto"><%= localized_text es: "Características", en: "Platform Highlights" %></p>
+      <h2 class="mt-5 text-3xl font-black text-white sm:text-4xl"><%= localized_text es: "Todo lo que necesitas en un solo lugar", en: "Built for clarity, control, and trust" %></h2>
       <p class="mt-3 text-lg text-white/75">
-        Nuestra plataforma combina seguridad, rapidez y simplicidad para que enviar ayuda a Ecuador sea tan fácil como un mensaje.
+        <%= localized_text es: "Nuestra plataforma combina seguridad, rapidez y simplicidad para que enviar ayuda a Ecuador sea tan fácil como un mensaje.", en: "The English experience uses simple language so customers, partners, and reviewers can understand the product quickly." %>
       </p>
     </div>
 
     <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       <% [
-        { title: "Seguro", body: "Transacciones protegidas con tecnología de encriptación avanzada.", icon: "🛡️" },
-        { title: "Rápido", body: "Envíos instantáneos. Tus seres queridos reciben la tarjeta en segundos.", icon: "⚡" },
-        { title: "Local", body: "Gasta en tiendas locales, farmacias y supermercados en todo Ecuador.", icon: "📍" },
-        { title: "Confiable", body: "Más de 5,000 usuarios confían en nosotros para enviar ayuda.", icon: "👥" },
-        { title: "Privado", body: "Tus datos personales y financieros están completamente protegidos.", icon: "🔒" },
-        { title: "Ahorra 30%", body: "Descuentos exclusivos en tu primer envío y productos seleccionados.", icon: "📈" }
-      ].each do |feature| %>
+        ["Seguro", "Protected checkout", "Transacciones protegidas con tecnología de encriptación avanzada.", "Secure payment processing for prepaid digital gift card purchases.", "🛡️"],
+        ["Rápido", "Fast delivery", "Envíos instantáneos. Tus seres queridos reciben la tarjeta en segundos.", "Digital gift cards are delivered quickly after purchase.", "⚡"],
+        ["Local", "Partner merchants", "Gasta en tiendas locales, farmacias y supermercados en todo Ecuador.", "Redemption is limited to approved partner merchants in Ecuador.", "📍"],
+        ["Confiable", "Simple records", "Más de 5,000 usuarios confían en nosotros para enviar ayuda.", "Users can review card activity and redemption details in one place.", "👥"],
+        ["Privado", "Private by design", "Tus datos personales y financieros están completamente protegidos.", "Personal and payment data are handled with standard security controls.", "🔒"],
+        ["Ahorra 30%", "USD checkout", "Descuentos exclusivos en tu primer envío y productos seleccionados.", "Where pricing is shown, it is presented in USD for consistency.", "💵"]
+      ].each do |es_title, en_title, es_body, en_body, icon| %>
         <article class="marketing-feature-card" data-reveal>
-          <div class="marketing-feature-icon"><span><%= feature[:icon] %></span></div>
-          <h3 class="mt-5 text-2xl font-bold text-[#17363C]"><%= feature[:title] %></h3>
-          <p class="mt-2 text-[#4E5E67]"><%= feature[:body] %></p>
+          <div class="marketing-feature-icon"><span><%= icon %></span></div>
+          <h3 class="mt-5 text-2xl font-bold text-[#17363C]"><%= localized_text es: es_title, en: en_title %></h3>
+          <p class="mt-2 text-[#4E5E67]"><%= localized_text es: es_body, en: en_body %></p>
         </article>
       <% end %>
     </div>
@@ -171,22 +177,24 @@
 <section id="beneficios" class="marketing-section py-20 sm:py-24">
   <div class="mx-auto grid w-full max-w-7xl grid-cols-1 gap-10 px-5 sm:px-6 lg:grid-cols-2 lg:items-start lg:px-8">
     <div>
-      <p class="marketing-pill" data-reveal>Beneficios</p>
-      <h2 class="mt-5 text-3xl font-black text-[#17363C] sm:text-4xl" data-reveal>Más que enviar dinero — envía tranquilidad.</h2>
+      <p class="marketing-pill" data-reveal><%= localized_text es: "Beneficios", en: "Why Papayal" %></p>
+      <h2 class="mt-5 text-3xl font-black text-[#17363C] sm:text-4xl" data-reveal>
+        <%= localized_text es: "Más que enviar dinero — envía tranquilidad.", en: "A clear product for prepaid purchases and redemption." %>
+      </h2>
       <p class="mt-4 text-lg text-[#67707C]" data-reveal>
-        Papayal no es una app de transferencias. Es la forma más segura y directa de ayudar a tu familia en Ecuador y asegurarte de que reciban lo esencial, sin complicaciones.
+        <%= localized_text es: "Papayal no es una app de transferencias. Es la forma más segura y directa de ayudar a tu familia en Ecuador y asegurarte de que reciban lo esencial, sin complicaciones.", en: "Papayal is a prepaid digital gift card platform. Customers select a partner merchant, purchase in USD, and recipients redeem for goods or services at checkout." %>
       </p>
       <ul class="mt-8 space-y-5">
         <% [
-          { title: "Envía desde Cualquier Lugar", body: "Ayuda a Ecuador en segundos, estés en Estados Unidos, Europa o cualquier parte del mundo.", icon: "🌎" },
-          { title: "Disponible 24/7", body: "Envía tarjetas de regalo en cualquier momento. Papayal siempre está lista.", icon: "🕒" },
-          { title: "Ayuda Real", body: "Alimentos, medicinas, higiene y más en tiendas locales de confianza.", icon: "❤️" }
-        ].each do |item| %>
+          ["Envía desde Cualquier Lugar", "Professional presentation", "Ayuda a Ecuador en segundos, estés en Estados Unidos, Europa o cualquier parte del mundo.", "The English site presents the product in straightforward terms for customers and reviewers.", "🌎"],
+          ["Disponible 24/7", "Merchant-specific redemption", "Envía tarjetas de regalo en cualquier momento. Papayal siempre está lista.", "Each gift card is issued for use with partner merchants and their redemption rules.", "🕒"],
+          ["Ayuda Real", "Everyday purchases", "Alimentos, medicinas, higiene y más en tiendas locales de confianza.", "Recipients can redeem for practical purchases such as pharmacy, grocery, and other approved categories.", "❤️"]
+        ].each do |es_title, en_title, es_body, en_body, icon| %>
           <li class="flex gap-4" data-reveal>
-            <span class="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#F4B126]/18"><%= item[:icon] %></span>
+            <span class="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#F4B126]/18"><%= icon %></span>
             <div>
-              <h3 class="text-xl font-bold text-[#17363C]"><%= item[:title] %></h3>
-              <p class="mt-1 text-[#67707C]"><%= item[:body] %></p>
+              <h3 class="text-xl font-bold text-[#17363C]"><%= localized_text es: es_title, en: en_title %></h3>
+              <p class="mt-1 text-[#67707C]"><%= localized_text es: es_body, en: en_body %></p>
             </div>
           </li>
         <% end %>
@@ -195,15 +203,15 @@
 
     <div class="space-y-4 lg:pt-4">
       <% [
-        { title: "App Móvil Intuitiva", body: "Envíos en 3 pasos. Rápida, simple y pensada para todos.", icon: "📱" },
-        { title: "Soporte en Español", body: "Atención humana, en tu idioma, cuando la necesites.", icon: "🎧" },
-        { title: "Sin Comisiones Ocultas", body: "Lo que ves es lo que pagas. Sin cargos sorpresa.", icon: "💲" }
-      ].each do |card| %>
+        ["App Móvil Intuitiva", "Simple purchase flow", "Envíos en 3 pasos. Rápida, simple y pensada para todos.", "Choose a merchant, purchase a card, and redeem with a clear user flow.", "📱"],
+        ["Soporte en Español", "US-based company", "Atención humana, en tu idioma, cuando la necesites.", "Papayal is based in the United States and supports a simple, professional customer experience.", "🇺🇸"],
+        ["Sin Comisiones Ocultas", "Clear product scope", "Lo que ves es lo que pagas. Sin cargos sorpresa.", "The English site describes prepaid gift cards only, without broader payment claims.", "💲"]
+      ].each do |es_title, en_title, es_body, en_body, icon| %>
         <article class="marketing-benefit-float-card" data-reveal>
-          <span class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#16363B] text-xl"><%= card[:icon] %></span>
+          <span class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#16363B] text-xl"><%= icon %></span>
           <div>
-            <h3 class="text-2xl font-bold text-[#17363C]"><%= card[:title] %></h3>
-            <p class="mt-1 text-[#67707C]"><%= card[:body] %></p>
+            <h3 class="text-2xl font-bold text-[#17363C]"><%= localized_text es: es_title, en: en_title %></h3>
+            <p class="mt-1 text-[#67707C]"><%= localized_text es: es_body, en: en_body %></p>
           </div>
         </article>
       <% end %>
@@ -211,15 +219,15 @@
       <div class="marketing-stats-bar" data-reveal>
         <div>
           <p class="marketing-stat-value" data-count-to="5000" data-marketing-target="countup">0</p>
-          <p class="marketing-stat-label">Usuarios</p>
+          <p class="marketing-stat-label"><%= localized_text es: "Usuarios", en: "Users" %></p>
         </div>
         <div>
           <p class="marketing-stat-value" data-count-prefix="$" data-count-to="500" data-count-suffix="K+" data-marketing-target="countup">$0</p>
-          <p class="marketing-stat-label">Enviados</p>
+          <p class="marketing-stat-label"><%= localized_text es: "Enviados", en: "USD processed" %></p>
         </div>
         <div>
           <p class="marketing-stat-value" data-count-to="4.9" data-count-suffix="★" data-marketing-target="countup">0</p>
-          <p class="marketing-stat-label">Rating</p>
+          <p class="marketing-stat-label"><%= localized_text es: "Rating", en: "Rating" %></p>
         </div>
       </div>
     </div>
@@ -229,30 +237,32 @@
 <section id="mercado" class="marketing-market pb-24 pt-20 sm:pt-24">
   <div class="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-4xl text-center">
-      <p class="marketing-pill mx-auto">Nuestro Mercado</p>
-      <h2 class="mt-5 text-3xl font-black text-[#17363C] sm:text-5xl">Mira cómo funciona Papayal</h2>
-      <p class="mt-3 text-lg text-[#67707C]">Descubre lo fácil que es enviar ayuda a tus seres queridos en Ecuador.</p>
+      <p class="marketing-pill mx-auto"><%= localized_text es: "Nuestro Mercado", en: "Partner Merchant Network" %></p>
+      <h2 class="mt-5 text-3xl font-black text-[#17363C] sm:text-5xl"><%= localized_text es: "Mira cómo funciona Papayal", en: "A simple prepaid digital gift card experience" %></h2>
+      <p class="mt-3 text-lg text-[#67707C]"><%= localized_text es: "Descubre lo fácil que es enviar ayuda a tus seres queridos en Ecuador.", en: "Designed for gift card purchases and redemption with approved merchants." %></p>
     </div>
 
     <div class="mt-14 rounded-[2rem] border border-[#16363B]/10 bg-white/70 p-6 shadow-[0_35px_80px_-60px_rgba(19,53,61,0.8)] sm:p-10" data-reveal>
-      <img src="/icons/Landing_card_group.png" alt="Categorías de tarjetas Papayal" class="mx-auto w-full max-w-4xl" />
+      <img src="/icons/Landing_card_group.png" alt="Papayal merchant categories" class="mx-auto w-full max-w-4xl" />
       <p class="mt-4 text-center text-sm text-[#66707A]">
-        <!-- TODO: Reemplazar con assets individuales por categoría si se agregan en /public/landing -->
-        Tarjetas para farmacia, alimentos, hogar y más.
+        <%= localized_text es: "Tarjetas para farmacia, alimentos, hogar y más.", en: "Gift cards for pharmacy, grocery, household, and other partner merchant categories." %>
       </p>
     </div>
 
     <div class="mt-12 grid gap-5 lg:grid-cols-3">
       <% [
-        { quote: "Papayal me ha permitido ayudar a mi familia en Ecuador de una manera rápida y segura. ¡Excelente servicio!", author: "María González", city: "Miami, USA" },
-        { quote: "La aplicación es muy fácil de usar. En segundos puedo enviar tarjetas de regalo a mis padres en Quito.", author: "Carlos Mendoza", city: "Madrid, España" },
-        { quote: "Me encanta que puedo ayudar a mi abuela con sus medicinas desde aquí. El servicio es confiable.", author: "Ana Rodríguez", city: "New York, USA" }
-      ].each do |testimonial| %>
+        ["Papayal me ha permitido ayudar a mi familia en Ecuador de una manera rápida y segura. ¡Excelente servicio!", "The process is straightforward and the merchant options are easy to understand.", "María González", "Miami, USA"],
+        ["La aplicación es muy fácil de usar. En segundos puedo enviar tarjetas de regalo a mis padres en Quito.", "I can choose a partner merchant and complete a prepaid purchase without confusion.", "Carlos Mendoza", "Madrid, España"],
+        ["Me encanta que puedo ayudar a mi abuela con sus medicinas desde aquí. El servicio es confiable.", "The redemption flow is clear and works well for everyday purchases.", "Ana Rodríguez", "New York, USA"]
+      ].each do |es_quote, en_quote, author, city| %>
         <article class="marketing-testimonial-card" data-reveal>
           <p class="text-lg tracking-wide text-[#F4B126]">★★★★★</p>
-          <blockquote class="mt-4 text-lg italic text-[#4B5A63]">"<%= testimonial[:quote] %>"</blockquote>
-          <p class="mt-6 text-lg font-bold text-[#17363C]"><%= testimonial[:author] %></p>
-          <p class="text-[#6B7480]"><%= testimonial[:city] %></p>
+          <blockquote class="mt-4 text-lg italic text-[#4B5A63]">
+            <%= locale_tag :es, tag: :span do %>"<%= es_quote %>"<% end %>
+            <%= locale_tag :en, tag: :span do %>"<%= en_quote %>"<% end %>
+          </blockquote>
+          <p class="mt-6 text-lg font-bold text-[#17363C]"><%= author %></p>
+          <p class="text-[#6B7480]"><%= city %></p>
         </article>
       <% end %>
     </div>

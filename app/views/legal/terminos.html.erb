@@ -1,136 +1,137 @@
+<% set_locale_titles es: "Términos y Condiciones de Uso | Papayal", en: "Terms of Service | Papayal" %>
+
 <div class="max-w-7xl mx-auto">
   <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-    <!-- Sidebar -->
     <div class="lg:col-span-1">
-      <%= render 'sidebar' %>
+      <%= render "legal/sidebar" %>
     </div>
 
-    <!-- Main Content -->
     <div class="lg:col-span-3">
       <div class="papayal-card p-8">
         <div class="mb-6">
-          <h1 class="text-3xl font-bold text-[#0D2F32] mb-2">Términos y Condiciones de Uso</h1>
-          <p class="text-sm text-[#2C3A43]/70">Última actualización: <%= Date.today.strftime("%d de %B de %Y") %></p>
+          <h1 class="text-3xl font-bold text-[#0D2F32] mb-2"><%= localized_text es: "Términos y Condiciones de Uso", en: "Terms of Service" %></h1>
+          <p class="text-sm text-[#2C3A43]/70">
+            <%= locale_tag :es, tag: :span do %>Última actualización: <%= localized_date(:es) %><% end %>
+            <%= locale_tag :en, tag: :span do %>Last updated: <%= localized_date(:en) %><% end %>
+          </p>
         </div>
 
         <div class="prose prose-slate max-w-none text-[#2C3A43]">
           <div class="mb-6 p-4 bg-[#0D2F32]/5 rounded-xl border border-[#0D2F32]/10">
-            <p class="text-sm"><strong>Entidad responsable:</strong> Papayal LLC (Delaware, EE. UU.)</p>
+            <p class="text-sm">
+              <%= locale_tag :es, tag: :span do %><strong>Entidad responsable:</strong> Papayal LLC (Delaware, EE. UU.)<% end %>
+              <%= locale_tag :en, tag: :span do %><strong>Responsible entity:</strong> Papayal LLC (Delaware, United States)<% end %>
+            </p>
           </div>
 
           <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">1. Introducción</h2>
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "1. Introducción", en: "1. Introduction" %></h2>
             <p class="mb-4">
-              Estos Términos y Condiciones ("Términos") regulan el acceso y uso de la aplicación móvil y plataforma digital Papayal (la "Aplicación"), operada por Papayal LLC ("Papayal", "nosotros").
+              <%= localized_text es: "Estos Términos y Condiciones (\"Términos\") regulan el acceso y uso de la aplicación móvil y plataforma digital Papayal (la \"Aplicación\"), operada por Papayal LLC (\"Papayal\", \"nosotros\").", en: "These Terms of Service (the \"Terms\") govern access to and use of the Papayal mobile application and website platform (the \"App\"), operated by Papayal LLC (\"Papayal,\" \"we,\" or \"us\")." %>
             </p>
             <p>
-              Al crear una cuenta, acceder o utilizar la Aplicación, el usuario ("Usuario") acepta estos Términos de manera expresa y vinculante.
+              <%= localized_text es: "Al crear una cuenta, acceder o utilizar la Aplicación, el usuario (\"Usuario\") acepta estos Términos de manera expresa y vinculante.", en: "By creating an account, accessing, or using the App, the user (\"User\") agrees to these Terms." %>
             </p>
           </section>
 
           <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">2. Elegibilidad</h2>
-            <p class="mb-4">Para utilizar la Aplicación, el Usuario debe:</p>
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "2. Elegibilidad", en: "2. Eligibility" %></h2>
+            <p class="mb-4"><%= localized_text es: "Para utilizar la Aplicación, el Usuario debe:", en: "To use the App, the User must:" %></p>
             <ul class="list-disc pl-6 space-y-2 mb-4">
-              <li>Tener al menos 18 años de edad</li>
-              <li>Tener capacidad legal para contratar</li>
-              <li>Utilizar la Aplicación únicamente para fines personales y lícitos</li>
+              <li><%= localized_text es: "Tener al menos 18 años de edad", en: "Be at least 18 years old" %></li>
+              <li><%= localized_text es: "Tener capacidad legal para contratar", en: "Have legal capacity to enter into contracts" %></li>
+              <li><%= localized_text es: "Utilizar la Aplicación únicamente para fines personales y lícitos", en: "Use the App only for lawful and personal purposes" %></li>
             </ul>
           </section>
 
           <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">3. Creación y Uso de Cuenta</h2>
-            <p class="mb-4">El Usuario es responsable de:</p>
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "3. Creación y Uso de Cuenta", en: "3. Account Creation and Use" %></h2>
+            <p class="mb-4"><%= localized_text es: "El Usuario es responsable de:", en: "The User is responsible for:" %></p>
             <ul class="list-disc pl-6 space-y-2 mb-4">
-              <li>Proveer información veraz y actualizada</li>
-              <li>Mantener la confidencialidad de sus credenciales</li>
-              <li>Notificar cualquier uso no autorizado</li>
+              <li><%= localized_text es: "Proveer información veraz y actualizada", en: "Providing accurate and current information" %></li>
+              <li><%= localized_text es: "Mantener la confidencialidad de sus credenciales", en: "Keeping account credentials confidential" %></li>
+              <li><%= localized_text es: "Notificar cualquier uso no autorizado", en: "Promptly reporting unauthorized use" %></li>
             </ul>
-            <p>
-              Papayal puede suspender o cerrar cuentas que presenten actividad fraudulenta o incumplan estos Términos.
-            </p>
+            <p><%= localized_text es: "Papayal puede suspender o cerrar cuentas que presenten actividad fraudulenta o incumplan estos Términos.", en: "Papayal may suspend or close accounts that show fraudulent activity or violate these Terms." %></p>
           </section>
 
           <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">4. Descripción del Servicio</h2>
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "4. Descripción del Servicio", en: "4. Description of the Service" %></h2>
             <p class="mb-4">
-              Papayal permite la compra, envío, recepción y redención de tarjetas de regalo digitales ("Tarjetas de Regalo") canjeables únicamente en comercios afiliados dentro de Ecuador.
+              <%= localized_text es: "Papayal permite la compra, envío, recepción y redención de tarjetas de regalo digitales (\"Tarjetas de Regalo\") canjeables únicamente en comercios afiliados dentro de Ecuador.", en: "Papayal offers prepaid digital gift cards (\"Gift Cards\") that may be purchased through the platform and redeemed only with partner merchants in Ecuador." %>
             </p>
             <p>
-              Papayal no es una institución financiera, banco, emisor de dinero electrónico ni proveedor de servicios de custodia.
-            </p>
-          </section>
-
-          <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">5. Tarjetas de Regalo y Saldo</h2>
-            <p class="mb-4">Las Tarjetas de Regalo representan un saldo de valor limitado para consumo en comercios afiliados.</p>
-            <ul class="list-disc pl-6 space-y-2">
-              <li>No constituyen dinero en efectivo</li>
-              <li>No generan intereses</li>
-              <li>No son convertibles a efectivo</li>
-              <li>No tienen fecha de expiración</li>
-              <li>Solo pueden utilizarse según las reglas del comercio afiliado</li>
-            </ul>
-          </section>
-
-          <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">6. Pagos y Transacciones</h2>
-            <ul class="list-disc pl-6 space-y-2">
-              <li>Los pagos se procesan a través de proveedores externos de pago.</li>
-              <li>Papayal no almacena información completa de tarjetas.</li>
-              <li>Las transacciones pueden ser rechazadas o revertidas por motivos técnicos, regulatorios o de seguridad.</li>
-            </ul>
-          </section>
-
-          <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">7. Uso Prohibido</h2>
-            <p class="mb-4">Está prohibido:</p>
-            <ul class="list-disc pl-6 space-y-2">
-              <li>Usar la Aplicación para fraude, lavado de activos o evasión</li>
-              <li>Revender Tarjetas de Regalo</li>
-              <li>Intentar eludir controles de seguridad</li>
-              <li>Utilizar la plataforma con fines comerciales no autorizados</li>
-            </ul>
-          </section>
-
-          <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">8. Suspensión y Terminación</h2>
-            <p class="mb-4">Papayal puede suspender o terminar el acceso:</p>
-            <ul class="list-disc pl-6 space-y-2">
-              <li>Por incumplimiento de estos Términos</li>
-              <li>Por requerimiento legal</li>
-              <li>Para prevenir riesgos operativos o legales</li>
-            </ul>
-          </section>
-
-          <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">9. Limitación de Responsabilidad</h2>
-            <p class="mb-4">Papayal no será responsable por:</p>
-            <ul class="list-disc pl-6 space-y-2">
-              <li>Decisiones de los comercios afiliados</li>
-              <li>Uso indebido por terceros</li>
-              <li>Interrupciones técnicas fuera de su control</li>
-            </ul>
-          </section>
-
-          <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">10. Cambios al Servicio</h2>
-            <p>
-              Papayal puede modificar estos Términos notificando al Usuario mediante la Aplicación o correo electrónico.
+              <%= localized_text es: "Papayal no es una institución financiera, banco, emisor de dinero electrónico ni proveedor de servicios de custodia.", en: "Papayal is not a bank, money transmitter, e-money issuer, or custodial financial service provider." %>
             </p>
           </section>
 
           <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">11. Ley Aplicable y Jurisdicción</h2>
-            <p>
-              Estos Términos se rigen por las leyes del Estado de Delaware, EE. UU., sin perjuicio de derechos del consumidor aplicables.
-            </p>
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "5. Tarjetas de Regalo y Saldo", en: "5. Gift Cards and Stored Value" %></h2>
+            <p class="mb-4"><%= localized_text es: "Las Tarjetas de Regalo representan un saldo de valor limitado para consumo en comercios afiliados.", en: "Gift Cards represent limited stored value for purchases with partner merchants." %></p>
+            <ul class="list-disc pl-6 space-y-2">
+              <li><%= localized_text es: "No constituyen dinero en efectivo", en: "They are not cash" %></li>
+              <li><%= localized_text es: "No generan intereses", en: "They do not earn interest" %></li>
+              <li><%= localized_text es: "No son convertibles a efectivo", en: "They cannot be redeemed for cash" %></li>
+              <li><%= localized_text es: "No tienen fecha de expiración", en: "They do not expire unless required by applicable law or merchant terms" %></li>
+              <li><%= localized_text es: "Solo pueden utilizarse según las reglas del comercio afiliado", en: "They may be redeemed only under the rules of the relevant partner merchant" %></li>
+            </ul>
           </section>
 
           <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">12. Contacto</h2>
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "6. Pagos y Transacciones", en: "6. Payments and Transactions" %></h2>
+            <ul class="list-disc pl-6 space-y-2">
+              <li><%= localized_text es: "Los pagos se procesan a través de proveedores externos de pago.", en: "Payments are processed through third-party payment providers." %></li>
+              <li><%= localized_text es: "Papayal no almacena información completa de tarjetas.", en: "Papayal does not store full payment card details." %></li>
+              <li><%= localized_text es: "Las transacciones pueden ser rechazadas o revertidas por motivos técnicos, regulatorios o de seguridad.", en: "Transactions may be declined, delayed, or reversed for technical, security, or compliance reasons." %></li>
+            </ul>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "7. Uso Prohibido", en: "7. Prohibited Use" %></h2>
+            <p class="mb-4"><%= localized_text es: "Está prohibido:", en: "Users may not:" %></p>
+            <ul class="list-disc pl-6 space-y-2">
+              <li><%= localized_text es: "Usar la Aplicación para fraude, lavado de activos o evasión", en: "Use the App for fraud, money laundering, or evasion of controls" %></li>
+              <li><%= localized_text es: "Revender Tarjetas de Regalo", en: "Resell Gift Cards without authorization" %></li>
+              <li><%= localized_text es: "Intentar eludir controles de seguridad", en: "Attempt to bypass security or compliance controls" %></li>
+              <li><%= localized_text es: "Utilizar la plataforma con fines comerciales no autorizados", en: "Use the platform for unauthorized commercial purposes" %></li>
+            </ul>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "8. Suspensión y Terminación", en: "8. Suspension and Termination" %></h2>
+            <p class="mb-4"><%= localized_text es: "Papayal puede suspender o terminar el acceso:", en: "Papayal may suspend or terminate access:" %></p>
+            <ul class="list-disc pl-6 space-y-2">
+              <li><%= localized_text es: "Por incumplimiento de estos Términos", en: "For violation of these Terms" %></li>
+              <li><%= localized_text es: "Por requerimiento legal", en: "When required by law" %></li>
+              <li><%= localized_text es: "Para prevenir riesgos operativos o legales", en: "To prevent operational, security, or legal risk" %></li>
+            </ul>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "9. Limitación de Responsabilidad", en: "9. Limitation of Liability" %></h2>
+            <p class="mb-4"><%= localized_text es: "Papayal no será responsable por:", en: "Papayal is not responsible for:" %></p>
+            <ul class="list-disc pl-6 space-y-2">
+              <li><%= localized_text es: "Decisiones de los comercios afiliados", en: "Decisions made by partner merchants" %></li>
+              <li><%= localized_text es: "Uso indebido por terceros", en: "Unauthorized use by third parties" %></li>
+              <li><%= localized_text es: "Interrupciones técnicas fuera de su control", en: "Technical interruptions outside its reasonable control" %></li>
+            </ul>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "10. Cambios al Servicio", en: "10. Changes to the Service" %></h2>
+            <p><%= localized_text es: "Papayal puede modificar estos Términos notificando al Usuario mediante la Aplicación o correo electrónico.", en: "Papayal may update these Terms by notifying Users through the App, website, or email." %></p>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "11. Ley Aplicable y Jurisdicción", en: "11. Governing Law and Jurisdiction" %></h2>
+            <p><%= localized_text es: "Estos Términos se rigen por las leyes del Estado de Delaware, EE. UU., sin perjuicio de derechos del consumidor aplicables.", en: "These Terms are governed by the laws of the State of Delaware, United States, subject to any non-waivable consumer rights that apply." %></p>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4"><%= localized_text es: "12. Contacto", en: "12. Contact" %></h2>
             <p>
-              Para consultas sobre estos Términos, contáctanos en: <a href="mailto:soporte@papayal.app" class="text-[#FCA50F] hover:underline">📧 soporte@papayal.app</a>
+              <%= locale_tag :es, tag: :span do %>Para consultas sobre estos Términos, contáctanos en: <a href="mailto:soporte@papayal.app" class="text-[#FCA50F] hover:underline">soporte@papayal.app</a><% end %>
+              <%= locale_tag :en, tag: :span do %>For questions about these Terms, contact us at: <a href="mailto:soporte@papayal.app" class="text-[#FCA50F] hover:underline">soporte@papayal.app</a><% end %>
             </p>
           </section>
         </div>
@@ -138,4 +139,3 @@
     </div>
   </div>
 </div>
-

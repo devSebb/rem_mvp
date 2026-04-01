@@ -1,4 +1,8 @@
 module ApplicationHelper
+  SPANISH_MONTHS = %w[
+    enero febrero marzo abril mayo junio julio agosto septiembre octubre noviembre diciembre
+  ].freeze
+
   STATUS_PRESETS = {
     "active" => { label: "Activa", classes: "bg-emerald-50 text-emerald-700 border border-emerald-100" },
     "redeemed" => { label: "Canjeada", classes: "bg-blue-50 text-blue-700 border border-blue-100" },
@@ -22,6 +26,37 @@ module ApplicationHelper
     "Tu billetera de regalos"
   end
 
+  def locale_tag(locale, tag: :span, class: nil, data: {}, **options, &block)
+    classes = [binding.local_variable_get(:class), ("hidden" if locale.to_s == "en")].compact.join(" ")
+    content_tag(tag, capture(&block), **options.merge(class: classes.presence, data: data.merge(locale_content: locale.to_s)))
+  end
+
+  def localized_text(es:, en:, tag: :span, class: nil, data: {}, **options)
+    safe_join(
+      [
+        content_tag(tag, es, **options.merge(class:, data: data.merge(locale_content: "es"))),
+        content_tag(tag, en, **options.merge(class: [binding.local_variable_get(:class), "hidden"].compact.join(" "), data: data.merge(locale_content: "en")))
+      ]
+    )
+  end
+
+  def set_locale_titles(es:, en:)
+    content_for(:title, es)
+    content_for(:title_es, es)
+    content_for(:title_en, en)
+    nil
+  end
+
+  def localized_date(locale)
+    date = Date.current
+
+    if locale.to_s == "en"
+      date.strftime("%B %-d, %Y")
+    else
+      "#{date.day} de #{SPANISH_MONTHS[date.month - 1]} de #{date.year}"
+    end
+  end
+
   def navbar_home_path
     return merchant_root_path if merchant_nav_context?
     return home_path if user_signed_in?
@@ -30,6 +65,10 @@ module ApplicationHelper
 
   def merchant_nav_context?
     controller_path.start_with?("merchant/")
+  end
+
+  def public_legal_page?
+    controller_path == "legal"
   end
 
   def avatar_url_for(record, attachment_name: :avatar, resize_to_limit: [96, 96])

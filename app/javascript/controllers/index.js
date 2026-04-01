@@ -5,9 +5,11 @@
 import { application } from "./application"
 
 import HelloController from "./hello_controller"
+import LocaleController from "./locale_controller"
 import MarketingController from "./marketing_controller"
 import RedemptionCodeController from "./redemption_code_controller"
 
 application.register("hello", HelloController)
+application.register("locale", LocaleController)
 application.register("marketing", MarketingController)
 application.register("redemption-code", RedemptionCodeController)

@@ -20,9 +20,14 @@
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
   </head>
 
-  <body class="marketing-body" data-controller="marketing">
+  <body
+    class="marketing-body"
+    data-controller="locale marketing"
+    data-locale-default="es"
+    data-title-es="<%= content_for(:title_es) || content_for(:title) || 'Papayal | Envía ayuda a Ecuador' %>"
+    data-title-en="<%= content_for(:title_en) || content_for(:title) || 'Papayal | Prepaid Digital Gift Cards' %>">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-sm">
-      Saltar al contenido principal
+      <%= localized_text es: "Saltar al contenido principal", en: "Skip to main content" %>
     </a>
 
     <%= render "marketing/navbar" %>
