@@ -4,13 +4,15 @@
     <title><%= content_for(:title) || "Papayal | Envía ayuda a Ecuador" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="description" content="<%= content_for(:meta_description) || 'Papayal offers prepaid digital gift cards for purchases with partner merchants in Ecuador.' %>">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="<%= content_for(:title_en) || content_for(:title) || 'Papayal' %>">
+    <meta property="og:description" content="<%= content_for(:meta_description) || 'Papayal offers prepaid digital gift cards for purchases with partner merchants in Ecuador.' %>">
+    <meta property="og:image" content="/optimized/hero-card-group-1600.webp">
+    <meta name="twitter:card" content="summary_large_image">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= yield :head %>
-
-    <link rel="preconnect" href="https://api.fontshare.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap" rel="stylesheet">
 
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/Papayal_favicon1.png" type="image/png">

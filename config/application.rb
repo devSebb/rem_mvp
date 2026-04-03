@@ -46,5 +46,8 @@ module RemMvp
 
     # Configure Rack::Attack
     config.middleware.use Rack::Attack
+
+    # Compression fallback when requests bypass CDN compression.
+    config.middleware.use Rack::Deflater
   end
 end

@@ -2,7 +2,10 @@
   <nav class="marketing-nav" aria-label="Primary">
     <div class="mx-auto flex w-full max-w-7xl items-center justify-between gap-6 px-5 py-4 sm:px-6 lg:px-8">
       <%= link_to root_path, class: "flex items-center gap-3", aria: { label: "Go to Papayal homepage" } do %>
-        <img src="/Papayal-logoV2Tag.png" alt="Papayal" class="h-9 w-9 " />
+        <picture>
+          <source type="image/webp" srcset="/optimized/papayal-logo-128.webp">
+          <img src="/Papayal-logoV2Tag.png" alt="Papayal" width="128" height="128" decoding="async" class="h-9 w-9" />
+        </picture>
         <span class="marketing-logo-text text-2xl font-black tracking-tight text-[#14343A]">Papayal</span>
       <% end %>
 
