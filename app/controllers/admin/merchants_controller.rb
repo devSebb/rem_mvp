@@ -105,7 +105,7 @@ class Admin::MerchantsController < ApplicationController
   end
 
   def merchant_params
-    params.require(:merchant).permit(:store_name, :address, :contact_email, :bank_account_iban, :avatar_url, :logo, :categories_string)
+    params.require(:merchant).permit(:store_name, :address, :contact_email, :bank_account_iban, :avatar_url, :logo, categories: [])
   end
 
   def user_params

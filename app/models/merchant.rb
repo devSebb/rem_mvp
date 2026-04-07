@@ -1,4 +1,6 @@
 class Merchant < ApplicationRecord
+  include MerchantCategories
+
   attr_reader :generated_secret_key
 
   belongs_to :user
@@ -18,15 +20,6 @@ class Merchant < ApplicationRecord
 
   before_validation :sync_display_name
   before_validation :ensure_api_keys
-
-  # Virtual attribute for comma-separated categories editing
-  def categories_string
-    categories&.join(", ") || ""
-  end
-
-  def categories_string=(value)
-    self.categories = value.to_s.split(",").map(&:strip).reject(&:blank?)
-  end
 
   def self.digest_secret(raw)
     return if raw.blank?

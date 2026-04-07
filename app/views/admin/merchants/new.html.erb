@@ -46,9 +46,18 @@
             <p class="text-xs text-[#2C3A43]/70 mt-1">Opcional. Sube una imagen (máx. 5MB). Si no subes una, se mostrará un avatar por defecto.</p>
           </div>
           <div>
-            <label class="papayal-label">Categorías (separadas por coma)</label>
-            <%= form.text_field :categories_string, name: "merchant[categories_string]", class: "papayal-input mt-2", value: @merchant.categories_string, placeholder: "Café, Panadería, Desayunos" %>
-            <p class="text-xs text-[#2C3A43]/70 mt-1">Lista de categorías o productos que ofrece el comercio.</p>
+            <label class="papayal-label">Categorías</label>
+            <p class="text-xs text-[#2C3A43]/70 mt-1 mb-3">Selecciona las categorías que aplican a este comercio.</p>
+            <input type="hidden" name="merchant[categories][]" value="">
+            <div class="grid grid-cols-2 gap-2">
+              <% MerchantCategories::VALID_CATEGORIES.each do |cat| %>
+                <label class="flex items-center gap-2 p-2 rounded-lg border border-black/10 bg-white cursor-pointer hover:bg-[#FFF8EC] hover:border-[#FCA50F]/40 transition-colors">
+                  <input type="checkbox" name="merchant[categories][]" value="<%= cat %>"
+                         class="accent-[#FCA50F] w-4 h-4 shrink-0">
+                  <span class="text-sm text-[#2C3A43] leading-tight"><%= MerchantCategories::CATEGORY_LABELS[cat] %></span>
+                </label>
+              <% end %>
+            </div>
           </div>
           <div>
             <label class="papayal-label">Avatar (URL de imagen) - Legacy</label>

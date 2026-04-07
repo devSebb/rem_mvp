@@ -6,6 +6,10 @@ module Api
           .includes(logo_attachment: :blob)
           .order(:store_name)
 
+        if params[:category].present? && MerchantCategories::VALID_CATEGORIES.include?(params[:category])
+          merchants = merchants.where("? = ANY(categories)", params[:category])
+        end
+
         render_success(data: merchants.map { |merchant| serialize_merchant(merchant) })
       end
 

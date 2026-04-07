@@ -6,9 +6,9 @@
       <h1 class="text-3xl font-bold text-[#0D2F32] mt-2">Mi Billetera</h1>
       <p class="text-sm text-[#2C3A43]/80 mt-2">Administra tus tarjetas con una vista clara.</p>
     </div>
-    <div class="col-span-12 lg:col-span-4 flex flex-wrap gap-3 justify-start lg:justify-end">
-      <%= link_to "Actualizar Perfil", edit_user_registration_path, class: "papayal-btn-secondary" %>
-      <%= link_to "Comprar Nueva Tarjeta", new_gift_card_path, class: "papayal-btn-primary" %>
+    <div class="col-span-12 lg:col-span-4 flex flex-col sm:flex-row sm:flex-wrap gap-3 justify-start lg:justify-end">
+      <%= link_to "Actualizar Perfil", edit_user_registration_path, class: "papayal-btn-secondary w-full sm:w-auto" %>
+      <%= link_to "Comprar Nueva Tarjeta", new_gift_card_path, class: "papayal-btn-primary w-full sm:w-auto" %>
     </div>
   </div>
 
@@ -37,13 +37,13 @@
   </div>
 
   <!-- Search and Filter Bar -->
-  <div class="papayal-card p-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+  <div class="papayal-card p-4 sm:p-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
     <div class="flex-1">
       <label for="search-input" class="papayal-meta text-[#2C3A43]/60 mb-2 block">Buscar</label>
       <input type="text" id="search-input" placeholder="Nombre, tienda, monto o estado..." class="papayal-input">
     </div>
-    <div class="flex flex-col sm:flex-row gap-4">
-      <div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:w-auto">
+      <div class="min-w-0">
         <label for="status-filter" class="papayal-meta text-[#2C3A43]/60 mb-2 block">Estado</label>
         <select id="status-filter" class="papayal-input">
           <option value="">Todos los estados</option>
@@ -53,7 +53,7 @@
           <option value="canceled">Cancelada</option>
         </select>
       </div>
-      <div>
+      <div class="min-w-0">
         <label for="sort-filter" class="papayal-meta text-[#2C3A43]/60 mb-2 block">Ordenar</label>
         <select id="sort-filter" class="papayal-input">
           <option value="newest">Más recientes</option>
@@ -67,8 +67,9 @@
   </div>
 
   <!-- Tab Navigation & Content -->
-  <div class="papayal-card p-6">
-    <div class="flex flex-wrap gap-3 mb-6" aria-label="Tabs">
+  <div class="papayal-card p-4 sm:p-6">
+    <div class="mb-6 overflow-x-auto pb-1" aria-label="Tabs">
+      <div class="flex min-w-max gap-3">
       <button onclick="showTab('sent')" id="sent-tab" class="tab-button active-tab inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium border border-[#0D2F32] text-white bg-[#0D2F32] shadow-sm transition">
         <span class="text-base">📤</span> Enviadas
         <span id="sent-count" class="text-xs px-2 py-1 rounded-full bg-white/20 text-white">0</span>
@@ -81,6 +82,7 @@
         <span class="text-base">✅</span> Canjeadas
         <span id="redeemed-count" class="text-xs px-2 py-1 rounded-full bg-white text-[#0D2F32]">0</span>
       </button>
+      </div>
     </div>
 
     <div id="tab-content">
@@ -283,7 +285,7 @@
 
   function createCardElement(card, type) {
     const div = document.createElement('div');
-    div.className = 'bg-white overflow-hidden shadow-lg rounded-xl border border-gray-200 hover:shadow-xl transition-shadow duration-200';
+    div.className = 'col-span-12 sm:col-span-6 xl:col-span-4';
     
     const statusColors = {
       'active': 'bg-green-100 text-green-800',
@@ -322,20 +324,21 @@
     }
     
     div.innerHTML = `
-      <div class="px-6 py-6">
+      <div class="bg-white h-full overflow-hidden shadow-lg rounded-xl border border-gray-200 hover:shadow-xl transition-shadow duration-200">
+      <div class="flex h-full flex-col px-4 py-5 sm:px-6 sm:py-6">
         <!-- Header with amount and status -->
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center">
-            <div class="w-12 h-12 ${type === 'sent' ? 'bg-blue-500' : type === 'received' ? 'bg-green-500' : 'bg-purple-500'} rounded-full flex items-center justify-center">
+        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div class="flex min-w-0 items-center">
+            <div class="w-12 h-12 shrink-0 ${type === 'sent' ? 'bg-blue-500' : type === 'received' ? 'bg-green-500' : 'bg-purple-500'} rounded-full flex items-center justify-center">
               <span class="text-white font-bold text-lg">${type === 'sent' ? '📤' : type === 'received' ? '📥' : '✅'}</span>
             </div>
-            <div class="ml-4">
-              <div class="text-2xl font-bold" style="color: #2C3A43;">${currency}${amount}</div>
+            <div class="ml-4 min-w-0">
+              <div class="text-xl sm:text-2xl font-bold break-words" style="color: #2C3A43;">${currency}${amount}</div>
               <div class="text-sm text-gray-500">${card.currency}</div>
               ${card.remaining_balance < card.amount ? `<div class="text-sm text-green-600 font-medium">Restante: ${currency}${remainingBalance}</div>` : ''}
             </div>
           </div>
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusColors[card.status]}">
+          <span class="inline-flex w-fit items-center px-3 py-1 rounded-full text-xs font-medium ${statusColors[card.status]}">
             ${statusIcons[card.status]}
             ${statusLabels[card.status] || card.status.charAt(0).toUpperCase() + card.status.slice(1)}
           </span>
@@ -343,26 +346,27 @@
         
         <!-- Recipient/From info -->
         <div class="mb-4">
-          <div class="text-sm text-gray-600">${recipientInfo}</div>
-          ${card.merchant ? `<div class="text-sm text-gray-500 mt-1">${card.status === 'redeemed' ? 'Canjeada en: ' : 'Tienda: '}${card.merchant.store_name}</div>` : ''}
+          <div class="text-sm text-gray-600 break-words">${recipientInfo}</div>
+          ${card.merchant ? `<div class="text-sm text-gray-500 mt-1 break-words">${card.status === 'redeemed' ? 'Canjeada en: ' : 'Tienda: '}${card.merchant.store_name}</div>` : ''}
         </div>
         
         <!-- Dates -->
-        <div class="space-y- text-sm text-gray-500">
+        <div class="space-y-1 text-sm text-gray-500">
           ${card.redeemed_at ? `<div>Canjeada: ${new Date(card.redeemed_at).toLocaleDateString('es-EC')}</div>` : ''}
           <%# Expiration removed - gift cards never expire %>
           <div>Creada: ${new Date(card.created_at).toLocaleDateString('es-EC')}</div>
         </div>
         
         <!-- Action button -->
-        <div class="mt-6">
-          <a href="/gift_cards/${card.id}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2" style="color: #FCA50F; background-color: #FEF3E2;">
+        <div class="mt-6 pt-2">
+          <a href="/gift_cards/${card.id}" class="inline-flex w-full sm:w-auto items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2" style="color: #FCA50F; background-color: #FEF3E2;">
             Ver Detalles
             <svg class="ml-2 -mr-1 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
             </svg>
           </a>
         </div>
+      </div>
       </div>
     `;
     
