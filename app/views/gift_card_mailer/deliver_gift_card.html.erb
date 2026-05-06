@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>You've received a REM gift card!</title>
+  <title>¡Recibiste una tarjeta de regalo Papayal!</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -87,52 +87,52 @@
   <div class="container">
     <div class="header">
       <div class="gift-icon">🎁</div>
-      <h1>You've received a REM gift card!</h1>
+      <h1>¡Recibiste una tarjeta de regalo Papayal!</h1>
     </div>
 
     <div class="amount">
-      <%= @gift_card.currency %> <%= @gift_card.amount / 100.0 %>
+      <%= @gift_card.currency %> <%= format("%.2f", @gift_card.amount / 100.0) %>
     </div>
 
     <div class="sender-info">
-      <strong>From:</strong> <%= @sender.name %><br>
+      <strong>De:</strong> <%= @sender.name %><br>
       <strong>Email:</strong> <%= @sender.email %>
     </div>
 
     <div class="otp-code">
-      Your gift card code: <%= @raw_code %>
+      Tu código: <%= @raw_code %>
     </div>
 
     <% if @qr_code %>
       <div class="qr-code">
-        <h3>Or scan this QR code:</h3>
+        <h3>O escanea este código QR:</h3>
         <%= raw @qr_code %>
         <p style="margin-top: 10px; font-size: 14px; color: #6b7280;">
-          The QR code contains your gift card code for easy scanning
+          El código QR contiene tu código de tarjeta para escaneo rápido
         </p>
       </div>
     <% end %>
 
     <div class="expiry-info">
-      <strong>⏰ Important:</strong><br>
-      • Your gift card code: <strong><%= @raw_code %></strong><br>
-      • Show this code or QR code to any participating merchant<br>
-      • No expiration date - use anytime!
+      <strong>⏰ Importante:</strong><br>
+      • Tu código de tarjeta: <strong><%= @raw_code %></strong><br>
+      • Muestra este código o el QR en cualquier comercio participante<br>
+      • Sin fecha de vencimiento — úsalo cuando quieras
     </div>
 
     <div style="margin: 30px 0; padding: 20px; background: #f9fafb; border-radius: 8px;">
-      <h3>How to redeem:</h3>
+      <h3>Cómo canjear:</h3>
       <ol>
-        <li>Visit any participating merchant</li>
-        <li>Show them your gift card code: <strong><%= @raw_code %></strong></li>
-        <li>Or let them scan the QR code above</li>
-        <li>Enjoy your gift card!</li>
+        <li>Visita cualquier comercio participante</li>
+        <li>Muestra tu código: <strong><%= @raw_code %></strong></li>
+        <li>O permite que escaneen el código QR de arriba</li>
+        <li>¡Disfruta tu tarjeta!</li>
       </ol>
     </div>
 
     <div class="footer">
-      <p>Thank you for using REM! 🚀</p>
-      <p>If you have any questions, please contact our support team.</p>
+      <p>Gracias por usar Papayal 🎉</p>
+      <p>Si tienes dudas, escríbenos a hola@papayal.app</p>
     </div>
   </div>
 </body>

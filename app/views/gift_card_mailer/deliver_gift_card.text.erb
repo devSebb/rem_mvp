@@ -1,21 +1,21 @@
-🎁 You've received a REM gift card!
+🎁 ¡Recibiste una tarjeta de regalo Papayal!
 
-Amount: <%= @gift_card.currency %> <%= @gift_card.amount / 100.0 %>
-From: <%= @sender.name %> (<%= @sender.email %>)
+Monto: <%= @gift_card.currency %> <%= format("%.2f", @gift_card.amount / 100.0) %>
+De: <%= @sender.name %> (<%= @sender.email %>)
 
-Your gift card code: <%= @raw_code %>
+Tu código: <%= @raw_code %>
 
-⏰ IMPORTANT INFORMATION:
-• Your gift card code: <%= @raw_code %>
-• Show this code to any participating merchant
-• No expiration date - use anytime!
+⏰ INFORMACIÓN IMPORTANTE:
+• Tu código de tarjeta: <%= @raw_code %>
+• Muestra este código en cualquier comercio participante
+• Sin fecha de vencimiento — úsalo cuando quieras
 
-HOW TO REDEEM:
-1. Visit any participating merchant
-2. Show them your gift card code: <%= @raw_code %>
-3. Or let them scan the QR code (in HTML version)
-4. Enjoy your gift card!
+CÓMO CANJEAR:
+1. Visita cualquier comercio participante
+2. Muestra tu código: <%= @raw_code %>
+3. O permite que escaneen el código QR (en la versión HTML)
+4. ¡Disfruta tu tarjeta!
 
-Thank you for using REM! 🚀
+Gracias por usar Papayal 🎉
 
-If you have any questions, please contact our support team.
+Si tienes dudas, escríbenos a hola@papayal.app

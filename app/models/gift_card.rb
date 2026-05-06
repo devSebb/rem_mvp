@@ -327,7 +327,7 @@ class GiftCard < ApplicationRecord
   def send_notifications!
     return false unless recipient.present?
 
-    SendGiftCardNotificationsJob.perform_later(id)
+    NotificationJob.perform_later(id)
     true
   end
 

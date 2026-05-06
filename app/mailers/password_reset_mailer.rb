@@ -1,5 +1,5 @@
 class PasswordResetMailer < ApplicationMailer
-  default from: ENV['DEFAULT_FROM_EMAIL'] || 'papayalapp@gmail.com'
+  default from: ENV['DEFAULT_FROM_EMAIL'] || 'hola@papayal.app'
 
   def reset_password_instructions(user, token)
     @user = user
@@ -8,7 +8,7 @@ class PasswordResetMailer < ApplicationMailer
 
     mail(
       to: @user.email,
-      subject: "Reset your REM password"
+      subject: "Restablece tu contraseña Papayal"
     )
   end
 

@@ -1,5 +1,5 @@
 class GiftCardMailer < ApplicationMailer
-  default from: ENV['DEFAULT_FROM_EMAIL'] || 'papayalapp@gmail.com'
+  default from: ENV['DEFAULT_FROM_EMAIL'] || 'hola@papayal.app'
 
   def deliver_gift_card(gift_card, raw_code)
     @gift_card = gift_card
@@ -10,7 +10,7 @@ class GiftCardMailer < ApplicationMailer
 
     mail(
       to: @recipient.email,
-      subject: "You've received a REM gift card! 🎁"
+      subject: "🎁 Recibiste una tarjeta de regalo Papayal"
     )
   end
 

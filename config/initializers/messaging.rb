@@ -10,7 +10,7 @@ Rails.application.configure do
     
     # Email configuration
     email: {
-      from: ENV['DEFAULT_FROM_EMAIL'] || 'papayalapp@gmail.com',
+      from: ENV['DEFAULT_FROM_EMAIL'] || 'hola@papayal.app',
       resend_api_key: ENV['RESEND_API_KEY']
     },
     
