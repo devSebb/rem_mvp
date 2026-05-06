@@ -6,6 +6,7 @@ class User < ApplicationRecord
 
   # Enums
   enum role: { user: 0, merchant: 1, admin: 2 }
+  enum preferred_channel: { whatsapp: 0, sms: 1 }, _prefix: :prefers
 
   attr_accessor :skip_national_id_validation
   attr_accessor :terms_accepted

@@ -34,12 +34,13 @@ module Api
           role: user.role,
           avatar_url: attachment_url(user.avatar),
           avatar_thumb_url: attachment_variant_url(user.avatar, resize_to_limit: [128, 128]),
-          interests: user.interests
+          interests: user.interests,
+          preferred_channel: user.preferred_channel
         }
       end
 
       def me_params
-        permitted = params.permit(:address, :country_of_residence, :date_of_birth, :phone, :first_name, :last_name, interests: [])
+        permitted = params.permit(:address, :country_of_residence, :date_of_birth, :phone, :first_name, :last_name, :preferred_channel, interests: [])
         permitted[:date_of_birth] = permitted[:date_of_birth].presence if permitted.key?(:date_of_birth)
         permitted
       end

@@ -11,14 +11,10 @@ module Messaging
     def send_all_notifications
       results = {}
 
-      # Send WhatsApp if recipient has phone
+      # Phone channel: respects user preference; WhatsApp first with SMS fallback by default.
       if @recipient&.phone.present?
-        results[:whatsapp] = send_whatsapp
-      end
-
-      # Send SMS if recipient has phone
-      if @recipient&.phone.present?
-        results[:sms] = send_sms
+        phone_result = send_phone_channel
+        results[phone_result[:via]] = phone_result if phone_result[:via]
       end
 
       # Send Email if recipient has email
@@ -33,6 +29,22 @@ module Messaging
       update_delivery_flags(results)
 
       results
+    end
+
+    # Sends via the user's preferred phone channel. If preference is :whatsapp
+    # (default) and WhatsApp delivery fails, automatically falls back to SMS.
+    # Returns a hash with :via (:whatsapp or :sms) plus the underlying result.
+    def send_phone_channel
+      if @recipient.preferred_channel == "sms"
+        return send_sms.merge(via: :sms)
+      end
+
+      whatsapp_result = send_whatsapp
+      return whatsapp_result.merge(via: :whatsapp) if whatsapp_result[:success]
+
+      Rails.logger.info "[Notifier] WhatsApp delivery failed for user #{@recipient.id} (#{whatsapp_result[:error]}); falling back to SMS"
+      sms_result = send_sms
+      sms_result.merge(via: :sms, whatsapp_attempted: true, whatsapp_error: whatsapp_result[:error])
     end
 
     def send_whatsapp
@@ -96,7 +108,7 @@ module Messaging
       Messaging::PushSender.new.send_to_user(
         @recipient,
         title: "#{merchant_name} — #{amount_label}",
-        body: "#{@sender&.name || "Alguien"} te envi\u00F3 una tarjeta de regalo",
+        body: "#{@sender&.name || "Alguien"} te envi\u00F3 una tarjeta de regalo Papayal",
         data: { type: "gift_card_received", gift_card_id: @gift_card.id.to_s }
       )
     rescue => e
@@ -137,34 +149,28 @@ module Messaging
     def whatsapp_message
       raw_code = @gift_card.raw_code || @gift_card.generate_code!
       <<~MESSAGE
-        🎁 You've received a REM gift card!
+        🎁 ¡Recibiste una tarjeta de regalo Papayal!
 
-        💰 Amount: #{@gift_card.currency} #{@gift_card.amount / 100.0}
-        👤 From: #{@sender.name}
+        💰 Monto: #{@gift_card.currency} #{format("%.2f", @gift_card.amount / 100.0)}
+        👤 De: #{@sender.name}
 
-        🎫 Your gift card code: #{raw_code}
+        🎫 Tu código: #{raw_code}
 
-        📱 Show this code to any participating merchant
-        ⏰ No expiration - use anytime!
+        📱 Muestra este código en cualquier comercio participante
+        ⏰ Sin fecha de vencimiento — úsalo cuando quieras
 
-        Thank you for using REM! 🚀
+        ¡Gracias por usar Papayal! 🎉
       MESSAGE
     end
 
     def sms_message
       raw_code = @gift_card.raw_code || @gift_card.generate_code!
       <<~MESSAGE
-        🎁 REM Gift Card Received!
-
-        Amount: #{@gift_card.currency} #{@gift_card.amount / 100.0}
-        From: #{@sender.name}
-
-        Code: #{raw_code}
-
-        Show this code to any merchant
-        No expiration - use anytime!
-
-        Thanks for using REM!
+        🎁 Tarjeta de regalo Papayal recibida.
+        Monto: #{@gift_card.currency} #{format("%.2f", @gift_card.amount / 100.0)}
+        De: #{@sender.name}
+        Código: #{raw_code}
+        Muéstralo en caja. Sin vencimiento.
       MESSAGE
     end
 
