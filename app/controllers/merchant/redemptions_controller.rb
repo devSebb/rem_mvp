@@ -153,6 +153,8 @@ class Merchant::RedemptionsController < ApplicationController
           Rails.logger.warn "⚠️ Failed to consume idempotency token after dynamic redemption: #{e.message}"
         end
 
+        notify_recipient_of_redemption(@gift_card, result[:amount_cents])
+
         flash[:notice] = "Successfully redeemed #{format_amount(result[:amount_cents], result[:currency])}. Remaining balance: #{format_amount(result[:remaining_balance_cents], result[:currency])}."
         redirect_to success_merchant_redemptions_path(gift_card_id: @gift_card.id)
       else
@@ -214,14 +216,16 @@ class Merchant::RedemptionsController < ApplicationController
     
     if @gift_card.partial_redeem!(redemption_amount: redemption_amount, merchant: current_user.merchant, actor: current_user)
       Rails.logger.info "✅ Successfully redeemed #{redemption_amount} from gift card #{@gift_card.id}"
-      
+
       # Consume the token after successful redemption
       begin
         RedemptionIdempotencyService.consume_token(idempotency_token)
       rescue => e
         Rails.logger.warn "⚠️ Failed to consume idempotency token: #{e.message}"
       end
-      
+
+      notify_recipient_of_redemption(@gift_card, redemption_amount)
+
       flash[:notice] = "Successfully redeemed #{format_amount(redemption_amount, @gift_card.currency)}. Remaining balance: #{format_amount(@gift_card.reload.remaining_balance, @gift_card.currency)}."
       redirect_to success_merchant_redemptions_path(gift_card_id: @gift_card.id)
     else
@@ -274,6 +278,18 @@ class Merchant::RedemptionsController < ApplicationController
 
   def normalized_token(value)
     value.to_s.upcase.gsub(/[^A-Z0-9]/, "")
+  end
+
+  # Best-effort push to the recipient that their card was redeemed.
+  # Wrapped so any push/Expo failure can never block the merchant's flow.
+  def notify_recipient_of_redemption(gift_card, amount_cents)
+    Messaging::RedemptionPusher.call(
+      gift_card: gift_card,
+      amount_cents: amount_cents,
+      merchant: current_user.merchant
+    )
+  rescue => e
+    Rails.logger.warn "[RedemptionPusher] enqueue failed for gift_card_id=#{gift_card&.id}: #{e.class} - #{e.message}"
   end
 
   def active_redemption_token_for(raw_value)
