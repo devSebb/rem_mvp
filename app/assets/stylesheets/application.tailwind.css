@@ -261,7 +261,7 @@
   }
 
   .marketing-mockup-card {
-    @apply relative flex min-h-[30rem] flex-col justify-between overflow-hidden rounded-lg border border-white/12 bg-white/7 p-5 shadow-[0_30px_70px_-48px_rgba(0,0,0,0.8)];
+    @apply relative flex flex-col gap-4 overflow-hidden rounded-lg border border-white/12 bg-white/7 p-5 pb-6 shadow-[0_30px_70px_-48px_rgba(0,0,0,0.8)];
   }
 
   .marketing-mockup-card::before {
@@ -270,7 +270,7 @@
   }
 
   .marketing-mockup-card-wide {
-    @apply min-h-[24rem] md:col-span-2;
+    @apply md:col-span-2;
   }
 
   .marketing-mockup-kicker {
@@ -284,15 +284,15 @@
   }
 
   .marketing-mockup-frame {
-    @apply relative z-10 mt-4 flex min-h-[20rem] items-center justify-center;
+    @apply relative z-10 h-[22rem] w-full;
+  }
+
+  .marketing-mockup-frame picture {
+    @apply flex h-full w-full max-w-full items-center justify-center;
   }
 
   .marketing-mockup-image {
-    @apply h-auto max-h-[25rem] w-auto max-w-full object-contain drop-shadow-[0_24px_34px_rgba(0,0,0,0.34)];
-  }
-
-  .marketing-mockup-image-wide {
-    @apply max-h-[22rem];
+    @apply h-full w-auto max-w-full object-contain object-center drop-shadow-[0_24px_34px_rgba(0,0,0,0.34)];
   }
 
   .marketing-benefit-card {
