@@ -69,8 +69,21 @@
   }
 
   .marketing-body {
-    @apply min-h-screen bg-[#ECEBE7] text-[#2C3A43] antialiased;
+    @apply min-h-screen bg-[#F4F1EA] text-[#24343A] antialiased;
+    font-family: "Raleway", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     scroll-behavior: smooth;
+  }
+
+  .marketing-body h1,
+  .marketing-body h2,
+  .marketing-body h3,
+  .marketing-body h4,
+  .marketing-body h5,
+  .marketing-body h6,
+  .marketing-body nav,
+  .marketing-body button,
+  .marketing-body input {
+    font-family: "Raleway", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
 
   .marketing-nav-wrap {
@@ -78,38 +91,37 @@
   }
 
   .marketing-nav {
-    @apply border-b border-[#16363B]/8 bg-[#ECEBE7]/82 backdrop-blur-xl;
+    @apply border-b border-[#14343A]/10 bg-[#F4F1EA]/90 backdrop-blur-xl;
   }
 
-  /* Logo text: nav has font-weight 500 in base layer; force heavy weight. Subtle same-color shadow makes 900 read bolder on screen. */
   .marketing-logo-text {
     font-weight: var(--font-weight-black, 900);
-    text-shadow: 0 0 0.5px currentColor;
-    -webkit-font-smoothing: antialiased;
+    letter-spacing: 0;
   }
 
   .marketing-nav-link {
-    @apply inline-flex h-10 items-center rounded-lg px-4 text-sm font-medium text-[#17363C] transition hover:bg-[#16363B]/6 hover:text-[#0E2F34];
+    @apply inline-flex h-10 items-center rounded-md px-3 text-sm font-bold text-[#17363C]/78 transition hover:bg-[#17363C]/7 hover:text-[#14343A];
   }
 
   .marketing-nav-link.is-active {
-    @apply bg-[#16363B]/7;
+    @apply bg-[#17363C]/8 text-[#14343A];
   }
 
   .marketing-mobile-link {
-    @apply rounded-lg px-3 py-2 text-sm font-medium text-[#17363C] transition hover:bg-[#16363B]/7;
+    @apply rounded-md px-3 py-3 text-sm font-bold text-[#17363C] transition hover:bg-[#16363B]/7;
   }
 
   .marketing-login-btn {
-    @apply inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-semibold text-[#17363C] transition hover:bg-[#16363B]/7;
+    @apply inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-bold text-[#17363C] transition hover:bg-[#16363B]/7;
   }
 
   .locale-toggle {
-    @apply inline-flex items-center rounded-full border border-[#17363C]/12 bg-white/70 p-1 shadow-sm;
+    @apply inline-flex items-center rounded-md border border-[#17363C]/12 bg-white/75 p-1 shadow-sm;
   }
 
   .locale-toggle-btn {
-    @apply inline-flex h-8 min-w-10 items-center justify-center rounded-full px-3 text-xs font-bold tracking-[0.18em] text-[#17363C]/60 transition;
+    @apply inline-flex h-8 min-w-10 items-center justify-center rounded-md px-3 text-xs font-black uppercase text-[#17363C]/60 transition;
+    letter-spacing: 0;
   }
 
   .locale-toggle-btn.is-active {
@@ -117,198 +129,227 @@
   }
 
   .marketing-signup-btn {
-    @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-b from-[#F4B126] to-[#D99111] px-5 py-4 text-sm font-bold text-[#16363B] shadow-[0_10px_20px_-10px_rgba(244,177,38,.9)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-14px_rgba(244,177,38,.95)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4B126]/55;
+    @apply inline-flex items-center justify-center rounded-md bg-[#F4A20F] px-5 py-3 text-sm font-black text-[#14343A] shadow-[0_16px_34px_-22px_rgba(244,162,15,.95)] transition hover:-translate-y-0.5 hover:bg-[#F7B12E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4A20F]/55;
   }
 
   .marketing-secondary-btn {
-    @apply inline-flex items-center justify-center rounded-xl border border-[#17363C]/14 bg-white/70 text-[#17363C] shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#17363C]/30;
+    @apply inline-flex items-center justify-center rounded-md border border-[#17363C]/16 bg-white/75 px-5 py-3 font-black text-[#17363C] shadow-sm transition hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#17363C]/30;
   }
 
   .marketing-deep-btn {
-    @apply rounded-xl bg-[#17363C] font-bold text-white shadow-[0_20px_30px_-20px_rgba(23,54,60,1)] transition hover:-translate-y-0.5 hover:bg-[#0f2b2f];
+    @apply inline-flex items-center justify-center rounded-md bg-[#17363C] px-5 py-3 font-black text-white shadow-[0_20px_34px_-24px_rgba(23,54,60,1)] transition hover:-translate-y-0.5 hover:bg-[#102A2F];
   }
 
   .marketing-pill {
-    @apply inline-flex items-center rounded-xl bg-gradient-to-b from-[#F6C14A] to-[#DB9A1A] px-5 py-2 text-sm font-bold text-[#1B3940] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)];
+    @apply inline-flex items-center rounded-md border border-[#F4A20F]/25 bg-[#F4A20F]/14 px-4 py-2 text-xs font-black uppercase text-[#17363C];
+    letter-spacing: 0;
   }
 
   .marketing-section {
-    @apply bg-[#ECEBE7];
+    @apply bg-[#F4F1EA];
   }
 
   .marketing-hero {
-    @apply relative bg-[#ECEBE7];
+    @apply relative bg-[#F4F1EA];
+  }
+
+  .marketing-hero-grid {
+    @apply pointer-events-none absolute inset-0 opacity-60;
+    background:
+      linear-gradient(rgba(20, 52, 58, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(20, 52, 58, 0.045) 1px, transparent 1px),
+      radial-gradient(circle at 16% 18%, rgba(244, 162, 15, 0.2), transparent 30%),
+      radial-gradient(circle at 88% 12%, rgba(20, 52, 58, 0.16), transparent 32%);
+    background-size: 40px 40px, 40px 40px, auto, auto;
+  }
+
+  .marketing-hero-title {
+    @apply mt-5 max-w-3xl text-4xl font-black leading-[1.03] text-[#14343A] sm:text-5xl lg:text-6xl;
+    letter-spacing: 0;
+  }
+
+  .marketing-hero-copy {
+    @apply mt-6 max-w-2xl text-base font-medium leading-7 text-[#43555B] sm:text-lg sm:leading-8;
+  }
+
+  .marketing-hero-visual {
+    @apply relative mx-auto max-w-[34rem];
+  }
+
+  .marketing-hero-visual::before {
+    content: "";
+    @apply absolute left-1/2 top-1/2 h-[78%] w-[78%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#14343A]/12 blur-3xl;
+  }
+
+  .hero-card-image {
+    @apply relative z-10 w-full object-contain drop-shadow-[0_30px_55px_rgba(20,52,58,0.22)];
+    transition: transform 0.35s ease-out;
+  }
+
+  .marketing-trust-row {
+    @apply mt-8 flex flex-wrap gap-2 text-sm font-bold text-[#17363C];
+  }
+
+  .marketing-trust-row > span {
+    @apply inline-flex rounded-md border border-[#17363C]/12 bg-white/68 px-3 py-2;
+  }
+
+  .marketing-category-strip {
+    @apply border-y border-[#17363C]/8 bg-[#FBFAF6] py-10 sm:py-12;
+  }
+
+  .marketing-category-card {
+    @apply flex min-h-16 items-center gap-3 rounded-md border border-[#17363C]/10 bg-white px-4 py-3 text-sm font-black text-[#17363C] shadow-[0_18px_40px_-32px_rgba(20,52,58,.6)];
+  }
+
+  .marketing-section-heading {
+    @apply mx-auto max-w-3xl text-center;
+  }
+
+  .marketing-section-eyebrow {
+    @apply text-xs font-black uppercase text-[#D4870A];
+    letter-spacing: 0;
+  }
+
+  .marketing-section-title {
+    @apply mt-4 text-3xl font-black leading-tight text-[#14343A] sm:text-4xl lg:text-5xl;
+    letter-spacing: 0;
+  }
+
+  .marketing-section-copy {
+    @apply mt-4 text-base font-medium leading-7 text-[#5C6A70] sm:text-lg;
+  }
+
+  .marketing-step-card,
+  .marketing-benefit-card,
+  .marketing-faq-card {
+    @apply rounded-lg border border-[#17363C]/10 bg-white/82 p-6 shadow-[0_24px_60px_-48px_rgba(12,35,43,0.75)];
+  }
+
+  .marketing-step-card {
+    @apply min-h-[15rem] transition hover:-translate-y-1 hover:bg-white;
+  }
+
+  .marketing-step-number {
+    @apply inline-flex h-11 w-11 items-center justify-center rounded-md bg-[#14343A] text-sm font-black text-[#F4A20F];
+  }
+
+  .marketing-card-title {
+    @apply mt-6 text-2xl font-black leading-tight text-[#14343A];
+    letter-spacing: 0;
+  }
+
+  .marketing-card-copy {
+    @apply mt-3 text-base font-medium leading-7 text-[#58656A];
+  }
+
+  .marketing-product-section {
+    @apply relative overflow-hidden bg-[#123238];
+  }
+
+  .marketing-product-section::before {
+    content: "";
+    @apply pointer-events-none absolute inset-x-0 top-0 h-px bg-white/12;
+  }
+
+  .marketing-dark-point {
+    @apply rounded-md border border-white/12 bg-white/7 px-4 py-3 text-sm font-bold text-white/86;
+  }
+
+  .marketing-phone-showcase {
+    @apply grid gap-4 md:grid-cols-2;
+  }
+
+  .marketing-mockup-card {
+    @apply relative flex min-h-[30rem] flex-col justify-between overflow-hidden rounded-lg border border-white/12 bg-white/7 p-5 shadow-[0_30px_70px_-48px_rgba(0,0,0,0.8)];
+  }
+
+  .marketing-mockup-card::before {
+    content: "";
+    @apply pointer-events-none absolute inset-x-8 bottom-10 h-40 rounded-full bg-[#F4A20F]/14 blur-3xl;
+  }
+
+  .marketing-mockup-card-wide {
+    @apply min-h-[24rem] md:col-span-2;
+  }
+
+  .marketing-mockup-kicker {
+    @apply relative z-10 text-xs font-black uppercase text-[#F4A20F];
+    letter-spacing: 0;
+  }
+
+  .marketing-mockup-title {
+    @apply relative z-10 mt-2 text-xl font-black leading-tight text-white;
+    letter-spacing: 0;
+  }
+
+  .marketing-mockup-frame {
+    @apply relative z-10 mt-4 flex min-h-[20rem] items-center justify-center;
+  }
+
+  .marketing-mockup-image {
+    @apply h-auto max-h-[25rem] w-auto max-w-full object-contain drop-shadow-[0_24px_34px_rgba(0,0,0,0.34)];
+  }
+
+  .marketing-mockup-image-wide {
+    @apply max-h-[22rem];
+  }
+
+  .marketing-benefit-card {
+    @apply transition hover:-translate-y-1 hover:bg-white;
+  }
+
+  .marketing-market {
+    background:
+      radial-gradient(circle at 18% 20%, rgba(244, 162, 15, 0.16), transparent 36%),
+      radial-gradient(circle at 82% 78%, rgba(20, 52, 58, 0.12), transparent 34%),
+      #FBFAF6;
+  }
+
+  .marketing-card-showcase {
+    @apply mt-12 rounded-lg border border-[#17363C]/10 bg-white/72 p-5 shadow-[0_28px_70px_-54px_rgba(20,52,58,0.78)] sm:p-8;
+  }
+
+  .marketing-faq-card {
+    @apply transition hover:bg-white;
+  }
+
+  .marketing-feature-card {
+    @apply rounded-lg border border-[#17363C]/10 bg-white/82 p-6 shadow-[0_24px_60px_-48px_rgba(12,35,43,0.75)];
   }
 
   .hero-gradient {
     @apply pointer-events-none absolute rounded-full blur-3xl;
-    width: 26rem;
-    height: 26rem;
+    width: 24rem;
+    height: 24rem;
   }
 
   .hero-gradient-left {
-    top: -8rem;
-    left: -6rem;
-    background: radial-gradient(circle at center, rgba(244, 177, 38, 0.34), rgba(244, 177, 38, 0));
+    top: -9rem;
+    left: -7rem;
+    background: radial-gradient(circle at center, rgba(244, 162, 15, 0.22), rgba(244, 162, 15, 0));
   }
 
   .hero-gradient-right {
-    right: -7rem;
-    top: 8rem;
-    background: radial-gradient(circle at center, rgba(21, 53, 58, 0.22), rgba(21, 53, 58, 0));
+    right: -8rem;
+    top: 6rem;
+    background: radial-gradient(circle at center, rgba(20, 52, 58, 0.16), rgba(20, 52, 58, 0));
   }
 
-  .hero-card-wrap {
-    @apply relative mx-auto max-w-xl rounded-[2.2rem] border border-white/70 bg-white/75 p-4 shadow-[0_35px_90px_-60px_rgba(20,52,58,0.85)] sm:p-5;
+  .marketing-about-card {
+    @apply rounded-lg border border-white/12 bg-[#14343A] p-6 shadow-[0_30px_70px_-42px_rgba(20,52,58,0.7)] sm:p-8;
   }
 
-  .hero-card-image {
-    @apply relative z-10 w-full object-contain drop-shadow-[0_25px_45px_rgba(20,52,58,0.28)];
-    transition: transform 0.35s ease-out;
-  }
-
-  .hero-chip {
-    @apply absolute z-20 inline-flex items-center rounded-2xl border border-[#17363C]/8 bg-white/92 px-4 py-2 text-sm font-semibold text-[#17363C] shadow-lg;
-    transition: transform 0.35s ease-out;
-  }
-
-  .hero-chip-top-right {
-    right: -0.4rem;
-    top: 2.3rem;
-  }
-
-  .hero-chip-bottom-left {
-    bottom: 0.9rem;
-    left: -0.8rem;
-    background: #17363c;
-    color: #f3f2ef;
-  }
-
-  .hero-chip-bottom-center {
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  .marketing-step-card {
-    @apply rounded-[2rem] border border-[#17363C]/8 bg-white/80 p-6 shadow-[0_30px_70px_-50px_rgba(16,38,45,0.6)];
-  }
-
-  .marketing-step-icon {
-    @apply inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-b from-[#F4B126] to-[#D99111] text-2xl shadow-[0_18px_25px_-18px_rgba(244,177,38,1)];
-  }
-
-  .marketing-step-kicker {
-    @apply mt-6 text-3xl font-black text-[#D99915];
-  }
-
-  .marketing-step-title {
-    @apply mt-1 text-4xl font-black text-[#17363C];
-  }
-
-  .marketing-step-body {
-    @apply mt-3 text-xl text-[#64707A];
-  }
-
-  .marketing-offer-banner {
-    @apply rounded-[2rem] border border-[#E6B449]/30 px-6 py-10 text-center shadow-[0_35px_70px_-60px_rgba(36,30,12,0.95)] sm:px-12;
-    background: linear-gradient(90deg, rgba(237, 178, 52, 0.95), rgba(228, 165, 32, 0.96), rgba(239, 187, 78, 0.95));
-  }
-
-  .marketing-features {
-    @apply relative overflow-hidden;
-    background: radial-gradient(ellipse at 15% 0%, rgba(35, 94, 106, 0.35), transparent 50%),
-      radial-gradient(ellipse at 85% 100%, rgba(27, 105, 101, 0.25), transparent 60%),
-      #15353a;
-  }
-
-  .marketing-feature-card {
-    @apply rounded-3xl border border-white/55 bg-white/88 p-6 shadow-[0_25px_60px_-50px_rgba(8,35,45,0.95)] transition duration-300 hover:-translate-y-1.5 hover:shadow-[0_30px_60px_-40px_rgba(8,35,45,0.7)];
-  }
-
-  .marketing-feature-icon {
-    @apply inline-flex h-13 w-13 items-center justify-center rounded-2xl bg-[#EFF3F7] text-2xl transition;
-    width: 3.25rem;
-    height: 3.25rem;
-  }
-
-  .marketing-feature-card:hover .marketing-feature-icon {
-    box-shadow: 0 0 0 3px rgba(244, 177, 38, 0.2), 0 0 26px rgba(244, 177, 38, 0.45);
-    background: #fff6e5;
-  }
-
-  .marketing-benefit-float-card {
-    @apply flex items-start gap-4 rounded-3xl border border-[#17363C]/8 bg-white/85 p-6 shadow-[0_25px_55px_-45px_rgba(12,35,43,0.9)] transition hover:-translate-y-1;
-  }
-
-  /* Beneficios / Por Qué Existimos section (landing redesign) */
-  .marketing-beneficios-section {
-    background: #F7F8F5;
-  }
-
-  .marketing-beneficios-pill {
-    @apply inline-flex items-center rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white;
-    background: #16363B;
-  }
-
-  .marketing-beneficio-badge {
-    @apply inline-flex items-center gap-2 rounded-xl border border-[#17363C]/12 bg-white px-4 py-2.5 text-sm font-medium text-[#17363C] shadow-sm;
-  }
-
-  .marketing-beneficio-float-card {
-    @apply relative z-0 overflow-hidden rounded-2xl border border-[#17363C]/8 bg-white p-6 shadow-[0_20px_50px_-35px_rgba(12,35,43,0.5)] transition duration-300 hover:-translate-y-0.5 hover:shadow-xl;
-  }
-
-  .marketing-beneficio-float-card::before {
-    content: "";
-    @apply absolute bottom-0 right-0 h-24 w-24 rounded-tl-full opacity-30;
-  }
-
-  .marketing-beneficio-float-card.orange-edge::before {
-    background: radial-gradient(circle at 100% 100%, #F4B126, transparent 70%);
-  }
-
-  .marketing-beneficio-float-card.teal-edge::before {
-    background: radial-gradient(circle at 100% 100%, #16363B, transparent 70%);
-  }
-
-  .marketing-stats-bar {
-    @apply mt-6 grid grid-cols-3 gap-3 rounded-3xl bg-gradient-to-r from-[#EFB83F] via-[#E2A729] to-[#D99819] p-6 text-center text-[#15353A] shadow-[0_28px_60px_-50px_rgba(45,31,0,1)];
-  }
-
-  .marketing-stat-value {
-    @apply text-3xl font-black sm:text-4xl;
-  }
-
-  .marketing-stat-label {
-    @apply mt-1 text-sm font-medium uppercase tracking-[0.12em] text-[#15353A]/75;
-  }
-
-  .marketing-market {
-    background: radial-gradient(circle at 15% 20%, rgba(244, 177, 38, 0.16), transparent 40%),
-      radial-gradient(circle at 80% 80%, rgba(47, 87, 98, 0.12), transparent 35%),
-      #e9ecea;
-  }
-
-  .marketing-testimonial-card {
-    @apply rounded-3xl border border-[#17363C]/10 bg-white/86 p-6 shadow-[0_25px_55px_-45px_rgba(12,35,43,0.8)] transition hover:-translate-y-1;
+  .marketing-final-cta {
+    @apply flex flex-col items-start justify-between gap-8 rounded-lg bg-[#14343A] p-7 shadow-[0_30px_80px_-52px_rgba(20,52,58,0.9)] sm:p-10 lg:flex-row lg:items-center;
   }
 
   .marketing-footer {
-    background: linear-gradient(160deg, #13323a 0%, #112f36 55%, #0d2530 100%);
+    background: linear-gradient(160deg, #14343A 0%, #102D34 56%, #0C222A 100%);
   }
 
   .marketing-newsletter {
-    @apply rounded-[1.8rem] border border-white/10 bg-white/5 p-7 backdrop-blur-xl sm:p-9;
-  }
-
-  /* ── About Page ── */
-
-  .about-gradient-text {
-    background: linear-gradient(135deg, #F4B126, #D99111, #E6B449);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    @apply rounded-lg border border-white/10 bg-white/6 p-7 backdrop-blur-xl sm:p-9;
   }
 }
 

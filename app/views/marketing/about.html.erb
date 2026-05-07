@@ -1,122 +1,109 @@
-<% content_for :title, "Sobre Nosotros | Papayal — Remesas digitales para Ecuador" %>
+<% set_locale_titles es: "Sobre Papayal | Tarjetas digitales para Ecuador", en: "About Papayal | Digital gift cards for Ecuador" %>
+<% content_for :meta_description, "Papayal ayuda a enviar tarjetas digitales prepagadas para compras en comercios afiliados en Ecuador." %>
 
-<%# ── HERO ── %>
-<section class="marketing-hero relative overflow-hidden">
-  <div class="hero-gradient hero-gradient-left"></div>
-  <div class="hero-gradient hero-gradient-right"></div>
-
-  <div class="mx-auto w-full max-w-7xl px-5 pb-20 pt-16 sm:px-6 md:pt-20 lg:px-8 lg:pb-28">
-    <div class="mx-auto max-w-3xl text-center">
-      <p class="marketing-pill mx-auto" data-reveal>Sobre Nosotros</p>
-
-      <h1 class="mt-5 text-4xl font-black leading-tight tracking-tight text-[#16363B] sm:text-5xl lg:text-6xl" data-reveal>
-        Remesas que se convierten en <span class="about-gradient-text">ayuda real</span>
+<section class="marketing-hero overflow-hidden">
+  <div class="marketing-hero-grid"></div>
+  <div class="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-10 px-5 pb-16 pt-14 sm:px-6 md:pt-18 lg:grid-cols-12 lg:px-8 lg:pb-24">
+    <div class="relative z-10 lg:col-span-7">
+      <p class="marketing-pill" data-reveal><%= localized_text es: "Sobre Papayal", en: "About Papayal" %></p>
+      <h1 class="marketing-hero-title" data-reveal>
+        <%= localized_text es: "Creamos una forma más clara de ayudar a Ecuador.", en: "We are building a clearer way to support Ecuador." %>
       </h1>
-
-      <p class="mt-6 text-base text-[#2B3C43]/78 sm:text-lg" data-reveal>
-        Papayal transforma el envío de dinero a Ecuador en tarjetas de regalo digitales.
-        Tu familia compra medicinas, alimentos y productos esenciales en tiendas locales de confianza.
-        Sin comisiones ocultas, sin complicaciones.
+      <p class="marketing-hero-copy" data-reveal>
+        <%= localized_text es: "Papayal nace para que la ayuda familiar sea práctica: tarjetas digitales prepagadas, comercios afiliados y una experiencia fácil de entender para quien compra y quien canjea.", en: "Papayal exists to make family support practical: prepaid digital gift cards, partner merchants, and an experience that is easy to understand for both sender and recipient." %>
       </p>
+      <div class="mt-8 flex flex-col gap-3 sm:flex-row" data-reveal>
+        <%= link_to new_user_registration_path, class: "marketing-signup-btn h-13 px-7 text-base" do %>
+          <%= localized_text es: "Crear cuenta", en: "Create account" %>
+        <% end %>
+        <%= link_to root_path(anchor: "como-funciona"), class: "marketing-secondary-btn h-13 px-7 text-base", data: { action: "click->marketing#handleAnchorClick" } do %>
+          <%= localized_text es: "Ver cómo funciona", en: "See how it works" %>
+        <% end %>
+      </div>
+    </div>
 
-      <div class="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row" data-reveal>
-        <%= link_to "Comenzar Ahora", new_user_registration_path, class: "marketing-signup-btn h-12 px-7 text-base" %>
-        <%= link_to "Ver cómo funciona", root_path(anchor: "como-funciona"), class: "marketing-secondary-btn h-12 px-7 text-base", data: { action: "click->marketing#handleAnchorClick" } %>
+    <div class="lg:col-span-5">
+      <div class="marketing-about-card" data-reveal>
+        <p class="text-sm font-bold uppercase text-[#F4B126]"><%= localized_text es: "Nuestro enfoque", en: "Our focus" %></p>
+        <ul class="mt-6 space-y-5">
+          <% [
+            ["No reemplazar la confianza familiar, sino hacerla más transparente.", "Not replacing family trust, but making support more transparent."],
+            ["No vender una promesa financiera amplia, sino un producto concreto.", "Not selling a broad financial promise, but a specific product."],
+            ["No ocultar el alcance: tarjetas prepagadas para comercios afiliados.", "Not hiding the scope: prepaid cards for partner merchants."]
+          ].each do |es_text, en_text| %>
+            <li class="flex gap-3">
+              <span class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-[#F4B126]"></span>
+              <span class="text-lg font-semibold leading-7 text-white"><%= localized_text es: es_text, en: en_text %></span>
+            </li>
+          <% end %>
+        </ul>
       </div>
     </div>
   </div>
 </section>
 
-<%# ── QUÉ HACEMOS ── %>
 <section class="marketing-section py-20 sm:py-24">
-  <div class="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8">
-    <div class="mx-auto max-w-3xl text-center">
-      <p class="marketing-pill mx-auto" data-reveal>Nuestra Misión</p>
-      <h2 class="mt-5 text-3xl font-black text-[#17363C] sm:text-4xl" data-reveal>
-        Que la distancia no sea un obstáculo para cuidar a tu familia
+  <div class="mx-auto grid w-full max-w-7xl grid-cols-1 gap-12 px-5 sm:px-6 lg:grid-cols-12 lg:px-8">
+    <div class="lg:col-span-5">
+      <p class="marketing-section-eyebrow" data-reveal><%= localized_text es: "Misión", en: "Mission" %></p>
+      <h2 class="marketing-section-title" data-reveal>
+        <%= localized_text es: "Que la distancia no complique las compras esenciales.", en: "Distance should not complicate essential purchases." %>
       </h2>
-      <p class="mt-3 text-lg text-[#6D7580]" data-reveal>
-        Sabemos lo que se siente. Envías dinero y te preguntas si llegó, si se usó bien, cuánto se fue en comisiones. Papayal nació para resolver eso.
+      <p class="marketing-section-copy text-left" data-reveal>
+        <%= localized_text es: "Muchas personas quieren ayudar a su familia, pero necesitan más claridad que un simple envío de dinero. Papayal organiza esa ayuda alrededor de comercios, categorías y saldos visibles.", en: "Many people want to support family, but need more clarity than a simple money send. Papayal organizes that support around merchants, categories, and visible balances." %>
       </p>
     </div>
 
-    <div class="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="grid gap-4 sm:grid-cols-2 lg:col-span-7">
       <% [
-        { title: "Tú decides dónde", body: "Elige la categoría: farmacia, supermercado, hogar. Tu ayuda llega exactamente donde la necesitan.", icon: "🎯" },
-        { title: "Llega al instante", body: "Tu familia recibe la tarjeta digital en su teléfono en segundos. Sin esperas, sin intermediarios.", icon: "⚡" },
-        { title: "Control total", body: "Revisa el estado de cada tarjeta, dónde se usó y cuánto queda. Transparencia completa en cada envío.", icon: "👁️" },
-        { title: "Comercios reales", body: "Solo trabajamos con tiendas locales verificadas en Ecuador. Farmacias, supermercados y más.", icon: "📍" },
-        { title: "Sin sorpresas", body: "Lo que ves es lo que pagas. Sin comisiones ocultas, sin cargos extras, sin letras chiquitas.", icon: "💲" },
-        { title: "Soporte humano", body: "Atención en español, de personas reales, cuando lo necesites. Estamos aquí para ayudarte.", icon: "🎧" }
-      ].each_with_index do |feature, i| %>
-        <article class="marketing-feature-card" data-reveal style="transition-delay: <%= i * 70 %>ms">
-          <div class="marketing-feature-icon"><span><%= feature[:icon] %></span></div>
-          <h3 class="mt-5 text-2xl font-bold text-[#17363C]"><%= feature[:title] %></h3>
-          <p class="mt-2 text-[#4E5E67]"><%= feature[:body] %></p>
+        ["Ayuda práctica", "Practical support", "Tarjetas para necesidades como salud, alimentos, hogar, servicios y recargas.", "Cards for needs such as health, groceries, home, services, and top-ups."],
+        ["Alcance claro", "Clear scope", "Papayal se presenta como tarjetas digitales prepagadas, no como una app de transferencias.", "Papayal is presented as prepaid digital gift cards, not a money transfer app."],
+        ["Canje local", "Local redemption", "La tarjeta se usa con comercios afiliados en Ecuador.", "Cards are redeemed with partner merchants in Ecuador."],
+        ["Experiencia simple", "Simple experience", "La interfaz debe ser directa para compradores, destinatarios y comercios.", "The interface should be direct for senders, recipients, and merchants."]
+      ].each do |es_title, en_title, es_body, en_body| %>
+        <article class="marketing-benefit-card" data-reveal>
+          <h3 class="marketing-card-title"><%= localized_text es: es_title, en: en_title %></h3>
+          <p class="marketing-card-copy"><%= localized_text es: es_body, en: en_body %></p>
         </article>
       <% end %>
     </div>
   </div>
 </section>
 
-<%# ── POR QUÉ EXISTIMOS ── %>
-<section class="marketing-section py-20 sm:py-24">
-  <div class="mx-auto grid w-full max-w-7xl grid-cols-1 gap-10 px-5 sm:px-6 lg:grid-cols-2 lg:items-start lg:px-8">
-    <div>
-      <p class="marketing-pill" data-reveal>Por Qué Existimos</p>
-      <h2 class="mt-5 text-3xl font-black text-[#17363C] sm:text-4xl" data-reveal>
-        Más que una app de envíos — un puente entre familias.
-      </h2>
-      <p class="mt-4 text-lg text-[#67707C]" data-reveal>
-        Las remesas tradicionales son opacas, lentas y caras. No sabes si el dinero llegó, ni cómo se usó.
-        Papayal nació de esa frustración: queríamos una forma directa, segura y transparente de ayudar a
-        nuestras familias en Ecuador.
-      </p>
-      <ul class="mt-8 space-y-5">
-        <% [
-          { title: "Ayuda directa", body: "Las tarjetas se usan en productos esenciales: medicinas, alimentos, higiene. Nada se pierde en el camino.", icon: "❤️" },
-          { title: "Economía local", body: "Cada tarjeta fortalece comercios ecuatorianos. Tu envío apoya a familias y comunidades enteras.", icon: "🏪" },
-          { title: "Hecho por latinos", body: "Entendemos la experiencia de la diáspora porque la vivimos. Papayal está diseñada desde esa realidad.", icon: "🌎" }
-        ].each do |item| %>
-          <li class="flex gap-4" data-reveal>
-            <span class="mt-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F4B126]/18"><%= item[:icon] %></span>
-            <div>
-              <h3 class="text-xl font-bold text-[#17363C]"><%= item[:title] %></h3>
-              <p class="mt-1 text-[#67707C]"><%= item[:body] %></p>
-            </div>
-          </li>
-        <% end %>
-      </ul>
+<section class="marketing-product-section py-20 sm:py-24">
+  <div class="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-10 px-5 sm:px-6 lg:grid-cols-12 lg:px-8">
+    <div class="lg:col-span-6">
+      <div class="marketing-card-showcase bg-white/8" data-reveal>
+        <picture>
+          <source type="image/webp" srcset="/optimized/landing-card-group-1280.webp">
+          <img src="/icons/Landing_card_group.png" alt="Tarjetas digitales Papayal" width="1448" height="854" loading="lazy" decoding="async" class="mx-auto w-full" />
+        </picture>
+      </div>
     </div>
-
-    <div class="space-y-4 lg:pt-4">
-      <% [
-        { title: "Seguridad real", body: "Encriptación avanzada y verificación de identidad en cada transacción.", icon: "🛡️" },
-        { title: "Disponible siempre", body: "Envía tarjetas en cualquier momento, desde cualquier lugar del mundo.", icon: "🕒" },
-        { title: "Simple de usar", body: "Diseñada para todos. Tres pasos y listo, sin complicaciones técnicas.", icon: "📱" }
-      ].each do |card| %>
-        <article class="marketing-benefit-float-card" data-reveal>
-          <span class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#16363B] text-xl"><%= card[:icon] %></span>
-          <div>
-            <h3 class="text-2xl font-bold text-[#17363C]"><%= card[:title] %></h3>
-            <p class="mt-1 text-[#67707C]"><%= card[:body] %></p>
-          </div>
-        </article>
-      <% end %>
+    <div class="lg:col-span-6">
+      <p class="marketing-section-eyebrow text-[#F4B126]" data-reveal><%= localized_text es: "Por qué existimos", en: "Why we exist" %></p>
+      <h2 class="marketing-section-title text-white" data-reveal>
+        <%= localized_text es: "Para que ayudar no dependa de suposiciones.", en: "So support does not depend on guesswork." %>
+      </h2>
+      <p class="mt-4 text-base leading-7 text-white/72 sm:text-lg" data-reveal>
+        <%= localized_text es: "Una tarjeta digital permite definir dónde puede usarse la ayuda, ver el estado de la tarjeta y mantener el proceso entendible para todos.", en: "A digital card lets support be tied to where it can be used, makes card status visible, and keeps the process understandable for everyone." %>
+      </p>
     </div>
   </div>
 </section>
 
-<%# ── CTA BANNER ── %>
-<section class="px-5 pb-20 sm:px-6 lg:px-8">
+<section class="px-5 py-20 sm:px-6 lg:px-8">
   <div class="mx-auto w-full max-w-7xl">
-    <div class="marketing-offer-banner" data-reveal>
-      <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#15353A]/70">Empieza hoy</p>
-      <h2 class="mt-4 text-3xl font-black text-[#15353A] sm:text-4xl">Tu familia te necesita. Papayal te conecta.</h2>
-      <p class="mt-3 text-lg text-[#15353A]/80">
-        Regístrate en menos de un minuto y envía tu primera tarjeta de regalo a Ecuador.
-      </p>
-      <%= link_to "Crear mi cuenta", new_user_registration_path, class: "marketing-deep-btn mt-7 inline-flex h-12 items-center px-8 text-base" %>
+    <div class="marketing-final-cta" data-reveal>
+      <div>
+        <p class="marketing-section-eyebrow text-[#F4B126]"><%= localized_text es: "Siguiente paso", en: "Next step" %></p>
+        <h2 class="mt-3 text-3xl font-black leading-tight text-white sm:text-5xl">
+          <%= localized_text es: "Compra una tarjeta digital para Ecuador.", en: "Buy a digital gift card for Ecuador." %>
+        </h2>
+      </div>
+      <%= link_to new_user_registration_path, class: "marketing-signup-btn h-13 px-7 text-base" do %>
+        <%= localized_text es: "Crear cuenta", en: "Create account" %>
+      <% end %>
     </div>
   </div>
 </section>

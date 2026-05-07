@@ -2,12 +2,12 @@
   <div class="mx-auto w-full max-w-7xl px-5 py-14 sm:px-6 lg:px-8">
     <div class="marketing-newsletter">
       <div>
-        <p class="marketing-pill"><%= localized_text es: "Newsletter", en: "Newsletter" %></p>
+        <p class="marketing-pill"><%= localized_text es: "Novedades", en: "Updates" %></p>
         <h2 class="mt-3 text-2xl font-black text-white sm:text-3xl">
-          <%= localized_text es: "Suscribete para ofertas y novedades", en: "Subscribe for updates and product news" %>
+          <%= localized_text es: "Recibe noticias de Papayal", en: "Receive Papayal updates" %>
         </h2>
         <p class="mt-2 max-w-2xl text-sm text-white/75 sm:text-base">
-          <%= localized_text es: "Recibe noticias, actualizaciones de producto y promociones exclusivas para enviar ayuda a Ecuador.", en: "Receive product updates and simple announcements about prepaid digital gift cards for partner merchants." %>
+          <%= localized_text es: "Actualizaciones de producto y anuncios sobre tarjetas digitales para comercios afiliados.", en: "Product updates and simple announcements about digital gift cards for partner merchants." %>
         </p>
       </div>
       <form class="mt-6 flex flex-col gap-3 sm:flex-row" data-action="submit->marketing#handleNewsletterSubmit">
@@ -42,17 +42,12 @@
         <p class="mt-4 text-sm text-white/70">
           <%= localized_text es: "Conectando familias a traves de tarjetas de regalo digitales para apoyo real en Ecuador.", en: "Prepaid digital gift cards for purchases with partner merchants in Ecuador. Based in the United States." %>
         </p>
-        <div class="mt-5 flex items-center gap-2 text-xs text-white/60">
-          <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">IG</span>
-          <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">FB</span>
-          <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">X</span>
-        </div>
       </div>
 
       <div>
         <h3 class="text-sm font-bold uppercase tracking-[0.2em] text-[#F4B126]"><%= localized_text es: "Producto", en: "Product" %></h3>
         <ul class="mt-4 space-y-2 text-sm text-white/75">
-          <li><%= link_to root_path(anchor: "como-funciona"), class: "hover:text-white transition-colors" do %><%= localized_text es: "Como Funciona", en: "How It Works" %><% end %></li>
+          <li><%= link_to root_path(anchor: "como-funciona"), class: "hover:text-white transition-colors" do %><%= localized_text es: "Cómo funciona", en: "How it works" %><% end %></li>
           <li><%= link_to root_path(anchor: "beneficios"), class: "hover:text-white transition-colors" do %><%= localized_text es: "Beneficios", en: "Benefits" %><% end %></li>
           <li><%= link_to root_path(anchor: "mercado"), class: "hover:text-white transition-colors" do %><%= localized_text es: "Nuestro Mercado", en: "Partner Merchants" %><% end %></li>
         </ul>

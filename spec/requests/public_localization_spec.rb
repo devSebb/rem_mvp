@@ -6,7 +6,7 @@ RSpec.describe "Public localization", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("data-language=\"en\"")
-    expect(response.body).to include("Prepaid digital gift cards for")
+    expect(response.body).to include("Digital gift cards for everyday purchases in Ecuador")
     expect(response.body).to include("Based in the United States")
   end
 
