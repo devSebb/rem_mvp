@@ -5,7 +5,10 @@ module Api
         skip_before_action :authenticate_user_from_token!, only: [:login, :refresh, :logout]
 
         def login
-          user = User.find_by(email: login_params[:email].to_s.downcase)
+          # User.active scope excludes soft-deleted accounts; combined with
+          # the deleted+<id>@papayal.app rename on deletion, the original
+          # email is fully released for re-signup with no conflict.
+          user = User.active.find_by(email: login_params[:email].to_s.downcase)
 
           unless user&.valid_password?(login_params[:password])
             return render_error(

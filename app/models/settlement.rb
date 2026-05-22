@@ -1,5 +1,6 @@
 class Settlement < ApplicationRecord
   belongs_to :merchant
+  belongs_to :paid_by_admin, class_name: "User", optional: true
 
   # Enums
   enum payout_status: { pending: 0, paid: 1, failed: 2 }

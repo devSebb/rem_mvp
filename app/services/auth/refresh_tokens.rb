@@ -16,6 +16,10 @@ module Auth
 
       user = User.find_by(id: payload["sub"])
       raise TokenError.new(code: "auth.user_not_found", message: "User not found") unless user
+      # Refresh is blocked for deleted accounts. Sessions are already
+      # revoked by Users::DeleteAccount; this guards the window before
+      # the client wipes its stored refresh token.
+      raise TokenError.new(code: "auth.account_deleted", message: "Account deleted") if user.deleted?
 
       digest = UserSession.digest(refresh_token)
       session = UserSession.find_by(user:, refresh_token_digest: digest)

@@ -48,6 +48,17 @@ module Api
           )
         end
 
+        # Defense-in-depth: sessions are revoked when an account is
+        # deleted, but if a still-valid access token reaches us before
+        # its TTL we must reject it here too.
+        if user.deleted?
+          return render_error(
+            code: "auth.account_deleted",
+            message: "This account has been deleted",
+            status: :unauthorized
+          )
+        end
+
         @current_user = user
       rescue JWT::ExpiredSignature
         render_error(

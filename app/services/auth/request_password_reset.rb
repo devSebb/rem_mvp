@@ -9,8 +9,10 @@ module Auth
     end
 
     def call
-      user = User.find_by(email: @email)
-      
+      # User.active excludes soft-deleted accounts so a deleted user
+      # cannot regain access via password reset.
+      user = User.active.find_by(email: @email)
+
       # Always return success to prevent email enumeration
       # Only send email if user exists
       if user

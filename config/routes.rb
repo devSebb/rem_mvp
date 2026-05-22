@@ -16,13 +16,14 @@ Rails.application.routes.draw do
   get "legal/uso-aceptable", to: "legal#uso_aceptable", as: :legal_uso_aceptable
   get "legal/eliminacion-datos", to: "legal#eliminacion_datos", as: :legal_eliminacion_datos
 
-  resources :gift_cards, only: [:index, :show, :new] do
-    collection do
-      post :checkout
-      get :success
-      get :cancel
-    end
-    
+  # Public account-deletion landing page. Required by Google Play; provides
+  # instructions for users to delete their account via the mobile app or
+  # by emailing support. The actual deletion runs through Users::DeleteAccount.
+  get "eliminar-cuenta", to: "users/deletion_requests#new", as: :delete_account
+
+  # Web purchase flow removed — purchases are done exclusively through the
+  # mobile app. Web wallet (index/show) and transfers remain available.
+  resources :gift_cards, only: [:index, :show] do
     resources :transfers, only: [:new, :create] do
       get :confirm, on: :collection
       post :process_transfer, on: :collection
@@ -55,6 +56,8 @@ Rails.application.routes.draw do
 
       get "me", to: "me#show"
       patch "me", to: "me#update"
+      delete "me", to: "me#destroy"
+      get "me/deletion_preview", to: "me#deletion_preview"
       post "checkout/validate_kyc", to: "checkout#validate_kyc"
       post "checkout/payment_intent", to: "checkout#payment_intent"
 
@@ -99,6 +102,9 @@ Rails.application.routes.draw do
     resources :merchants, only: [:index, :new, :create, :show, :edit, :update]
     resources :gift_cards, only: [] do
       resources :refunds, only: [:new, :create], path: 'refund'
+    end
+    resources :payouts, only: [:index, :show, :create] do
+      member { post :mark_paid }
     end
   end
 

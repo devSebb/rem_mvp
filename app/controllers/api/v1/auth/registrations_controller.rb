@@ -10,9 +10,25 @@ module Api
             return render_signup_error(details: missing_field_errors)
           end
 
-          user = build_user
+          # Look up an existing pending recipient first. If a gift card was
+          # sent to this phone or email earlier, the User row already exists
+          # in pending state; this signup claims it (preserving the link to
+          # any waiting gift cards) instead of creating a duplicate.
+          pending_user = find_pending_recipient
+          user = pending_user || User.new
+          was_pending_claim = pending_user.present?
+
+          populate_user_attributes(user)
 
           if user.save
+            if was_pending_claim
+              # TODO: when phone/email verification (OTP) ships, send a
+              # claim-confirmation alert here so the original recipient is
+              # notified if their pending account was claimed by someone
+              # else. Architecture stub — real notifier wired in OTP phase.
+              Rails.logger.info "[Auth] Claimed pending account user_id=#{user.id} email=#{user.email}"
+            end
+
             tokens = ::Auth::IssueTokens.call(
               user:,
               device_id: signup_params[:device_id],
@@ -47,9 +63,27 @@ module Api
           )
         end
 
-        def build_user
-          user = User.new
+        # Find a pending User record (claimed_at: nil) whose email or phone
+        # matches the signup params. Returns nil if none — the signup will
+        # then create a brand-new User as before.
+        def find_pending_recipient
+          email = signup_params[:email].to_s.strip.downcase.presence
+          phone = signup_params[:phone].to_s.strip.presence
+          return nil if email.blank? && phone.blank?
 
+          scope = User.where(claimed_at: nil)
+          if email.present? && phone.present?
+            scope.where("LOWER(email) = ? OR phone = ?", email, phone).first
+          elsif email.present?
+            scope.where("LOWER(email) = ?", email).first
+          else
+            scope.where(phone: phone).first
+          end
+        end
+
+        # Populate fields on either a new User or a pending User being claimed.
+        # Marks the record as claimed so full-profile validations apply.
+        def populate_user_attributes(user)
           user.email = signup_params[:email].to_s.downcase if user.respond_to?(:email=)
           user.password = signup_params[:password] if signup_params.key?(:password)
           if signup_params.key?(:password_confirmation)
@@ -62,8 +96,7 @@ module Api
           user.interests = signup_params[:interests] if signup_params[:interests].present?
 
           user.role ||= :user if user.respond_to?(:role) && user.role.blank?
-
-          user
+          user.claimed_at = Time.current
         end
 
         def required_signup_field_errors

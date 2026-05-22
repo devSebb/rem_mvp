@@ -1,4 +1,29 @@
 class RegistrationsController < Devise::RegistrationsController
+  # Override Devise's create to support the pending-recipient claim flow.
+  # If the email or phone matches a pending User (created by the Stripe
+  # webhook when someone was sent a gift card), claim that record instead
+  # of creating a duplicate. Otherwise, fall through to standard Devise
+  # behavior.
+  #
+  # Mirrors the API claim flow in Api::V1::Auth::RegistrationsController.
+  def create
+    pending = find_pending_recipient_for_signup
+    return super unless pending
+
+    self.resource = pending
+    populate_pending_recipient(pending)
+
+    if pending.save
+      set_flash_message! :notice, :signed_up
+      sign_up(resource_name, pending)
+      respond_with pending, location: after_sign_up_path_for(pending)
+    else
+      clean_up_passwords(pending)
+      set_minimum_password_length
+      respond_with pending
+    end
+  end
+
   def update
     self.resource = resource_class.to_adapter.get!(send(:"current_#{resource_name}").to_key)
     prev_unconfirmed_email = resource.unconfirmed_email if resource.respond_to?(:unconfirmed_email)
@@ -99,6 +124,41 @@ class RegistrationsController < Devise::RegistrationsController
 
   def account_update_params
     params.require(:user).permit(:first_name, :last_name, :email, :phone, :password, :password_confirmation, :current_password, :date_of_birth, :address, :country_of_residence, :national_id)
+  end
+
+  private
+
+  # Look for an existing pending User (claimed_at: nil) whose email or phone
+  # matches the signup form. Returns nil if none — Devise's standard create
+  # then runs as usual.
+  def find_pending_recipient_for_signup
+    attrs = sign_up_params
+    email = attrs[:email].to_s.strip.downcase.presence
+    phone = attrs[:phone].to_s.strip.presence
+    return nil if email.blank? && phone.blank?
+
+    scope = User.where(claimed_at: nil)
+    if email.present? && phone.present?
+      scope.where("LOWER(email) = ? OR phone = ?", email, phone).first
+    elsif email.present?
+      scope.where("LOWER(email) = ?", email).first
+    else
+      scope.where(phone: phone).first
+    end
+  end
+
+  # Populate the claimed pending User with the signup values, replacing any
+  # placeholder email/phone with the real ones the user just provided.
+  def populate_pending_recipient(user)
+    attrs = sign_up_params
+    user.email = attrs[:email].to_s.strip.downcase if attrs[:email].present?
+    user.phone = attrs[:phone] if attrs.key?(:phone)
+    user.first_name = attrs[:first_name] if attrs[:first_name].present?
+    user.last_name = attrs[:last_name] if attrs[:last_name].present?
+    user.password = attrs[:password] if attrs.key?(:password)
+    user.password_confirmation = attrs[:password_confirmation] if attrs.key?(:password_confirmation)
+    user.role ||= :user
+    user.claimed_at = Time.current
   end
 end
 

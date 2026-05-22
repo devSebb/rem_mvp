@@ -18,6 +18,64 @@ module Api
         end
       end
 
+      # Pre-deletion summary so the mobile UI can warn the user about
+      # what they're about to lose (active balance, open cards) and
+      # whether the merchant-must-contact-support branch applies.
+      def deletion_preview
+        active_cards = current_user.received_gift_cards
+                                    .where(status: GiftCard.statuses[:active])
+
+        render_success(
+          data: {
+            balance_cents: active_cards.sum(:remaining_balance).to_i,
+            active_card_count: active_cards.count.to_i,
+            is_merchant: current_user.merchant?,
+            currency: "USD"
+          }
+        )
+      end
+
+      def destroy
+        password = params[:password]
+        if password.blank?
+          return render_error(
+            code: "me.password_required",
+            message: "Password is required",
+            status: :unprocessable_entity
+          )
+        end
+
+        ::Users::DeleteAccount.call(user: current_user, password: password)
+
+        render_success(data: { deleted: true })
+      rescue ::Users::DeleteAccount::InvalidPassword
+        render_error(
+          code: "me.invalid_password",
+          message: "Invalid password",
+          status: :unauthorized
+        )
+      rescue ::Users::DeleteAccount::MerchantNotAllowed
+        render_error(
+          code: "me.merchant_must_contact_support",
+          message: "Las cuentas de comercio deben contactar a soporte para eliminar.",
+          status: :forbidden
+        )
+      rescue ::Users::DeleteAccount::AdminNotAllowed
+        render_error(
+          code: "me.admin_not_allowed",
+          message: "Admin accounts cannot self-delete",
+          status: :forbidden
+        )
+      rescue ::Users::DeleteAccount::AlreadyDeleted
+        # Defense-in-depth — base_controller blocks deleted users, but if
+        # a race slips through we still return a clean code.
+        render_error(
+          code: "me.already_deleted",
+          message: "Account is already deleted",
+          status: :gone
+        )
+      end
+
       private
 
       def user_payload(user)

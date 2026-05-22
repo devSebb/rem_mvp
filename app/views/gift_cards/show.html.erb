@@ -120,9 +120,6 @@
           <% if policy(@gift_card).refund? && @gift_card.transactions.successful.redemptions.any? %>
             <%= link_to "Emitir Reembolso", new_admin_gift_card_refund_path(@gift_card), class: "papayal-btn-ghost w-full text-center border border-rose-200 text-rose-700 bg-rose-50/60 hover:bg-rose-100" %>
           <% end %>
-          <% if @gift_card.active? %>
-            <%= link_to "Comprar Otra", new_gift_card_path, class: "papayal-btn-ghost w-full text-center" %>
-          <% end %>
         </div>
       </div>
 

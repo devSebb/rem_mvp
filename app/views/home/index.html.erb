@@ -3,6 +3,8 @@
   <% latest_merchants = Merchant.order(created_at: :desc).limit(5) %>
   <% recent_redemptions = Transaction.where(txn_type: :redemption).order(created_at: :desc).includes(:merchant, gift_card: :sender).limit(5) %>
   <% total_volume = GiftCard.sum(:amount).to_f / 100 %>
+  <% pending_payouts_total = (Transaction.where(txn_type: :redemption, status: :succeeded).sum(:amount) - Settlement.paid.sum(:amount)).to_f / 100 %>
+  <% pending_settlements_count = Settlement.pending.count %>
   <div class="space-y-10">
     <div class="grid grid-cols-12 gap-6 items-start">
       <div class="col-span-12 xl:col-span-8 papayal-card p-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
@@ -16,6 +18,7 @@
         <div class="flex flex-wrap gap-3">
           <%= link_to "Ver actividad", gift_cards_path, class: "papayal-btn-secondary" %>
           <%= link_to "Panel Comercios", admin_merchants_path, class: "papayal-btn-primary" %>
+          <%= link_to "Pagos a comercios", admin_payouts_path, class: "papayal-btn-ghost" %>
         </div>
       </div>
       <div class="col-span-12 xl:col-span-4 papayal-card p-6 bg-[#0D2F32] text-white">
@@ -45,6 +48,25 @@
         <p class="papayal-meta">Comercios</p>
         <p class="text-3xl font-bold mt-3"><%= Merchant.count %></p>
         <p class="text-sm text-[#2C3A43]/70 mt-1">Socios activos</p>
+      </div>
+    </div>
+
+    <div class="papayal-card p-6 bg-amber-50/60 border border-amber-200">
+      <div class="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <p class="papayal-meta text-amber-900">Pagos a comercios</p>
+          <h2 class="text-2xl font-bold text-[#0D2F32] mt-1">
+            <%= number_to_currency(pending_payouts_total, unit: '$') %>
+            <span class="text-sm font-normal text-[#2C3A43]/70">por pagar</span>
+          </h2>
+          <p class="text-sm text-[#2C3A43]/80 mt-2">
+            Total adeudado a los comercios por canjes ya realizados.
+            <% if pending_settlements_count.positive? %>
+              <span class="font-medium"><%= pending_settlements_count %> liquidaciones pendientes.</span>
+            <% end %>
+          </p>
+        </div>
+        <%= link_to "Gestionar pagos", admin_payouts_path, class: "papayal-btn-primary text-sm" %>
       </div>
     </div>
 
@@ -132,7 +154,7 @@
           <p class="papayal-meta">Redenciones</p>
           <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Últimos canjes</h2>
         </div>
-        <%= link_to "Ver liquidaciones", merchant_settlements_path, class: "papayal-btn-secondary text-sm" %>
+        <%= link_to "Ver liquidaciones", admin_payouts_path, class: "papayal-btn-secondary text-sm" %>
       </div>
       <% if recent_redemptions.any? %>
         <div class="overflow-hidden rounded-2xl border border-black/5">
@@ -191,7 +213,7 @@
       </div>
       <div class="col-span-12 lg:col-span-4 flex flex-wrap gap-3 justify-start lg:justify-end">
         <%= link_to "Mi Billetera", gift_cards_path, class: "papayal-btn-secondary w-full sm:w-auto" %>
-        <%= link_to "Comprar Tarjeta", new_gift_card_path, class: "papayal-btn-primary w-full sm:w-auto" %>
+        <span class="text-xs text-[#2C3A43]/60 self-center">Compra desde la app móvil Papayal</span>
       </div>
     </div>
 
@@ -215,6 +237,38 @@
         <p class="papayal-meta">Recibidas</p>
         <p class="text-3xl font-bold mt-2"><%= total_received %></p>
         <p class="text-sm text-[#2C3A43]/70 mt-2">Tarjetas en tu poder</p>
+      </div>
+    </div>
+
+    <%# App Download CTA — visible to all signed-in regular users so they can
+        complete the experience on mobile (purchases happen on the app only). %>
+    <div class="papayal-card p-6 bg-gradient-to-r from-[#0D2F32] to-[#15353A] text-white">
+      <div class="flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-8">
+        <div class="flex-shrink-0 h-16 w-16 rounded-2xl bg-[#FCA50F]/20 flex items-center justify-center text-3xl">
+          📱
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="papayal-meta text-white/70">Tu Papayal en el bolsillo</p>
+          <h2 class="text-2xl font-bold mt-1">Descarga la app móvil</h2>
+          <p class="text-sm text-white/80 mt-2 max-w-xl">
+            Compra tarjetas de regalo, escanea códigos en caja y recibe notificaciones al instante. Toda tu billetera, lista cuando la necesites.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-3 flex-shrink-0">
+          <%# TODO: replace "#" with App Store and Google Play URLs once published %>
+          <%= link_to("#", class: "papayal-btn-primary text-sm", target: "_blank", rel: "noopener") do %>
+            <span class="flex items-center gap-2">
+              <span></span>
+              <span>App Store</span>
+            </span>
+          <% end %>
+          <%= link_to("#", class: "papayal-btn-secondary text-sm", target: "_blank", rel: "noopener") do %>
+            <span class="flex items-center gap-2">
+              <span>▶</span>
+              <span>Google Play</span>
+            </span>
+          <% end %>
+        </div>
       </div>
     </div>
 
@@ -274,9 +328,8 @@
     <% elsif @merchants.blank? || @merchants.empty? %>
       <div class="papayal-card p-8 text-center space-y-3">
         <p class="text-xl font-semibold text-[#2C3A43]">Aún no tienes tarjetas recientes</p>
-        <p class="text-sm text-[#2C3A43]/70">Compra o recibe una tarjeta para ver tu actividad aquí.</p>
+        <p class="text-sm text-[#2C3A43]/70">Recibe una tarjeta o cómprala desde la app móvil Papayal para ver tu actividad aquí.</p>
         <div class="flex flex-wrap justify-center gap-3">
-          <%= link_to "Comprar una tarjeta", new_gift_card_path, class: "papayal-btn-primary" %>
           <%= link_to "Explorar billetera", gift_cards_path, class: "papayal-btn-secondary" %>
         </div>
       </div>

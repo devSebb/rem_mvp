@@ -8,7 +8,7 @@
     </div>
     <div class="col-span-12 lg:col-span-4 flex flex-col sm:flex-row sm:flex-wrap gap-3 justify-start lg:justify-end">
       <%= link_to "Actualizar Perfil", edit_user_registration_path, class: "papayal-btn-secondary w-full sm:w-auto" %>
-      <%= link_to "Comprar Nueva Tarjeta", new_gift_card_path, class: "papayal-btn-primary w-full sm:w-auto" %>
+      <span class="text-xs text-[#2C3A43]/60 self-center">Para comprar, usa la app móvil Papayal</span>
     </div>
   </div>
 
@@ -95,8 +95,7 @@
         <div id="sent-cards" class="grid grid-cols-12 gap-6"></div>
         <div id="sent-empty" class="hidden papayal-card text-center py-12 mt-4 space-y-3">
           <p class="text-xl font-semibold text-[#2C3A43]">Aún no has enviado tarjetas</p>
-          <p class="text-sm text-[#2C3A43]/70">Sorprende a alguien con una tarjeta Papayal.</p>
-          <%= link_to "Enviar Tarjeta", new_gift_card_path, class: "papayal-btn-primary" %>
+          <p class="text-sm text-[#2C3A43]/70">Sorprende a alguien con una tarjeta Papayal desde la app móvil.</p>
         </div>
       </div>
 

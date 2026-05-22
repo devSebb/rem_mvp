@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_06_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_22_140726) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -140,7 +140,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_06_120000) do
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "paid_at"
+    t.bigint "paid_by_admin_id"
+    t.string "payment_method"
+    t.string "payment_reference"
     t.index ["merchant_id"], name: "index_settlements_on_merchant_id"
+    t.index ["paid_by_admin_id"], name: "index_settlements_on_paid_by_admin_id"
     t.index ["payout_status"], name: "index_settlements_on_payout_status"
     t.index ["period_start", "period_end"], name: "index_settlements_on_period_start_and_period_end"
   end
@@ -206,6 +211,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_06_120000) do
     t.date "date_of_birth"
     t.string "interests", default: [], array: true
     t.integer "preferred_channel", default: 0, null: false
+    t.datetime "claimed_at"
+    t.datetime "deleted_at"
+    t.index ["claimed_at"], name: "index_users_on_claimed_at"
+    t.index ["deleted_at"], name: "index_users_on_deleted_at", where: "(deleted_at IS NOT NULL)"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["national_id"], name: "index_users_on_national_id", unique: true
     t.index ["phone"], name: "index_users_on_phone", unique: true, where: "(phone IS NOT NULL)"

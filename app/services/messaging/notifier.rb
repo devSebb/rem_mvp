@@ -17,8 +17,10 @@ module Messaging
         results[phone_result[:via]] = phone_result if phone_result[:via]
       end
 
-      # Send Email if recipient has email
-      if @recipient&.email.present?
+      # Send Email only if recipient has a real address.
+      # Pending recipients with placeholder emails (claim+<hash>@papayal.app)
+      # haven't signed up yet — skip email, the SMS/WhatsApp path delivers.
+      if @recipient&.email.present? && !@recipient.placeholder_email?
         results[:email] = send_email
       end
 

@@ -56,7 +56,6 @@
                 <% end %>
                 <% unless current_user.merchant? %>
                   <%= link_to "Mi Billetera", gift_cards_path, class: "papayal-btn-ghost text-sm" %>
-                  <%= link_to "Comprar Tarjeta", new_gift_card_path, class: "papayal-btn-primary text-sm" %>
                 <% end %>
                 <% if current_user.merchant? %>
                   <%= link_to "Portal Comercio", merchant_root_path, class: "papayal-btn-ghost text-sm" %>
@@ -95,7 +94,6 @@
                 <% end %>
                 <% unless current_user.merchant? %>
                   <%= link_to "Mi Billetera", gift_cards_path, class: "block w-full papayal-btn-ghost text-left justify-start" %>
-                  <%= link_to "Comprar Tarjeta", new_gift_card_path, class: "block w-full papayal-btn-primary text-center" %>
                 <% end %>
                 <% if current_user.merchant? %>
                   <%= link_to "Portal Comercio", merchant_root_path, class: "block w-full papayal-btn-ghost text-left justify-start" %>

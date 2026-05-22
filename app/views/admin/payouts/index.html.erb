@@ -1,0 +1,146 @@
+<div class="space-y-8">
+  <div class="grid grid-cols-12 gap-6 items-start">
+    <div class="col-span-12 xl:col-span-8 papayal-card p-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="papayal-meta text-[#0D2F32]">Pagos a comercios</p>
+        <h1 class="text-3xl font-bold text-[#0D2F32] mt-2">Liquidaciones</h1>
+        <p class="text-base text-[#2C3A43]/80 mt-3 max-w-2xl">
+          Resumen por comercio de lo canjeado vs pagado. Crea una liquidación
+          cuando estés listo para hacer la transferencia bancaria, y márcala
+          como pagada con la referencia del banco.
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <%= link_to "Volver al panel", home_path, class: "papayal-btn-ghost text-sm" %>
+      </div>
+    </div>
+    <div class="col-span-12 xl:col-span-4 papayal-card p-6 bg-[#0D2F32] text-white">
+      <p class="papayal-meta text-white/70">Total adeudado</p>
+      <p class="text-4xl font-bold mt-2"><%= number_to_currency(@total_owed.to_f / 100, unit: '$') %></p>
+      <p class="text-sm text-white/70 mt-3">
+        En liquidaciones pendientes: <%= number_to_currency(@total_pending_settlements.to_f / 100, unit: '$') %>
+      </p>
+    </div>
+  </div>
+
+  <div class="papayal-card p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <p class="papayal-meta">Comercios</p>
+        <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Resumen por comercio</h2>
+      </div>
+    </div>
+    <% if @rows.any? { |r| r[:owed].positive? || r[:redeemed].positive? } %>
+      <div class="overflow-x-auto rounded-2xl border border-black/5">
+        <table class="min-w-full divide-y divide-black/5">
+          <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
+            <tr>
+              <th class="px-4 py-3">Comercio</th>
+              <th class="px-4 py-3">Banco (IBAN)</th>
+              <th class="px-4 py-3 text-right">Canjeado</th>
+              <th class="px-4 py-3 text-right">Pagado</th>
+              <th class="px-4 py-3 text-right">Adeudado</th>
+              <th class="px-4 py-3 text-right">Sin liquidar</th>
+              <th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-black/5 text-sm">
+            <% @rows.each do |row| %>
+              <% next if row[:redeemed].zero? && row[:settled].zero? %>
+              <tr class="hover:bg-[#EBEBEB]/40 transition">
+                <td class="px-4 py-3">
+                  <p class="font-semibold text-[#0D2F32]"><%= row[:merchant].store_name %></p>
+                  <p class="text-xs text-[#2C3A43]/70">ID <%= row[:merchant].id %></p>
+                </td>
+                <td class="px-4 py-3 text-[#2C3A43]/80 text-xs font-mono">
+                  <%= row[:merchant].bank_account_iban.presence || "—" %>
+                </td>
+                <td class="px-4 py-3 text-right font-medium">
+                  <%= number_to_currency(row[:redeemed].to_f / 100, unit: '$') %>
+                </td>
+                <td class="px-4 py-3 text-right text-[#2C3A43]/70">
+                  <%= number_to_currency(row[:settled].to_f / 100, unit: '$') %>
+                </td>
+                <td class="px-4 py-3 text-right font-bold text-[#0D2F32]">
+                  <%= number_to_currency(row[:owed].to_f / 100, unit: '$') %>
+                </td>
+                <td class="px-4 py-3 text-right text-[#2C3A43]/80">
+                  <%= number_to_currency(row[:unsettled].to_f / 100, unit: '$') %>
+                </td>
+                <td class="px-4 py-3">
+                  <% if row[:unsettled].positive? %>
+                    <%= button_to "Crear pago",
+                                  admin_payouts_path(merchant_id: row[:merchant].id),
+                                  method: :post,
+                                  class: "papayal-btn-primary text-xs",
+                                  data: { turbo_confirm: "¿Crear liquidación de #{number_to_currency(row[:unsettled].to_f / 100, unit: '$')} para #{row[:merchant].store_name}?" } %>
+                  <% else %>
+                    <span class="text-xs text-[#2C3A43]/50">—</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="text-center py-10 text-sm text-[#2C3A43]/70">
+        No hay actividad de canjes todavía.
+      </div>
+    <% end %>
+  </div>
+
+  <div class="papayal-card p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <p class="papayal-meta">Liquidaciones recientes</p>
+        <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Últimas creadas</h2>
+      </div>
+    </div>
+    <% if @recent_settlements.any? %>
+      <div class="overflow-hidden rounded-2xl border border-black/5">
+        <table class="min-w-full divide-y divide-black/5">
+          <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
+            <tr>
+              <th class="px-4 py-3">Comercio</th>
+              <th class="px-4 py-3 text-right">Monto</th>
+              <th class="px-4 py-3">Periodo</th>
+              <th class="px-4 py-3">Estado</th>
+              <th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-black/5 text-sm">
+            <% @recent_settlements.each do |s| %>
+              <tr class="hover:bg-[#EBEBEB]/40 transition">
+                <td class="px-4 py-3 font-medium"><%= s.merchant.store_name %></td>
+                <td class="px-4 py-3 text-right font-semibold">
+                  <%= number_to_currency(s.amount.to_f / 100, unit: '$') %>
+                </td>
+                <td class="px-4 py-3 text-[#2C3A43]/70">
+                  <%= s.period_start.strftime("%d %b") %> – <%= s.period_end.strftime("%d %b %Y") %>
+                </td>
+                <td class="px-4 py-3">
+                  <% case s.payout_status
+                     when "paid" %>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Pagada</span>
+                  <% when "failed" %>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">Fallida</span>
+                  <% else %>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Pendiente</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3">
+                  <%= link_to "Ver", admin_payout_path(s), class: "papayal-btn-ghost text-xs" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="text-center py-10 text-sm text-[#2C3A43]/70">
+        Aún no se han creado liquidaciones.
+      </div>
+    <% end %>
+  </div>
+</div>

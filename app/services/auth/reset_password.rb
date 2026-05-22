@@ -33,7 +33,9 @@ module Auth
       # Devise stores reset_password_token as a digest
       # We need to find the user and verify the token
       digest = Devise.token_generator.digest(User, :reset_password_token, reset_token)
-      user = User.find_by(reset_password_token: digest)
+      # User.active excludes soft-deleted accounts. Anonymization already
+      # nullifies reset_password_token, but this guards defense-in-depth.
+      user = User.active.find_by(reset_password_token: digest)
       
       # Also validate the token hasn't expired
       if user && user.reset_password_sent_at

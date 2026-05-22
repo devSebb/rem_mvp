@@ -1,0 +1,143 @@
+<div class="space-y-8">
+  <div class="papayal-card p-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p class="papayal-meta text-[#0D2F32]">Liquidación</p>
+      <h1 class="text-3xl font-bold text-[#0D2F32] mt-2"><%= @merchant.store_name %></h1>
+      <p class="text-sm text-[#2C3A43]/80 mt-2">
+        Periodo: <%= @settlement.period_start.strftime("%d %b %Y") %>
+        – <%= @settlement.period_end.strftime("%d %b %Y") %>
+      </p>
+    </div>
+    <div class="flex flex-col items-start md:items-end gap-2">
+      <p class="text-4xl font-bold text-[#0D2F32]">
+        <%= number_to_currency(@settlement.amount.to_f / 100, unit: '$') %>
+      </p>
+      <% case @settlement.payout_status
+         when "paid" %>
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Pagada</span>
+      <% when "failed" %>
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">Fallida</span>
+      <% else %>
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Pendiente</span>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 lg:col-span-6 papayal-card p-6">
+      <p class="papayal-meta">Datos para transferencia</p>
+      <dl class="mt-4 space-y-3 text-sm">
+        <div class="flex justify-between border-b border-black/5 pb-2">
+          <dt class="text-[#2C3A43]/70">Comercio</dt>
+          <dd class="font-medium text-[#0D2F32]"><%= @merchant.store_name %></dd>
+        </div>
+        <div class="flex justify-between border-b border-black/5 pb-2">
+          <dt class="text-[#2C3A43]/70">Email contacto</dt>
+          <dd class="text-[#0D2F32]"><%= @merchant.contact_email.presence || "—" %></dd>
+        </div>
+        <div class="flex justify-between border-b border-black/5 pb-2">
+          <dt class="text-[#2C3A43]/70">IBAN</dt>
+          <dd class="font-mono text-xs text-[#0D2F32]"><%= @merchant.bank_account_iban.presence || "(no registrado)" %></dd>
+        </div>
+        <div class="flex justify-between">
+          <dt class="text-[#2C3A43]/70">Monto a transferir</dt>
+          <dd class="font-bold text-[#0D2F32]"><%= number_to_currency(@settlement.amount.to_f / 100, unit: '$') %></dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="col-span-12 lg:col-span-6 papayal-card p-6">
+      <% if @settlement.paid? %>
+        <p class="papayal-meta">Pago confirmado</p>
+        <dl class="mt-4 space-y-3 text-sm">
+          <div class="flex justify-between border-b border-black/5 pb-2">
+            <dt class="text-[#2C3A43]/70">Pagada el</dt>
+            <dd class="text-[#0D2F32]"><%= @settlement.paid_at&.strftime("%d %b %Y %H:%M") %></dd>
+          </div>
+          <div class="flex justify-between border-b border-black/5 pb-2">
+            <dt class="text-[#2C3A43]/70">Por</dt>
+            <dd class="text-[#0D2F32]"><%= @settlement.paid_by_admin&.full_name.presence || "—" %></dd>
+          </div>
+          <div class="flex justify-between border-b border-black/5 pb-2">
+            <dt class="text-[#2C3A43]/70">Método</dt>
+            <dd class="text-[#0D2F32]"><%= @settlement.payment_method.presence || "—" %></dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-[#2C3A43]/70">Referencia</dt>
+            <dd class="font-mono text-xs text-[#0D2F32]"><%= @settlement.payment_reference.presence || "—" %></dd>
+          </div>
+        </dl>
+      <% else %>
+        <p class="papayal-meta">Marcar como pagada</p>
+        <p class="text-sm text-[#2C3A43]/80 mt-2">
+          Después de hacer la transferencia, registra el método y referencia bancaria aquí.
+        </p>
+        <%= form_with url: mark_paid_admin_payout_path(@settlement), method: :post, local: true, class: "mt-4 space-y-3" do |f| %>
+          <div>
+            <label class="block text-xs font-medium text-[#2C3A43]/70 mb-1">Método de pago</label>
+            <%= f.select :payment_method,
+                          options_for_select([["Wire transfer", "wire"], ["Zelle", "zelle"], ["Otro", "other"]]),
+                          { include_blank: "Selecciona…" },
+                          class: "w-full rounded-lg border border-black/10 px-3 py-2 text-sm" %>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-[#2C3A43]/70 mb-1">Número de referencia</label>
+            <%= f.text_field :payment_reference,
+                              placeholder: "Ej: WIRE-2026-0451",
+                              class: "w-full rounded-lg border border-black/10 px-3 py-2 text-sm font-mono" %>
+          </div>
+          <%= f.submit "Marcar como pagada",
+                       class: "papayal-btn-primary w-full text-sm",
+                       data: { turbo_confirm: "Esta acción no se puede deshacer. ¿Continuar?" } %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="papayal-card p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <p class="papayal-meta">Canjes incluidos</p>
+        <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Detalle de transacciones</h2>
+      </div>
+      <span class="text-sm text-[#2C3A43]/70"><%= @transactions.size %> canjes</span>
+    </div>
+    <% if @transactions.any? %>
+      <div class="overflow-hidden rounded-2xl border border-black/5">
+        <table class="min-w-full divide-y divide-black/5">
+          <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
+            <tr>
+              <th class="px-4 py-3">Fecha</th>
+              <th class="px-4 py-3">Tarjeta</th>
+              <th class="px-4 py-3 text-right">Monto</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-black/5 text-sm">
+            <% @transactions.each do |txn| %>
+              <tr class="hover:bg-[#EBEBEB]/40 transition">
+                <td class="px-4 py-3 text-[#2C3A43]/80"><%= txn.created_at.strftime("%d/%m/%Y %H:%M") %></td>
+                <td class="px-4 py-3">
+                  <p class="font-medium text-[#0D2F32]">PAY-<%= txn.gift_card_id %></p>
+                  <p class="text-xs text-[#2C3A43]/70">
+                    <%= txn.gift_card&.recipient&.full_name.presence || "—" %>
+                  </p>
+                </td>
+                <td class="px-4 py-3 text-right font-semibold">
+                  <%= number_to_currency(txn.amount.to_f / 100, unit: '$') %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="text-center py-10 text-sm text-[#2C3A43]/70">
+        No se encontraron canjes en este periodo.
+      </div>
+    <% end %>
+  </div>
+
+  <div class="flex justify-between">
+    <%= link_to "← Todas las liquidaciones", admin_payouts_path, class: "papayal-btn-ghost text-sm" %>
+  </div>
+</div>

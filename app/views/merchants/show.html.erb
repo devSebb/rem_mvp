@@ -53,9 +53,8 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <h2 class="text-lg font-bold text-[#0D2F32]">¿Quieres regalar una tarjeta?</h2>
-        <p class="text-[#2C3A43]/70 text-sm mt-1">Compra una tarjeta de regalo para usar en <%= @merchant.store_name %>.</p>
+        <p class="text-[#2C3A43]/70 text-sm mt-1">Compra una tarjeta de regalo para usar en <%= @merchant.store_name %> desde la app móvil Papayal.</p>
       </div>
-      <%= link_to "Comprar tarjeta", new_gift_card_path(merchant_id: @merchant.id), class: "papayal-btn-primary whitespace-nowrap flex-shrink-0" %>
     </div>
   </div>
 
