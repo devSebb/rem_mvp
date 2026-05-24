@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Dispute filed — Gift card #<%= @gift_card.id %></title></head>
+<body style="font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h2 style="color: #B91C1C;">⚠️ Chargeback filed</h2>
+  <p>A customer has disputed a charge for the following gift card:</p>
+
+  <table cellpadding="6" style="border-collapse: collapse; width: 100%; background: #f9fafb; border-radius: 8px;">
+    <tr><td><strong>Gift card ID:</strong></td><td>#<%= @gift_card.id %></td></tr>
+    <tr><td><strong>Stripe dispute ID:</strong></td><td><code><%= @dispute_id %></code></td></tr>
+    <tr><td><strong>Stripe PaymentIntent:</strong></td><td><code><%= @gift_card.payment_intent_id %></code></td></tr>
+    <tr><td><strong>Amount:</strong></td><td><%= @amount_formatted %></td></tr>
+    <tr><td><strong>Buyer:</strong></td><td><%= @gift_card.sender&.email %> (user_id <%= @gift_card.sender_id %>)</td></tr>
+    <tr><td><strong>Recipient:</strong></td><td><%= @gift_card.recipient&.email %></td></tr>
+    <tr><td><strong>Merchant:</strong></td><td><%= @gift_card.merchant&.store_name %></td></tr>
+    <tr><td><strong>Status:</strong></td><td><%= @gift_card.status %></td></tr>
+    <tr><td><strong>Risk score (at purchase):</strong></td><td><%= @gift_card.risk_score %> / <%= @gift_card.risk_level %></td></tr>
+  </table>
+
+  <p style="margin-top: 24px;">
+    The gift card has been flagged (<code>disputed_at</code>) and further redemptions are blocked.
+    Review in the Stripe Dashboard to decide whether to submit evidence or accept the dispute.
+  </p>
+
+  <p>
+    <a href="https://dashboard.stripe.com/disputes/<%= @dispute_id %>"
+       style="display: inline-block; background: #FCA50F; color: #0D2F32; padding: 10px 16px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+      Open in Stripe Dashboard
+    </a>
+  </p>
+</body>
+</html>

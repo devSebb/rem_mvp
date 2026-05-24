@@ -118,6 +118,12 @@ module Api
               amount: amount_cents,
               currency: currency.downcase,
               payment_method_types: ['card'],
+              # Let Stripe Radar decide when 3DS is required: liability for
+              # fraud disputes shifts to the issuer on 3DS-confirmed charges.
+              # Zero UX cost on the normal path; Radar only prompts when warranted.
+              payment_method_options: {
+                card: { request_three_d_secure: "automatic" }
+              },
               metadata: {
                 sender_id: current_user.id.to_s,
                 recipient_email: recipient_params[:email] || '',

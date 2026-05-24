@@ -50,6 +50,8 @@ module Redemptions
         return decline!("expired_token", token: token, gift_card: gift_card) if token_expired?(token)
         return decline!("token_used", token: token, gift_card: gift_card) if token.used_at.present?
         return decline!("gift_card_inactive", token: token, gift_card: gift_card) unless gift_card&.active? && !gift_card.expired?
+        return decline!("card_held_security_review", token: token, gift_card: gift_card) if gift_card.held?
+        return decline!("card_disputed", token: token, gift_card: gift_card) if gift_card.disputed?
 
         if (existing = existing_transaction)
           return build_payload(existing)
@@ -137,7 +139,7 @@ module Redemptions
       remaining_balance = remaining_balance_override
       remaining_balance ||= gift_card&.reload&.remaining_balance
 
-      {
+      payload = {
         transaction: txn,
         approved: txn.succeeded?,
         status: txn.status,
@@ -148,6 +150,14 @@ module Redemptions
         remaining_balance_cents: remaining_balance,
         currency: txn.currency || gift_card&.currency || "USD"
       }
+
+      # Include unlock time so merchant POS can show "ready at X" on
+      # held cards instead of a generic decline.
+      if txn.decline_reason == "card_held_security_review" && gift_card&.held_until
+        payload[:held_until] = gift_card.held_until.iso8601
+      end
+
+      payload
     end
 
     def create_transaction!(gift_card:, redemption_token:, status:, decline_reason:)

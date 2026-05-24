@@ -1,0 +1,28 @@
+Tu compra está bajo revisión de seguridad
+==========================================
+
+Hola,
+
+Recibimos tu compra de una tarjeta de regalo. Para tu protección y la
+del titular de la tarjeta, esta compra fue marcada por nuestro sistema
+de seguridad para una breve revisión.
+
+Destinatario:         <%= @recipient_label %>
+Monto:                <%= @amount_formatted %>
+Comercio:             <%= @gift_card.merchant&.store_name %>
+Estará activa el:     <%= @unlock_time.strftime("%d de %B de %Y a las %H:%M") %>
+
+¿Qué significa esto?
+La tarjeta se entregará a <%= @recipient_label %> normalmente, pero no
+podrá canjearse hasta el momento indicado. Esto reduce el riesgo de uso
+indebido en casos de tarjetas robadas o transacciones no autorizadas.
+
+Si reconoces esta compra, no necesitas hacer nada — la tarjeta se
+activará automáticamente.
+
+Si NO reconoces esta compra, contáctanos inmediatamente en
+<%= @support_email %> para que cancelemos la transacción y reembolsemos
+tu tarjeta.
+
+Gracias por usar Papayal.
+¿Preguntas? <%= @support_email %>

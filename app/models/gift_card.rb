@@ -25,6 +25,17 @@ class GiftCard < ApplicationRecord
   # Constants
   MAX_AMOUNT_CENTS = 20_000 # $200.00 USD
 
+  # Stripe Radar risk score thresholds. See docs/security-hold.md or
+  # Refunds::IssueStripeRefund for the surrounding policy. Scores >= 75
+  # are blocked at purchase time by Stripe itself (default Radar setting),
+  # so we only need to handle the 65-74 elevated band here.
+  RISK_HOLD_THRESHOLD = 65
+  RISK_HOLD_DURATION = 24.hours
+
+  # Scopes
+  scope :currently_held, -> { where("held_until IS NOT NULL AND held_until > ?", Time.current) }
+  scope :disputed, -> { where.not(disputed_at: nil) }
+
   # Validations
   validates :sender, presence: true
   validates :recipient, presence: true
@@ -116,6 +127,23 @@ class GiftCard < ApplicationRecord
   def redeem!(merchant:, actor:)
     partial_redeem!(redemption_amount: remaining_balance, merchant: merchant, actor: actor)
   end
+
+  # Security hold predicates. A held card has held_until set in the future;
+  # once that time passes the predicate flips automatically (no callback
+  # needed — checked at read time).
+  def held?
+    held_until.present? && held_until > Time.current
+  end
+
+  def hold_remaining_seconds
+    return 0 unless held?
+    (held_until - Time.current).to_i
+  end
+
+  def disputed?
+    disputed_at.present?
+  end
+
   def redeem_amount!(amount_cents)
     cents = amount_cents.to_i
     raise RedemptionError.new(:invalid_amount) if cents <= 0

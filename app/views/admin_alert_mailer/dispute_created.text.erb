@@ -1,0 +1,17 @@
+[DISPUTE] Chargeback filed — Gift card #<%= @gift_card.id %>
+======================================================
+
+Gift card ID:        #<%= @gift_card.id %>
+Stripe dispute ID:   <%= @dispute_id %>
+PaymentIntent:       <%= @gift_card.payment_intent_id %>
+Amount:              <%= @amount_formatted %>
+Buyer:               <%= @gift_card.sender&.email %> (user_id <%= @gift_card.sender_id %>)
+Recipient:           <%= @gift_card.recipient&.email %>
+Merchant:            <%= @gift_card.merchant&.store_name %>
+Status:              <%= @gift_card.status %>
+Risk at purchase:    <%= @gift_card.risk_score %> / <%= @gift_card.risk_level %>
+
+The gift card has been flagged (disputed_at) and further redemptions
+are blocked.
+
+Review in Stripe: https://dashboard.stripe.com/disputes/<%= @dispute_id %>

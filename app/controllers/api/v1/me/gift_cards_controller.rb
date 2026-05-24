@@ -73,7 +73,11 @@ module Api
             merchant_store_name: card.merchant&.store_name,
             merchant_logo_url: merchant_logo_url,
             note: card.note,
-            sender: serialize_sender(card.sender)
+            sender: serialize_sender(card.sender),
+            # Only expose held_until while it's still in the future. After
+            # expiration we leave it null so the mobile UI doesn't need to
+            # know about past holds.
+            held_until: card.held? ? card.held_until.iso8601 : nil
           }
         end
 

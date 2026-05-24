@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_22_140726) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_24_163730) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -69,10 +69,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_22_140726) do
     t.text "note"
     t.string "code_lookup_hash"
     t.boolean "sent_via_push", default: false
+    t.datetime "held_until"
+    t.integer "risk_score"
+    t.string "risk_level"
+    t.datetime "disputed_at"
     t.index ["checkout_session_id"], name: "index_gift_cards_on_checkout_session_id", unique: true
     t.index ["code_digest"], name: "index_gift_cards_on_code_digest", unique: true
     t.index ["code_lookup_hash"], name: "index_gift_cards_on_code_lookup_hash", unique: true, where: "(code_lookup_hash IS NOT NULL)"
+    t.index ["disputed_at"], name: "index_gift_cards_on_disputed_at", where: "(disputed_at IS NOT NULL)"
     t.index ["encrypted_raw_code"], name: "index_gift_cards_on_encrypted_raw_code", where: "(encrypted_raw_code IS NOT NULL)"
+    t.index ["held_until"], name: "index_gift_cards_on_held_until", where: "(held_until IS NOT NULL)"
     t.index ["last_owner_activity_at"], name: "index_gift_cards_on_last_owner_activity_at"
     t.index ["link_token_digest"], name: "index_gift_cards_on_link_token_digest", unique: true
     t.index ["merchant_id"], name: "index_gift_cards_on_merchant_id"

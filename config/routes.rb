@@ -106,6 +106,9 @@ Rails.application.routes.draw do
     resources :payouts, only: [:index, :show, :create] do
       member { post :mark_paid }
     end
+    resources :holds, only: [:index] do
+      member { post :release }
+    end
   end
 
   # Mount Sidekiq web interface at /sidekiq (admin only)

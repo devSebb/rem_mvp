@@ -1,0 +1,16 @@
+[DISPUTE] Closed (<%= @status %>) — Gift card #<%= @gift_card.id %>
+======================================================
+
+Gift card ID:        #<%= @gift_card.id %>
+Stripe dispute ID:   <%= @dispute_id %>
+Amount:              <%= @amount_formatted %>
+Final status:        <%= @status %>
+
+<%= case @status
+    when "won" then "We retained the funds. disputed_at flag remains set — release manually if appropriate."
+    when "lost" then "Stripe debited the disputed amount. Gift card canceled via charge.refunded webhook."
+    when "warning_closed" then "Pre-dispute warning closed without escalation."
+    else "Outcome: #{@status}. Review manually."
+    end %>
+
+View in Stripe: https://dashboard.stripe.com/disputes/<%= @dispute_id %>

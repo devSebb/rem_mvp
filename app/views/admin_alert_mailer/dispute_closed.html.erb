@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Dispute closed — Gift card #<%= @gift_card.id %></title></head>
+<body style="font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h2 style="color: <%= @status == 'won' ? '#15803D' : '#B91C1C' %>;">
+    Dispute closed: <%= @status %>
+  </h2>
+
+  <table cellpadding="6" style="border-collapse: collapse; width: 100%; background: #f9fafb; border-radius: 8px;">
+    <tr><td><strong>Gift card ID:</strong></td><td>#<%= @gift_card.id %></td></tr>
+    <tr><td><strong>Stripe dispute ID:</strong></td><td><code><%= @dispute_id %></code></td></tr>
+    <tr><td><strong>Amount:</strong></td><td><%= @amount_formatted %></td></tr>
+    <tr><td><strong>Final status:</strong></td><td><strong><%= @status %></strong></td></tr>
+  </table>
+
+  <p style="margin-top: 16px;">
+    <%= case @status
+        when "won" then "We retained the funds. The gift card flag (disputed_at) remains set — release manually if appropriate."
+        when "lost" then "Stripe debited the disputed amount. The gift card is canceled per the charge.refunded webhook."
+        when "warning_closed" then "Pre-dispute warning closed without escalation."
+        else "Outcome: #{@status}. Review manually."
+        end %>
+  </p>
+
+  <p>
+    <a href="https://dashboard.stripe.com/disputes/<%= @dispute_id %>"
+       style="display: inline-block; background: #FCA50F; color: #0D2F32; padding: 10px 16px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+      View in Stripe Dashboard
+    </a>
+  </p>
+</body>
+</html>

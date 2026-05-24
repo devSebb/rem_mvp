@@ -31,6 +31,16 @@ class GiftCardPolicy < ApplicationPolicy
     user.present? && record.recipient == user && record.active?
   end
 
+  # Admin-only: review held cards + release a hold early. Held-card
+  # management is a fraud-team function, not for merchants.
+  def index_holds?
+    user&.admin?
+  end
+
+  def release_hold?
+    user&.admin?
+  end
+
   class Scope < Scope
     def resolve
       if user.admin?

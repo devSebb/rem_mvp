@@ -16,6 +16,12 @@ class StripeWebhooks
     case event.type
     when 'payment_intent.succeeded'
       handle_payment_intent_succeeded(event.data.object)
+    when 'charge.refunded'
+      handle_charge_refunded(event.data.object)
+    when 'charge.dispute.created'
+      handle_charge_dispute_created(event.data.object)
+    when 'charge.dispute.closed'
+      handle_charge_dispute_closed(event.data.object)
     else
       Rails.logger.info "Unhandled event type: #{event.type}"
     end
@@ -92,6 +98,11 @@ class StripeWebhooks
       return
     end
 
+    # Read Stripe's Radar risk assessment so we can apply a security hold
+    # on elevated-risk charges. score >= 75 is blocked by Stripe by default
+    # so we should only see normal (0-64) or elevated (65-74) charges here.
+    risk = extract_risk_assessment(payment_intent)
+
     # Create gift card safely (no expiration - gift cards never expire)
     gift_card = GiftCard.create!(
       sender: sender,
@@ -101,8 +112,19 @@ class StripeWebhooks
       currency: payment_intent.currency&.upcase || "USD",
       payment_intent_id: payment_intent.id,
       expires_at: nil, # Gift cards never expire
-      note: metadata['recipient_note'].presence
+      note: metadata['recipient_note'].presence,
+      risk_score: risk[:score],
+      risk_level: risk[:level],
+      held_until: risk[:hold_until]
     )
+
+    if gift_card.held?
+      Rails.logger.warn(
+        "🛡️ Gift card #{gift_card.id} placed on security hold until " \
+        "#{gift_card.held_until.iso8601} (risk_score=#{risk[:score]}, level=#{risk[:level]})"
+      )
+      GiftCardHoldMailer.held(gift_card.id).deliver_later
+    end
 
     # Generate code after saving
     raw_code = gift_card.generate_code!
@@ -210,5 +232,133 @@ class StripeWebhooks
     )
     Rails.logger.info "✅ Created pending recipient: user_id=#{recipient.id} email=#{recipient.email} phone=#{recipient.phone || '(none)'}"
     recipient
+  end
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Risk-scored security hold
+  # ──────────────────────────────────────────────────────────────────────
+
+  # Pull Stripe Radar's risk assessment off the charge attached to the
+  # PaymentIntent. Returns { score:, level:, hold_until: } with hold_until
+  # set only when the score exceeds GiftCard::RISK_HOLD_THRESHOLD.
+  #
+  # Defensive: if outcome is missing (older Stripe API versions, or test
+  # charges without Radar), treat as zero risk — better to release the
+  # card than block it on stale metadata.
+  def self.extract_risk_assessment(payment_intent)
+    charge = Array(payment_intent.charges&.data).first
+    outcome = charge&.outcome
+
+    score = outcome&.risk_score.to_i
+    level = outcome&.risk_level.to_s.presence
+
+    hold_until = if score >= GiftCard::RISK_HOLD_THRESHOLD
+      Time.current + GiftCard::RISK_HOLD_DURATION
+    end
+
+    { score: score, level: level, hold_until: hold_until }
+  rescue => e
+    Rails.logger.warn "[Radar] Failed to extract risk assessment from PI #{payment_intent.id}: #{e.class} #{e.message}"
+    { score: 0, level: nil, hold_until: nil }
+  end
+
+  # ──────────────────────────────────────────────────────────────────────
+  # charge.refunded — reconcile internal state with a Stripe-side refund.
+  # Triggered for refunds issued via the Admin tool (Refunds::IssueStripeRefund)
+  # AND for refunds issued directly in the Stripe Dashboard. Idempotent
+  # against re-delivery: we look up by stripe_refund_id metadata.
+  # ──────────────────────────────────────────────────────────────────────
+  def self.handle_charge_refunded(charge)
+    payment_intent_id = charge.payment_intent
+    gift_card = GiftCard.find_by(payment_intent_id: payment_intent_id)
+    unless gift_card
+      Rails.logger.warn "[Refund] No gift card found for charge #{charge.id} (PI: #{payment_intent_id})"
+      return
+    end
+
+    # Find the most recent refund on this charge that we haven't already
+    # recorded. Stripe sends one webhook per refund (and re-delivers on
+    # retry), so we de-dupe on the refund_id.
+    Array(charge.refunds&.data).each do |refund|
+      next if Transaction.refunds.where("metadata->>'stripe_refund_id' = ?", refund.id).exists?
+
+      Rails.logger.info "[Refund] Recording Stripe refund #{refund.id} for gift card #{gift_card.id} (amount: #{refund.amount})"
+
+      gift_card.with_lock do
+        gift_card.reload
+
+        # Decrement remaining_balance by the refund amount, floor at 0.
+        # A full refund cancels the card; partial leaves it active with
+        # the reduced balance.
+        new_balance = [gift_card.remaining_balance.to_i - refund.amount.to_i, 0].max
+        updates = { remaining_balance: new_balance }
+        if refund.amount.to_i >= gift_card.amount.to_i || new_balance.zero?
+          updates[:status] = :canceled
+        end
+        gift_card.update!(updates)
+
+        Transaction.create!(
+          gift_card: gift_card,
+          merchant: gift_card.merchant,
+          user: nil, # initiated externally (Stripe Dashboard) or via admin path
+          amount: refund.amount,
+          currency: refund.currency&.upcase || gift_card.currency,
+          txn_type: :refund,
+          status: :succeeded,
+          processor_ref: refund.id,
+          metadata: {
+            stripe_refund_id: refund.id,
+            stripe_charge_id: charge.id,
+            reason: refund.reason,
+            refunded_at: Time.current.iso8601,
+            source: "stripe_webhook"
+          }
+        )
+      end
+    end
+  rescue => e
+    Rails.logger.error "💥 charge.refunded handler error: #{e.class} - #{e.message}"
+    Rails.logger.error e.backtrace.first(10).join("\n")
+    raise
+  end
+
+  # ──────────────────────────────────────────────────────────────────────
+  # charge.dispute.created — chargeback filed. Block further redemption
+  # and alert admin so they can decide whether to fight or accept.
+  # ──────────────────────────────────────────────────────────────────────
+  def self.handle_charge_dispute_created(dispute)
+    payment_intent_id = dispute.payment_intent
+    gift_card = GiftCard.find_by(payment_intent_id: payment_intent_id)
+    unless gift_card
+      Rails.logger.warn "[Dispute] No gift card found for dispute #{dispute.id} (PI: #{payment_intent_id})"
+      return
+    end
+
+    return if gift_card.disputed? # already recorded; idempotent
+
+    Rails.logger.warn "⚠️ Dispute created for gift card #{gift_card.id}: reason=#{dispute.reason} amount=#{dispute.amount}"
+
+    gift_card.update!(disputed_at: Time.current)
+    AdminAlertMailer.dispute_created(gift_card.id, dispute.id).deliver_later
+  rescue => e
+    Rails.logger.error "💥 charge.dispute.created handler error: #{e.class} - #{e.message}"
+    raise
+  end
+
+  # ──────────────────────────────────────────────────────────────────────
+  # charge.dispute.closed — outcome resolved. We don't auto-restore the
+  # card on a win (admin reviews case-by-case) but we do log the outcome
+  # so it's visible in the audit trail.
+  # ──────────────────────────────────────────────────────────────────────
+  def self.handle_charge_dispute_closed(dispute)
+    payment_intent_id = dispute.payment_intent
+    gift_card = GiftCard.find_by(payment_intent_id: payment_intent_id)
+    return unless gift_card
+
+    Rails.logger.info "[Dispute] Closed for gift card #{gift_card.id}: status=#{dispute.status}"
+    AdminAlertMailer.dispute_closed(gift_card.id, dispute.id, dispute.status).deliver_later
+  rescue => e
+    Rails.logger.error "💥 charge.dispute.closed handler error: #{e.class} - #{e.message}"
+    raise
   end
 end
