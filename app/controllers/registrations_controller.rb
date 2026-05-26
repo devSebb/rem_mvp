@@ -14,6 +14,10 @@ class RegistrationsController < Devise::RegistrationsController
     populate_pending_recipient(pending)
 
     if pending.save
+      # Claim is an UPDATE, so the User#after_create_commit hook doesn't
+      # fire. Send the welcome explicitly here.
+      WelcomeMailer.welcome(pending.id).deliver_later unless pending.placeholder_email?
+
       set_flash_message! :notice, :signed_up
       sign_up(resource_name, pending)
       respond_with pending, location: after_sign_up_path_for(pending)

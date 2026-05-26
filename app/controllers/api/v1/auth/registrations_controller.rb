@@ -27,6 +27,9 @@ module Api
               # notified if their pending account was claimed by someone
               # else. Architecture stub — real notifier wired in OTP phase.
               Rails.logger.info "[Auth] Claimed pending account user_id=#{user.id} email=#{user.email}"
+              # Claim is an UPDATE, so the User#after_create_commit hook
+              # doesn't fire. Send the welcome explicitly here.
+              WelcomeMailer.welcome(user.id).deliver_later unless user.placeholder_email?
             end
 
             tokens = ::Auth::IssueTokens.call(

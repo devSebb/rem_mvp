@@ -62,6 +62,15 @@ class User < ApplicationRecord
   before_validation :sync_name_fields
   before_validation :normalize_national_id
 
+  # Send a welcome email for fresh signups only. Pending recipients
+  # (created via the Stripe webhook for someone who received a gift card
+  # but hasn't signed up) are skipped — their `pending_recipient` flag is
+  # set, and they have a placeholder email anyway. When a pending account
+  # is later claimed via signup, the claim path is an UPDATE (not CREATE),
+  # so this callback won't fire — the controllers send the welcome email
+  # explicitly in that branch.
+  after_create_commit :send_welcome_email_if_real_signup
+
   # Methods
   def merchant?
     role == 'merchant'
@@ -116,6 +125,14 @@ class User < ApplicationRecord
   def default_claimed_at_on_create
     return if pending_recipient
     self.claimed_at ||= Time.current
+  end
+
+  def send_welcome_email_if_real_signup
+    return if pending_recipient
+    return if placeholder_email?
+    return unless claimed?
+
+    WelcomeMailer.welcome(id).deliver_later
   end
 
   def normalize_contact_fields
