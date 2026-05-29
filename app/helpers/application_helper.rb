@@ -8,6 +8,7 @@ module ApplicationHelper
     "redeemed" => { label: "Canjeada", classes: "bg-blue-50 text-blue-700 border border-blue-100" },
     "expired" => { label: "Vencida", classes: "bg-rose-50 text-rose-700 border border-rose-100" },
     "canceled" => { label: "Cancelada", classes: "bg-gray-100 text-gray-600 border border-gray-200" },
+    "suspended" => { label: "Suspendido", classes: "bg-rose-50 text-rose-700 border border-rose-100" },
     "pending" => { label: "Pendiente", classes: "bg-amber-50 text-amber-700 border border-amber-100" }
   }.freeze
 

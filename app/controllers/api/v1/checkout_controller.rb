@@ -10,7 +10,7 @@ module Api
         }
         data[:errors] = result[:errors] if result[:errors].present?
 
-        render_success(data:)
+        render_success(data: data)
       end
 
       def payment_intent
@@ -42,6 +42,14 @@ module Api
 
         merchant = Merchant.find_by(id: merchant_id)
         unless merchant
+          return render_error(
+            code: "invalid_merchant",
+            message: "Please select a valid merchant",
+            status: :unprocessable_entity
+          )
+        end
+
+        unless merchant.active?
           return render_error(
             code: "invalid_merchant",
             message: "Please select a valid merchant",
@@ -206,4 +214,3 @@ module Api
     end
   end
 end
-

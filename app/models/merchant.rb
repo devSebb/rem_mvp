@@ -49,6 +49,24 @@ class Merchant < ApplicationRecord
     ActiveSupport::SecurityUtils.secure_compare(secret_key_digest, candidate)
   end
 
+  def admin_delete_blockers
+    blockers = []
+    blockers << "tarjetas de regalo" if gift_cards.exists?
+    blockers << "transacciones" if Transaction.where(merchant_id: id).exists?
+    blockers << "liquidaciones" if settlements.exists?
+
+    if user
+      blockers << "historial de tarjetas del usuario" if user.sent_gift_cards.exists? || user.received_gift_cards.exists?
+      blockers << "transacciones del usuario" if Transaction.where(user_id: user.id).exists?
+    end
+
+    blockers
+  end
+
+  def admin_deletable?
+    admin_delete_blockers.empty?
+  end
+
   private
 
   def sync_display_name

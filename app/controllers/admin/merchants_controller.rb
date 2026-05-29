@@ -2,13 +2,13 @@ require "securerandom"
 
 class Admin::MerchantsController < ApplicationController
   before_action :ensure_admin
-  before_action :set_merchant, only: [:show, :edit, :update]
+  before_action :set_merchant, only: [:show, :edit, :update, :suspend, :reactivate, :regenerate_secret, :destroy]
 
   def index
     @merchants = Merchant.includes(:user).order(created_at: :desc)
     @created_merchant = Merchant.find_by(id: params[:created_id]) if params[:created_id].present?
-    @generated_secret_key = params[:secret]
-    @generated_password = params[:password]
+    @generated_secret_key = flash[:generated_secret_key].presence || params[:secret]
+    @generated_password = flash[:generated_password].presence || params[:password]
   end
 
   def show
@@ -39,13 +39,10 @@ class Admin::MerchantsController < ApplicationController
     if @merchant.save
       @merchant.logo.attach(logo_file) if logo_file.present?
       secret_key = @merchant.generated_secret_key
-      redirect_params = {
-        created_id: @merchant.id,
-        secret: secret_key
-      }
-      redirect_params[:password] = generated_password if password_generated
+      flash[:generated_secret_key] = secret_key
+      flash[:generated_password] = generated_password if password_generated
 
-      redirect_to admin_merchants_path(redirect_params), notice: "Comercio creado correctamente."
+      redirect_to admin_merchants_path(created_id: @merchant.id), notice: "Comercio creado correctamente."
     else
       flash.now[:alert] = "No se pudo crear el comercio. Revisa los campos."
       render :new, status: :unprocessable_entity
@@ -73,6 +70,56 @@ class Admin::MerchantsController < ApplicationController
   rescue ActiveRecord::RecordInvalid
     flash.now[:alert] = "No se pudo actualizar el comercio. Revisa los campos."
     render :edit, status: :unprocessable_entity
+  end
+
+  def suspend
+    if @merchant.suspended?
+      redirect_to admin_merchant_path(@merchant), notice: "El comercio ya estaba suspendido."
+      return
+    end
+
+    @merchant.suspended!
+    redirect_to admin_merchant_path(@merchant), notice: "Comercio suspendido. Ya no aparecerá en la app ni podrá usar la API."
+  end
+
+  def reactivate
+    if @merchant.active?
+      redirect_to admin_merchant_path(@merchant), notice: "El comercio ya estaba activo."
+      return
+    end
+
+    @merchant.active!
+    redirect_to admin_merchant_path(@merchant), notice: "Comercio reactivado. Volverá a aparecer en la app."
+  end
+
+  def regenerate_secret
+    keys = Merchant.generate_keys!(@merchant)
+    flash[:generated_secret_key] = keys[:secret_key]
+
+    redirect_to admin_merchant_path(@merchant), notice: "Nueva clave secreta generada. La clave anterior dejó de funcionar."
+  end
+
+  def destroy
+    blockers = @merchant.admin_delete_blockers
+
+    if blockers.any?
+      redirect_to admin_merchant_path(@merchant), alert: "No se puede eliminar este comercio porque tiene #{blockers.to_sentence}. Suspéndelo si quieres ocultarlo."
+      return
+    end
+
+    merchant_name = @merchant.store_name
+    merchant_user = @merchant.user
+
+    ActiveRecord::Base.transaction do
+      if merchant_user&.merchant?
+        UserSession.where(user_id: merchant_user.id).delete_all
+        merchant_user.destroy!
+      else
+        @merchant.destroy!
+      end
+    end
+
+    redirect_to admin_merchants_path, notice: "Comercio #{merchant_name} eliminado correctamente."
   end
 
   private
@@ -124,4 +171,3 @@ class Admin::MerchantsController < ApplicationController
     }
   end
 end
-

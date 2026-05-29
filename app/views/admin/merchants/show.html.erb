@@ -11,8 +11,22 @@
     <div class="flex flex-wrap gap-3">
       <%= link_to "Volver al listado", admin_merchants_path, class: "papayal-btn-ghost" %>
       <%= link_to "Editar comercio", edit_admin_merchant_path(@merchant), class: "papayal-btn-primary" %>
+      <% if @merchant.active? %>
+        <%= button_to "Suspender", suspend_admin_merchant_path(@merchant), method: :patch, class: "papayal-btn-secondary text-rose-700", data: { turbo_confirm: "¿Suspender este comercio? Dejará de aparecer en la app y no podrá usar la API." } %>
+      <% else %>
+        <%= button_to "Reactivar", reactivate_admin_merchant_path(@merchant), method: :patch, class: "papayal-btn-secondary text-emerald-700", data: { turbo_confirm: "¿Reactivar este comercio? Volverá a aparecer en la app." } %>
+      <% end %>
     </div>
   </div>
+
+  <% if flash[:generated_secret_key].present? %>
+    <div class="papayal-card p-6 border border-amber-100 bg-amber-50">
+      <p class="papayal-meta text-amber-800">Clave secreta nueva</p>
+      <h2 class="text-lg font-semibold text-[#0D2F32] mt-1">Copia esta clave ahora</h2>
+      <p class="font-mono text-sm text-[#0D2F32] break-words mt-3"><%= flash[:generated_secret_key] %></p>
+      <p class="text-xs text-[#2C3A43]/70 mt-3">Solo se muestra una vez. La clave anterior ya no funciona.</p>
+    </div>
+  <% end %>
 
   <div class="grid grid-cols-12 gap-6">
     <div class="col-span-12 md:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-5">
@@ -107,6 +121,33 @@
     </div>
   </div>
 
+  <div class="papayal-card p-6 space-y-4 border border-black/5">
+    <div>
+      <p class="papayal-meta">Seguridad y estado</p>
+      <h2 class="text-xl font-semibold text-[#0D2F32]">Acciones administrativas</h2>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">Regenera credenciales o elimina comercios de prueba sin historial.</p>
+    </div>
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div class="text-sm text-[#2C3A43]/75">
+        <p><span class="font-semibold text-[#0D2F32]">Regenerar secret:</span> invalida la clave anterior inmediatamente.</p>
+        <% blockers = @merchant.admin_delete_blockers %>
+        <% if blockers.any? %>
+          <p class="mt-1"><span class="font-semibold text-[#0D2F32]">Eliminar:</span> bloqueado por <%= blockers.to_sentence %>. Usa suspender para ocultarlo.</p>
+        <% else %>
+          <p class="mt-1"><span class="font-semibold text-[#0D2F32]">Eliminar:</span> disponible porque no hay historial asociado.</p>
+        <% end %>
+      </div>
+      <div class="flex flex-wrap gap-3 md:justify-end">
+        <%= button_to "Regenerar secret", regenerate_secret_admin_merchant_path(@merchant), method: :post, class: "papayal-btn-secondary", data: { turbo_confirm: "¿Regenerar la clave secreta? La clave anterior dejará de funcionar de inmediato." } %>
+        <% if blockers.empty? %>
+          <%= button_to "Eliminar comercio", admin_merchant_path(@merchant), method: :delete, class: "papayal-btn-ghost text-rose-700", data: { turbo_confirm: "¿Eliminar definitivamente este comercio y su usuario? Esta acción no se puede deshacer." } %>
+        <% else %>
+          <button type="button" class="papayal-btn-ghost text-[#2C3A43]/50 cursor-not-allowed" disabled>Eliminar bloqueado</button>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
   <div class="papayal-card p-6">
     <div class="flex items-center justify-between mb-4">
       <div>
@@ -156,4 +197,3 @@
     <% end %>
   </div>
 </div>
-

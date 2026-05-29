@@ -66,7 +66,7 @@
           </thead>
           <tbody class="bg-white divide-y divide-black/5 text-sm">
             <% @merchants.each do |merchant| %>
-              <tr class="hover:bg-[#EBEBEB]/40 transition">
+              <tr class="hover:bg-[#EBEBEB]/40 transition <%= 'bg-rose-50/30' if merchant.suspended? %>">
                 <td class="px-4 py-3">
                   <p class="font-semibold text-[#0D2F32]"><%= merchant.store_name %></p>
                   <p class="text-xs text-[#2C3A43]/70"><%= merchant.contact_email.presence || "Sin email" %></p>
@@ -88,6 +88,11 @@
                   <div class="flex justify-end gap-2">
                     <%= link_to "Detalles", admin_merchant_path(merchant), class: "papayal-btn-ghost text-sm" %>
                     <%= link_to "Editar", edit_admin_merchant_path(merchant), class: "papayal-btn-secondary text-sm" %>
+                    <% if merchant.active? %>
+                      <%= button_to "Suspender", suspend_admin_merchant_path(merchant), method: :patch, class: "papayal-btn-ghost text-sm text-rose-700", data: { turbo_confirm: "¿Suspender este comercio? Dejará de aparecer en la app y no podrá usar la API." } %>
+                    <% else %>
+                      <%= button_to "Reactivar", reactivate_admin_merchant_path(merchant), method: :patch, class: "papayal-btn-ghost text-sm text-emerald-700", data: { turbo_confirm: "¿Reactivar este comercio? Volverá a aparecer en la app." } %>
+                    <% end %>
                   </div>
                 </td>
               </tr>
@@ -102,4 +107,3 @@
     <% end %>
   </div>
 </div>
-

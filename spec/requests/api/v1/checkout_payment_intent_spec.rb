@@ -67,6 +67,17 @@ RSpec.describe "POST /api/v1/checkout/payment_intent", type: :request do
       expect(parsed_error["code"]).to eq("invalid_merchant")
     end
 
+    it "returns 422 when merchant is suspended" do
+      merchant.update!(status: :suspended)
+
+      post "/api/v1/checkout/payment_intent",
+           params: valid_params.to_json,
+           headers: auth_headers(access_token)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(parsed_error["code"]).to eq("invalid_merchant")
+    end
+
     it "returns 422 when amount is zero" do
       post "/api/v1/checkout/payment_intent",
            params: valid_params.merge(amount_cents: 0).to_json,
