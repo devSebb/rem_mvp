@@ -11,6 +11,7 @@ module Api
         )
 
         status = if result[:approved]
+          notify_recipient_of_redemption(result)
           :ok
         elsif result[:decline_reason] == "merchant_mismatch"
           :forbidden
@@ -77,9 +78,22 @@ module Api
         }
 
         payload[:decline_reason] = result[:decline_reason] if result[:decline_reason].present?
+        payload[:held_until] = result[:held_until] if result[:held_until].present?
         payload
+      end
+
+      def notify_recipient_of_redemption(result)
+        gift_card = GiftCard.find_by(id: result[:gift_card_id])
+        return unless gift_card
+
+        Messaging::RedemptionPusher.call(
+          gift_card: gift_card,
+          amount_cents: result[:amount_cents],
+          merchant: current_merchant
+        )
+      rescue => e
+        Rails.logger.warn "[RedemptionPusher] API enqueue failed for gift_card_id=#{result[:gift_card_id]}: #{e.class} - #{e.message}"
       end
     end
   end
 end
-

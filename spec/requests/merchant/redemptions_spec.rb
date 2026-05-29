@@ -6,7 +6,7 @@ RSpec.describe "Merchant::Redemptions", type: :request do
 
   let(:merchant_user) { create(:user, role: :merchant) }
   let!(:merchant) { create(:merchant, user: merchant_user) }
-let(:other_merchant) { create(:merchant) }
+  let(:other_merchant) { create(:merchant) }
   let(:recipient) { create(:user) }
   let(:sender) { create(:user) }
   let!(:gift_card) do
@@ -23,7 +23,10 @@ let(:other_merchant) { create(:merchant) }
   let!(:token_value) { RedemptionTokens::Issue.call(gift_card: gift_card)[:token] }
   let(:token_value_with_hyphens) { token_value.scan(/.{1,4}/).join("-") }
 
-  before { sign_in merchant_user }
+  before do
+    sign_in merchant_user
+    allow(Messaging::RedemptionPusher).to receive(:call)
+  end
 
   it "redeems a gift card using the dynamic token via the merchant UI" do
     get confirm_merchant_redemptions_path(
@@ -105,7 +108,7 @@ let(:other_merchant) { create(:merchant) }
     expect(redemption_txn.merchant_id).not_to eq(other_merchant.id) # NOT the issuing merchant
   end
 
-  it "allows cross-merchant redemption via static code mode" do
+  it "rejects static gift-card codes in the merchant UI" do
     other_gift_card = create(
       :gift_card,
       sender: sender,
@@ -117,32 +120,10 @@ let(:other_merchant) { create(:merchant) }
     )
     static_code = other_gift_card.raw_code
 
-    # Confirm page should load successfully for another merchant's gift card (code mode)
-    get confirm_merchant_redemptions_path(
-      gift_card_id: other_gift_card.id,
-      redemption_mode: "code"
-    )
-    expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Canje en red") # Cross-merchant indicator
+    post merchant_redemptions_path, params: { code: static_code }
 
-    doc = Nokogiri::HTML(response.body)
-    idempotency = doc.at_css("input[name='idempotency_token']")&.[]("value")
-    expect(idempotency).to be_present
-
-    # Redeem should complete successfully
-    post redeem_merchant_redemptions_path, params: {
-      gift_card_id: other_gift_card.id,
-      redemption_mode: "code",
-      redemption_amount: 15, # dollars
-      idempotency_token: idempotency
-    }
-
-    expect(response).to redirect_to(success_merchant_redemptions_path(gift_card_id: other_gift_card.id))
-    expect(other_gift_card.reload.remaining_balance).to eq(3_500) # 5000 - 1500
-
-    # Transaction should record the REDEEMING merchant
-    redemption_txn = other_gift_card.transactions.redemptions.succeeded.last
-    expect(redemption_txn).to be_present
-    expect(redemption_txn.merchant_id).to eq(merchant.id) # Redeemer
+    expect(response).to redirect_to(new_merchant_redemption_path)
+    expect(other_gift_card.reload.remaining_balance).to eq(5_000)
+    expect(other_gift_card.transactions.redemptions.succeeded).to be_empty
   end
 end

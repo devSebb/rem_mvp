@@ -5,13 +5,22 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
   let(:other_merchant_secret) { "sec_other_key_456" }
   let(:merchant) { create_merchant(secret: merchant_secret) }
   let(:other_merchant) { create_merchant(secret: other_merchant_secret) }
-  let(:gift_card) { create_gift_card(merchant:) }
+  let(:gift_card) { create_gift_card(merchant: merchant) }
   let(:raw_token) { issue_token_for(gift_card) }
 
   describe "POST /api/v1/redemptions" do
+    before do
+      allow(Messaging::RedemptionPusher).to receive(:call)
+    end
+
     it "allows redemption by a different merchant and records the redeemer" do
       other_merchant # ensure created
       token_value = raw_token # force gift card + issuance txn creation before the expect block
+      expect(Messaging::RedemptionPusher).to receive(:call).with(
+        gift_card: gift_card,
+        amount_cents: 1_000,
+        merchant: other_merchant
+      )
 
       expect {
         post "/api/v1/redemptions",
@@ -36,6 +45,25 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
       expect(token_record&.used_at).to be_present
       redemption_txn = Transaction.find(body["transaction_id"])
       expect(redemption_txn.merchant_id).to eq(other_merchant.id)
+    end
+
+    it "returns held_until when a held card is declined" do
+      held_until = 2.hours.from_now
+      gift_card.update!(held_until: held_until)
+
+      post "/api/v1/redemptions",
+           params: {
+             token: raw_token,
+             amount_cents: 500,
+             idempotency_key: SecureRandom.uuid
+           }.to_json,
+           headers: auth_headers(merchant_secret)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      body = JSON.parse(response.body)
+      expect(body["approved"]).to be(false)
+      expect(body["decline_reason"]).to eq("card_held_security_review")
+      expect(body["held_until"]).to be_present
     end
 
     it "returns response contract: approved, transaction_id, gift_card_id, remaining_balance_cents, currency" do
@@ -93,9 +121,9 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
   def create_gift_card(merchant:)
     sender = create_user(role: :user)
     GiftCard.create!(
-      sender:,
+      sender: sender,
       recipient: sender,
-      merchant:,
+      merchant: merchant,
       amount: 10_000,
       remaining_balance: 10_000,
       currency: "USD",
@@ -114,4 +142,3 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
     raw_token
   end
 end
-

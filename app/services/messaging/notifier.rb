@@ -122,11 +122,8 @@ module Messaging
       return { success: false, error: 'No email address' } unless @recipient&.email.present?
 
       begin
-        # Get the raw gift card code for email delivery
-        raw_code = @gift_card.raw_code || @gift_card.generate_code!
-
         # Try deliver_later first, fallback to deliver_now if Sidekiq not available
-        mail = GiftCardMailer.deliver_gift_card(@gift_card, raw_code)
+        mail = GiftCardMailer.deliver_gift_card(@gift_card)
 
         begin
           mail.deliver_later

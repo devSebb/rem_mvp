@@ -1,3 +1,5 @@
+require "digest"
+
 class Rack::Attack
   redis_url = ENV['REDIS_URL']
   if Rails.env.production?
@@ -14,6 +16,20 @@ class Rack::Attack
     if req.path == '/merchant/redemptions' && req.post?
       req.ip
     end
+  end
+
+  # Throttle merchant POS/API redemption attempts by IP and by presented secret.
+  throttle('api/redemptions/ip', limit: 30, period: 1.minute) do |req|
+    if req.path == '/api/v1/redemptions' && req.post?
+      req.ip
+    end
+  end
+
+  throttle('api/redemptions/merchant_secret', limit: 60, period: 1.minute) do |req|
+    next unless req.path == '/api/v1/redemptions' && req.post?
+
+    scheme, secret = req.get_header('HTTP_AUTHORIZATION').to_s.split(' ', 2)
+    Digest::SHA256.hexdigest(secret) if scheme == 'Bearer' && secret.present?
   end
 
   # Throttle webhook requests by IP

@@ -3,18 +3,18 @@
 Monto: <%= @gift_card.currency %> <%= format("%.2f", @gift_card.amount / 100.0) %>
 De: <%= @sender.name %> (<%= @sender.email %>)
 
-Tu código: <%= @raw_code %>
+Ver tu tarjeta: <%= @gift_card_url %>
 
 ⏰ INFORMACIÓN IMPORTANTE:
-• Tu código de tarjeta: <%= @raw_code %>
-• Muestra este código en cualquier comercio participante
-• Sin fecha de vencimiento — úsalo cuando quieras
+• Por seguridad, el QR y el código de canje no se envían por correo.
+• Abre Papayal cuando estés listo para usar tu tarjeta.
+• Genera un código vigente desde la app y muéstralo en el comercio participante.
 
 CÓMO CANJEAR:
-1. Visita cualquier comercio participante
-2. Muestra tu código: <%= @raw_code %>
-3. O permite que escaneen el código QR (en la versión HTML)
-4. ¡Disfruta tu tarjeta!
+1. Abre Papayal e ingresa a tu billetera.
+2. Selecciona esta tarjeta de regalo.
+3. Genera el QR o código de canje dentro de la app.
+4. Muéstralo al cajero del comercio participante.
 
 Gracias por usar Papayal 🎉
 

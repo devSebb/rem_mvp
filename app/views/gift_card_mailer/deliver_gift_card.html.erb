@@ -51,20 +51,12 @@
       margin: 20px 0;
       text-align: center;
     }
-    .otp-code {
-      background: #1f2937;
-      color: white;
-      padding: 20px;
+    .security-info {
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      padding: 16px;
       border-radius: 8px;
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      letter-spacing: 4px;
       margin: 20px 0;
-    }
-    .qr-code {
-      text-align: center;
-      margin: 30px 0;
     }
     .expiry-info {
       background: #fef3c7;
@@ -99,34 +91,22 @@
       <strong>Email:</strong> <%= @sender.email %>
     </div>
 
-    <div class="otp-code">
-      Tu código: <%= @raw_code %>
+    <div class="security-info">
+      <strong>🔒 Importante:</strong><br>
+      Por seguridad, el QR y el código de canje no se envían por correo. Abre Papayal cuando estés listo para usar tu tarjeta y genera un código vigente desde la app.
     </div>
 
-    <% if @qr_code %>
-      <div class="qr-code">
-        <h3>O escanea este código QR:</h3>
-        <%= raw @qr_code %>
-        <p style="margin-top: 10px; font-size: 14px; color: #6b7280;">
-          El código QR contiene tu código de tarjeta para escaneo rápido
-        </p>
-      </div>
-    <% end %>
-
-    <div class="expiry-info">
-      <strong>⏰ Importante:</strong><br>
-      • Tu código de tarjeta: <strong><%= @raw_code %></strong><br>
-      • Muestra este código o el QR en cualquier comercio participante<br>
-      • Sin fecha de vencimiento — úsalo cuando quieras
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="<%= @gift_card_url %>" class="cta-button">Ver mi tarjeta en Papayal</a>
     </div>
 
     <div style="margin: 30px 0; padding: 20px; background: #f9fafb; border-radius: 8px;">
       <h3>Cómo canjear:</h3>
       <ol>
-        <li>Visita cualquier comercio participante</li>
-        <li>Muestra tu código: <strong><%= @raw_code %></strong></li>
-        <li>O permite que escaneen el código QR de arriba</li>
-        <li>¡Disfruta tu tarjeta!</li>
+        <li>Abre Papayal e ingresa a tu billetera.</li>
+        <li>Selecciona esta tarjeta de regalo.</li>
+        <li>Genera el QR o código de canje dentro de la app.</li>
+        <li>Muéstralo al cajero del comercio participante.</li>
       </ol>
     </div>
 
