@@ -71,6 +71,10 @@ Rails.application.routes.draw do
       post "me/avatar", to: "me/avatars#create"
       resources :merchants, only: [:index, :show]
       post "merchants/:id/logo", to: "merchants#upload_logo"
+
+      namespace :public do
+        resources :merchants, only: [:index, :show]
+      end
     end
   end
 
