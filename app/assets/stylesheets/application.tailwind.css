@@ -284,7 +284,7 @@
   }
 
   .marketing-mockup-frame {
-    @apply relative z-10 h-[22rem] w-full;
+    @apply relative z-10 h-[26rem] w-full;
   }
 
   .marketing-mockup-frame picture {
@@ -307,7 +307,7 @@
   }
 
   .marketing-card-showcase {
-    @apply mt-12 rounded-lg border border-[#17363C]/10 bg-white/72 p-5 shadow-[0_28px_70px_-54px_rgba(20,52,58,0.78)] sm:p-8;
+    @apply mt-12 p-5 sm:p-8;
   }
 
   .marketing-faq-card {
