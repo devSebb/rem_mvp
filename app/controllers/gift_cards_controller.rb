@@ -15,7 +15,7 @@ class GiftCardsController < ApplicationController
     respond_to do |format|
       format.html
       format.json do
-        render json: @gift_cards.as_json(include: [:sender, :recipient, :merchant])
+        render json: @gift_cards.map { |card| serialize_wallet_card(card) }
       end
     end
   end
@@ -30,5 +30,32 @@ class GiftCardsController < ApplicationController
 
   def set_gift_card
     @gift_card = GiftCard.find(params[:id])
+  end
+
+  # Explicit whitelist for the wallet JSON. The counterparty on a card is
+  # another person's User row — never serialize full records here (they
+  # carry national_id, date_of_birth, address, phone; merchants carry
+  # secret digests). Only fields the wallet view actually renders.
+  def serialize_wallet_card(card)
+    {
+      id: card.id,
+      amount: card.amount,
+      remaining_balance: card.remaining_balance,
+      currency: card.currency,
+      status: card.status,
+      created_at: card.created_at,
+      redeemed_at: card.redeemed_at,
+      sender_id: card.sender_id,
+      recipient_id: card.recipient_id,
+      sender: serialize_wallet_party(card.sender),
+      recipient: serialize_wallet_party(card.recipient),
+      merchant: card.merchant ? { id: card.merchant.id, store_name: card.merchant.store_name } : nil
+    }
+  end
+
+  def serialize_wallet_party(user)
+    return nil unless user
+
+    { id: user.id, name: user.name }
   end
 end

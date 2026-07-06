@@ -1,7 +1,11 @@
 class NotificationJob < ApplicationJob
   queue_as :default
 
-  def perform(gift_card_id, raw_code = nil)
+  # _legacy_raw_code: older enqueues passed the raw gift card code as a
+  # second argument. It was never used (the notifier derives the code from
+  # the encrypted column) and is no longer enqueued, but the parameter stays
+  # so in-flight jobs serialized with two arguments still deserialize.
+  def perform(gift_card_id, _legacy_raw_code = nil)
     gift_card = GiftCard.find(gift_card_id)
     
     unless gift_card.recipient

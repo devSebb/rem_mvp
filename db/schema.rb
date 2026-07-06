@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_24_163730) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_05_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -219,6 +219,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_24_163730) do
     t.integer "preferred_channel", default: 0, null: false
     t.datetime "claimed_at"
     t.datetime "deleted_at"
+    t.string "claim_otp_digest"
+    t.datetime "claim_otp_sent_at"
+    t.integer "claim_otp_attempts", default: 0, null: false
     t.index ["claimed_at"], name: "index_users_on_claimed_at"
     t.index ["deleted_at"], name: "index_users_on_deleted_at", where: "(deleted_at IS NOT NULL)"
     t.index ["email"], name: "index_users_on_email", unique: true

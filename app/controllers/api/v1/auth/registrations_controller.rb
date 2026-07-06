@@ -14,19 +14,37 @@ module Api
           # sent to this phone or email earlier, the User row already exists
           # in pending state; this signup claims it (preserving the link to
           # any waiting gift cards) instead of creating a duplicate.
+          #
+          # Claiming requires proving control of the pending account's
+          # contact channel: without a claim_otp we challenge (409); with
+          # one we verify it before letting the signup take the account.
           pending_user = find_pending_recipient
+          if pending_user
+            error_response = challenge_or_verify_claim(pending_user)
+            return error_response if error_response
+          end
+
           user = pending_user || User.new
           was_pending_claim = pending_user.present?
+          # Capture the pending account's ORIGINAL contact channels before
+          # the signup params overwrite them, so we can alert the original
+          # recipient that their account was claimed.
+          original_email = pending_user&.email
+          original_phone = pending_user&.phone
 
           populate_user_attributes(user)
 
           if user.save
             if was_pending_claim
-              # TODO: when phone/email verification (OTP) ships, send a
-              # claim-confirmation alert here so the original recipient is
-              # notified if their pending account was claimed by someone
-              # else. Architecture stub — real notifier wired in OTP phase.
               Rails.logger.info "[Auth] Claimed pending account user_id=#{user.id} email=#{user.email}"
+              # Alert the original contact channel that the account was
+              # claimed, so the rightful recipient finds out if someone
+              # else somehow completed the OTP challenge.
+              ::Auth::ClaimVerification.notify_claimed!(
+                user,
+                email: original_email,
+                phone: original_phone
+              )
               # Claim is an UPDATE, so the User#after_create_commit hook
               # doesn't fire. Send the welcome explicitly here.
               WelcomeMailer.welcome(user.id).deliver_later unless user.placeholder_email?
@@ -62,7 +80,41 @@ module Api
             :name,
             :phone,
             :device_id,
+            :claim_otp,
             interests: []
+          )
+        end
+
+        # OTP gate in front of the pending-account claim. Returns a rendered
+        # error response when the signup may NOT proceed (challenge issued or
+        # verification failed), or nil when the claim is verified.
+        def challenge_or_verify_claim(pending_user)
+          claim_otp = signup_params[:claim_otp].to_s.strip
+
+          if claim_otp.blank?
+            details = ::Auth::ClaimVerification.request!(pending_user)
+            return render_error(
+              code: "auth.claim_verification_required",
+              message: "Verification code required to claim this account",
+              status: :conflict,
+              details: details
+            )
+          end
+
+          ::Auth::ClaimVerification.verify!(pending_user, claim_otp)
+          nil
+        rescue ::Auth::ClaimVerification::Invalid => e
+          render_error(
+            code: "auth.claim_otp_invalid",
+            message: "Incorrect verification code",
+            status: :unprocessable_entity,
+            details: { attempts_remaining: e.attempts_remaining }
+          )
+        rescue ::Auth::ClaimVerification::Expired, ::Auth::ClaimVerification::TooManyAttempts
+          render_error(
+            code: "auth.claim_otp_expired",
+            message: "Verification code expired, request a new one",
+            status: :unprocessable_entity
           )
         end
 

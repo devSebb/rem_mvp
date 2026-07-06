@@ -57,7 +57,7 @@
       </div>
 
       <!-- Refund Form -->
-      <%= form_with url: admin_refund_path(@gift_card), method: :post, local: true, class: "space-y-6" do |form| %>
+      <%= form_with url: admin_gift_card_refunds_path(@gift_card), method: :post, local: true, class: "space-y-6" do |form| %>
         <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
           <div class="flex">
             <div class="flex-shrink-0">
@@ -68,7 +68,7 @@
             <div class="ml-3">
               <h3 class="text-sm font-medium text-yellow-800">Important</h3>
               <div class="mt-2 text-sm text-yellow-700">
-                <p>Refunds will restore the gift card balance and may change its status back to active. This action cannot be undone.</p>
+                <p>This sends money back to the buyer's original payment method at Stripe and reduces the card's available balance (a full refund cancels the card). Redeemed value cannot be refunded. This action cannot be undone.</p>
               </div>
             </div>
           </div>
@@ -81,15 +81,15 @@
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <span class="text-gray-500 sm:text-sm"><%= @gift_card.currency == 'USD' ? '$' : @gift_card.currency %></span>
               </div>
-              <%= form.number_field :refund_amount, 
+              <%= form.number_field :refund_amount,
                   step: 0.01,
                   min: 0.01,
-                  max: @total_redeemed / 100.0,
+                  max: @max_refund_amount / 100.0,
                   class: "block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
                   placeholder: "0.00" %>
             </div>
             <p class="mt-1 text-sm text-gray-500">
-              Maximum refundable: <%= number_to_currency(@total_redeemed / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+              Maximum refundable: <%= number_to_currency(@max_refund_amount / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
             </p>
           </div>
           

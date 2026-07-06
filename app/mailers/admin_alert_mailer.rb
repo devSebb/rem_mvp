@@ -27,6 +27,21 @@ class AdminAlertMailer < ApplicationMailer
     )
   end
 
+  # A succeeded payment could not be fulfilled as a gift card and was
+  # automatically refunded in full (see Refunds::RefundOrphanedPayment).
+  # Primitives only so deliver_later serializes cleanly.
+  def orphaned_payment_refunded(payment_intent_id, amount_cents, currency, reason, refund_id)
+    @payment_intent_id = payment_intent_id
+    @reason = reason
+    @refund_id = refund_id
+    @amount_formatted = format("$%.2f %s", amount_cents / 100.0, currency)
+
+    mail(
+      to: admin_recipient,
+      subject: "[ALERT] Payment #{payment_intent_id} auto-refunded — fulfillment failed (#{reason})"
+    )
+  end
+
   private
 
   def admin_recipient

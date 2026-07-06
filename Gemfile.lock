@@ -363,6 +363,16 @@ GEM
       ffi (~> 1.12)
       pkg-config (~> 1.4)
     securerandom (0.4.1)
+    sentry-rails (6.6.2)
+      railties (>= 5.2.0)
+      sentry-ruby (~> 6.6.2)
+    sentry-ruby (6.6.2)
+      bigdecimal
+      concurrent-ruby (~> 1.0, >= 1.0.2)
+      logger
+    sentry-sidekiq (6.6.2)
+      sentry-ruby (~> 6.6.2)
+      sidekiq (>= 5.0)
     sidekiq (7.3.9)
       base64
       connection_pool (>= 2.3.0)
@@ -450,6 +460,9 @@ DEPENDENCIES
   rqrcode
   rspec-rails
   rubocop-rails-omakase
+  sentry-rails (~> 6.6)
+  sentry-ruby (~> 6.6)
+  sentry-sidekiq (~> 6.6)
   sidekiq
   sprockets-rails
   stimulus-rails

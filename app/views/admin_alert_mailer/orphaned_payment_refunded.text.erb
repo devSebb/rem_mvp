@@ -1,0 +1,13 @@
+[ALERT] Payment auto-refunded — fulfillment failed
+======================================================
+
+PaymentIntent:       <%= @payment_intent_id %>
+Stripe refund ID:    <%= @refund_id %>
+Amount refunded:     <%= @amount_formatted %>
+Failure reason:      <%= @reason %>
+
+The buyer paid but the gift card could not be created (permanent
+fulfillment failure), so the charge was refunded in full automatically.
+No gift card exists for this payment.
+
+Review in Stripe: https://dashboard.stripe.com/payments/<%= @payment_intent_id %>

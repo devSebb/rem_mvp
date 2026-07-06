@@ -265,6 +265,15 @@ class GiftCard < ApplicationRecord
     transactions.successful.redemptions.sum(:amount)
   end
 
+  # Max amount refundable to the buyer at Stripe (Type B refund): the value
+  # not yet consumed by redemptions nor already returned by prior Stripe
+  # refunds. Both of those flows decrement remaining_balance under the row
+  # lock, so the live balance IS the cap — refunding beyond it would return
+  # money the platform already owes (or paid) to the redeeming merchant.
+  def refundable_to_buyer_cents
+    canceled? ? 0 : remaining_balance.to_i
+  end
+
   def refund!(refund_amount:, reason:, actor:)
     transaction do
       lock!

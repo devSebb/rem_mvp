@@ -11,8 +11,11 @@ module Messaging
     def send_all_notifications
       results = {}
 
+      # Channels whose delivery flag is already set are skipped so Sidekiq
+      # retries after a partial failure don't double-send.
+
       # Phone channel: respects user preference; WhatsApp first with SMS fallback by default.
-      if @recipient&.phone.present?
+      if @recipient&.phone.present? && !@gift_card.sent_via_whatsapp? && !@gift_card.sent_via_sms?
         phone_result = send_phone_channel
         results[phone_result[:via]] = phone_result if phone_result[:via]
       end
@@ -20,12 +23,12 @@ module Messaging
       # Send Email only if recipient has a real address.
       # Pending recipients with placeholder emails (claim+<hash>@papayal.app)
       # haven't signed up yet — skip email, the SMS/WhatsApp path delivers.
-      if @recipient&.email.present? && !@recipient.placeholder_email?
+      if @recipient&.email.present? && !@recipient.placeholder_email? && !@gift_card.sent_via_email?
         results[:email] = send_email
       end
 
       # Send push notification if recipient has active push tokens
-      results[:push] = send_push
+      results[:push] = send_push unless @gift_card.sent_via_push?
 
       # Update delivery flags
       update_delivery_flags(results)

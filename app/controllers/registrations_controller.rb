@@ -1,31 +1,25 @@
 class RegistrationsController < Devise::RegistrationsController
-  # Override Devise's create to support the pending-recipient claim flow.
-  # If the email or phone matches a pending User (created by the Stripe
-  # webhook when someone was sent a gift card), claim that record instead
-  # of creating a duplicate. Otherwise, fall through to standard Devise
-  # behavior.
-  #
-  # Mirrors the API claim flow in Api::V1::Auth::RegistrationsController.
+  # Claiming a pending recipient account transfers its waiting gift cards,
+  # so it requires OTP proof that the signer-up owns the contact channel.
+  # That verified flow lives in the mobile API
+  # (Api::V1::Auth::RegistrationsController + Auth::ClaimVerification).
+  # The web form has no verification step, so instead of silently handing
+  # the account to whoever typed the email/phone first (account-takeover
+  # vector), we block the claim here and direct the user to the app.
   def create
-    pending = find_pending_recipient_for_signup
-    return super unless pending
-
-    self.resource = pending
-    populate_pending_recipient(pending)
-
-    if pending.save
-      # Claim is an UPDATE, so the User#after_create_commit hook doesn't
-      # fire. Send the welcome explicitly here.
-      WelcomeMailer.welcome(pending.id).deliver_later unless pending.placeholder_email?
-
-      set_flash_message! :notice, :signed_up
-      sign_up(resource_name, pending)
-      respond_with pending, location: after_sign_up_path_for(pending)
-    else
-      clean_up_passwords(pending)
+    if find_pending_recipient_for_signup
+      self.resource = resource_class.new(
+        sign_up_params.except("password", "password_confirmation")
+      )
+      clean_up_passwords(resource)
       set_minimum_password_length
-      respond_with pending
+      flash.now[:alert] =
+        "Hay tarjetas de regalo esperando en esta cuenta. Para reclamarlas de forma segura, " \
+        "crea tu cuenta desde la app Papayal: te enviaremos un código de verificación."
+      return render :new, status: :unprocessable_entity
     end
+
+    super
   end
 
   def update
@@ -149,20 +143,6 @@ class RegistrationsController < Devise::RegistrationsController
     else
       scope.where(phone: phone).first
     end
-  end
-
-  # Populate the claimed pending User with the signup values, replacing any
-  # placeholder email/phone with the real ones the user just provided.
-  def populate_pending_recipient(user)
-    attrs = sign_up_params
-    user.email = attrs[:email].to_s.strip.downcase if attrs[:email].present?
-    user.phone = attrs[:phone] if attrs.key?(:phone)
-    user.first_name = attrs[:first_name] if attrs[:first_name].present?
-    user.last_name = attrs[:last_name] if attrs[:last_name].present?
-    user.password = attrs[:password] if attrs.key?(:password)
-    user.password_confirmation = attrs[:password_confirmation] if attrs.key?(:password_confirmation)
-    user.role ||= :user
-    user.claimed_at = Time.current
   end
 end
 

@@ -163,6 +163,12 @@ module Api
       end
 
       def render_internal_error(exception)
+        # rescue_from StandardError swallows the exception before it can reach
+        # Sentry's Rack middleware, so sentry-rails' automatic capture never
+        # fires for this path — report explicitly. This is a no-op unless
+        # Sentry.init ran (i.e. SENTRY_DSN is set; see initializers/sentry.rb).
+        Sentry.capture_exception(exception)
+
         Rails.logger.error("Mobile API error: #{exception.class} - #{exception.message}")
         Rails.logger.error(exception.backtrace.join("\n")) if exception.backtrace
 

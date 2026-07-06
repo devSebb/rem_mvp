@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Payment auto-refunded — <%= @payment_intent_id %></title></head>
+<body style="font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h2 style="color: #B91C1C;">↩️ Payment auto-refunded</h2>
+  <p>A buyer paid but the gift card could not be created (permanent fulfillment failure), so the charge was refunded in full automatically. No gift card exists for this payment.</p>
+
+  <table cellpadding="6" style="border-collapse: collapse; width: 100%; background: #f9fafb; border-radius: 8px;">
+    <tr><td><strong>Stripe PaymentIntent:</strong></td><td><code><%= @payment_intent_id %></code></td></tr>
+    <tr><td><strong>Stripe refund ID:</strong></td><td><code><%= @refund_id %></code></td></tr>
+    <tr><td><strong>Amount refunded:</strong></td><td><%= @amount_formatted %></td></tr>
+    <tr><td><strong>Failure reason:</strong></td><td><code><%= @reason %></code></td></tr>
+  </table>
+
+  <p style="margin-top: 24px;">
+    No action is required for the buyer. If this reason keeps recurring
+    (e.g. <code>purchase_limit_exceeded</code>, <code>merchant_inactive</code>),
+    investigate the upstream cause.
+  </p>
+
+  <p>
+    <a href="https://dashboard.stripe.com/payments/<%= @payment_intent_id %>"
+       style="display: inline-block; background: #FCA50F; color: #0D2F32; padding: 10px 16px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+      Open in Stripe Dashboard
+    </a>
+  </p>
+</body>
+</html>

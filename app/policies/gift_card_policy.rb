@@ -20,10 +20,19 @@ class GiftCardPolicy < ApplicationPolicy
     user.present? && (record.recipient == user || user.admin?)
   end
 
+  # Type A refund: reverse a redemption capture back onto the card (no money
+  # moves at Stripe). Merchants may do this for their own redemptions.
   def refund?
     return false unless user.present?
     return true if user.admin?
     user.merchant? && record.merchant&.user_id == user.id
+  end
+
+  # Type B refund: real Stripe refund to the buyer's payment method. Moves
+  # platform money out, so this is an admin-only function — merchants must
+  # never be able to trigger buyer payouts.
+  def stripe_refund?
+    user&.admin?
   end
 
   # Only recipients can transfer their gift cards

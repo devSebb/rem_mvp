@@ -32,6 +32,43 @@ RSpec.describe "GiftCards", type: :request do
         expect(card).to have_key("merchant")
       end
     end
+
+    it "never leaks counterparty PII or merchant secrets in the wallet JSON" do
+      counterparty = create(
+        :user,
+        national_id: "PII1712345678",
+        date_of_birth: Date.new(1985, 5, 5),
+        address: "Av. Amazonas 123, Quito",
+        phone: "+593991234567"
+      )
+      create(:gift_card, sender: user, recipient: counterparty, merchant:)
+      create(:gift_card, sender: counterparty, recipient: user, merchant:)
+
+      get "/gift_cards", as: :json
+
+      expect(response).to have_http_status(:ok)
+
+      body = response.body
+      # No PII attribute names…
+      expect(body).not_to include(
+        "national_id", "date_of_birth", "encrypted_password",
+        "encrypted_raw_code", "secret_key_digest", "code_digest",
+        "reset_password_token", "bank_account_iban"
+      )
+      # …and no PII values for the other person on the card.
+      expect(body).not_to include(counterparty.national_id)
+      expect(body).not_to include(counterparty.phone)
+      expect(body).not_to include("Av. Amazonas 123")
+      expect(body).not_to include("1985-05-05")
+
+      data = response.parsed_body
+      expect(data.length).to eq(2)
+      data.each do |card|
+        expect(card["sender"].keys).to match_array(%w[id name])
+        expect(card["recipient"].keys).to match_array(%w[id name])
+        expect(card["merchant"].keys).to match_array(%w[id store_name])
+      end
+    end
   end
 
 end

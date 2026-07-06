@@ -1,5 +1,18 @@
 class StripeWebhooks
-  class InvalidMerchantError < StandardError; end
+  # Raised when a succeeded payment can never be fulfilled as a gift card
+  # (bad/suspended merchant, missing sender/recipient, limit exceeded,
+  # invalid card data). These are PERMANENT failures: retrying the webhook
+  # will not fix them, so the money must go back to the buyer instead of
+  # being stranded. Transient errors (DB/Redis down) are deliberately NOT
+  # mapped to this class — they re-raise so Stripe retries delivery.
+  class UnfulfillablePaymentError < StandardError
+    attr_reader :reason
+
+    def initialize(reason, message)
+      @reason = reason
+      super(message)
+    end
+  end
 
   def self.verify_signature(payload, signature)
     webhook_secret = Rails.application.config.stripe[:webhook_secret]
@@ -29,58 +42,102 @@ class StripeWebhooks
 
   private
 
+  # The buyer has been charged at this point, so there are only two valid
+  # outcomes: a gift card exists, or the buyer gets their money back.
+  # Permanent fulfillment failures auto-refund; transient errors re-raise
+  # so Stripe retries the delivery.
   def self.handle_payment_intent_succeeded(payment_intent)
+    fulfill_payment_intent!(payment_intent)
+  rescue UnfulfillablePaymentError => e
+    refund_unfulfillable_payment(payment_intent, e)
+  end
+
+  def self.refund_unfulfillable_payment(payment_intent, error)
+    Rails.logger.error "❌ Unfulfillable payment #{payment_intent.id} (#{error.reason}): #{error.message}"
+    Refunds::RefundOrphanedPayment.call(payment_intent: payment_intent, reason: error.reason)
+    Rails.logger.info "✅ Auto-refunded unfulfillable payment #{payment_intent.id}"
+    # Swallow the error from here: the webhook returns 200 so Stripe stops
+    # retrying — the money is back with the buyer, nothing left to retry.
+    # If RefundOrphanedPayment itself raised (Stripe API down), we let that
+    # propagate instead: Stripe re-delivers and the refund is re-attempted.
+  rescue Refunds::RefundOrphanedPayment::GiftCardExists
+    # A concurrent delivery created the card after our check — the payment
+    # was actually fulfilled, so there is nothing to refund.
+    Rails.logger.warn "⚠️ Gift card appeared for #{payment_intent.id} while handling failure; skipping refund"
+  end
+
+  def self.fulfill_payment_intent!(payment_intent)
     metadata = payment_intent.metadata || {}
     Rails.logger.info "💳 Payment intent succeeded: #{payment_intent.id} with metadata: #{metadata.inspect}"
-    
+
     merchant_id_raw = metadata["merchant_id"]
     merchant_id = merchant_id_raw.to_s.strip
 
-    if merchant_id.blank?
-      Rails.logger.error "❌ Missing merchant_id for payment intent #{payment_intent.id}"
-      raise InvalidMerchantError, "Missing merchant for payment intent #{payment_intent.id}"
-    end
-
-    unless merchant_id.match?(/\A\d+\z/)
-      Rails.logger.error "❌ Non-numeric merchant_id #{merchant_id.inspect} for payment intent #{payment_intent.id}"
-      raise InvalidMerchantError, "Invalid merchant for payment intent #{payment_intent.id}"
+    if merchant_id.blank? || !merchant_id.match?(/\A\d+\z/)
+      raise UnfulfillablePaymentError.new(
+        "merchant_invalid",
+        "Missing or malformed merchant_id #{merchant_id_raw.inspect} for payment intent #{payment_intent.id}"
+      )
     end
 
     merchant = Merchant.find_by(id: merchant_id)
     unless merchant
-      Rails.logger.error "❌ Invalid merchant_id #{merchant_id} for payment intent #{payment_intent.id}"
-      raise InvalidMerchantError, "Invalid merchant for payment intent #{payment_intent.id}"
+      raise UnfulfillablePaymentError.new(
+        "merchant_invalid",
+        "Unknown merchant_id #{merchant_id} for payment intent #{payment_intent.id}"
+      )
+    end
+
+    # Checkout validated active? but the merchant can be suspended between
+    # checkout and webhook delivery; a card for a suspended merchant would
+    # be unredeemable (dead money).
+    unless merchant.active?
+      raise UnfulfillablePaymentError.new(
+        "merchant_inactive",
+        "Merchant #{merchant.id} is #{merchant.status} for payment intent #{payment_intent.id}"
+      )
     end
 
     # Find sender user
     sender = User.find_by(id: metadata['sender_id'])
     unless sender
-      Rails.logger.error "❌ No sender found for payment intent #{payment_intent.id} (metadata: #{metadata.inspect})"
-      return
+      raise UnfulfillablePaymentError.new(
+        "sender_missing",
+        "No sender found for payment intent #{payment_intent.id}"
+      )
     end
     Rails.logger.info "✅ Found sender: #{sender.email} (ID: #{sender.id})"
 
     # Find or create recipient user
     recipient = find_or_create_recipient(metadata)
     unless recipient
-      Rails.logger.error "❌ Failed to find or create recipient for payment intent #{payment_intent.id}"
-      return
+      raise UnfulfillablePaymentError.new(
+        "recipient_missing",
+        "Failed to find or create recipient for payment intent #{payment_intent.id}"
+      )
     end
     Rails.logger.info "✅ Found/created recipient: #{recipient.email} (ID: #{recipient.id})"
 
-    Rails.logger.info "✅ Merchant: #{merchant ? merchant.store_name : 'none'}"
+    Rails.logger.info "✅ Merchant: #{merchant.store_name}"
 
     # Validate amount (defense in depth - should already be validated at checkout)
     if payment_intent.amount > GiftCard::MAX_AMOUNT_CENTS
-      Rails.logger.error "❌ Amount exceeds maximum: #{payment_intent.amount} cents (max: #{GiftCard::MAX_AMOUNT_CENTS})"
-      raise InvalidMerchantError, "Amount exceeds maximum allowed per gift card"
+      raise UnfulfillablePaymentError.new(
+        "amount_exceeds_max",
+        "Amount #{payment_intent.amount} exceeds maximum #{GiftCard::MAX_AMOUNT_CENTS} for payment intent #{payment_intent.id}"
+      )
     end
 
-    # Validate purchase limit (defense in depth - should already be validated at checkout)
+    # Re-check the purchase limit (checkout already gates it, but concurrent
+    # checkouts can all pass that check before any card exists — TOCTOU).
+    # The buyer has already paid here, so exceeding the limit must refund
+    # the excess purchase rather than strand the money.
     limit_check = GiftCardPurchaseLimiter.can_purchase?(user: sender)
     unless limit_check[:allowed]
-      Rails.logger.error "❌ Purchase limit exceeded for user #{sender.id}: #{limit_check[:count]}/#{limit_check[:limit]} in last 24h"
-      raise InvalidMerchantError, "Purchase limit exceeded: #{limit_check[:reason]}"
+      raise UnfulfillablePaymentError.new(
+        "purchase_limit_exceeded",
+        "Purchase limit exceeded for user #{sender.id} (#{limit_check[:count]}/#{limit_check[:limit]} in 24h) on payment intent #{payment_intent.id}"
+      )
     end
 
     # Check if gift card already exists for this payment intent (idempotency)
@@ -104,19 +161,32 @@ class StripeWebhooks
     risk = extract_risk_assessment(payment_intent)
 
     # Create gift card safely (no expiration - gift cards never expire)
-    gift_card = GiftCard.create!(
-      sender: sender,
-      recipient: recipient,
-      merchant: merchant,
-      amount: payment_intent.amount, # Stripe gives amount in cents
-      currency: payment_intent.currency&.upcase || "USD",
-      payment_intent_id: payment_intent.id,
-      expires_at: nil, # Gift cards never expire
-      note: metadata['recipient_note'].presence,
-      risk_score: risk[:score],
-      risk_level: risk[:level],
-      held_until: risk[:hold_until]
-    )
+    begin
+      gift_card = GiftCard.create!(
+        sender: sender,
+        recipient: recipient,
+        merchant: merchant,
+        amount: payment_intent.amount, # Stripe gives amount in cents
+        currency: payment_intent.currency&.upcase || "USD",
+        payment_intent_id: payment_intent.id,
+        expires_at: nil, # Gift cards never expire
+        note: metadata['recipient_note'].presence,
+        risk_score: risk[:score],
+        risk_level: risk[:level],
+        held_until: risk[:hold_until]
+      )
+    rescue ActiveRecord::RecordInvalid => e
+      # Validation failures won't heal on retry — refund instead of stranding
+      raise UnfulfillablePaymentError.new(
+        "gift_card_invalid",
+        "Gift card validation failed for payment intent #{payment_intent.id}: #{e.message}"
+      )
+    rescue ActiveRecord::RecordNotUnique
+      # Concurrent delivery won the unique payment_intent_id race — the card
+      # exists, so this delivery has nothing left to do.
+      Rails.logger.warn "⚠️ Gift card already created concurrently for payment intent #{payment_intent.id}"
+      return
+    end
 
     if gift_card.held?
       Rails.logger.warn(
@@ -154,16 +224,25 @@ class StripeWebhooks
 
     Rails.logger.info "✅ Successfully created gift card #{gift_card.id} for payment intent #{payment_intent.id}"
     Rails.logger.info "   Recipient: #{recipient.email}, Amount: #{gift_card.currency} #{gift_card.amount / 100.0}"
+  rescue UnfulfillablePaymentError
+    raise # handled by handle_payment_intent_succeeded (auto-refund)
   rescue => e
+    # Transient failure (DB down, etc.): re-raise so the webhook 500s and
+    # Stripe retries the delivery.
     Rails.logger.error "💥 Error handling payment_intent.succeeded: #{e.class} - #{e.message}"
     Rails.logger.error e.backtrace.join("\n")
-    raise # re-raise so you still see the 500 during dev
+    raise
   end
 
   # Enqueue notification job. In production we never block the webhook on sync send;
   # in development/test we fall back to perform_now if Sidekiq/Redis is unavailable.
-  def self.enqueue_notification(gift_card_id, raw_code)
-    NotificationJob.perform_later(gift_card_id, raw_code)
+  #
+  # Only the gift card id is enqueued — the raw bearer code must never be
+  # serialized into Redis job payloads (Messaging::Notifier derives it from
+  # the encrypted column). The second arg is accepted so existing call
+  # sites keep working, but it is deliberately dropped.
+  def self.enqueue_notification(gift_card_id, _legacy_raw_code = nil)
+    NotificationJob.perform_later(gift_card_id)
     Rails.logger.info "📤 Enqueued notification job for gift card #{gift_card_id} (async)"
   rescue NoMethodError, Redis::CannotConnectError => e
     if Rails.env.production?
@@ -171,7 +250,7 @@ class StripeWebhooks
       # Do not block webhook; notification can be retried via support or cron
     else
       Rails.logger.warn "⚠️ Sidekiq not available (#{e.class}), sending notification synchronously"
-      NotificationJob.perform_now(gift_card_id, raw_code)
+      NotificationJob.perform_now(gift_card_id)
       Rails.logger.info "📤 Sent notification for gift card #{gift_card_id} (sync)"
     end
   rescue => e
@@ -242,15 +321,27 @@ class StripeWebhooks
   # PaymentIntent. Returns { score:, level:, hold_until: } with hold_until
   # set only when the score exceeds GiftCard::RISK_HOLD_THRESHOLD.
   #
-  # Defensive: if outcome is missing (older Stripe API versions, or test
-  # charges without Radar), treat as zero risk — better to release the
-  # card than block it on stale metadata.
+  # Current Stripe API versions expose the charge via `latest_charge` — a
+  # charge ID string in webhook payloads (an expanded Stripe::Charge when
+  # the caller requested expansion). NOTE: `payment_intent.charges` no
+  # longer exists; reading it silently zeroed every risk score.
+  #
+  # Defensive: if the charge or outcome is missing (test charges without
+  # Radar), treat as zero risk — better to release the card than block it
+  # on stale metadata. `try` is used so absent attributes return nil
+  # instead of raising NoMethodError and silently zeroing real scores.
   def self.extract_risk_assessment(payment_intent)
-    charge = Array(payment_intent.charges&.data).first
-    outcome = charge&.outcome
+    charge = payment_intent.try(:latest_charge)
+    charge = Stripe::Charge.retrieve(charge) if charge.is_a?(String)
 
-    score = outcome&.risk_score.to_i
-    level = outcome&.risk_level.to_s.presence
+    if charge.nil?
+      Rails.logger.warn "[Radar] No latest_charge on PI #{payment_intent.id}; treating as zero risk"
+      return { score: 0, level: nil, hold_until: nil }
+    end
+
+    outcome = charge.try(:outcome)
+    score = outcome.try(:risk_score).to_i
+    level = outcome.try(:risk_level).to_s.presence
 
     hold_until = if score >= GiftCard::RISK_HOLD_THRESHOLD
       Time.current + GiftCard::RISK_HOLD_DURATION

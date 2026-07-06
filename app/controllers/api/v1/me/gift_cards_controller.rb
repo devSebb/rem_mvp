@@ -23,6 +23,20 @@ module Api
           render_success(data: serialize_gift_card(@gift_card))
         end
 
+        # Post-checkout polling endpoint: the mobile app polls this with the
+        # Stripe payment intent id until the webhook creates the card, so a
+        # 404 here means "not created yet" and is part of the contract. The
+        # policy scope also turns other users' cards into 404s (no existence leak).
+        def by_payment_intent
+          gift_card = policy_scope(GiftCard)
+            .includes(:sender, sender: { avatar_attachment: :blob }, merchant: { logo_attachment: :blob })
+            .find_by!(payment_intent_id: params[:payment_intent_id])
+
+          # Track owner activity for balance check
+          gift_card.touch_owner_activity!
+          render_success(data: serialize_gift_card(gift_card))
+        end
+
         def redemption_token
           authorize @gift_card, :view_code?
 

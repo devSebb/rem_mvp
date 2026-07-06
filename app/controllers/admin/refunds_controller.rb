@@ -1,38 +1,39 @@
 class Admin::RefundsController < ApplicationController
-  before_action :ensure_admin_or_merchant
+  before_action :ensure_admin
   before_action :set_gift_card, only: [:new, :create]
 
   def new
-    authorize @gift_card, :refund?
+    authorize @gift_card, :stripe_refund?
 
-    # Buyer refund cap: original purchase amount minus anything already
-    # refunded. Redemption-side reversals (Type A) go through a separate
-    # merchant-facing endpoint, not this controller.
-    @already_refunded = @gift_card.transactions.where(txn_type: :refund, status: :succeeded).sum(:amount)
-    @max_refund_amount = @gift_card.amount.to_i - @already_refunded.to_i
+    # Buyer refund cap: only value that hasn't been redeemed at a merchant
+    # or already refunded to the buyer. Redemption-side reversals (Type A)
+    # go through a separate merchant-facing endpoint, not this controller.
+    @total_redeemed = @gift_card.total_redemptions
+    @max_refund_amount = @gift_card.refundable_to_buyer_cents
   end
 
   def create
-    authorize @gift_card, :refund?
+    authorize @gift_card, :stripe_refund?
 
     refund_amount = params[:refund_amount]&.to_f&.*(100)&.to_i # Convert to cents
     reason = params[:reason]&.strip
 
     if refund_amount.nil? || refund_amount <= 0
       flash[:alert] = 'Please enter a valid refund amount.'
-      redirect_to new_admin_refund_path(@gift_card) and return
+      redirect_to new_admin_gift_card_refund_path(@gift_card) and return
     end
 
-    already_refunded = @gift_card.transactions.where(txn_type: :refund, status: :succeeded).sum(:amount)
-    max_refund = @gift_card.amount.to_i - already_refunded.to_i
+    # Friendly pre-check; Refunds::IssueStripeRefund re-validates under the
+    # row lock, which is the authoritative enforcement.
+    max_refund = @gift_card.refundable_to_buyer_cents
     if refund_amount > max_refund
       flash[:alert] = "Refund amount exceeds remaining refundable amount (#{format_amount(max_refund, @gift_card.currency)})."
-      redirect_to new_admin_refund_path(@gift_card) and return
+      redirect_to new_admin_gift_card_refund_path(@gift_card) and return
     end
 
     if reason.blank?
       flash[:alert] = 'Please provide a reason for the refund.'
-      redirect_to new_admin_refund_path(@gift_card) and return
+      redirect_to new_admin_gift_card_refund_path(@gift_card) and return
     end
 
     # Issue the refund at Stripe. Internal balance reconciliation runs
@@ -51,25 +52,30 @@ class Admin::RefundsController < ApplicationController
       redirect_to gift_card_path(@gift_card)
     rescue Refunds::IssueStripeRefund::MissingPaymentIntent
       flash[:alert] = "This gift card was not created via Stripe — no payment to refund."
-      redirect_to new_admin_refund_path(@gift_card)
+      redirect_to new_admin_gift_card_refund_path(@gift_card)
     rescue Refunds::IssueStripeRefund::AlreadyFullyRefunded
       flash[:alert] = "This card is already canceled or fully refunded."
       redirect_to gift_card_path(@gift_card)
     rescue Refunds::IssueStripeRefund::InvalidAmount
       flash[:alert] = "Invalid refund amount."
-      redirect_to new_admin_refund_path(@gift_card)
+      redirect_to new_admin_gift_card_refund_path(@gift_card)
+    rescue Refunds::IssueStripeRefund::ExceedsRefundableBalance
+      flash[:alert] = "Refund amount exceeds the card's refundable balance (redeemed value cannot be refunded to the buyer)."
+      redirect_to new_admin_gift_card_refund_path(@gift_card)
     rescue Stripe::StripeError => e
       Rails.logger.error "[AdminRefund] Stripe error for gift_card=#{@gift_card.id}: #{e.class} #{e.message}"
       flash[:alert] = "Stripe rejected the refund: #{e.message}"
-      redirect_to new_admin_refund_path(@gift_card)
+      redirect_to new_admin_gift_card_refund_path(@gift_card)
     end
   end
 
   private
 
-  def ensure_admin_or_merchant
-    unless current_user&.admin? || current_user&.merchant?
-      flash[:alert] = 'You must be an admin or merchant to access this area.'
+  # Stripe refunds pay platform money out to buyers — admin only. Merchants
+  # reverse their own redemptions via Merchant::TransactionsController.
+  def ensure_admin
+    unless current_user&.admin?
+      flash[:alert] = 'You must be an admin to access this area.'
       redirect_to root_path
     end
   end

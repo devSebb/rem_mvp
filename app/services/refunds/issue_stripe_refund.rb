@@ -17,6 +17,7 @@ module Refunds
     class MissingPaymentIntent < Error; end
     class InvalidAmount < Error; end
     class AlreadyFullyRefunded < Error; end
+    class ExceedsRefundableBalance < Error; end
 
     def self.call(...)
       new(...).call
@@ -32,9 +33,30 @@ module Refunds
     def call
       raise MissingPaymentIntent if @gift_card.payment_intent_id.blank?
       raise InvalidAmount if @amount_cents <= 0
-      raise InvalidAmount if @amount_cents > @gift_card.amount.to_i
-      raise AlreadyFullyRefunded if @gift_card.canceled?
 
+      # Hold the row lock through validation AND the Stripe call: redemptions
+      # lock the same row, so the refundable balance cannot move (or be spent
+      # at a register) between the cap check and the money leaving. Admin
+      # refunds are rare, so briefly holding the lock across the external
+      # call is an acceptable trade for closing that race.
+      @gift_card.with_lock do
+        raise AlreadyFullyRefunded if @gift_card.canceled?
+
+        # Never refund value that has already been redeemed (the platform
+        # owes/paid the merchant for it) or already refunded to the buyer.
+        if @amount_cents > @gift_card.refundable_to_buyer_cents
+          raise ExceedsRefundableBalance,
+                "Requested #{@amount_cents} exceeds refundable #{@gift_card.refundable_to_buyer_cents} " \
+                "for gift_card=#{@gift_card.id}"
+        end
+
+        create_stripe_refund
+      end
+    end
+
+    private
+
+    def create_stripe_refund
       idem_key = "refund:gc#{@gift_card.id}:#{@amount_cents}:#{@actor&.id}"
 
       refund = Stripe::Refund.create(
@@ -61,8 +83,6 @@ module Refunds
       # (Stripe outage, misconfig), admin can re-run reconciliation manually.
       refund
     end
-
-    private
 
     # Map our internal reason to one of Stripe's accepted reason codes.
     # Free-form text goes in metadata.internal_reason for the audit trail.

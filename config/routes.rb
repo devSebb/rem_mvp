@@ -61,6 +61,10 @@ Rails.application.routes.draw do
       post "checkout/validate_kyc", to: "checkout#validate_kyc"
       post "checkout/payment_intent", to: "checkout#payment_intent"
 
+      # Mobile post-checkout polling: returns the buyer's gift card for a
+      # Stripe payment intent once the webhook has created it (404 until then).
+      get "gift_cards/by_payment_intent/:payment_intent_id", to: "me/gift_cards#by_payment_intent"
+
       namespace :me do
         resources :gift_cards, only: [:index, :show] do
           post :redemption_token, on: :member

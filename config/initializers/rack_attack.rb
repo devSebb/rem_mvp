@@ -53,6 +53,14 @@ class Rack::Attack
     end
   end
 
+  # Throttle signups by IP. Also caps how fast an attacker can trigger
+  # claim-verification OTP sends or brute-force claim codes via signup.
+  throttle('api/auth/signup/ip', limit: 15, period: 1.hour) do |req|
+    if req.path == '/api/v1/auth/signup' && req.post?
+      req.ip
+    end
+  end
+
   throttle('api/auth/login/ip', limit: 10, period: 10.minutes) do |req|
     if req.path == '/api/v1/auth/login' && req.post?
       req.ip
