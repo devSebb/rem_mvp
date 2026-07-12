@@ -3,7 +3,10 @@ require "rails_helper"
 RSpec.describe "GiftCards", type: :request do
   include Devise::Test::IntegrationHelpers
 
-  let(:user) { create(:user, address: "123 Main St", country_of_residence: "PE", date_of_birth: Date.new(1990, 1, 1)) }
+  # The web wallet is gated to admins now (consumers are redirected to the
+  # coming-soon page — see ConsumerWebGate), so the wallet contract is
+  # exercised with an admin account.
+  let(:user) { create(:user, role: :admin, address: "123 Main St", country_of_residence: "PE", date_of_birth: Date.new(1990, 1, 1)) }
   let!(:merchant) { create(:merchant) }
 
   before { sign_in user }

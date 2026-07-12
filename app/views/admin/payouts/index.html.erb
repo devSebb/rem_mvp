@@ -38,6 +38,9 @@
               <th class="px-4 py-3">Comercio</th>
               <th class="px-4 py-3">Banco (IBAN)</th>
               <th class="px-4 py-3 text-right">Canjeado</th>
+              <% if @settings.merchant_commission_bps.positive? %>
+                <th class="px-4 py-3 text-right">Comisión</th>
+              <% end %>
               <th class="px-4 py-3 text-right">Pagado</th>
               <th class="px-4 py-3 text-right">Adeudado</th>
               <th class="px-4 py-3 text-right">Sin liquidar</th>
@@ -58,6 +61,11 @@
                 <td class="px-4 py-3 text-right font-medium">
                   <%= number_to_currency(row[:redeemed].to_f / 100, unit: '$') %>
                 </td>
+                <% if @settings.merchant_commission_bps.positive? %>
+                  <td class="px-4 py-3 text-right text-[#2C3A43]/70">
+                    −<%= number_to_currency(row[:commission].to_f / 100, unit: '$') %>
+                  </td>
+                <% end %>
                 <td class="px-4 py-3 text-right text-[#2C3A43]/70">
                   <%= number_to_currency(row[:settled].to_f / 100, unit: '$') %>
                 </td>

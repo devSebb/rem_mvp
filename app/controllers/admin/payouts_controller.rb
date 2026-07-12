@@ -1,5 +1,4 @@
-class Admin::PayoutsController < ApplicationController
-  before_action :ensure_admin
+class Admin::PayoutsController < Admin::BaseController
   before_action :set_settlement, only: [:show, :mark_paid]
 
   # Per-merchant payout summary across the platform. The "pending" amount is
@@ -7,6 +6,7 @@ class Admin::PayoutsController < ApplicationController
   # (revenue earned for them) and what we've already settled (paid out).
   def index
     @merchants = Merchant.includes(:settlements).order(:store_name)
+    @settings = PlatformSetting.current
 
     # Compute per-merchant totals with two grouped queries (no N+1).
     redeemed_by_merchant = Transaction
@@ -28,12 +28,18 @@ class Admin::PayoutsController < ApplicationController
       redeemed = redeemed_by_merchant[merchant.id].to_i
       settled = settled_by_merchant[merchant.id].to_i
       pending_in_settlements = pending_settlement_total_by_merchant[merchant.id].to_i
-      # "Owed now" = total redeemed − already paid. Any pending settlements
+      # Platform commission is withheld from settlements (0 at launch).
+      # Settlement.amount is stored NET of commission, so owed/settled/
+      # pending all compare net-to-net.
+      commission = @settings.merchant_commission_cents_for(redeemed)
+      net_redeemed = redeemed - commission
+      # "Owed now" = net redeemed − already paid. Any pending settlements
       # are part of the redeemed-but-not-yet-paid balance.
-      owed = redeemed - settled
+      owed = net_redeemed - settled
       {
         merchant: merchant,
         redeemed: redeemed,
+        commission: commission,
         settled: settled,
         owed: owed,
         pending_in_settlements: pending_in_settlements,
@@ -68,10 +74,19 @@ class Admin::PayoutsController < ApplicationController
 
     period_start = unsettled_scope.minimum(:created_at).to_date
     period_end = Time.current.to_date
-    amount = unsettled_scope.sum(:amount)
+    gross = unsettled_scope.sum(:amount)
+
+    # amount = what we actually pay the merchant (gross minus platform
+    # commission). The gross and rate are stored so the payout stays
+    # explainable even if the commission changes later.
+    settings = PlatformSetting.current
+    commission = settings.merchant_commission_cents_for(gross)
 
     settlement = merchant.settlements.create!(
-      amount: amount,
+      amount: gross - commission,
+      gross_amount: gross,
+      commission_amount: commission,
+      commission_bps: settings.merchant_commission_bps,
       period_start: period_start,
       period_end: period_end,
       payout_status: :pending
@@ -99,11 +114,6 @@ class Admin::PayoutsController < ApplicationController
 
   private
 
-  def ensure_admin
-    return if current_user&.admin?
-    flash[:alert] = "Acceso restringido."
-    redirect_to root_path
-  end
 
   def set_settlement
     @settlement = Settlement.find(params[:id])
@@ -111,11 +121,13 @@ class Admin::PayoutsController < ApplicationController
 
   # Redemption transactions for this merchant that haven't been included
   # in any settlement yet (succeeded redemptions outside of every existing
-  # settlement period for this merchant).
+  # settlement period for this merchant). Uses Settlement#period_range so
+  # the last day of a period is fully excluded — a bare date range ends at
+  # midnight and would let same-day redemptions be settled twice.
   def unsettled_redemptions_for(merchant)
     base = Transaction.where(merchant: merchant, txn_type: :redemption, status: :succeeded)
     merchant.settlements.each do |s|
-      base = base.where.not(created_at: s.period_start..s.period_end)
+      base = base.where.not(created_at: s.period_range)
     end
     base
   end

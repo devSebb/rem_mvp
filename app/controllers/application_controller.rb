@@ -22,6 +22,10 @@ class ApplicationController < ActionController::Base
   end
   
   def after_sign_in_path_for(resource)
-    home_path
+    return merchant_root_path if resource.respond_to?(:merchant?) && resource.merchant?
+    return admin_root_path if resource.respond_to?(:admin?) && resource.admin?
+
+    # Consumers use the mobile app; the web has no shopper experience yet.
+    proximamente_path
   end
 end

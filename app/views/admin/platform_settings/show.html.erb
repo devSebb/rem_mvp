@@ -1,0 +1,93 @@
+<div class="space-y-8">
+  <div class="papayal-card p-6 flex flex-col gap-2">
+    <p class="papayal-meta text-[#0D2F32]">Configuración de la plataforma</p>
+    <h1 class="text-2xl font-bold text-[#0D2F32]">Tarifas y controles</h1>
+    <p class="text-sm text-[#2C3A43]/80">
+      Estos valores aplican inmediatamente en el checkout de la app, sin necesidad de publicar una nueva versión.
+      Las tarifas se guardan en puntos básicos: <span class="font-semibold">100 bps = 1%</span>.
+    </p>
+    <% if @settings.updated_by.present? %>
+      <p class="text-xs text-[#2C3A43]/60">
+        Último cambio: <%= l(@settings.updated_at, format: :short) rescue @settings.updated_at %> por <%= @settings.updated_by.email %>
+      </p>
+    <% end %>
+  </div>
+
+  <% if @settings.errors.any? %>
+    <div class="papayal-card border border-rose-200 bg-rose-50 text-rose-800 px-4 py-3">
+      <p class="font-semibold">Corrige los siguientes errores:</p>
+      <ul class="list-disc pl-5 text-sm mt-2 space-y-1">
+        <% @settings.errors.full_messages.uniq.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="papayal-card p-6">
+    <%= form_with model: @settings, url: admin_platform_settings_path, method: :patch, local: true, class: "space-y-6" do |form| %>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8] space-y-4">
+          <div>
+            <p class="papayal-meta">Tarifa al comprador</p>
+            <h2 class="text-lg font-semibold text-[#0D2F32]">Fee de servicio en el checkout</h2>
+            <p class="text-xs text-[#2C3A43]/70 mt-1">
+              El comprador paga <span class="font-semibold">valor de la tarjeta + fee</span>. La tarjeta siempre vale su monto original.
+              Actualmente: <span class="font-semibold"><%= @settings.buyer_fee_bps / 100.0 %>% + <%= number_to_currency(@settings.buyer_fee_fixed_cents / 100.0, unit: '$') %></span>
+              — ej. sobre $50: fee de <%= number_to_currency(@settings.buyer_fee_cents_for(5000) / 100.0, unit: '$') %>.
+            </p>
+          </div>
+          <div>
+            <label class="papayal-label">Porcentaje (bps)</label>
+            <%= form.number_field :buyer_fee_bps, class: "papayal-input mt-2", min: 0, max: PlatformSetting::MAX_BPS, step: 1 %>
+            <p class="text-xs text-[#2C3A43]/70 mt-1">0 = sin fee. 250 = 2.5%. Máximo <%= PlatformSetting::MAX_BPS %> (<%= PlatformSetting::MAX_BPS / 100.0 %>%).</p>
+          </div>
+          <div>
+            <label class="papayal-label">Monto fijo (centavos)</label>
+            <%= form.number_field :buyer_fee_fixed_cents, class: "papayal-input mt-2", min: 0, max: PlatformSetting::MAX_FIXED_CENTS, step: 1 %>
+            <p class="text-xs text-[#2C3A43]/70 mt-1">0 = sin monto fijo. 30 = $0.30. Máximo <%= PlatformSetting::MAX_FIXED_CENTS %> ($<%= PlatformSetting::MAX_FIXED_CENTS / 100.0 %>).</p>
+          </div>
+          <div class="pt-4 border-t border-black/10">
+            <p class="papayal-meta">Comisión a comercios</p>
+            <p class="text-xs text-[#2C3A43]/70 mt-1 mb-2">
+              Porcentaje retenido de las liquidaciones (se descuenta al crear el pago al comercio).
+              Actualmente: <span class="font-semibold"><%= @settings.merchant_commission_bps / 100.0 %>%</span>.
+            </p>
+            <label class="papayal-label">Comisión (bps)</label>
+            <%= form.number_field :merchant_commission_bps, class: "papayal-input mt-2", min: 0, max: PlatformSetting::MAX_BPS, step: 1 %>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8] space-y-4">
+          <div>
+            <p class="papayal-meta">Controles de la app</p>
+            <h2 class="text-lg font-semibold text-[#0D2F32]">Interruptores y versiones</h2>
+          </div>
+          <label class="flex items-start gap-3 p-3 rounded-xl border border-black/10 bg-white cursor-pointer hover:bg-[#FFF8EC] transition-colors">
+            <%= form.check_box :purchases_enabled, class: "accent-[#FCA50F] w-4 h-4 shrink-0 mt-0.5" %>
+            <span class="text-sm text-[#2C3A43] leading-snug">
+              <span class="font-semibold block">Compras habilitadas</span>
+              Interruptor de emergencia: al desactivarlo, el checkout de la app se pausa inmediatamente (los canjes siguen funcionando).
+            </span>
+          </label>
+          <div>
+            <label class="papayal-label">Versión mínima iOS</label>
+            <%= form.text_field :min_ios_version, class: "papayal-input mt-2", placeholder: "Ej: 1.0.1 (vacío = sin mínimo)" %>
+          </div>
+          <div>
+            <label class="papayal-label">Versión mínima Android</label>
+            <%= form.text_field :min_android_version, class: "papayal-input mt-2", placeholder: "Ej: 1.0.1 (vacío = sin mínimo)" %>
+          </div>
+          <p class="text-xs text-[#2C3A43]/70">
+            Las versiones mínimas se publican en <code>/api/v1/config</code>. La app las usará para pedir actualización antes de permitir compras (útil si un fee nuevo requiere una versión que lo muestre correctamente).
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3">
+        <%= link_to "Cancelar", home_path, class: "papayal-btn-ghost" %>
+        <%= form.submit "Guardar configuración", class: "papayal-btn-primary", data: { turbo_confirm: "¿Aplicar estos cambios? Afectan el checkout de la app inmediatamente." } %>
+      </div>
+    <% end %>
+  </div>
+</div>

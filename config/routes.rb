@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   root to: "marketing#landing"
   get "about", to: "marketing#about", as: :about
   get "contact", to: "marketing#contact", as: :contact
+  get "proximamente", to: "marketing#proximamente", as: :proximamente
   
   get "home", to: "home#index", as: :home
   
@@ -59,7 +60,11 @@ Rails.application.routes.draw do
       delete "me", to: "me#destroy"
       get "me/deletion_preview", to: "me#deletion_preview"
       post "checkout/validate_kyc", to: "checkout#validate_kyc"
+      post "checkout/quote", to: "checkout#quote"
       post "checkout/payment_intent", to: "checkout#payment_intent"
+
+      # Public remote config (fees, limits, kill switches, min app versions)
+      get "config", to: "config#show"
 
       # Mobile post-checkout polling: returns the buyer's gift card for a
       # Stripe payment intent once the webhook has created it (404 until then).
@@ -107,6 +112,8 @@ Rails.application.routes.draw do
   end
 
   namespace :admin do
+    root to: "dashboard#index"
+    resources :users, only: [:index, :show]
     resources :merchants, only: [:index, :new, :create, :show, :edit, :update, :destroy] do
       member do
         patch :suspend
@@ -123,6 +130,7 @@ Rails.application.routes.draw do
     resources :holds, only: [:index] do
       member { post :release }
     end
+    resource :platform_settings, only: [:show, :update]
   end
 
   # Mount Sidekiq web interface at /sidekiq (admin only)

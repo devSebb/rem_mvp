@@ -78,6 +78,18 @@
           <p class="papayal-meta">Public Key</p>
           <p class="font-mono text-xs text-[#0D2F32]/80 break-words"><%= @merchant.public_key %></p>
         </div>
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8] md:col-span-2">
+          <p class="papayal-meta">Canje</p>
+          <% if @merchant.partner_redemption? %>
+            <p class="font-semibold text-[#0D2F32]">Vía socio: <%= @merchant.redemption_partner_display %></p>
+            <p class="text-xs text-[#2C3A43]/70 mt-1"><%= @merchant.effective_coverage_text %></p>
+          <% else %>
+            <p class="font-semibold text-[#0D2F32]">Directo en el comercio</p>
+            <% if @merchant.coverage_text.present? %>
+              <p class="text-xs text-[#2C3A43]/70 mt-1"><%= @merchant.coverage_text %></p>
+            <% end %>
+          <% end %>
+        </div>
       </div>
 
       <%# Categories Section %>

@@ -1,7 +1,6 @@
 require "securerandom"
 
-class Admin::MerchantsController < ApplicationController
-  before_action :ensure_admin
+class Admin::MerchantsController < Admin::BaseController
   before_action :set_merchant, only: [:show, :edit, :update, :suspend, :reactivate, :regenerate_secret, :destroy]
 
   def index
@@ -128,12 +127,6 @@ class Admin::MerchantsController < ApplicationController
     @merchant = Merchant.find(params[:id])
   end
 
-  def ensure_admin
-    unless current_user&.admin?
-      flash[:alert] = "Debes ser administrador para acceder a esta sección."
-      redirect_to root_path
-    end
-  end
 
   def build_user_from_params
     attrs = user_params.to_h
@@ -152,7 +145,7 @@ class Admin::MerchantsController < ApplicationController
   end
 
   def merchant_params
-    params.require(:merchant).permit(:store_name, :address, :contact_email, :bank_account_iban, :avatar_url, :logo, categories: [])
+    params.require(:merchant).permit(:store_name, :address, :contact_email, :bank_account_iban, :avatar_url, :logo, :partner_redemption, :redemption_partner_label, :coverage_text, categories: [])
   end
 
   def user_params

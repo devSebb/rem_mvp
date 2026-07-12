@@ -1,5 +1,4 @@
-class Admin::RefundsController < ApplicationController
-  before_action :ensure_admin
+class Admin::RefundsController < Admin::BaseController
   before_action :set_gift_card, only: [:new, :create]
 
   def new
@@ -73,12 +72,6 @@ class Admin::RefundsController < ApplicationController
 
   # Stripe refunds pay platform money out to buyers — admin only. Merchants
   # reverse their own redemptions via Merchant::TransactionsController.
-  def ensure_admin
-    unless current_user&.admin?
-      flash[:alert] = 'You must be an admin to access this area.'
-      redirect_to root_path
-    end
-  end
 
   def set_gift_card
     @gift_card = GiftCard.find(params[:gift_card_id])

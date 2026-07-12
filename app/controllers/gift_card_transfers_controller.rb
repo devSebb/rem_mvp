@@ -1,4 +1,6 @@
 class GiftCardTransfersController < ApplicationController
+  include ConsumerWebGate
+
   before_action :set_gift_card, only: [:new, :create, :confirm]
 
   def new

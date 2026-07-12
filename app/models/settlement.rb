@@ -19,19 +19,26 @@ class Settlement < ApplicationRecord
   scope :paid, -> { where(payout_status: :paid) }
   scope :failed, -> { where(payout_status: :failed) }
 
-  # Get all transactions included in this settlement
+  # Get all transactions included in this settlement.
+  # period_start/period_end are dates; created_at is a timestamp. Compare
+  # against the full end day — a bare date range ends at midnight and would
+  # silently drop every transaction from the settlement's last day.
   def transactions
     Transaction.where(merchant: merchant)
               .where(txn_type: :redemption, status: :succeeded)
-              .where(created_at: period_start..period_end)
+              .where(created_at: period_range)
   end
 
   # Get all gift cards included in this settlement
   def gift_cards
     GiftCard.joins(:transactions)
             .where(transactions: { merchant: merchant, txn_type: :redemption, status: :succeeded })
-            .where(transactions: { created_at: period_start..period_end })
+            .where(transactions: { created_at: period_range })
             .distinct
+  end
+
+  def period_range
+    period_start.beginning_of_day..period_end.end_of_day
   end
 
   # Calculate the total amount that should be settled for this period
@@ -39,9 +46,11 @@ class Settlement < ApplicationRecord
     transactions.sum(:amount)
   end
 
-  # Check if the settlement amount matches the calculated amount
+  # Check if the settlement amount matches the calculated amount.
+  # amount is stored net of platform commission (commission_amount is 0 on
+  # legacy settlements created before commissions existed).
   def amount_matches_calculated?
-    amount == calculated_amount
+    amount == calculated_amount - commission_amount.to_i
   end
 
   # Get settlement status for a specific gift card

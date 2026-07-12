@@ -1,0 +1,257 @@
+<% content_for :title, "Papayal · Centro de control" %>
+<div class="space-y-10">
+  <%# ── Header + quick links ─────────────────────────────────────────── %>
+  <div class="grid grid-cols-12 gap-6 items-start">
+    <div class="col-span-12 xl:col-span-8 papayal-card p-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="papayal-meta text-[#0D2F32]">Centro de control</p>
+        <h1 class="text-3xl font-bold text-[#0D2F32] mt-2">Hola, <%= current_user.name %></h1>
+        <p class="text-base text-[#2C3A43]/80 mt-3 max-w-2xl">
+          Todos los números salen directamente del ledger y las tablas en vivo — lo que ves aquí es lo que dice la base de datos.
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <%= link_to "Comercios", admin_merchants_path, class: "papayal-btn-primary" %>
+        <%= link_to "Usuarios", admin_users_path, class: "papayal-btn-secondary" %>
+        <%= link_to "Pagos", admin_payouts_path, class: "papayal-btn-ghost" %>
+        <%= link_to "Bloqueos", admin_holds_path, class: "papayal-btn-ghost" %>
+        <%= link_to "Tarifas y controles", admin_platform_settings_path, class: "papayal-btn-ghost" %>
+        <%= link_to "Sidekiq", "/sidekiq", class: "papayal-btn-ghost" %>
+      </div>
+    </div>
+    <div class="col-span-12 xl:col-span-4 papayal-card p-6 bg-[#0D2F32] text-white">
+      <p class="papayal-meta text-white/70">Volumen Total Emitido</p>
+      <p class="text-4xl font-bold mt-2"><%= number_to_currency(@cards[:issued_volume_cents] / 100.0, unit: '$') %></p>
+      <p class="text-sm text-white/70 mt-3"><%= @cards[:total] %> tarjetas · incluye activas, canjeadas y canceladas.</p>
+    </div>
+  </div>
+
+  <%# ── Money row ────────────────────────────────────────────────────── %>
+  <div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+      <p class="papayal-meta">Saldo por canjear</p>
+      <p class="text-3xl font-bold mt-3"><%= number_to_currency(@cards[:liability_cents] / 100.0, unit: '$') %></p>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">Pasivo pendiente en tarjetas activas</p>
+    </div>
+    <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+      <p class="papayal-meta">Por pagar a comercios</p>
+      <p class="text-3xl font-bold mt-3"><%= number_to_currency(@payouts[:owed_cents] / 100.0, unit: '$') %></p>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">
+        <% if @payouts[:pending_settlements].positive? %>
+          <%= @payouts[:pending_settlements] %> liquidaciones pendientes
+        <% else %>
+          Sin liquidaciones pendientes
+        <% end %>
+      </p>
+    </div>
+    <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+      <p class="papayal-meta">Fees cobrados</p>
+      <p class="text-3xl font-bold mt-3"><%= number_to_currency(@economics[:fees_collected_cents] / 100.0, unit: '$') %></p>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">
+        Tarifa actual: <%= @settings.buyer_fee_bps / 100.0 %>% + <%= number_to_currency(@settings.buyer_fee_fixed_cents / 100.0, unit: '$') %>
+      </p>
+    </div>
+    <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
+      <p class="papayal-meta">Costo Stripe registrado</p>
+      <p class="text-3xl font-bold mt-3"><%= number_to_currency(@economics[:stripe_costs_cents] / 100.0, unit: '$') %></p>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">Comisiones de procesamiento capturadas</p>
+    </div>
+  </div>
+
+  <%# ── Users + cards + activity + ops ───────────────────────────────── %>
+  <div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 md:col-span-6 xl:col-span-3 papayal-card p-6">
+      <div class="flex items-center justify-between">
+        <p class="papayal-meta">Usuarios</p>
+        <%= link_to "Ver todos", admin_users_path, class: "text-xs font-semibold text-[#FCA50F] hover:underline" %>
+      </div>
+      <p class="text-3xl font-bold mt-3"><%= @users[:total] %></p>
+      <div class="mt-3 space-y-1 text-sm text-[#2C3A43]/80">
+        <p><span class="font-semibold text-[#0D2F32]"><%= @users[:claimed] %></span> registrados · <span class="font-semibold text-amber-700"><%= @users[:pending] %></span> pendientes de reclamar</p>
+        <p><span class="font-semibold text-emerald-700"><%= @users[:new_this_week] %></span> nuevos esta semana</p>
+        <% if @users[:deleted].positive? %>
+          <p class="text-xs text-[#2C3A43]/60"><%= @users[:deleted] %> cuentas eliminadas</p>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="col-span-12 md:col-span-6 xl:col-span-3 papayal-card p-6">
+      <p class="papayal-meta">Tarjetas</p>
+      <p class="text-3xl font-bold mt-3"><%= @cards[:active] %> <span class="text-base font-normal text-[#2C3A43]/60">activas</span></p>
+      <div class="mt-3 space-y-1 text-sm text-[#2C3A43]/80">
+        <p><span class="font-semibold text-blue-700"><%= @cards[:redeemed] %></span> canjeadas por completo</p>
+        <p>
+          <% if @cards[:held].positive? %>
+            <span class="font-semibold text-amber-700"><%= @cards[:held] %> retenidas por seguridad</span>
+          <% else %>
+            Sin retenciones de seguridad
+          <% end %>
+        </p>
+        <p>
+          <% if @cards[:disputed].positive? %>
+            <span class="font-semibold text-rose-700"><%= @cards[:disputed] %> con disputa</span>
+          <% else %>
+            Sin disputas
+          <% end %>
+        </p>
+      </div>
+    </div>
+
+    <div class="col-span-12 md:col-span-6 xl:col-span-3 papayal-card p-6">
+      <p class="papayal-meta">Últimos 7 días</p>
+      <p class="text-3xl font-bold mt-3"><%= number_to_currency(@activity[:purchases_7d_cents] / 100.0, unit: '$') %> <span class="text-base font-normal text-[#2C3A43]/60">comprado</span></p>
+      <div class="mt-3 space-y-1 text-sm text-[#2C3A43]/80">
+        <p><span class="font-semibold text-[#0D2F32]"><%= @activity[:purchases_7d_count] %></span> compras (<%= @activity[:purchases_today] %> hoy)</p>
+        <p><span class="font-semibold text-[#0D2F32]"><%= @activity[:redemptions_7d_count] %></span> canjes por <%= number_to_currency(@activity[:redemptions_7d_cents] / 100.0, unit: '$') %> (<%= @activity[:redemptions_today] %> hoy)</p>
+        <p>
+          <% if @activity[:failed_redemptions_7d].positive? %>
+            <span class="font-semibold text-rose-700"><%= @activity[:failed_redemptions_7d] %> canjes rechazados</span>
+          <% else %>
+            Sin canjes rechazados
+          <% end %>
+        </p>
+      </div>
+    </div>
+
+    <div class="col-span-12 md:col-span-6 xl:col-span-3 papayal-card p-6">
+      <p class="papayal-meta">Operación</p>
+      <div class="mt-3 space-y-2 text-sm text-[#2C3A43]/80">
+        <p>
+          Compras en la app:
+          <% if @settings.purchases_enabled? %>
+            <span class="font-semibold text-emerald-700">habilitadas</span>
+          <% else %>
+            <span class="font-semibold text-rose-700">DESHABILITADAS</span>
+          <% end %>
+        </p>
+        <p>Comercios: <span class="font-semibold text-[#0D2F32]"><%= @merchants[:active] %></span> activos<% if @merchants[:suspended].positive? %> · <span class="text-rose-700"><%= @merchants[:suspended] %> suspendidos</span><% end %></p>
+        <% if @sidekiq %>
+          <p>
+            Cola de trabajos: <span class="font-semibold text-[#0D2F32]"><%= @sidekiq[:enqueued] %></span> en espera
+            <% if @sidekiq[:retries].positive? || @sidekiq[:dead].positive? %>
+              · <span class="text-amber-700"><%= @sidekiq[:retries] %> reintentos</span>
+              · <span class="text-rose-700"><%= @sidekiq[:dead] %> muertos</span>
+            <% end %>
+          </p>
+        <% else %>
+          <p class="text-rose-700 font-semibold">Sidekiq/Redis no disponible</p>
+        <% end %>
+        <div class="flex flex-wrap gap-2 pt-1">
+          <% if @cards[:held].positive? %>
+            <%= link_to "Revisar bloqueos", admin_holds_path, class: "papayal-btn-ghost text-xs" %>
+          <% end %>
+          <%= link_to "Configuración", admin_platform_settings_path, class: "papayal-btn-ghost text-xs" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# ── Recent activity tables ───────────────────────────────────────── %>
+  <div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 lg:col-span-7 papayal-card p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <p class="papayal-meta">Ledger</p>
+          <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Últimos movimientos</h2>
+        </div>
+        <%= link_to "Pagos a comercios", admin_payouts_path, class: "papayal-btn-ghost text-sm" %>
+      </div>
+      <% if @recent_transactions.any? %>
+        <div class="overflow-hidden rounded-2xl border border-black/5">
+          <table class="min-w-full divide-y divide-black/5">
+            <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
+              <tr>
+                <th class="px-4 py-3">Tipo</th>
+                <th class="px-4 py-3">Detalle</th>
+                <th class="px-4 py-3 text-right">Monto</th>
+                <th class="px-4 py-3">Estado</th>
+                <th class="px-4 py-3">Fecha</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-black/5 text-sm">
+              <% txn_labels = { "purchase" => "Compra", "redemption" => "Canje", "refund" => "Reembolso", "adjustment" => "Ajuste", "issuance" => "Emisión" } %>
+              <% @recent_transactions.each do |txn| %>
+                <tr class="hover:bg-[#EBEBEB]/40 transition">
+                  <td class="px-4 py-3 font-medium text-[#0D2F32]"><%= txn_labels[txn.txn_type] || txn.txn_type %></td>
+                  <td class="px-4 py-3">
+                    <p class="font-medium text-[#2C3A43]"><%= (txn.merchant || txn.gift_card&.merchant)&.store_name || "—" %></p>
+                    <p class="text-xs text-[#2C3A43]/70"><%= txn.gift_card&.sender&.name || "" %></p>
+                  </td>
+                  <td class="px-4 py-3 text-right font-semibold"><%= number_to_currency(txn.amount / 100.0, unit: '$') %></td>
+                  <td class="px-4 py-3">
+                    <% if txn.succeeded? %>
+                      <span class="<%= status_badge_classes(:active) %>">Aprobado</span>
+                    <% elsif txn.failed? %>
+                      <span class="<%= status_badge_classes(:expired) %>">Rechazado<%= " · #{txn.decline_reason}" if txn.decline_reason.present? %></span>
+                    <% else %>
+                      <span class="<%= status_badge_classes(:pending) %>">Pendiente</span>
+                    <% end %>
+                  </td>
+                  <td class="px-4 py-3 text-[#2C3A43]/70"><%= txn.created_at.strftime('%d/%m %H:%M') %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="text-center py-10 text-sm text-[#2C3A43]/70">Aún no hay movimientos registrados.</div>
+      <% end %>
+    </div>
+
+    <div class="col-span-12 lg:col-span-5 space-y-6">
+      <div class="papayal-card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="papayal-meta">Actividad</p>
+            <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Tarjetas recientes</h2>
+          </div>
+        </div>
+        <% if @recent_gift_cards.any? %>
+          <div class="space-y-3">
+            <% @recent_gift_cards.each do |gift_card| %>
+              <div class="flex items-center justify-between rounded-2xl border border-black/5 px-4 py-3 bg-[#EBEBEB]/40">
+                <div>
+                  <p class="font-semibold text-[#0D2F32]"><%= number_to_currency(gift_card.amount / 100.0, unit: '$') %></p>
+                  <p class="text-xs text-[#2C3A43]/70">Para <%= gift_card.recipient&.name || gift_card.recipient&.email || "—" %> · <%= gift_card.created_at.strftime('%d/%m/%Y') %></p>
+                </div>
+                <span class="<%= status_badge_classes(gift_card.status) %>"><%= status_badge_label(gift_card.status) %></span>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="text-center py-8 text-sm text-[#2C3A43]/70">Aún no se emiten tarjetas.</div>
+        <% end %>
+      </div>
+
+      <div class="papayal-card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="papayal-meta">Comercios</p>
+            <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Nuevos socios</h2>
+          </div>
+          <%= link_to "Gestionar", admin_merchants_path, class: "papayal-btn-ghost text-sm" %>
+        </div>
+        <% if @latest_merchants.any? %>
+          <div class="space-y-3">
+            <% @latest_merchants.each do |merchant| %>
+              <div class="flex items-center justify-between rounded-2xl border border-black/5 px-4 py-3 bg-[#EBEBEB]/40">
+                <div>
+                  <p class="font-semibold text-[#0D2F32]">
+                    <%= link_to merchant.store_name, admin_merchant_path(merchant), class: "hover:underline" %>
+                    <% if merchant.partner_redemption? %>
+                      <span class="ml-1 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[#FCA50F]/15 text-[#8a5a00] border border-[#FCA50F]/30">Vía socio</span>
+                    <% end %>
+                  </p>
+                  <p class="text-xs text-[#2C3A43]/70"><%= merchant.created_at.strftime('%d %b %Y') %></p>
+                </div>
+                <span class="text-sm font-medium text-[#0D2F32]"><%= number_to_currency(@redeemed_by_merchant[merchant.id].to_i / 100.0, unit: '$') %></span>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="text-center py-8 text-sm text-[#2C3A43]/70">No hay comercios nuevos todavía.</div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

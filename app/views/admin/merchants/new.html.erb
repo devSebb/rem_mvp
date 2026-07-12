@@ -64,6 +64,32 @@
             <%= form.url_field :avatar_url, name: "merchant[avatar_url]", class: "papayal-input mt-2", value: @merchant.avatar_url, placeholder: "https://..." %>
             <p class="text-xs text-[#2C3A43]/70 mt-1">Campo legacy. Usa el campo "Logo del comercio" arriba para subir imágenes.</p>
           </div>
+          <div class="pt-4 border-t border-black/10 space-y-4">
+            <div>
+              <p class="papayal-meta">Canje</p>
+              <h2 class="text-lg font-semibold text-[#0D2F32]">Dónde se paga la tarjeta</h2>
+            </div>
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-black/10 bg-white cursor-pointer hover:bg-[#FFF8EC] hover:border-[#FCA50F]/40 transition-colors">
+              <input type="hidden" name="merchant[partner_redemption]" value="0">
+              <input type="checkbox" name="merchant[partner_redemption]" value="1"
+                     <%= 'checked="checked"' if @merchant.partner_redemption %>
+                     class="accent-[#FCA50F] w-4 h-4 shrink-0 mt-0.5">
+              <span class="text-sm text-[#2C3A43] leading-snug">
+                <span class="font-semibold block">Canje a través de socio (Farmaenlace)</span>
+                Las tarjetas de este comercio se pagan en Medicity o Farmacias Económicas. La app mostrará el aviso al comprador y al destinatario.
+              </span>
+            </label>
+            <div>
+              <label class="papayal-label">Nombre del socio de canje</label>
+              <%= form.text_field :redemption_partner_label, name: "merchant[redemption_partner_label]", class: "papayal-input mt-2", value: @merchant.redemption_partner_label, placeholder: Merchant::DEFAULT_REDEMPTION_PARTNER_LABEL %>
+              <p class="text-xs text-[#2C3A43]/70 mt-1">Opcional. Si lo dejas vacío se usa "<%= Merchant::DEFAULT_REDEMPTION_PARTNER_LABEL %>".</p>
+            </div>
+            <div>
+              <label class="papayal-label">Texto de cobertura (app)</label>
+              <%= form.text_field :coverage_text, name: "merchant[coverage_text]", class: "papayal-input mt-2", value: @merchant.coverage_text, placeholder: "Ej: Canjeable en 40 locales en todo el Ecuador." %>
+              <p class="text-xs text-[#2C3A43]/70 mt-1">Se muestra tal cual en el perfil del comercio en la app. Si está vacío y el canje es vía socio, se muestra el aviso del socio automáticamente.</p>
+            </div>
+          </div>
         </div>
 
         <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8] space-y-4">

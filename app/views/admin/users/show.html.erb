@@ -1,0 +1,129 @@
+<% content_for :title, "Papayal · Usuario #{@user.id}" %>
+<div class="space-y-8">
+  <div class="papayal-card p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <p class="papayal-meta text-[#0D2F32]">
+        <%= link_to "Usuarios", admin_users_path, class: "hover:underline" %> / ID <%= @user.id %>
+      </p>
+      <h1 class="text-2xl font-bold text-[#0D2F32] mt-1 flex items-center gap-3">
+        <%= @user.name.presence || "(sin nombre)" %>
+        <% if @user.deleted? %>
+          <span class="<%= status_badge_classes(:canceled) %>">Eliminado</span>
+        <% elsif @user.pending? %>
+          <span class="<%= status_badge_classes(:pending) %>">Pendiente de reclamar</span>
+        <% else %>
+          <span class="<%= status_badge_classes(:active) %>">Registrado</span>
+        <% end %>
+      </h1>
+      <p class="text-sm text-[#2C3A43]/80 mt-1">
+        Registrado el <%= @user.created_at.strftime('%d/%m/%Y') %>
+        <% if @user.claimed_at.present? %> · reclamado el <%= @user.claimed_at.strftime('%d/%m/%Y') %><% end %>
+        <% if @user.deleted_at.present? %> · eliminado el <%= @user.deleted_at.strftime('%d/%m/%Y') %><% end %>
+      </p>
+    </div>
+    <div class="text-right">
+      <p class="papayal-meta">Saldo disponible</p>
+      <p class="text-3xl font-bold text-[#0D2F32]"><%= number_to_currency(@balance_cents / 100.0, unit: '$') %></p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 lg:col-span-5 papayal-card p-6 space-y-4">
+      <div>
+        <p class="papayal-meta">Cuenta</p>
+        <h2 class="text-lg font-semibold text-[#0D2F32]">Datos del usuario</h2>
+      </div>
+      <div class="grid grid-cols-1 gap-3 text-sm">
+        <% [
+          ["Correo", @user.placeholder_email? ? "(placeholder — solo teléfono)" : @user.email],
+          ["Teléfono", @user.phone.presence || "—"],
+          ["Cédula / ID", @user.national_id.presence || "—"],
+          ["Dirección", @user.address.presence || "—"],
+          ["País de residencia", @user.country_of_residence.presence || "—"],
+          ["Fecha de nacimiento", @user.date_of_birth&.strftime('%d/%m/%Y') || "—"],
+          ["Canal preferido", @user.preferred_channel.presence || "whatsapp (default)"],
+          ["Intereses", (@user.interests.presence || []).join(", ").presence || "—"]
+        ].each do |label, value| %>
+          <div class="p-3 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+            <p class="papayal-meta"><%= label %></p>
+            <p class="font-medium text-[#0D2F32] break-words"><%= value %></p>
+          </div>
+        <% end %>
+      </div>
+      <div class="grid grid-cols-2 gap-3 text-sm pt-2">
+        <div class="p-3 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+          <p class="papayal-meta">Sesiones activas</p>
+          <p class="font-semibold text-[#0D2F32]"><%= @active_sessions_count %></p>
+        </div>
+        <div class="p-3 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+          <p class="papayal-meta">Dispositivos push</p>
+          <p class="font-semibold text-[#0D2F32]"><%= @push_tokens_count %></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-span-12 lg:col-span-7 space-y-6">
+      <div class="papayal-card p-6">
+        <p class="papayal-meta mb-3">Tarjetas recibidas (últimas 5)</p>
+        <% if @received_gift_cards.any? %>
+          <div class="space-y-3">
+            <% @received_gift_cards.each do |card| %>
+              <div class="flex items-center justify-between rounded-2xl border border-black/5 px-4 py-3 bg-[#EBEBEB]/40">
+                <div>
+                  <p class="font-semibold text-[#0D2F32]"><%= number_to_currency(card.amount / 100.0, unit: '$') %> · <%= card.merchant&.store_name || "—" %></p>
+                  <p class="text-xs text-[#2C3A43]/70">De <%= card.sender&.name || "—" %> · <%= card.created_at.strftime('%d/%m/%Y') %> · saldo <%= number_to_currency(card.remaining_balance / 100.0, unit: '$') %></p>
+                </div>
+                <span class="<%= status_badge_classes(card.status) %>"><%= status_badge_label(card.status) %></span>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-sm text-[#2C3A43]/70 py-4 text-center">No ha recibido tarjetas.</p>
+        <% end %>
+      </div>
+
+      <div class="papayal-card p-6">
+        <p class="papayal-meta mb-3">Tarjetas enviadas (últimas 5)</p>
+        <% if @sent_gift_cards.any? %>
+          <div class="space-y-3">
+            <% @sent_gift_cards.each do |card| %>
+              <div class="flex items-center justify-between rounded-2xl border border-black/5 px-4 py-3 bg-[#EBEBEB]/40">
+                <div>
+                  <p class="font-semibold text-[#0D2F32]"><%= number_to_currency(card.amount / 100.0, unit: '$') %> · <%= card.merchant&.store_name || "—" %></p>
+                  <p class="text-xs text-[#2C3A43]/70">Para <%= card.recipient&.name || card.recipient&.email || "—" %> · <%= card.created_at.strftime('%d/%m/%Y') %></p>
+                </div>
+                <span class="<%= status_badge_classes(card.status) %>"><%= status_badge_label(card.status) %></span>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-sm text-[#2C3A43]/70 py-4 text-center">No ha enviado tarjetas.</p>
+        <% end %>
+      </div>
+
+      <div class="papayal-card p-6">
+        <p class="papayal-meta mb-3">Movimientos recientes</p>
+        <% if @recent_transactions.any? %>
+          <div class="overflow-x-auto rounded-2xl border border-black/5">
+            <table class="min-w-full divide-y divide-black/5 text-sm">
+              <tbody class="bg-white divide-y divide-black/5">
+                <% txn_labels = { "purchase" => "Compra", "redemption" => "Canje", "refund" => "Reembolso", "adjustment" => "Ajuste", "issuance" => "Emisión" } %>
+                <% @recent_transactions.each do |txn| %>
+                  <tr>
+                    <td class="px-4 py-2.5 font-medium text-[#0D2F32]"><%= txn_labels[txn.txn_type] || txn.txn_type %></td>
+                    <td class="px-4 py-2.5 text-[#2C3A43]/80"><%= txn.merchant&.store_name || "—" %></td>
+                    <td class="px-4 py-2.5 text-right font-semibold"><%= number_to_currency(txn.amount / 100.0, unit: '$') %></td>
+                    <td class="px-4 py-2.5"><%= txn.succeeded? ? "✓" : (txn.failed? ? "✗" : "…") %></td>
+                    <td class="px-4 py-2.5 text-[#2C3A43]/70"><%= txn.created_at.strftime('%d/%m %H:%M') %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <p class="text-sm text-[#2C3A43]/70 py-4 text-center">Sin movimientos.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

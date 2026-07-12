@@ -62,6 +62,9 @@ module Api
           contact_email: merchant.contact_email,
           address: merchant.address,
           categories: merchant.categories || [],
+          coverage_text: merchant.effective_coverage_text,
+          partner_redemption: merchant.partner_redemption,
+          redemption_partner_label: merchant.partner_redemption? ? merchant.redemption_partner_display : nil,
           created_at: merchant.created_at&.iso8601,
           updated_at: merchant.updated_at&.iso8601
         }

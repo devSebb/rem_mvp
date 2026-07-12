@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_05_100000) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_11_100001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -106,10 +106,26 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_05_100000) do
     t.string "secret_key_digest", null: false
     t.string "avatar_url"
     t.string "categories", default: [], array: true
+    t.boolean "partner_redemption", default: false, null: false
+    t.string "redemption_partner_label"
+    t.string "coverage_text"
     t.index ["public_key"], name: "index_merchants_on_public_key", unique: true
     t.index ["secret_key_digest"], name: "index_merchants_on_secret_key_digest", unique: true
     t.index ["store_name"], name: "index_merchants_on_store_name"
     t.index ["user_id"], name: "index_merchants_on_user_id"
+  end
+
+  create_table "platform_settings", force: :cascade do |t|
+    t.integer "buyer_fee_bps", default: 0, null: false
+    t.integer "buyer_fee_fixed_cents", default: 0, null: false
+    t.integer "merchant_commission_bps", default: 0, null: false
+    t.boolean "purchases_enabled", default: true, null: false
+    t.string "min_ios_version"
+    t.string "min_android_version"
+    t.bigint "updated_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["updated_by_id"], name: "index_platform_settings_on_updated_by_id"
   end
 
   create_table "push_tokens", force: :cascade do |t|
@@ -150,6 +166,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_05_100000) do
     t.bigint "paid_by_admin_id"
     t.string "payment_method"
     t.string "payment_reference"
+    t.integer "gross_amount"
+    t.integer "commission_amount", default: 0, null: false
+    t.integer "commission_bps", default: 0, null: false
     t.index ["merchant_id"], name: "index_settlements_on_merchant_id"
     t.index ["paid_by_admin_id"], name: "index_settlements_on_paid_by_admin_id"
     t.index ["payout_status"], name: "index_settlements_on_payout_status"
@@ -237,6 +256,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_05_100000) do
   add_foreign_key "gift_cards", "users", column: "recipient_id"
   add_foreign_key "gift_cards", "users", column: "sender_id"
   add_foreign_key "merchants", "users"
+  add_foreign_key "platform_settings", "users", column: "updated_by_id"
   add_foreign_key "push_tokens", "users"
   add_foreign_key "redemption_tokens", "gift_cards"
   add_foreign_key "settlements", "merchants"

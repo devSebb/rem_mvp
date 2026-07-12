@@ -1,4 +1,6 @@
 class MerchantsController < ApplicationController
+  include ConsumerWebGate
+
   before_action :authenticate_user!
 
   def show

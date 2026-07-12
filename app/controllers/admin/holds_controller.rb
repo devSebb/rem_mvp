@@ -1,5 +1,4 @@
-class Admin::HoldsController < ApplicationController
-  before_action :ensure_admin
+class Admin::HoldsController < Admin::BaseController
   before_action :set_gift_card, only: [:release]
 
   # Currently-held cards, ordered by hold expiration so the soonest-to-unlock
@@ -46,12 +45,6 @@ class Admin::HoldsController < ApplicationController
 
   private
 
-  def ensure_admin
-    unless current_user&.admin?
-      flash[:alert] = "Solo administradores pueden acceder."
-      redirect_to root_path
-    end
-  end
 
   def set_gift_card
     @gift_card = GiftCard.find(params[:id])

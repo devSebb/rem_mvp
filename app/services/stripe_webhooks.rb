@@ -120,11 +120,21 @@ class StripeWebhooks
 
     Rails.logger.info "✅ Merchant: #{merchant.store_name}"
 
+    # Face value = what the buyer chose (metadata written at checkout). The
+    # PI amount additionally includes the buyer service fee. Legacy PIs
+    # without the metadata predate fees: face value == charged amount.
+    # Distrust nonsensical metadata (zero/negative or above the charge).
+    subtotal_cents = metadata["subtotal_cents"].presence.to_i
+    if subtotal_cents <= 0 || subtotal_cents > payment_intent.amount
+      subtotal_cents = payment_intent.amount
+    end
+    buyer_fee_cents = payment_intent.amount - subtotal_cents
+
     # Validate amount (defense in depth - should already be validated at checkout)
-    if payment_intent.amount > GiftCard::MAX_AMOUNT_CENTS
+    if subtotal_cents > GiftCard::MAX_AMOUNT_CENTS
       raise UnfulfillablePaymentError.new(
         "amount_exceeds_max",
-        "Amount #{payment_intent.amount} exceeds maximum #{GiftCard::MAX_AMOUNT_CENTS} for payment intent #{payment_intent.id}"
+        "Amount #{subtotal_cents} exceeds maximum #{GiftCard::MAX_AMOUNT_CENTS} for payment intent #{payment_intent.id}"
       )
     end
 
@@ -155,10 +165,14 @@ class StripeWebhooks
       return
     end
 
+    # Retrieve the charge once: Radar risk assessment (security holds) and
+    # the balance transaction (actual Stripe processing cost) both live on it.
+    charge = retrieve_charge(payment_intent)
+
     # Read Stripe's Radar risk assessment so we can apply a security hold
     # on elevated-risk charges. score >= 75 is blocked by Stripe by default
     # so we should only see normal (0-64) or elevated (65-74) charges here.
-    risk = extract_risk_assessment(payment_intent)
+    risk = extract_risk_assessment(payment_intent, charge)
 
     # Create gift card safely (no expiration - gift cards never expire)
     begin
@@ -166,7 +180,7 @@ class StripeWebhooks
         sender: sender,
         recipient: recipient,
         merchant: merchant,
-        amount: payment_intent.amount, # Stripe gives amount in cents
+        amount: subtotal_cents, # face value in cents (charged total minus buyer fee)
         currency: payment_intent.currency&.upcase || "USD",
         payment_intent_id: payment_intent.id,
         expires_at: nil, # Gift cards never expire
@@ -212,8 +226,11 @@ class StripeWebhooks
         currency: gift_card.currency,
         metadata: {
           stripe_payment_intent_id: payment_intent.id,
-          customer_email: payment_intent.receipt_email
-        }
+          customer_email: payment_intent.receipt_email,
+          subtotal_cents: subtotal_cents,
+          fee_cents: buyer_fee_cents,
+          total_paid_cents: payment_intent.amount
+        }.merge(extract_processing_cost(charge))
       )
       Rails.logger.info "✅ Created purchase transaction for gift card #{gift_card.id}"
     else
@@ -317,23 +334,33 @@ class StripeWebhooks
   # Risk-scored security hold
   # ──────────────────────────────────────────────────────────────────────
 
-  # Pull Stripe Radar's risk assessment off the charge attached to the
-  # PaymentIntent. Returns { score:, level:, hold_until: } with hold_until
-  # set only when the score exceeds GiftCard::RISK_HOLD_THRESHOLD.
+  # Resolve the charge attached to the PaymentIntent.
   #
   # Current Stripe API versions expose the charge via `latest_charge` — a
   # charge ID string in webhook payloads (an expanded Stripe::Charge when
   # the caller requested expansion). NOTE: `payment_intent.charges` no
   # longer exists; reading it silently zeroed every risk score.
   #
+  # balance_transaction is expanded so the processing cost is available
+  # without a second API round-trip. Best-effort: returns nil on failure.
+  def self.retrieve_charge(payment_intent)
+    charge = payment_intent.try(:latest_charge)
+    charge = Stripe::Charge.retrieve({ id: charge, expand: ["balance_transaction"] }) if charge.is_a?(String)
+    charge
+  rescue => e
+    Rails.logger.warn "[Stripe] Failed to retrieve charge for PI #{payment_intent.id}: #{e.class} #{e.message}"
+    nil
+  end
+
+  # Pull Stripe Radar's risk assessment off the charge attached to the
+  # PaymentIntent. Returns { score:, level:, hold_until: } with hold_until
+  # set only when the score exceeds GiftCard::RISK_HOLD_THRESHOLD.
+  #
   # Defensive: if the charge or outcome is missing (test charges without
   # Radar), treat as zero risk — better to release the card than block it
   # on stale metadata. `try` is used so absent attributes return nil
   # instead of raising NoMethodError and silently zeroing real scores.
-  def self.extract_risk_assessment(payment_intent)
-    charge = payment_intent.try(:latest_charge)
-    charge = Stripe::Charge.retrieve(charge) if charge.is_a?(String)
-
+  def self.extract_risk_assessment(payment_intent, charge)
     if charge.nil?
       Rails.logger.warn "[Radar] No latest_charge on PI #{payment_intent.id}; treating as zero risk"
       return { score: 0, level: nil, hold_until: nil }
@@ -351,6 +378,27 @@ class StripeWebhooks
   rescue => e
     Rails.logger.warn "[Radar] Failed to extract risk assessment from PI #{payment_intent.id}: #{e.class} #{e.message}"
     { score: 0, level: nil, hold_until: nil }
+  end
+
+  # Actual Stripe processing cost for this charge, read from the balance
+  # transaction (expanded by retrieve_charge). Stored on the purchase ledger
+  # row so per-transaction economics (fee charged vs. cost paid) are
+  # queryable. Best-effort: any failure returns {} and never blocks fulfillment.
+  def self.extract_processing_cost(charge)
+    return {} if charge.nil?
+
+    balance_txn = charge.try(:balance_transaction)
+    # Without expansion this is just an id string; skip rather than fetch again.
+    return {} if balance_txn.nil? || balance_txn.is_a?(String)
+
+    {
+      stripe_fee_cents: balance_txn.try(:fee),
+      stripe_net_cents: balance_txn.try(:net),
+      stripe_balance_transaction_id: balance_txn.try(:id)
+    }.compact
+  rescue => e
+    Rails.logger.warn "[Fees] Failed to extract processing cost from charge #{charge.try(:id)}: #{e.class} #{e.message}"
+    {}
   end
 
   # ──────────────────────────────────────────────────────────────────────

@@ -60,6 +60,7 @@ module ApplicationHelper
 
   def navbar_home_path
     return merchant_root_path if merchant_nav_context?
+    return admin_root_path if current_user&.admin?
     return home_path if user_signed_in?
     root_path
   end

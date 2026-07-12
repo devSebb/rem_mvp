@@ -1,6 +1,10 @@
 class Merchant < ApplicationRecord
   include MerchantCategories
 
+  # Business deal with Farmaenlace: cards for partner-routed merchants are
+  # paid at these stores, which then reroute funds to the merchant off-platform.
+  DEFAULT_REDEMPTION_PARTNER_LABEL = "Medicity o Farmacias Económicas".freeze
+
   attr_reader :generated_secret_key
 
   belongs_to :user
@@ -47,6 +51,20 @@ class Merchant < ApplicationRecord
     return false if candidate.blank?
 
     ActiveSupport::SecurityUtils.secure_compare(secret_key_digest, candidate)
+  end
+
+  def redemption_partner_display
+    redemption_partner_label.presence || DEFAULT_REDEMPTION_PARTNER_LABEL
+  end
+
+  # Shown verbatim by the mobile app on the merchant profile ("Canje" section).
+  # Falls back to the partner disclaimer so flagged merchants surface it even
+  # when no custom coverage text has been written in the admin.
+  def effective_coverage_text
+    return coverage_text.strip if coverage_text.present?
+    return unless partner_redemption?
+
+    "Para canjear esta tarjeta, paga en #{redemption_partner_display}."
   end
 
   def admin_delete_blockers

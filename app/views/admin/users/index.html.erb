@@ -1,0 +1,93 @@
+<% content_for :title, "Papayal · Usuarios" %>
+<div class="space-y-8">
+  <div class="papayal-card p-6 flex flex-col gap-2">
+    <p class="papayal-meta text-[#0D2F32]">Centro de control</p>
+    <h1 class="text-2xl font-bold text-[#0D2F32]">Usuarios</h1>
+    <p class="text-sm text-[#2C3A43]/80">
+      Cuentas de clientes (solo lectura). <span class="font-semibold"><%= @total_count %></span> resultado<%= "s" unless @total_count == 1 %>.
+    </p>
+  </div>
+
+  <div class="papayal-card p-6 space-y-4">
+    <%= form_with url: admin_users_path, method: :get, local: true, class: "flex flex-col sm:flex-row gap-3" do %>
+      <input type="text" name="q" value="<%= @query %>" placeholder="Buscar por correo, teléfono, nombre o cédula…" class="papayal-input flex-1">
+      <input type="hidden" name="filter" value="<%= @filter %>">
+      <button type="submit" class="papayal-btn-primary">Buscar</button>
+      <% if @query.present? %>
+        <%= link_to "Limpiar", admin_users_path(filter: @filter), class: "papayal-btn-ghost" %>
+      <% end %>
+    <% end %>
+
+    <div class="flex flex-wrap gap-2">
+      <% { "all" => "Todos", "claimed" => "Registrados", "pending" => "Pendientes", "deleted" => "Eliminados" }.each do |key, label| %>
+        <%= link_to label, admin_users_path(filter: key, q: @query.presence),
+              class: "px-4 py-1.5 rounded-full text-sm font-medium border transition-colors #{@filter == key ? 'bg-[#0D2F32] text-white border-[#0D2F32]' : 'bg-white text-[#2C3A43] border-black/10 hover:border-[#FCA50F]/50'}" %>
+      <% end %>
+    </div>
+
+    <% if @users.any? %>
+      <div class="overflow-x-auto rounded-2xl border border-black/5">
+        <table class="min-w-full divide-y divide-black/5">
+          <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
+            <tr>
+              <th class="px-4 py-3">Usuario</th>
+              <th class="px-4 py-3">Contacto</th>
+              <th class="px-4 py-3">Estado</th>
+              <th class="px-4 py-3 text-right">Recibidas</th>
+              <th class="px-4 py-3 text-right">Enviadas</th>
+              <th class="px-4 py-3">Registro</th>
+              <th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-black/5 text-sm">
+            <% @users.each do |user| %>
+              <tr class="hover:bg-[#EBEBEB]/40 transition">
+                <td class="px-4 py-3">
+                  <p class="font-semibold text-[#0D2F32]"><%= user.name.presence || "—" %></p>
+                  <p class="text-xs text-[#2C3A43]/70">ID <%= user.id %></p>
+                </td>
+                <td class="px-4 py-3">
+                  <p class="text-[#2C3A43]"><%= user.placeholder_email? ? "(solo teléfono)" : user.email %></p>
+                  <p class="text-xs text-[#2C3A43]/70"><%= user.phone.presence || "—" %></p>
+                </td>
+                <td class="px-4 py-3">
+                  <% if user.deleted? %>
+                    <span class="<%= status_badge_classes(:canceled) %>">Eliminado</span>
+                  <% elsif user.pending? %>
+                    <span class="<%= status_badge_classes(:pending) %>">Pendiente</span>
+                  <% else %>
+                    <span class="<%= status_badge_classes(:active) %>">Registrado</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-right font-medium"><%= user.received_gift_cards.size %></td>
+                <td class="px-4 py-3 text-right text-[#2C3A43]/70"><%= user.sent_gift_cards.size %></td>
+                <td class="px-4 py-3 text-[#2C3A43]/70"><%= user.created_at.strftime('%d/%m/%Y') %></td>
+                <td class="px-4 py-3 text-right">
+                  <%= link_to "Ver", admin_user_path(user), class: "papayal-btn-ghost text-xs" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if @total_pages > 1 %>
+        <div class="flex items-center justify-between text-sm text-[#2C3A43]/70 pt-2">
+          <span>Página <%= @page %> de <%= @total_pages %></span>
+          <div class="flex gap-2">
+            <% if @page > 1 %>
+              <%= link_to "← Anterior", admin_users_path(filter: @filter, q: @query.presence, page: @page - 1), class: "papayal-btn-ghost text-xs" %>
+            <% end %>
+            <% if @page < @total_pages %>
+              <%= link_to "Siguiente →", admin_users_path(filter: @filter, q: @query.presence, page: @page + 1), class: "papayal-btn-ghost text-xs" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="text-center py-10 text-sm text-[#2C3A43]/70">
+        No se encontraron usuarios<%= " para \"#{@query}\"" if @query.present? %>.
+      </div>
+    <% end %>
+  </div>
+</div>

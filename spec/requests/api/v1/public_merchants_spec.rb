@@ -23,6 +23,25 @@ RSpec.describe "Api::V1::Public::Merchants", type: :request do
       expect(parsed_data.first).not_to have_key("secret_key_digest")
     end
 
+    it "exposes partner redemption disclaimers" do
+      partner = create(:merchant, store_name: "Botica Vida", partner_redemption: true)
+      direct = create(:merchant, store_name: "Directo", coverage_text: "Canjeable en 3 locales.")
+
+      get "/api/v1/public/merchants"
+
+      merchants = parsed_data.index_by { |merchant| merchant["id"] }
+      expect(merchants[partner.id]).to include(
+        "partner_redemption" => true,
+        "redemption_partner_label" => "Medicity o Farmacias Económicas",
+        "coverage_text" => "Para canjear esta tarjeta, paga en Medicity o Farmacias Económicas."
+      )
+      expect(merchants[direct.id]).to include(
+        "partner_redemption" => false,
+        "redemption_partner_label" => nil,
+        "coverage_text" => "Canjeable en 3 locales."
+      )
+    end
+
     it "filters active merchants by category" do
       bakery = create(:merchant, store_name: "Pan Fresco", categories: ["restaurantes"])
       create(:merchant, store_name: "Farmacia Norte", categories: ["salud_y_medicina"])

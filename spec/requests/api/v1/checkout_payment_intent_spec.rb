@@ -276,6 +276,82 @@ RSpec.describe "POST /api/v1/checkout/payment_intent", type: :request do
     end
   end
 
+  describe "fees and platform controls" do
+    before do
+      allow(Stripe::PaymentIntent).to receive(:create).and_return(
+        double(
+          id: "pi_test_123456",
+          client_secret: "pi_test_123456_secret_abc",
+          last_response: nil
+        )
+      )
+    end
+
+    it "returns a zero-fee quote with launch pricing" do
+      post "/api/v1/checkout/payment_intent",
+           params: valid_params.to_json,
+           headers: auth_headers(access_token)
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data["quote"]).to eq(
+        "subtotal_cents" => 2500,
+        "fee_cents" => 0,
+        "total_cents" => 2500,
+        "currency" => "USD"
+      )
+    end
+
+    it "charges subtotal + fee and records the breakdown in Stripe metadata when fees are configured" do
+      PlatformSetting.current.update!(buyer_fee_bps: 250, buyer_fee_fixed_cents: 30)
+
+      expect(Stripe::PaymentIntent).to receive(:create).with(
+        hash_including(
+          amount: 2593, # 2500 + 63 (2.5%) + 30 fixed
+          metadata: hash_including(subtotal_cents: "2500", fee_cents: "93")
+        ),
+        hash_including(:idempotency_key)
+      ).and_return(
+        double(
+          id: "pi_test_123456",
+          client_secret: "pi_test_123456_secret_abc",
+          last_response: nil
+        )
+      )
+
+      post "/api/v1/checkout/payment_intent",
+           params: valid_params.to_json,
+           headers: auth_headers(access_token)
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data["quote"]).to eq(
+        "subtotal_cents" => 2500,
+        "fee_cents" => 93,
+        "total_cents" => 2593,
+        "currency" => "USD"
+      )
+    end
+
+    it "rejects non-USD currencies" do
+      post "/api/v1/checkout/payment_intent",
+           params: valid_params.merge(currency: "EUR").to_json,
+           headers: auth_headers(access_token)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(parsed_error["code"]).to eq("invalid_currency")
+    end
+
+    it "returns 503 when purchases are disabled (kill switch)" do
+      PlatformSetting.current.update!(purchases_enabled: false)
+
+      post "/api/v1/checkout/payment_intent",
+           params: valid_params.to_json,
+           headers: auth_headers(access_token)
+
+      expect(response).to have_http_status(:service_unavailable)
+      expect(parsed_error["code"]).to eq("purchases_disabled")
+    end
+  end
+
   describe "Stripe error handling" do
     it "returns 500 with safe error message when Stripe fails" do
       allow(Stripe::PaymentIntent).to receive(:create).and_raise(

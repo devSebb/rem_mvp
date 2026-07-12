@@ -33,7 +33,10 @@ module Api
             name: merchant.name,
             logo_url: attachment_url(merchant.logo),
             address: merchant.address,
-            categories: merchant.categories || []
+            categories: merchant.categories || [],
+            coverage_text: merchant.effective_coverage_text,
+            partner_redemption: merchant.partner_redemption,
+            redemption_partner_label: merchant.partner_redemption? ? merchant.redemption_partner_display : nil
           }
         end
       end
