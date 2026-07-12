@@ -42,11 +42,26 @@
 
       <div class="hidden items-center gap-2 md:flex">
         <%= render "shared/language_toggle" %>
-        <%= link_to new_user_session_path, class: "marketing-login-btn" do %>
-          <%= localized_text es: "Iniciar Sesión", en: "Sign In" %>
-        <% end %>
-        <%= link_to new_user_registration_path, class: "marketing-signup-btn" do %>
-          <%= localized_text es: "Registrarse", en: "Sign Up" %>
+        <% if user_signed_in? %>
+          <% if current_user.merchant? %>
+            <%= link_to merchant_root_path, class: "marketing-signup-btn" do %>
+              <%= localized_text es: "Portal Comercio", en: "Merchant Portal" %>
+            <% end %>
+          <% elsif current_user.admin? %>
+            <%= link_to admin_root_path, class: "marketing-signup-btn" do %>
+              <%= localized_text es: "Panel Admin", en: "Admin Panel" %>
+            <% end %>
+          <% end %>
+          <%= button_to destroy_user_session_path, method: :delete, class: "marketing-login-btn", form: { class: "contents" } do %>
+            <%= localized_text es: "Cerrar Sesión", en: "Sign Out" %>
+          <% end %>
+        <% else %>
+          <%= link_to new_user_session_path, class: "marketing-login-btn" do %>
+            <%= localized_text es: "Iniciar Sesión", en: "Sign In" %>
+          <% end %>
+          <%= link_to new_user_registration_path, class: "marketing-signup-btn" do %>
+            <%= localized_text es: "Registrarse", en: "Sign Up" %>
+          <% end %>
         <% end %>
       </div>
     </div>
@@ -71,14 +86,31 @@
         <%= link_to contact_path, class: "marketing-mobile-link", data: { action: "click->marketing#closeMenu" } do %>
           <%= localized_text es: "Contacto", en: "Contact" %>
         <% end %>
-        <div class="mt-3 grid grid-cols-2 gap-2">
-          <%= link_to new_user_session_path, class: "marketing-login-btn text-center" do %>
-            <%= localized_text es: "Iniciar Sesión", en: "Sign In" %>
-          <% end %>
-          <%= link_to new_user_registration_path, class: "marketing-signup-btn text-center" do %>
-            <%= localized_text es: "Registrarse", en: "Sign Up" %>
-          <% end %>
-        </div>
+        <% if user_signed_in? %>
+          <div class="mt-3 grid gap-2 <%= current_user.merchant? || current_user.admin? ? "grid-cols-2" : "grid-cols-1" %>">
+            <% if current_user.merchant? %>
+              <%= link_to merchant_root_path, class: "marketing-signup-btn text-center" do %>
+                <%= localized_text es: "Portal Comercio", en: "Merchant Portal" %>
+              <% end %>
+            <% elsif current_user.admin? %>
+              <%= link_to admin_root_path, class: "marketing-signup-btn text-center" do %>
+                <%= localized_text es: "Panel Admin", en: "Admin Panel" %>
+              <% end %>
+            <% end %>
+            <%= button_to destroy_user_session_path, method: :delete, class: "marketing-login-btn w-full text-center", form: { class: "contents" } do %>
+              <%= localized_text es: "Cerrar Sesión", en: "Sign Out" %>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="mt-3 grid grid-cols-2 gap-2">
+            <%= link_to new_user_session_path, class: "marketing-login-btn text-center" do %>
+              <%= localized_text es: "Iniciar Sesión", en: "Sign In" %>
+            <% end %>
+            <%= link_to new_user_registration_path, class: "marketing-signup-btn text-center" do %>
+              <%= localized_text es: "Registrarse", en: "Sign Up" %>
+            <% end %>
+          </div>
+        <% end %>
       </div>
     </div>
   </nav>

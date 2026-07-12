@@ -17,6 +17,23 @@ RSpec.describe "Coming soon page and consumer web gating", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Tu cuenta ya está lista")
     end
+
+    it "gives signed-in consumers a way out (sign out)" do
+      sign_in create(:user)
+
+      get "/proximamente"
+      # Without a logout, a signed-in consumer is trapped: every consumer
+      # page redirects back here and the marketing navbar used to offer
+      # only Sign In / Sign Up.
+      expect(response.body).to include("Cerrar sesión")
+      expect(response.body).to include("Cerrar Sesión") # navbar button
+
+      delete destroy_user_session_path
+
+      expect(response).to redirect_to(root_path)
+      follow_redirect!
+      expect(response).to have_http_status(:ok)
+    end
   end
 
   describe "consumer web gating" do

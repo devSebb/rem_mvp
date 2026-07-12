@@ -14,11 +14,14 @@
       </p>
 
       <% if user_signed_in? %>
-        <div class="mt-6 inline-flex items-center gap-3 rounded-2xl border border-[#F4B126]/40 bg-[#F4B126]/10 px-5 py-4" data-reveal>
+        <div class="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-[#F4B126]/40 bg-[#F4B126]/10 px-5 py-4" data-reveal>
           <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-[#F4B126]"></span>
-          <p class="text-sm font-semibold text-[#2C3A43]">
+          <p class="flex-1 text-sm font-semibold text-[#2C3A43]">
             <%= localized_text es: "Tu cuenta ya está lista. Cuando la app esté disponible, inicia sesión con este mismo correo.", en: "Your account is ready. When the app is live, sign in with this same email." %>
           </p>
+          <%= button_to destroy_user_session_path, method: :delete, class: "text-sm font-bold text-[#14343A] underline underline-offset-2 hover:text-[#F4A20F]", form: { class: "contents" } do %>
+            <%= localized_text es: "Cerrar sesión", en: "Sign out" %>
+          <% end %>
         </div>
       <% end %>
 
