@@ -6,7 +6,10 @@ class GiftCardMailer < ApplicationMailer
     @gift_card = gift_card
     @recipient = gift_card.recipient
     @sender = gift_card.sender
-    @gift_card_url = gift_card_url(gift_card)
+    # Universal link: opens the app when installed, otherwise the branded
+    # claim page with the app-download funnel. Replaces the old web-wallet
+    # URL, which redirected consumers to /proximamente.
+    @claim_url = GiftCards::ClaimLink.url_for(gift_card)
 
     mail(
       to: @recipient.email,

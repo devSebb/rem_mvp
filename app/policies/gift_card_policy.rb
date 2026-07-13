@@ -35,6 +35,13 @@ class GiftCardPolicy < ApplicationPolicy
     user&.admin?
   end
 
+  # Sender-side sharing (claim link + resend of the delivery notification).
+  # Senders only: recipients already have the card in their wallet, and the
+  # claim link exists to hand the gift to its recipient.
+  def share?
+    user.present? && (record.sender == user || user.admin?)
+  end
+
   # Only recipients can transfer their gift cards
   def transfer?
     user.present? && record.recipient == user && record.active?

@@ -1,0 +1,110 @@
+<% set_locale_titles es: "Recibiste un regalo | Papayal", en: "You received a gift | Papayal" %>
+<% content_for :meta_description, "Alguien te envió una tarjeta de regalo Papayal. Descarga la app para reclamarla y usarla en comercios aliados de Ecuador." %>
+
+<% if @gift_card.present? && @gift_card.active? %>
+  <section class="marketing-hero overflow-hidden">
+    <div class="marketing-hero-grid"></div>
+    <div class="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-10 px-5 pb-16 pt-14 sm:px-6 md:pt-18 lg:grid-cols-12 lg:px-8 lg:pb-24">
+      <div class="relative z-10 lg:col-span-7">
+        <p class="marketing-pill" data-reveal>🎁 <%= localized_text es: "Tienes un regalo", en: "You have a gift" %></p>
+        <h1 class="marketing-hero-title" data-reveal>
+          <% sender_name = @gift_card.sender&.first_name.presence %>
+          <%= localized_text(
+            es: sender_name ? "#{sender_name} te envió una tarjeta de regalo." : "Te enviaron una tarjeta de regalo.",
+            en: sender_name ? "#{sender_name} sent you a gift card." : "Someone sent you a gift card."
+          ) %>
+        </h1>
+        <p class="marketing-hero-copy" data-reveal>
+          <%= localized_text es: "Descarga la app de Papayal y crea tu cuenta con el número de teléfono donde recibiste el mensaje. Tu tarjeta te estará esperando — sin fecha de vencimiento.", en: "Download the Papayal app and create your account with the phone number that received the message. Your card will be waiting — it never expires." %>
+        </p>
+
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row" data-reveal>
+          <% if @download_url.present? %>
+            <%= link_to @download_url, class: "marketing-signup-btn h-13 px-7 text-base", rel: "noopener" do %>
+              <%= localized_text es: "Descargar Papayal", en: "Download Papayal" %>
+            <% end %>
+          <% else %>
+            <div class="marketing-secondary-btn h-13 cursor-default select-none px-7 text-base opacity-80">
+              <span><%= localized_text es: "App Store — muy pronto", en: "App Store — coming soon" %></span>
+            </div>
+          <% end %>
+          <%= link_to @app_scheme_url, class: "marketing-secondary-btn h-13 px-7 text-base" do %>
+            <%= localized_text es: "Ya tengo la app", en: "I already have the app" %>
+          <% end %>
+        </div>
+
+        <div class="marketing-trust-row" data-reveal>
+          <% [
+            ["Reclamo verificado con código", "Claim verified with a code"],
+            ["Sin fecha de vencimiento", "Never expires"],
+            ["Canje en comercios aliados", "Redeem at partner merchants"]
+          ].each do |es_label, en_label| %>
+            <span><%= localized_text es: es_label, en: en_label %></span>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="lg:col-span-5">
+        <div class="marketing-about-card" data-reveal>
+          <p class="text-sm font-bold uppercase text-[#F4B126]"><%= localized_text es: "Tu regalo", en: "Your gift" %></p>
+
+          <div class="mt-6 flex items-center gap-4">
+            <% if @gift_card.merchant&.logo&.attached? %>
+              <%= image_tag url_for(@gift_card.merchant.logo), alt: @gift_card.merchant.store_name, class: "h-14 w-14 rounded-2xl bg-white object-contain p-1" %>
+            <% end %>
+            <div>
+              <p class="text-lg font-bold text-white"><%= @gift_card.merchant&.store_name || "Papayal" %></p>
+              <p class="text-sm font-semibold text-white/70"><%= localized_text es: "Tarjeta de regalo digital", en: "Digital gift card" %></p>
+            </div>
+          </div>
+
+          <p class="mt-6 text-5xl font-extrabold tracking-tight text-white">
+            <%= @gift_card.currency %> <%= format("%.2f", @gift_card.amount / 100.0) %>
+          </p>
+
+          <% if @gift_card.note.present? %>
+            <p class="mt-5 rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-base font-medium italic leading-6 text-white/90">
+              “<%= @gift_card.note %>”
+            </p>
+          <% end %>
+
+          <ul class="mt-6 space-y-4">
+            <% [
+              ["Descarga la app de Papayal.", "Download the Papayal app."],
+              ["Crea tu cuenta con el número que recibió este enlace.", "Create your account with the number that received this link."],
+              ["Confirma el código de verificación y tu tarjeta aparecerá en tu billetera.", "Confirm the verification code and your card will appear in your wallet."]
+            ].each_with_index do |(es_text, en_text), i| %>
+              <li class="flex gap-3">
+                <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F4B126] text-sm font-extrabold text-[#14343A]"><%= i + 1 %></span>
+                <span class="text-base font-semibold leading-6 text-white"><%= localized_text es: es_text, en: en_text %></span>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+<% else %>
+  <section class="marketing-hero overflow-hidden">
+    <div class="marketing-hero-grid"></div>
+    <div class="mx-auto w-full max-w-3xl px-5 pb-20 pt-16 text-center sm:px-6 lg:px-8">
+      <p class="marketing-pill mx-auto" data-reveal><%= localized_text es: "Enlace no disponible", en: "Link unavailable" %></p>
+      <h1 class="marketing-hero-title" data-reveal>
+        <%= localized_text es: "Este enlace ya no está activo.", en: "This link is no longer active." %>
+      </h1>
+      <p class="marketing-hero-copy mx-auto" data-reveal>
+        <%= localized_text es: "Puede que la tarjeta ya haya sido reclamada o que el enlace haya expirado. Si crees que es un error, pide a quien te la envió que la comparta de nuevo desde la app, o escríbenos.", en: "The card may already be claimed or the link may have expired. If you think this is a mistake, ask the sender to share it again from the app, or contact us." %>
+      </p>
+      <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row" data-reveal>
+        <% if @download_url.present? %>
+          <%= link_to @download_url, class: "marketing-signup-btn h-13 px-7 text-base", rel: "noopener" do %>
+            <%= localized_text es: "Descargar Papayal", en: "Download Papayal" %>
+          <% end %>
+        <% end %>
+        <%= link_to contact_path, class: "marketing-secondary-btn h-13 px-7 text-base" do %>
+          <%= localized_text es: "Contactar soporte", en: "Contact support" %>
+        <% end %>
+      </div>
+    </div>
+  </section>
+<% end %>

@@ -23,6 +23,16 @@ Rails.application.routes.draw do
   # by emailing support. The actual deletion runs through Users::DeleteAccount.
   get "eliminar-cuenta", to: "users/deletion_requests#new", as: :delete_account
 
+  # Universal-link association files (iOS applinks / Android app links).
+  # Served by a controller (not public/) to guarantee application/json.
+  get ".well-known/apple-app-site-association", to: "well_known#apple_app_site_association"
+  get ".well-known/assetlinks.json", to: "well_known#assetlinks"
+
+  # Web fallbacks for the app's universal links. With the app installed the
+  # OS opens it directly; without it these pages funnel to the download.
+  get "claim/:token", to: "app_links#claim", as: :claim_link
+  get "reset", to: "app_links#reset", as: :reset_link
+
   # Web purchase flow removed — purchases are done exclusively through the
   # mobile app. Web wallet (index/show) and transfers remain available.
   resources :gift_cards, only: [:index, :show] do
@@ -69,6 +79,9 @@ Rails.application.routes.draw do
       # Public remote config (fees, limits, kill switches, min app versions)
       get "config", to: "config#show"
 
+      # Public claim-link teaser (unauthenticated; throttled in rack_attack)
+      get "claim/:token", to: "claim_links#show"
+
       # Mobile post-checkout polling: returns the buyer's gift card for a
       # Stripe payment intent once the webhook has created it (404 until then).
       get "gift_cards/by_payment_intent/:payment_intent_id", to: "me/gift_cards#by_payment_intent"
@@ -76,6 +89,11 @@ Rails.application.routes.draw do
       namespace :me do
         resources :gift_cards, only: [:index, :show] do
           post :redemption_token, on: :member
+          # Sender-side sharing: a claim URL + prewritten message for the
+          # native share sheet, and a throttled re-delivery of the original
+          # WhatsApp/SMS/email notification.
+          post :share_link, on: :member
+          post :resend, on: :member
         end
         resource :push_tokens, only: [:create, :destroy]
       end

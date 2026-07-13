@@ -1,0 +1,30 @@
+<% set_locale_titles es: "Restablece tu contraseña | Papayal", en: "Reset your password | Papayal" %>
+<% content_for :meta_description, "Restablece la contraseña de tu cuenta Papayal desde la app móvil." %>
+
+<section class="marketing-hero overflow-hidden">
+  <div class="marketing-hero-grid"></div>
+  <div class="mx-auto w-full max-w-3xl px-5 pb-20 pt-16 text-center sm:px-6 lg:px-8">
+    <p class="marketing-pill mx-auto" data-reveal><%= localized_text es: "Recuperación de contraseña", en: "Password recovery" %></p>
+    <h1 class="marketing-hero-title" data-reveal>
+      <%= localized_text es: "Restablece tu contraseña en la app.", en: "Reset your password in the app." %>
+    </h1>
+    <p class="marketing-hero-copy mx-auto" data-reveal>
+      <%= localized_text es: "Por seguridad, el cambio de contraseña se completa dentro de la app de Papayal. Si la tienes instalada, este enlace la abre directamente. Si no, descárgala y usa el código de recuperación que te enviamos por correo: Iniciar sesión → ¿Olvidaste tu contraseña? → Ya tengo mi código.", en: "For security, password changes are completed inside the Papayal app. If it is installed, this link opens it directly. Otherwise, download it and use the recovery code we emailed you: Sign in → Forgot your password? → I already have my code." %>
+    </p>
+    <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row" data-reveal>
+      <% if @app_scheme_url.present? %>
+        <%= link_to @app_scheme_url, class: "marketing-signup-btn h-13 px-7 text-base" do %>
+          <%= localized_text es: "Abrir en la app", en: "Open in the app" %>
+        <% end %>
+      <% end %>
+      <% if @download_url.present? %>
+        <%= link_to @download_url, class: "marketing-secondary-btn h-13 px-7 text-base", rel: "noopener" do %>
+          <%= localized_text es: "Descargar Papayal", en: "Download Papayal" %>
+        <% end %>
+      <% end %>
+    </div>
+    <p class="mx-auto mt-6 max-w-xl text-sm font-semibold text-[#2C3A43]/70" data-reveal>
+      <%= localized_text es: "El código de recuperación vence en 6 horas. Si no solicitaste este cambio, puedes ignorar el correo.", en: "The recovery code expires in 6 hours. If you did not request this change, you can ignore the email." %>
+    </p>
+  </div>
+</section>

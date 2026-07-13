@@ -79,6 +79,36 @@ class Rack::Attack
     end
   end
 
+  # Claim-link teaser lookups (public, unauthenticated): caps token guessing.
+  # Tokens are 128-bit HMACs so guessing is hopeless anyway; this just keeps
+  # scanners from hammering the endpoint.
+  throttle('api/claim_link/ip', limit: 30, period: 5.minutes) do |req|
+    if req.path.start_with?('/api/v1/claim/') && req.get?
+      req.ip
+    end
+  end
+
+  # Same for the public claim web page.
+  throttle('web/claim/ip', limit: 60, period: 5.minutes) do |req|
+    if req.path.start_with?('/claim/') && req.get?
+      req.ip
+    end
+  end
+
+  # Sender-side share/resend. Resend also has per-card service-level limits
+  # (GiftCards::ResendDelivery); this adds a per-IP backstop.
+  throttle('api/me/share_link/ip', limit: 30, period: 5.minutes) do |req|
+    if req.path =~ %r{\A/api/v1/me/gift_cards/\d+/share_link\z} && req.post?
+      req.ip
+    end
+  end
+
+  throttle('api/me/resend/ip', limit: 10, period: 5.minutes) do |req|
+    if req.path =~ %r{\A/api/v1/me/gift_cards/\d+/resend\z} && req.post?
+      req.ip
+    end
+  end
+
   # Throttle login attempts by email
   throttle('login/email', limit: 5, period: 20.minutes) do |req|
     if req.path == '/users/sign_in' && req.post? && req.params['user']

@@ -2,7 +2,7 @@ module Api
   module V1
     module Me
       class GiftCardsController < Api::V1::BaseController
-        before_action :set_gift_card, only: [:show, :redemption_token]
+        before_action :set_gift_card, only: [:show, :redemption_token, :share_link, :resend]
 
         def index
           gift_cards = policy_scope(GiftCard)
@@ -58,7 +58,71 @@ module Api
           )
         end
 
+        # Sender-side sharing for the native share sheet: the claim URL plus
+        # a prewritten message. Copy lives server-side so wording can be
+        # tuned without an app release. The link is a doorway, not a key —
+        # claiming still requires the recipient's OTP at signup.
+        def share_link
+          authorize @gift_card, :share?
+
+          unless @gift_card.active?
+            return render_error(
+              code: "gift_card.inactive",
+              message: "Tarjeta inactiva o no disponible",
+              status: :unprocessable_entity
+            )
+          end
+
+          claim_url = ::GiftCards::ClaimLink.url_for(@gift_card)
+
+          render_success(
+            data: {
+              claim_url: claim_url,
+              message: share_message(claim_url)
+            }
+          )
+        end
+
+        # Sender-triggered re-delivery of the original notification
+        # (WhatsApp/SMS/email/push). Throttled per card in
+        # GiftCards::ResendDelivery so it can't spam the recipient.
+        def resend
+          authorize @gift_card, :share?
+
+          unless @gift_card.active?
+            return render_error(
+              code: "gift_card.inactive",
+              message: "Tarjeta inactiva o no disponible",
+              status: :unprocessable_entity
+            )
+          end
+
+          ::GiftCards::ResendDelivery.call(gift_card: @gift_card)
+
+          render_success(data: { resent: true })
+        rescue ::GiftCards::ResendDelivery::Throttled => e
+          render_error(
+            code: "gift_card.resend_throttled",
+            message: "Ya reenviamos la notificación hace poco. Intenta de nuevo más tarde.",
+            status: :too_many_requests,
+            details: { retry_in_seconds: e.retry_in_seconds }
+          )
+        end
+
         private
+
+        def share_message(claim_url)
+          amount_label = "#{@gift_card.currency} #{format("%.2f", @gift_card.amount / 100.0)}"
+          merchant_name = @gift_card.merchant&.store_name || "Papayal"
+
+          <<~MESSAGE.strip
+            🎁 ¡Te envié un regalo! Una tarjeta de #{amount_label} para #{merchant_name} en Papayal.
+
+            👉 Reclámala aquí: #{claim_url}
+
+            Crea tu cuenta con tu número de teléfono y la tarjeta te estará esperando. Sin fecha de vencimiento. 🎉
+          MESSAGE
+        end
 
         def set_gift_card
           @gift_card = policy_scope(GiftCard)

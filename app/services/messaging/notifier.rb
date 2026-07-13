@@ -36,6 +36,29 @@ module Messaging
       results
     end
 
+    # Sender-triggered re-delivery: same channels as send_all_notifications
+    # but ignoring the sent_via_* first-delivery guards. Flags are still
+    # updated on success so a failed first delivery repaired by a resend is
+    # recorded. Throttled upstream in GiftCards::ResendDelivery.
+    def resend_delivery
+      results = {}
+
+      if @recipient&.phone.present?
+        phone_result = send_phone_channel
+        results[phone_result[:via]] = phone_result if phone_result[:via]
+      end
+
+      if @recipient&.email.present? && !@recipient.placeholder_email?
+        results[:email] = send_email
+      end
+
+      results[:push] = send_push
+
+      update_delivery_flags(results)
+
+      results
+    end
+
     # Sends via the user's preferred phone channel. If preference is :whatsapp
     # (default) and WhatsApp delivery fails, automatically falls back to SMS.
     # Returns a hash with :via (:whatsapp or :sms) plus the underlying result.
@@ -148,32 +171,42 @@ module Messaging
 
     private
 
+    # Delivery messages carry the claim link, never a redemption code:
+    # merchants only accept the short-lived in-app QR token, so a code in a
+    # message can't be redeemed — and anything shareable must stay a doorway
+    # (the claim itself is OTP-verified at signup).
     def whatsapp_message
-      raw_code = @gift_card.raw_code || @gift_card.generate_code!
       <<~MESSAGE
         🎁 ¡Recibiste una tarjeta de regalo Papayal!
 
-        💰 Monto: #{@gift_card.currency} #{format("%.2f", @gift_card.amount / 100.0)}
+        💰 Monto: #{amount_label}
         👤 De: #{@sender.name}
+        🏪 Canjéala en: #{merchant_label}
 
-        🎫 Tu código: #{raw_code}
+        👉 Reclámala aquí: #{claim_url}
 
-        📱 Muestra este código en cualquier comercio participante
-        ⏰ Sin fecha de vencimiento — úsalo cuando quieras
-
-        ¡Gracias por usar Papayal! 🎉
+        Descarga la app, crea tu cuenta con este número y tu tarjeta te estará esperando. Sin fecha de vencimiento. 🎉
       MESSAGE
     end
 
     def sms_message
-      raw_code = @gift_card.raw_code || @gift_card.generate_code!
       <<~MESSAGE
-        🎁 Tarjeta de regalo Papayal recibida.
-        Monto: #{@gift_card.currency} #{format("%.2f", @gift_card.amount / 100.0)}
-        De: #{@sender.name}
-        Código: #{raw_code}
-        Muéstralo en caja. Sin vencimiento.
+        🎁 Recibiste #{amount_label} en Papayal, de #{@sender.name}.
+        Reclámala aquí: #{claim_url}
+        Sin vencimiento.
       MESSAGE
+    end
+
+    def claim_url
+      @claim_url ||= GiftCards::ClaimLink.url_for(@gift_card)
+    end
+
+    def amount_label
+      "#{@gift_card.currency} #{format("%.2f", @gift_card.amount / 100.0)}"
+    end
+
+    def merchant_label
+      @gift_card.merchant&.store_name || "comercios aliados"
     end
 
     def update_delivery_flags(results)
