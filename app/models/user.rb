@@ -10,6 +10,11 @@ class User < ApplicationRecord
 
   attr_accessor :skip_national_id_validation
   attr_accessor :terms_accepted
+  # Set to true by the mobile API signup path so a fresh account is created
+  # UNVERIFIED (email_verified_at stays nil) and must confirm an emailed code
+  # before any tokens are issued. All other creation paths (web signup,
+  # console, tests) leave this nil and are auto-verified on create.
+  attr_accessor :require_email_verification
   # Set to true when the Stripe webhook creates a recipient shell. Suppresses
   # the default-claim callback so claimed_at stays nil until the real owner
   # signs up. All other code paths (web signup, API signup, console) leave
@@ -58,6 +63,7 @@ class User < ApplicationRecord
   end
 
   before_validation :default_claimed_at_on_create, on: :create
+  before_validation :default_email_verified_on_create, on: :create
   before_validation :normalize_contact_fields
   before_validation :sync_name_fields
   before_validation :normalize_national_id
@@ -100,6 +106,13 @@ class User < ApplicationRecord
     deleted_at.present?
   end
 
+  # A user has verified their email once they've confirmed the emailed code
+  # (or was auto-verified on a non-mobile-signup path / backfilled). The
+  # mobile API refuses to issue tokens until this is true.
+  def email_verified?
+    email_verified_at.present?
+  end
+
   # Deterministic placeholder email for a deleted account.
   def self.deleted_email_for(id)
     "#{DELETED_EMAIL_PREFIX}#{id}@#{CLAIM_EMAIL_DOMAIN}"
@@ -127,10 +140,23 @@ class User < ApplicationRecord
     self.claimed_at ||= Time.current
   end
 
+  # Auto-verify every creation path EXCEPT the mobile API fresh signup
+  # (which sets require_email_verification and drives the emailed-code flow)
+  # and pending-recipient shells (verified when their owner claims them).
+  def default_email_verified_on_create
+    return if require_email_verification
+    return if pending_recipient
+    self.email_verified_at ||= Time.current
+  end
+
   def send_welcome_email_if_real_signup
     return if pending_recipient
     return if placeholder_email?
     return unless claimed?
+    # Unverified fresh signups get their welcome only after they confirm the
+    # emailed code (sent explicitly from the verification endpoint) — we
+    # don't welcome an address we haven't confirmed is real and reachable.
+    return unless email_verified?
 
     WelcomeMailer.welcome(id).deliver_later
   end

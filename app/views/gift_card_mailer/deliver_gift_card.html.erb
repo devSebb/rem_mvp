@@ -1,119 +1,84 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>¡Recibiste una tarjeta de regalo Papayal!</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #f8f9fa;
-    }
-    .container {
-      background: white;
-      border-radius: 12px;
-      padding: 40px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .gift-icon {
-      font-size: 48px;
-      margin-bottom: 20px;
-    }
-    .amount {
-      font-size: 32px;
-      font-weight: bold;
-      color: #10b981;
-      margin: 20px 0;
-    }
-    .sender-info {
-      background: #f3f4f6;
-      padding: 20px;
-      border-radius: 8px;
-      margin: 20px 0;
-    }
-    .cta-button {
-      display: inline-block;
-      background: #10b981;
-      color: white;
-      padding: 16px 32px;
-      text-decoration: none;
-      border-radius: 8px;
-      font-weight: bold;
-      margin: 20px 0;
-      text-align: center;
-    }
-    .security-info {
-      background: #fef3c7;
-      border: 1px solid #f59e0b;
-      padding: 16px;
-      border-radius: 8px;
-      margin: 20px 0;
-    }
-    .expiry-info {
-      background: #fef3c7;
-      border: 1px solid #f59e0b;
-      padding: 16px;
-      border-radius: 8px;
-      margin: 20px 0;
-    }
-    .footer {
-      text-align: center;
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px solid #e5e7eb;
-      color: #6b7280;
-      font-size: 14px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="gift-icon">🎁</div>
-      <h1>¡Recibiste una tarjeta de regalo Papayal!</h1>
-    </div>
+<% content_for :preview_title, "Recibiste una tarjeta de regalo Papayal" %>
+<% content_for :preheader do %><%= @sender.name %> te envió una tarjeta de regalo de <%= @gift_card.currency %> <%= format("%.2f", @gift_card.amount / 100.0) %>.<% end %>
 
-    <div class="amount">
-      <%= @gift_card.currency %> <%= format("%.2f", @gift_card.amount / 100.0) %>
-    </div>
+<!-- Eyebrow -->
+<div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:14px;">
+  Recibiste un regalo
+</div>
 
-    <div class="sender-info">
-      <strong>De:</strong> <%= @sender.name %><br>
-      <strong>Email:</strong> <%= @sender.email %>
-    </div>
+<h1 style="margin:0 0 18px 0; font-size:30px; line-height:1.2; font-weight:800; letter-spacing:-0.8px; color:#0D2F32;">
+  ¡Tienes una tarjeta de regalo Papayal!
+</h1>
 
-    <div class="security-info">
-      <strong>🔒 Importante:</strong><br>
+<p style="margin:0 0 22px 0; font-size:16px; line-height:1.65; color:#2C3A43;">
+  <%= @sender.name %> te envió una tarjeta de regalo para que la disfrutes en los comercios afiliados de Papayal.
+</p>
+
+<!-- Amount -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">
+  <tr>
+    <td align="center" style="padding:22px 0; background-color:#FDF1E1; border:1px solid #F1E2CB; border-radius:16px;">
+      <div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:6px;">
+        Monto
+      </div>
+      <div style="font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:38px; font-weight:800; letter-spacing:-1px; color:#0D2F32;">
+        <%= @gift_card.currency %> <%= format("%.2f", @gift_card.amount / 100.0) %>
+      </div>
+    </td>
+  </tr>
+</table>
+
+<!-- Sender info -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">
+  <tr>
+    <td style="padding:16px 18px; background-color:#FFFFFF; border:1px solid #F1E2CB; border-radius:12px; font-size:15px; line-height:1.6; color:#2C3A43;">
+      <strong style="color:#0D2F32;">De:</strong> <%= @sender.name %><br>
+      <strong style="color:#0D2F32;">Email:</strong> <%= @sender.email %>
+    </td>
+  </tr>
+</table>
+
+<!-- Security notice -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px 0;">
+  <tr>
+    <td style="padding:16px 18px; background-color:#FDF1E1; border:1px solid #F1E2CB; border-radius:12px; font-size:14px; line-height:1.6; color:#2C3A43;">
+      <strong style="color:#0D2F32;">🔒 Importante:</strong><br>
       Por seguridad, el QR y el código de canje no se envían por correo. Abre Papayal cuando estés listo para usar tu tarjeta y genera un código vigente desde la app.
-    </div>
+    </td>
+  </tr>
+</table>
 
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="<%= @gift_card_url %>" class="cta-button">Ver mi tarjeta en Papayal</a>
-    </div>
+<!-- CTA -->
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 28px auto;">
+  <tr>
+    <td align="center" bgcolor="#FCA50F" style="border-radius:999px;">
+      <a href="<%= @gift_card_url %>" class="pyl-btn"
+         style="display:inline-block; padding:15px 38px; font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:16px; font-weight:700; color:#3A1E00; text-decoration:none; border-radius:999px;">
+        Ver mi tarjeta en Papayal
+      </a>
+    </td>
+  </tr>
+</table>
 
-    <div style="margin: 30px 0; padding: 20px; background: #f9fafb; border-radius: 8px;">
-      <h3>Cómo canjear:</h3>
-      <ol>
-        <li>Abre Papayal e ingresa a tu billetera.</li>
-        <li>Selecciona esta tarjeta de regalo.</li>
-        <li>Genera el QR o código de canje dentro de la app.</li>
-        <li>Muéstralo al cajero del comercio participante.</li>
-      </ol>
-    </div>
-
-    <div class="footer">
-      <p>Gracias por usar Papayal 🎉</p>
-      <p>Si tienes dudas, escríbenos a hola@papayal.app</p>
-    </div>
-  </div>
-</body>
-</html>
+<!-- How to redeem -->
+<div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:12px;">
+  Cómo canjear
+</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 4px 0;">
+  <tr>
+    <td width="34" valign="top" style="padding:8px 0; font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:16px; font-weight:800; color:#E08A00;">1</td>
+    <td style="padding:8px 0; font-size:15px; line-height:1.55; color:#2C3A43;">Abre Papayal e ingresa a tu billetera.</td>
+  </tr>
+  <tr>
+    <td width="34" valign="top" style="padding:8px 0; font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:16px; font-weight:800; color:#E08A00;">2</td>
+    <td style="padding:8px 0; font-size:15px; line-height:1.55; color:#2C3A43;">Selecciona esta tarjeta de regalo.</td>
+  </tr>
+  <tr>
+    <td width="34" valign="top" style="padding:8px 0; font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:16px; font-weight:800; color:#E08A00;">3</td>
+    <td style="padding:8px 0; font-size:15px; line-height:1.55; color:#2C3A43;">Genera el QR o código de canje dentro de la app.</td>
+  </tr>
+  <tr>
+    <td width="34" valign="top" style="padding:8px 0; font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:16px; font-weight:800; color:#E08A00;">4</td>
+    <td style="padding:8px 0; font-size:15px; line-height:1.55; color:#2C3A43;">Muéstralo al cajero del comercio participante.</td>
+  </tr>
+</table>

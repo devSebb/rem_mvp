@@ -1,4 +1,5 @@
 class GiftCardMailer < ApplicationMailer
+  layout "branded_mailer"
   default from: ENV['DEFAULT_FROM_EMAIL'] || 'hola@papayal.app'
 
   def deliver_gift_card(gift_card)

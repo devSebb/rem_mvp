@@ -1,4 +1,5 @@
 class AdminAlertMailer < ApplicationMailer
+  layout "branded_mailer"
   # Internal alerts to the admin team. Recipient comes from
   # ENV['ADMIN_ALERT_EMAIL'] (e.g., hola@papayal.app forwarded via
   # Cloudflare Email Routing). Subject prefixed [DISPUTE]/[ALERT] for

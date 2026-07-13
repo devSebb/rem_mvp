@@ -1,4 +1,5 @@
 class AccountDeletionMailer < ApplicationMailer
+  layout "branded_mailer"
   # Sent after a user account is permanently deleted. We pass user_id +
   # original_email explicitly because by the time this job runs, the user
   # row has been anonymized (email = deleted+<id>@papayal.app), and we

@@ -1,0 +1,25 @@
+¡Gracias por tu compra!
+
+Tu tarjeta de regalo ya está en camino a <%= @recipient_label %>.
+Aquí tienes el recibo de tu compra.
+
+TOTAL PAGADO: <%= @currency %> <%= format("%.2f", @total_cents / 100.0) %>
+
+Comercio:            <%= @merchant&.name %>
+Enviada a:           <%= @recipient_label %>
+Valor de la tarjeta: <%= @currency %> <%= format("%.2f", @subtotal_cents / 100.0) %>
+<% if @fee_cents.positive? -%>
+Costo de servicio:   <%= @currency %> <%= format("%.2f", @fee_cents / 100.0) %>
+<% end -%>
+Total:               <%= @currency %> <%= format("%.2f", @total_cents / 100.0) %>
+
+<% if @reference.present? -%>
+Referencia: <%= @reference %>
+<% end -%>
+<% if @purchased_at_str.present? -%>
+Fecha: <%= @purchased_at_str %>
+<% end -%>
+
+¿Preguntas? Escríbenos a <%= @support_email %>.
+
+Papayal — Tarjetas de regalo digitales · Ecuador

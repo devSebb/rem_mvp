@@ -251,7 +251,7 @@ RSpec.describe "Pending account claim verification", type: :request do
   end
 
   describe "signup without a pending match" do
-    it "creates a brand-new user with no OTP challenge" do
+    it "creates a brand-new unverified user and challenges for email verification (no claim OTP)" do
       fresh_params = signup_params.merge(
         email: "fresh.user@example.com",
         phone: "+593987654321"
@@ -262,11 +262,15 @@ RSpec.describe "Pending account claim verification", type: :request do
       end.to change(User, :count).by(1)
 
       expect(response).to have_http_status(:ok)
-      expect(parsed_data["access_token"]).to be_present
+      # No pending match → no claim OTP challenge, but a fresh signup must
+      # still verify its email before tokens are issued.
+      expect(parsed_data["verification_required"]).to eq(true)
+      expect(parsed_data["access_token"]).to be_nil
 
       new_user = User.find_by(email: "fresh.user@example.com")
       expect(new_user.claimed_at).to be_present
       expect(new_user.claim_otp_digest).to be_nil
+      expect(new_user.email_verified_at).to be_nil
     end
   end
 

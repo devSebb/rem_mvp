@@ -6,6 +6,7 @@ export default class extends Controller {
     "menuButton",
     "newsletterStatus",
     "contactStatus",
+    "contactError",
     "heroParallaxItem",
     "countup"
   ]
@@ -64,10 +65,40 @@ export default class extends Controller {
 
   handleContactSubmit(event) {
     event.preventDefault()
-    if (!this.hasContactStatusTarget) return
 
-    this.contactStatusTarget.classList.remove("hidden")
-    event.target.reset()
+    const form = event.target
+    const submitButton = form.querySelector('button[type="submit"]')
+    const token = document.querySelector('meta[name="csrf-token"]')?.content
+
+    const payload = {
+      name: form.querySelector("#contact-name")?.value.trim() || "",
+      email: form.querySelector("#contact-email")?.value.trim() || "",
+      message: form.querySelector("#contact-message")?.value.trim() || ""
+    }
+
+    if (this.hasContactErrorTarget) this.contactErrorTarget.classList.add("hidden")
+    if (submitButton) submitButton.disabled = true
+
+    fetch("/contact", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "X-CSRF-Token": token || ""
+      },
+      body: JSON.stringify(payload)
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error("Request failed")
+        if (this.hasContactStatusTarget) this.contactStatusTarget.classList.remove("hidden")
+        form.reset()
+      })
+      .catch(() => {
+        if (this.hasContactErrorTarget) this.contactErrorTarget.classList.remove("hidden")
+      })
+      .finally(() => {
+        if (submitButton) submitButton.disabled = false
+      })
   }
 
   handleHeroParallax(event) {

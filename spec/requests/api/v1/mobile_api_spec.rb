@@ -17,19 +17,47 @@ RSpec.describe "Mobile API", type: :request do
       }
     end
 
-    it "returns tokens and creates a User" do
+    it "creates an unverified User and returns a verification challenge (no tokens yet)" do
       expect do
         post "/api/v1/auth/signup",
              params: signup_params.to_json,
              headers: json_headers
       end.to change(User, :count).by(1)
-         .and change(UserSession, :count).by(1)
+         .and change(UserSession, :count).by(0)
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data["verification_required"]).to eq(true)
+      expect(parsed_data["email"]).to eq("new_user@example.com")
+      expect(parsed_data["masked_email"]).to be_present
+      expect(parsed_data["access_token"]).to be_nil
+      expect(parsed_body["request_id"]).to be_present
+
+      user = User.find_by(email: "new_user@example.com")
+      expect(user.email_verified_at).to be_nil
+    end
+
+    it "verifies the emailed code and then issues tokens" do
+      post "/api/v1/auth/signup", params: signup_params.to_json, headers: json_headers
+      user = User.find_by(email: "new_user@example.com")
+
+      # request! stored a random code; stamp a known one to submit.
+      code = "246813"
+      user.update_columns(
+        email_otp_digest: Digest::SHA256.hexdigest(code),
+        email_otp_sent_at: Time.current,
+        email_otp_attempts: 0
+      )
+
+      expect do
+        post "/api/v1/auth/verify_email",
+             params: { email: user.email, code: code }.to_json,
+             headers: json_headers
+      end.to change(UserSession, :count).by(1)
 
       expect(response).to have_http_status(:ok)
       expect(parsed_data["access_token"]).to be_present
       expect(parsed_data["refresh_token"]).to be_present
-      expect(parsed_data["expires_in"]).to be > 0
-      expect(parsed_body["request_id"]).to be_present
+      expect(user.reload.email_verified_at).to be_present
     end
 
     it "returns 422 for duplicate email" do

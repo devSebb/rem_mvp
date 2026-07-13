@@ -1,4 +1,5 @@
 class ClaimVerificationMailer < ApplicationMailer
+  layout "branded_mailer"
   # Emails backing Auth::ClaimVerification — the OTP challenge required to
   # claim a pending recipient account, plus the "your account was claimed"
   # notice sent to the original contact channel afterwards.

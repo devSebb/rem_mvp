@@ -1,39 +1,25 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tu cuenta Papayal fue activada</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8f9fa; }
-    .container { background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.08); }
-    .header { text-align: center; margin-bottom: 24px; }
-    .footer { text-align: center; margin-top: 32px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 13px; }
-    a { color: #FCA50F; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1 style="color: #0D2F32;">Tu cuenta fue activada</h1>
-    </div>
+<% content_for :preview_title, "Tu cuenta Papayal fue activada" %>
+<% content_for :preheader do %>Tus tarjetas de regalo ya están disponibles en tu cuenta.<% end %>
 
-    <p>Hola,</p>
+<!-- Eyebrow -->
+<div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:14px;">
+  Cuenta activada
+</div>
 
-    <p>
-      Tu cuenta Papayal fue activada y las tarjetas de regalo que te esperaban
-      ya están disponibles en ella.
-    </p>
+<h1 style="margin:0 0 18px 0; font-size:28px; line-height:1.2; font-weight:800; letter-spacing:-0.8px; color:#0D2F32;">
+  Tu cuenta fue activada
+</h1>
 
-    <p>
-      Si no fuiste tú quien activó la cuenta, escríbenos de inmediato a
-      <a href="mailto:<%= @support_email %>"><%= @support_email %></a>.
-    </p>
+<p style="margin:0 0 18px 0; font-size:16px; line-height:1.65; color:#2C3A43;">
+  Hola,
+</p>
 
-    <div class="footer">
-      Gracias por elegir Papayal.<br>
-      ¿Preguntas? <a href="mailto:<%= @support_email %>"><%= @support_email %></a>
-    </div>
-  </div>
-</body>
-</html>
+<p style="margin:0 0 18px 0; font-size:16px; line-height:1.65; color:#2C3A43;">
+  Tu cuenta Papayal fue activada y las tarjetas de regalo que te esperaban
+  ya están disponibles en ella.
+</p>
+
+<p style="margin:0 0 18px 0; font-size:16px; line-height:1.65; color:#2C3A43;">
+  Si no fuiste tú quien activó la cuenta, escríbenos de inmediato a
+  <a href="mailto:<%= @support_email %>" style="color:#E08A00; font-weight:600; text-decoration:none;"><%= @support_email %></a>.
+</p>

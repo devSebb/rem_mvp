@@ -1,4 +1,5 @@
 class GiftCardHoldMailer < ApplicationMailer
+  layout "branded_mailer"
   # Sent to the BUYER when a security hold is placed on a gift card they
   # just purchased. Triggered from StripeWebhooks when risk_score >= 65.
   # Transparent communication reduces support volume ("why isn't my

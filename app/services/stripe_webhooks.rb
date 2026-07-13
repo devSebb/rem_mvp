@@ -237,6 +237,16 @@ class StripeWebhooks
       Rails.logger.warn "⚠️ GiftCard #{gift_card.id} has no transactions association"
     end
 
+    # Buyer receipt. Best-effort: a mail failure must never fail the webhook
+    # (that would trigger a Stripe retry / auto-refund on an already-fulfilled
+    # purchase). The recipient's delivery email is enqueued separately below.
+    begin
+      PurchaseConfirmationMailer.receipt(gift_card.id).deliver_later
+    rescue => e
+      Rails.logger.error "✉️ Failed to enqueue purchase receipt for gift card #{gift_card.id}: #{e.class} - #{e.message}"
+      Sentry.capture_exception(e) if defined?(Sentry)
+    end
+
     enqueue_notification(gift_card.id, raw_code)
 
     Rails.logger.info "✅ Successfully created gift card #{gift_card.id} for payment intent #{payment_intent.id}"

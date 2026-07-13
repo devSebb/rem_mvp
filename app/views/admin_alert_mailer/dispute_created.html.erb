@@ -1,32 +1,43 @@
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Dispute filed — Gift card #<%= @gift_card.id %></title></head>
-<body style="font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h2 style="color: #B91C1C;">⚠️ Chargeback filed</h2>
-  <p>A customer has disputed a charge for the following gift card:</p>
+<% content_for :preview_title, "Chargeback filed — Gift card ##{@gift_card.id}" %>
+<% content_for :preheader do %>A chargeback was filed on gift card #<%= @gift_card.id %> (<%= @amount_formatted %>).<% end %>
 
-  <table cellpadding="6" style="border-collapse: collapse; width: 100%; background: #f9fafb; border-radius: 8px;">
-    <tr><td><strong>Gift card ID:</strong></td><td>#<%= @gift_card.id %></td></tr>
-    <tr><td><strong>Stripe dispute ID:</strong></td><td><code><%= @dispute_id %></code></td></tr>
-    <tr><td><strong>Stripe PaymentIntent:</strong></td><td><code><%= @gift_card.payment_intent_id %></code></td></tr>
-    <tr><td><strong>Amount:</strong></td><td><%= @amount_formatted %></td></tr>
-    <tr><td><strong>Buyer:</strong></td><td><%= @gift_card.sender&.email %> (user_id <%= @gift_card.sender_id %>)</td></tr>
-    <tr><td><strong>Recipient:</strong></td><td><%= @gift_card.recipient&.email %></td></tr>
-    <tr><td><strong>Merchant:</strong></td><td><%= @gift_card.merchant&.store_name %></td></tr>
-    <tr><td><strong>Status:</strong></td><td><%= @gift_card.status %></td></tr>
-    <tr><td><strong>Risk score (at purchase):</strong></td><td><%= @gift_card.risk_score %> / <%= @gift_card.risk_level %></td></tr>
-  </table>
+<!-- Eyebrow -->
+<div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:14px;">
+  Internal alert · Dispute
+</div>
 
-  <p style="margin-top: 24px;">
-    The gift card has been flagged (<code>disputed_at</code>) and further redemptions are blocked.
-    Review in the Stripe Dashboard to decide whether to submit evidence or accept the dispute.
-  </p>
+<h1 style="margin:0 0 16px 0; font-size:24px; line-height:1.2; font-weight:800; letter-spacing:-0.6px; color:#0D2F32;">
+  ⚠️ Chargeback filed
+</h1>
 
-  <p>
-    <a href="https://dashboard.stripe.com/disputes/<%= @dispute_id %>"
-       style="display: inline-block; background: #FCA50F; color: #0D2F32; padding: 10px 16px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-      Open in Stripe Dashboard
-    </a>
-  </p>
-</body>
-</html>
+<p style="margin:0 0 20px 0; font-size:15px; line-height:1.6; color:#2C3A43;">
+  A customer has disputed a charge for the following gift card:
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse; background:#FFFFFF; border:1px solid #F1E2CB; border-radius:12px; margin:0 0 24px 0;">
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Gift card ID:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;">#<%= @gift_card.id %></td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Stripe dispute ID:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43; font-family:'Courier New',Courier,monospace;"><%= @dispute_id %></td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Stripe PaymentIntent:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43; font-family:'Courier New',Courier,monospace;"><%= @gift_card.payment_intent_id %></td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Amount:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;"><%= @amount_formatted %></td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Buyer:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;"><%= @gift_card.sender&.email %> (user_id <%= @gift_card.sender_id %>)</td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Recipient:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;"><%= @gift_card.recipient&.email %></td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Merchant:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;"><%= @gift_card.merchant&.store_name %></td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Status:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;"><%= @gift_card.status %></td></tr>
+  <tr><td style="padding:10px 16px; font-size:14px; color:#0D2F32; font-weight:700;">Risk score (at purchase):</td><td style="padding:10px 16px; font-size:14px; color:#2C3A43;"><%= @gift_card.risk_score %> / <%= @gift_card.risk_level %></td></tr>
+</table>
+
+<p style="margin:0 0 24px 0; font-size:14px; line-height:1.6; color:#2C3A43;">
+  The gift card has been flagged (<code style="font-family:'Courier New',Courier,monospace;">disputed_at</code>) and further redemptions are blocked.
+  Review in the Stripe Dashboard to decide whether to submit evidence or accept the dispute.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 4px 0;">
+  <tr>
+    <td align="center" bgcolor="#FCA50F" style="border-radius:999px;">
+      <a href="https://dashboard.stripe.com/disputes/<%= @dispute_id %>" class="pyl-btn"
+         style="display:inline-block; padding:13px 30px; font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:15px; font-weight:700; color:#3A1E00; text-decoration:none; border-radius:999px;">
+        Open in Stripe Dashboard
+      </a>
+    </td>
+  </tr>
+</table>

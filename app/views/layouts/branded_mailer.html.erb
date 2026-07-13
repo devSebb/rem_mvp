@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <%# Force light rendering so clients in dark mode don't invert the cream card into muddy grey. %>
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title><%= content_for?(:preview_title) ? yield(:preview_title) : "Papayal" %></title>
+  <style>
+    /* Clients that support <style> pick up Raleway; the rest fall back gracefully. */
+    body { margin: 0; padding: 0; width: 100% !important; background-color: #FDF1E1; }
+    a { color: #E08A00; }
+    .pyl-btn:hover { opacity: 0.92; }
+    @media only screen and (max-width: 620px) {
+      .pyl-card { padding: 28px 22px !important; }
+      .pyl-shell { padding: 16px 12px !important; }
+    }
+  </style>
+</head>
+<body style="margin:0; padding:0; background-color:#FDF1E1;">
+  <!-- Preview text: shows in the inbox list before the email is opened. -->
+  <div style="display:none; max-height:0; overflow:hidden; opacity:0; color:#FDF1E1;">
+    <%= content_for?(:preheader) ? yield(:preheader) : "Papayal — tarjetas de regalo digitales" %>
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#FDF1E1;">
+    <tr>
+      <td align="center" class="pyl-shell" style="padding:32px 16px;">
+        <!-- Fluid up to 600px: centered 600px on desktop, full-width on phones. -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; max-width:600px; margin:0 auto;">
+
+          <!-- Brand header -->
+          <tr>
+            <td align="center" style="padding:8px 0 24px 0;">
+              <img src="https://papayal.app/Papayal-logoV2Tag.png" width="56" height="56" alt="Papayal"
+                   style="display:block; width:56px; height:56px; border:0; outline:none; text-decoration:none; margin:0 auto 10px auto;">
+              <div style="font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:22px; font-weight:800; letter-spacing:-0.5px; color:#0D2F32;">
+                Papayal
+              </div>
+            </td>
+          </tr>
+
+          <!-- Card -->
+          <tr>
+            <td>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="background-color:#FFFFFF; border-radius:20px; border:1px solid #F1E2CB; box-shadow:0 8px 28px rgba(13,47,50,0.06);">
+                <tr>
+                  <td class="pyl-card" style="padding:40px 44px; font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; color:#2C3A43; font-size:16px; line-height:1.6;">
+                    <%= yield %>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding:26px 24px 8px 24px; font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
+              <div style="font-size:13px; line-height:1.6; color:#6A7780;">
+                ¿Preguntas? Escríbenos a
+                <a href="mailto:hola@papayal.app" style="color:#E08A00; font-weight:600; text-decoration:none;">hola@papayal.app</a>
+              </div>
+              <div style="font-size:11px; line-height:1.6; color:#9AA5A9; margin-top:12px;">
+                Papayal — Tarjetas de regalo digitales · Ecuador<br>
+                Recibiste este correo porque tienes una cuenta en Papayal.
+              </div>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

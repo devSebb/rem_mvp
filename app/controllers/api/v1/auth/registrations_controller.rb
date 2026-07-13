@@ -24,7 +24,12 @@ module Api
             return error_response if error_response
           end
 
-          user = pending_user || User.new
+          # A fresh signup that abandoned email verification leaves an
+          # unverified account behind; a repeat signup with the same email
+          # reuses that row (and re-sends a code) instead of colliding on
+          # the unique-email index.
+          unverified_user = pending_user ? nil : reusable_unverified_user
+          user = pending_user || unverified_user || User.new
           was_pending_claim = pending_user.present?
           # Capture the pending account's ORIGINAL contact channels before
           # the signup params overwrite them, so we can alert the original
@@ -32,11 +37,20 @@ module Api
           original_email = pending_user&.email
           original_phone = pending_user&.phone
 
+          # Fresh (non-claim) signups must prove control of their email
+          # before any tokens are issued. The flag tells the User model to
+          # leave the account unverified on create (skipping the default
+          # auto-verify and the welcome email until the code is confirmed).
+          user.require_email_verification = true unless was_pending_claim
+
           populate_user_attributes(user)
 
           if user.save
             if was_pending_claim
               Rails.logger.info "[Auth] Claimed pending account user_id=#{user.id} email=#{user.email}"
+              # Claiming already proved control of the email/phone via the
+              # claim OTP, so the account is verified — issue tokens as before.
+              user.update_columns(email_verified_at: Time.current, updated_at: Time.current) if user.email_verified_at.blank?
               # Alert the original contact channel that the account was
               # claimed, so the rightful recipient finds out if someone
               # else somehow completed the OTP challenge.
@@ -48,16 +62,22 @@ module Api
               # Claim is an UPDATE, so the User#after_create_commit hook
               # doesn't fire. Send the welcome explicitly here.
               WelcomeMailer.welcome(user.id).deliver_later unless user.placeholder_email?
+
+              tokens = ::Auth::IssueTokens.call(
+                user:,
+                device_id: signup_params[:device_id],
+                ip: request.ip,
+                user_agent: request.user_agent
+              )
+
+              return render_tokens(tokens)
             end
 
-            tokens = ::Auth::IssueTokens.call(
-              user:,
-              device_id: signup_params[:device_id],
-              ip: request.ip,
-              user_agent: request.user_agent
-            )
-
-            render_tokens(tokens)
+            # Block-until-verified: email the 6-digit code and return a
+            # verification challenge instead of tokens. The client collects
+            # the code and calls POST /api/v1/auth/verify_email.
+            details = ::Auth::EmailVerification.request!(user)
+            render_verification_required(user, details)
           else
             render_error(
               code: "auth.signup_failed",
@@ -115,6 +135,36 @@ module Api
             code: "auth.claim_otp_expired",
             message: "Verification code expired, request a new one",
             status: :unprocessable_entity
+          )
+        end
+
+        # An active account that completed signup (claimed_at set) but never
+        # verified its email. A repeat signup reuses it so the second attempt
+        # re-sends a code instead of failing on the unique-email index. A
+        # verified account with this email is NOT returned — that's a real
+        # conflict and falls through to the standard save/error path.
+        def reusable_unverified_user
+          email = signup_params[:email].to_s.strip.downcase.presence
+          return nil if email.blank?
+
+          User.active
+              .where("LOWER(email) = ?", email)
+              .where(email_verified_at: nil)
+              .where.not(claimed_at: nil)
+              .first
+        end
+
+        # Signup succeeded but tokens are withheld until the emailed code is
+        # confirmed. 200 so the mobile client reads the body; it branches on
+        # the verification_required flag.
+        def render_verification_required(user, details)
+          render_success(
+            data: {
+              verification_required: true,
+              email: user.email,
+              masked_email: details[:masked_email],
+              resend_available_in: details[:retry_in_seconds] || ::Auth::EmailVerification::RESEND_INTERVAL.to_i
+            }
           )
         end
 

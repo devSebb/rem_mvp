@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_11_100001) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_12_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -241,6 +241,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_11_100001) do
     t.string "claim_otp_digest"
     t.datetime "claim_otp_sent_at"
     t.integer "claim_otp_attempts", default: 0, null: false
+    t.datetime "email_verified_at"
+    t.string "email_otp_digest"
+    t.datetime "email_otp_sent_at"
+    t.integer "email_otp_attempts", default: 0, null: false
     t.index ["claimed_at"], name: "index_users_on_claimed_at"
     t.index ["deleted_at"], name: "index_users_on_deleted_at", where: "(deleted_at IS NOT NULL)"
     t.index ["email"], name: "index_users_on_email", unique: true

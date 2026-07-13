@@ -1,0 +1,29 @@
+<% content_for :preview_title, "Nuevo mensaje de contacto" %>
+<% content_for :preheader do %>Mensaje de <%= @name %> a través del formulario de contacto.<% end %>
+
+<!-- Eyebrow -->
+<div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:14px;">
+  Formulario de contacto
+</div>
+
+<h1 style="margin:0 0 18px 0; font-size:26px; line-height:1.2; font-weight:800; letter-spacing:-0.6px; color:#0D2F32;">
+  Nuevo mensaje de <%= @name %>
+</h1>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px 0;">
+  <tr>
+    <td style="padding:6px 0; font-size:14px; color:#66707A; width:120px; vertical-align:top;">Nombre</td>
+    <td style="padding:6px 0; font-size:15px; color:#2C3A43; font-weight:600;"><%= @name %></td>
+  </tr>
+  <tr>
+    <td style="padding:6px 0; font-size:14px; color:#66707A; vertical-align:top;">Correo</td>
+    <td style="padding:6px 0; font-size:15px; color:#2C3A43; font-weight:600;">
+      <a href="mailto:<%= @email %>" style="color:#15353A;"><%= @email %></a>
+    </td>
+  </tr>
+</table>
+
+<div style="font-size:12px; font-weight:700; letter-spacing:0.6px; text-transform:uppercase; color:#66707A; margin-bottom:8px;">
+  Mensaje
+</div>
+<p style="margin:0; font-size:16px; line-height:1.65; color:#2C3A43; white-space:pre-wrap;"><%= @message %></p>

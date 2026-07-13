@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   root to: "marketing#landing"
   get "about", to: "marketing#about", as: :about
   get "contact", to: "marketing#contact", as: :contact
+  post "contact", to: "marketing#submit_contact", as: :contact_submit
   get "proximamente", to: "marketing#proximamente", as: :proximamente
   
   get "home", to: "home#index", as: :home
@@ -47,6 +48,8 @@ Rails.application.routes.draw do
 
       namespace :auth do
         post :signup, to: "registrations#create"
+        post :verify_email, to: "email_verifications#verify"
+        post :resend_verification, to: "email_verifications#resend"
         post :login, to: "sessions#login"
         post :refresh, to: "sessions#refresh"
         post :logout, to: "sessions#logout"

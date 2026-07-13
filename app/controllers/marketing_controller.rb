@@ -15,6 +15,23 @@ class MarketingController < ApplicationController
   def contact
   end
 
+  # Handles the public contact form. Delivers the message to the Papayal
+  # inbox (hola@papayal.app) and answers the fetch() call from the
+  # marketing Stimulus controller with a small JSON payload.
+  def submit_contact
+    name = params[:name].to_s.strip
+    email = params[:email].to_s.strip
+    message = params[:message].to_s.strip
+
+    if name.blank? || email.blank? || message.blank?
+      render json: { error: "missing_fields" }, status: :unprocessable_entity
+      return
+    end
+
+    ContactMailer.contact_message(name, email, message).deliver_later
+    render json: { ok: true }
+  end
+
   # Public "coming soon" page: the consumer experience lives in the mobile
   # app, so signed-in shoppers are routed here instead of the web wallet.
   def proximamente

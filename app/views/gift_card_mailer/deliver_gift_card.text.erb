@@ -1,21 +1,22 @@
-🎁 ¡Recibiste una tarjeta de regalo Papayal!
+¡Recibiste una tarjeta de regalo Papayal!
+
+<%= @sender.name %> te envió una tarjeta de regalo.
 
 Monto: <%= @gift_card.currency %> <%= format("%.2f", @gift_card.amount / 100.0) %>
 De: <%= @sender.name %> (<%= @sender.email %>)
 
 Ver tu tarjeta: <%= @gift_card_url %>
 
-⏰ INFORMACIÓN IMPORTANTE:
-• Por seguridad, el QR y el código de canje no se envían por correo.
-• Abre Papayal cuando estés listo para usar tu tarjeta.
-• Genera un código vigente desde la app y muéstralo en el comercio participante.
+Importante:
+- Por seguridad, el QR y el código de canje no se envían por correo.
+- Abre Papayal cuando estés listo para usar tu tarjeta.
+- Genera un código vigente desde la app y muéstralo en el comercio participante.
 
-CÓMO CANJEAR:
+Cómo canjear:
 1. Abre Papayal e ingresa a tu billetera.
 2. Selecciona esta tarjeta de regalo.
 3. Genera el QR o código de canje dentro de la app.
 4. Muéstralo al cajero del comercio participante.
 
-Gracias por usar Papayal 🎉
-
-Si tienes dudas, escríbenos a hola@papayal.app
+Gracias por usar Papayal.
+¿Preguntas? Escríbenos a hola@papayal.app

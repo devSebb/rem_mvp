@@ -1,97 +1,50 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tu cuenta de Papayal ha sido eliminada</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #f8f9fa;
-    }
-    .container {
-      background: white;
-      border-radius: 12px;
-      padding: 40px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .logo {
-      font-size: 40px;
-      margin-bottom: 20px;
-    }
-    .summary {
-      background: #f3f4f6;
-      padding: 20px;
-      border-radius: 8px;
-      margin: 20px 0;
-    }
-    .summary ul {
-      margin: 8px 0 0 0;
-      padding-left: 20px;
-    }
-    .warning {
-      background: #fef2f2;
-      border: 1px solid #ef4444;
-      padding: 16px;
-      border-radius: 8px;
-      margin: 20px 0;
-      color: #7f1d1d;
-    }
-    .footer {
-      text-align: center;
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px solid #e5e7eb;
-      color: #6b7280;
-      font-size: 14px;
-    }
-    a {
-      color: #FCA50F;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="logo">👋</div>
-      <h1>Tu cuenta ha sido eliminada</h1>
-    </div>
+<% content_for :preview_title, "Tu cuenta de Papayal ha sido eliminada" %>
+<% content_for :preheader do %>Confirmamos que tu cuenta de Papayal fue eliminada permanentemente.<% end %>
 
-    <p>Hola,</p>
+<!-- Eyebrow -->
+<div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:14px;">
+  Cuenta eliminada
+</div>
 
-    <p>Confirmamos que tu cuenta de Papayal ha sido eliminada permanentemente.</p>
+<h1 style="margin:0 0 18px 0; font-size:28px; line-height:1.2; font-weight:800; letter-spacing:-0.8px; color:#0D2F32;">
+  Tu cuenta ha sido eliminada
+</h1>
 
-    <div class="summary">
-      <strong>Lo que hicimos:</strong>
-      <ul>
-        <li>Eliminamos tu información personal: nombre, teléfono, dirección, documento de identidad y foto de perfil.</li>
-        <li>Cerramos todas tus sesiones activas en todos los dispositivos.</li>
-        <li>Desactivamos las notificaciones para tu cuenta.</li>
+<p style="margin:0 0 18px 0; font-size:16px; line-height:1.65; color:#2C3A43;">
+  Hola,
+</p>
+
+<p style="margin:0 0 20px 0; font-size:16px; line-height:1.65; color:#2C3A43;">
+  Confirmamos que tu cuenta de Papayal ha sido eliminada permanentemente.
+</p>
+
+<!-- Summary -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">
+  <tr>
+    <td style="padding:18px 20px; background-color:#FDF1E1; border:1px solid #F1E2CB; border-radius:14px; font-size:15px; line-height:1.6; color:#2C3A43;">
+      <strong style="color:#0D2F32;">Lo que hicimos:</strong>
+      <ul style="margin:10px 0 0 0; padding-left:20px;">
+        <li style="margin-bottom:6px;">Eliminamos tu información personal: nombre, teléfono, dirección, documento de identidad y foto de perfil.</li>
+        <li style="margin-bottom:6px;">Cerramos todas tus sesiones activas en todos los dispositivos.</li>
+        <li style="margin-bottom:6px;">Desactivamos las notificaciones para tu cuenta.</li>
         <li>Tu historial de tarjetas de regalo se anonimizó y se conserva solo para registros contables de comercios.</li>
       </ul>
-    </div>
+    </td>
+  </tr>
+</table>
 
-    <div class="warning">
-      <strong>⚠️ Importante</strong><br>
+<!-- Warning -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">
+  <tr>
+    <td style="padding:16px 18px; background-color:#FDF1E1; border:1px solid #F1E2CB; border-radius:12px; font-size:14px; line-height:1.65; color:#2C3A43;">
+      <strong style="color:#0D2F32;">⚠️ Importante</strong><br>
       Esta acción es permanente. No podemos restaurar tu cuenta ni los saldos de tarjetas no utilizados.
-      Si esto no fue solicitado por ti, contáctanos inmediatamente en <a href="mailto:<%= @support_email %>"><%= @support_email %></a>.
-    </div>
+      Si esto no fue solicitado por ti, contáctanos inmediatamente en
+      <a href="mailto:<%= @support_email %>" style="color:#E08A00; font-weight:600; text-decoration:none;"><%= @support_email %></a>.
+    </td>
+  </tr>
+</table>
 
-    <p>Si decides volver, puedes crear una nueva cuenta en cualquier momento con el mismo correo electrónico.</p>
-
-    <div class="footer">
-      <p>Gracias por haber sido parte de Papayal.</p>
-      <p>¿Preguntas? <a href="mailto:<%= @support_email %>"><%= @support_email %></a></p>
-    </div>
-  </div>
-</body>
-</html>
+<p style="margin:0 0 4px 0; font-size:16px; line-height:1.65; color:#2C3A43;">
+  Si decides volver, puedes crear una nueva cuenta en cualquier momento con el mismo correo electrónico.
+</p>

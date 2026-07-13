@@ -18,6 +18,21 @@ module Api
             )
           end
 
+          # Block-until-verified: an account that signed up but never
+          # confirmed its email can't get tokens. Re-send a code and steer
+          # the client into the verification screen instead.
+          unless user.email_verified?
+            details = ::Auth::EmailVerification.request!(user)
+            return render_success(
+              data: {
+                verification_required: true,
+                email: user.email,
+                masked_email: details[:masked_email],
+                resend_available_in: details[:retry_in_seconds] || ::Auth::EmailVerification::RESEND_INTERVAL.to_i
+              }
+            )
+          end
+
           tokens = ::Auth::IssueTokens.call(
             user:,
             device_id: login_params[:device_id],

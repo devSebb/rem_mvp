@@ -1,28 +1,39 @@
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Payment auto-refunded — <%= @payment_intent_id %></title></head>
-<body style="font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h2 style="color: #B91C1C;">↩️ Payment auto-refunded</h2>
-  <p>A buyer paid but the gift card could not be created (permanent fulfillment failure), so the charge was refunded in full automatically. No gift card exists for this payment.</p>
+<% content_for :preview_title, "Payment auto-refunded — #{@payment_intent_id}" %>
+<% content_for :preheader do %>A payment was auto-refunded (<%= @amount_formatted %>) after fulfillment failed: <%= @reason %>.<% end %>
 
-  <table cellpadding="6" style="border-collapse: collapse; width: 100%; background: #f9fafb; border-radius: 8px;">
-    <tr><td><strong>Stripe PaymentIntent:</strong></td><td><code><%= @payment_intent_id %></code></td></tr>
-    <tr><td><strong>Stripe refund ID:</strong></td><td><code><%= @refund_id %></code></td></tr>
-    <tr><td><strong>Amount refunded:</strong></td><td><%= @amount_formatted %></td></tr>
-    <tr><td><strong>Failure reason:</strong></td><td><code><%= @reason %></code></td></tr>
-  </table>
+<!-- Eyebrow -->
+<div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:14px;">
+  Internal alert · Refund
+</div>
 
-  <p style="margin-top: 24px;">
-    No action is required for the buyer. If this reason keeps recurring
-    (e.g. <code>purchase_limit_exceeded</code>, <code>merchant_inactive</code>),
-    investigate the upstream cause.
-  </p>
+<h1 style="margin:0 0 16px 0; font-size:24px; line-height:1.2; font-weight:800; letter-spacing:-0.6px; color:#0D2F32;">
+  ↩️ Payment auto-refunded
+</h1>
 
-  <p>
-    <a href="https://dashboard.stripe.com/payments/<%= @payment_intent_id %>"
-       style="display: inline-block; background: #FCA50F; color: #0D2F32; padding: 10px 16px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-      Open in Stripe Dashboard
-    </a>
-  </p>
-</body>
-</html>
+<p style="margin:0 0 20px 0; font-size:15px; line-height:1.6; color:#2C3A43;">
+  A buyer paid but the gift card could not be created (permanent fulfillment failure), so the charge was refunded in full automatically. No gift card exists for this payment.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse; background:#FFFFFF; border:1px solid #F1E2CB; border-radius:12px; margin:0 0 24px 0;">
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Stripe PaymentIntent:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43; font-family:'Courier New',Courier,monospace;"><%= @payment_intent_id %></td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Stripe refund ID:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43; font-family:'Courier New',Courier,monospace;"><%= @refund_id %></td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Amount refunded:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;"><%= @amount_formatted %></td></tr>
+  <tr><td style="padding:10px 16px; font-size:14px; color:#0D2F32; font-weight:700;">Failure reason:</td><td style="padding:10px 16px; font-size:14px; color:#2C3A43; font-family:'Courier New',Courier,monospace;"><%= @reason %></td></tr>
+</table>
+
+<p style="margin:0 0 24px 0; font-size:14px; line-height:1.6; color:#2C3A43;">
+  No action is required for the buyer. If this reason keeps recurring
+  (e.g. <code style="font-family:'Courier New',Courier,monospace;">purchase_limit_exceeded</code>, <code style="font-family:'Courier New',Courier,monospace;">merchant_inactive</code>),
+  investigate the upstream cause.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 4px 0;">
+  <tr>
+    <td align="center" bgcolor="#FCA50F" style="border-radius:999px;">
+      <a href="https://dashboard.stripe.com/payments/<%= @payment_intent_id %>" class="pyl-btn"
+         style="display:inline-block; padding:13px 30px; font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:15px; font-weight:700; color:#3A1E00; text-decoration:none; border-radius:999px;">
+        Open in Stripe Dashboard
+      </a>
+    </td>
+  </tr>
+</table>

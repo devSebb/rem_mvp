@@ -1,4 +1,6 @@
 class WelcomeMailer < ApplicationMailer
+  layout "branded_mailer"
+
   # Sent once when a new user signs up via API or web. Triggered from the
   # User model's after_create_commit for fresh signups, and called
   # explicitly from the controllers when a pending recipient is claimed
