@@ -6,6 +6,8 @@ Estos endpoints permiten a los comercios validar y consultar gift cards usando e
 Authorization: Bearer <MERCHANT_SECRET_KEY>
 ```
 
+**Base URL (producción):** `https://api.papayal.app` — todos los endpoints cuelgan de `https://api.papayal.app/api/v1/...`. Para pruebas locales usa `http://localhost:3000`.
+
 ---
 
 ## Validar saldo
@@ -49,7 +51,7 @@ Otros posibles errores (`valid: false`): `inactive_gift_card`, `expired_token`, 
 ### cURL de ejemplo
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/gift_cards/validate \
+curl -X POST https://api.papayal.app/api/v1/gift_cards/validate \
   -H "Authorization: Bearer <MERCHANT_SECRET_KEY>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -90,7 +92,7 @@ curl -X POST http://localhost:3000/api/v1/gift_cards/validate \
 ### cURL de ejemplo
 
 ```bash
-curl -X GET http://localhost:3000/api/v1/gift_cards/RAW_TOKEN_COMPARTIDO \
+curl -X GET https://api.papayal.app/api/v1/gift_cards/RAW_TOKEN_COMPARTIDO \
   -H "Authorization: Bearer <MERCHANT_SECRET_KEY>"
 ```
 
@@ -140,7 +142,7 @@ curl -X GET http://localhost:3000/api/v1/gift_cards/RAW_TOKEN_COMPARTIDO \
 ### cURL de ejemplo
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/redemptions/456/refund \
+curl -X POST https://api.papayal.app/api/v1/redemptions/456/refund \
   -H "Authorization: Bearer <MERCHANT_SECRET_KEY>" \
   -H "Content-Type: application/json" \
   -d '{

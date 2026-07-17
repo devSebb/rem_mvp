@@ -1,9 +1,9 @@
 openapi: 3.0.3
 info:
-  title: Rem Mobile API
+  title: Papayal Mobile API
   version: "1.0.0"
 servers:
-  - url: https://api.rem.com
+  - url: https://api.papayal.app
 paths:
   /api/v1/auth/signup:
     post:
@@ -356,8 +356,8 @@ paths:
                     type: string
               example:
                 data:
-                  avatar_url: https://api.rem.com/rails/active_storage/blobs/.../avatar.png
-                  avatar_thumb_url: https://api.rem.com/rails/active_storage/representations/.../avatar.png
+                  avatar_url: https://api.papayal.app/rails/active_storage/blobs/.../avatar.png
+                  avatar_thumb_url: https://api.papayal.app/rails/active_storage/representations/.../avatar.png
                 request_id: 123e4567
         "422":
           description: Upload failed
@@ -500,7 +500,7 @@ paths:
                 data:
                   merchant_id: 2
                   merchant_store_name: Coffee Shop
-                  merchant_logo_url: https://api.rem.com/rails/active_storage/blobs/.../logo.png
+                  merchant_logo_url: https://api.papayal.app/rails/active_storage/blobs/.../logo.png
                 request_id: 123e4567
         "401":
           description: Unauthorized
