@@ -1,10 +1,19 @@
+<% content_for :title, "Papayal · #{@merchant.store_name}" %>
+<%
+  txn_type_labels = { "purchase" => "Compra", "redemption" => "Canje", "refund" => "Reembolso", "adjustment" => "Ajuste", "issuance" => "Emisión" }
+  txn_status_labels = { "pending" => "Pendiente", "succeeded" => "Exitosa", "failed" => "Fallida" }
+  payout_status_labels = { "pending" => "Pendiente", "paid" => "Pagado", "failed" => "Fallido" }
+%>
 <div class="space-y-8">
   <div class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
     <div class="flex items-center gap-4">
       <%= merchant_logo_image(@merchant, size: 80, classes: "shadow-sm", rounded: "full") %>
       <div>
         <p class="papayal-meta text-[#0D2F32]">Panel Comercios</p>
-        <h1 class="text-2xl font-bold text-[#0D2F32]"><%= @merchant.store_name %></h1>
+        <div class="flex items-center gap-3">
+          <h1 class="text-2xl font-bold text-[#0D2F32]"><%= @merchant.store_name %></h1>
+          <span class="<%= status_badge_classes(@merchant.status) %>"><%= status_badge_label(@merchant.status) %></span>
+        </div>
         <p class="text-sm text-[#2C3A43]/70"><%= @merchant.contact_email.presence || @merchant.user&.email %></p>
       </div>
     </div>
@@ -28,25 +37,50 @@
     </div>
   <% end %>
 
-  <div class="grid grid-cols-12 gap-6">
-    <div class="col-span-12 md:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-5">
-      <p class="papayal-meta">Tarjetas emitidas</p>
-      <p class="text-3xl font-bold mt-2"><%= @stats[:total_cards] %></p>
-      <p class="text-xs text-[#2C3A43]/70 mt-1">Históricas</p>
+  <% if @stats[:held_cards] > 0 || @stats[:disputed_cards] > 0 %>
+    <div class="flex flex-wrap gap-3">
+      <% if @stats[:held_cards] > 0 %>
+        <%= link_to admin_merchant_path(@merchant, cards: "held", anchor: "tarjetas"), class: "inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50 border border-amber-200 text-sm font-medium text-amber-800 hover:bg-amber-100 transition" do %>
+          ⚠ <%= @stats[:held_cards] %> tarjeta<%= "s" unless @stats[:held_cards] == 1 %> retenida<%= "s" unless @stats[:held_cards] == 1 %> por riesgo
+        <% end %>
+      <% end %>
+      <% if @stats[:disputed_cards] > 0 %>
+        <%= link_to admin_merchant_path(@merchant, cards: "disputed", anchor: "tarjetas"), class: "inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-50 border border-rose-200 text-sm font-medium text-rose-800 hover:bg-rose-100 transition" do %>
+          ⚠ <%= @stats[:disputed_cards] %> tarjeta<%= "s" unless @stats[:disputed_cards] == 1 %> en disputa
+        <% end %>
+      <% end %>
     </div>
-    <div class="col-span-12 md:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-5">
-      <p class="papayal-meta">Volumen emitido</p>
-      <p class="text-3xl font-bold mt-2"><%= number_to_currency(@stats[:issued_volume_cents] / 100.0, unit: '$') %></p>
+  <% end %>
+
+  <div class="grid grid-cols-12 gap-4">
+    <div class="col-span-6 md:col-span-4 xl:col-span-2 papayal-card papayal-card-hover p-5">
+      <p class="papayal-meta">Emitidas</p>
+      <p class="text-3xl font-bold mt-2"><%= @stats[:total_cards] %></p>
+      <p class="text-xs text-[#2C3A43]/70 mt-1">Tarjetas históricas</p>
+    </div>
+    <div class="col-span-6 md:col-span-4 xl:col-span-2 papayal-card papayal-card-hover p-5">
+      <p class="papayal-meta">Activas</p>
+      <p class="text-3xl font-bold mt-2 text-emerald-700"><%= @stats[:active_cards] %></p>
+      <p class="text-xs text-[#2C3A43]/70 mt-1">Con saldo vigente</p>
+    </div>
+    <div class="col-span-6 md:col-span-4 xl:col-span-2 papayal-card papayal-card-hover p-5">
+      <p class="papayal-meta">Canjeadas</p>
+      <p class="text-3xl font-bold mt-2 text-blue-700"><%= @stats[:redeemed_cards] %></p>
+      <p class="text-xs text-[#2C3A43]/70 mt-1">Totalmente usadas</p>
+    </div>
+    <div class="col-span-6 md:col-span-4 xl:col-span-2 papayal-card papayal-card-hover p-5">
+      <p class="papayal-meta">Vol. emitido</p>
+      <p class="text-2xl font-bold mt-2"><%= number_to_currency(@stats[:issued_volume_cents] / 100.0, unit: '$') %></p>
       <p class="text-xs text-[#2C3A43]/70 mt-1">Suma de montos emitidos</p>
     </div>
-    <div class="col-span-12 md:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-5">
-      <p class="papayal-meta">Volumen canjeado</p>
-      <p class="text-3xl font-bold mt-2"><%= number_to_currency(@stats[:redemption_volume_cents] / 100.0, unit: '$') %></p>
-      <p class="text-xs text-[#2C3A43]/70 mt-1">Redenciones exitosas</p>
+    <div class="col-span-6 md:col-span-4 xl:col-span-2 papayal-card papayal-card-hover p-5">
+      <p class="papayal-meta">Vol. canjeado</p>
+      <p class="text-2xl font-bold mt-2"><%= number_to_currency(@stats[:redemption_volume_cents] / 100.0, unit: '$') %></p>
+      <p class="text-xs text-[#2C3A43]/70 mt-1">Pagado en este comercio</p>
     </div>
-    <div class="col-span-12 md:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-5">
-      <p class="papayal-meta">Saldo pendiente</p>
-      <p class="text-3xl font-bold mt-2"><%= number_to_currency(@stats[:remaining_balance_cents] / 100.0, unit: '$') %></p>
+    <div class="col-span-6 md:col-span-4 xl:col-span-2 papayal-card papayal-card-hover p-5">
+      <p class="papayal-meta">Saldo activo</p>
+      <p class="text-2xl font-bold mt-2"><%= number_to_currency(@stats[:remaining_balance_cents] / 100.0, unit: '$') %></p>
       <p class="text-xs text-[#2C3A43]/70 mt-1">Saldo de tarjetas activas</p>
     </div>
   </div>
@@ -58,7 +92,6 @@
           <p class="papayal-meta">Datos del comercio</p>
           <h2 class="text-xl font-semibold text-[#0D2F32]">Información principal</h2>
         </div>
-        <span class="<%= status_badge_classes(@merchant.status) %>"><%= status_badge_label(@merchant.status) %></span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
         <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
@@ -74,9 +107,14 @@
           <p class="papayal-meta">IBAN</p>
           <p class="font-semibold text-[#0D2F32] break-words"><%= @merchant.bank_account_iban.presence || "No especificado" %></p>
         </div>
-        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
-          <p class="papayal-meta">Public Key</p>
-          <p class="font-mono text-xs text-[#0D2F32]/80 break-words"><%= @merchant.public_key %></p>
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]"
+             data-controller="copy"
+             data-copy-text-value="<%= @merchant.public_key %>">
+          <div class="flex items-center justify-between gap-2">
+            <p class="papayal-meta">Public Key</p>
+            <button type="button" data-copy-target="button" data-action="copy#copy" class="text-xs font-medium text-[#0D2F32] underline decoration-dotted hover:text-[#FCA50F] transition">Copiar</button>
+          </div>
+          <p class="font-mono text-xs text-[#0D2F32]/80 break-words mt-1"><%= @merchant.public_key %></p>
         </div>
         <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8] md:col-span-2">
           <p class="papayal-meta">Canje</p>
@@ -115,6 +153,9 @@
           <p class="papayal-meta">Propietario</p>
           <h2 class="text-xl font-semibold text-[#0D2F32]">Cuenta asociada</h2>
         </div>
+        <% if @user %>
+          <%= link_to "Ver cuenta", admin_user_path(@user), class: "papayal-btn-ghost text-sm" %>
+        <% end %>
       </div>
       <div class="space-y-3 text-sm">
         <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
@@ -128,6 +169,10 @@
         <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
           <p class="papayal-meta">Teléfono</p>
           <p class="font-semibold text-[#0D2F32]"><%= @user&.phone.presence || "No especificado" %></p>
+        </div>
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+          <p class="papayal-meta">Última tarjeta emitida</p>
+          <p class="font-semibold text-[#0D2F32]"><%= @stats[:last_card_at] ? @stats[:last_card_at].strftime("%d/%m/%Y %H:%M") : "Sin actividad" %></p>
         </div>
       </div>
     </div>
@@ -144,7 +189,7 @@
         <p><span class="font-semibold text-[#0D2F32]">Regenerar secret:</span> invalida la clave anterior inmediatamente.</p>
         <% blockers = @merchant.admin_delete_blockers %>
         <% if blockers.any? %>
-          <p class="mt-1"><span class="font-semibold text-[#0D2F32]">Eliminar:</span> bloqueado por <%= blockers.to_sentence %>. Usa suspender para ocultarlo.</p>
+          <p class="mt-1"><span class="font-semibold text-[#0D2F32]">Eliminar:</span> bloqueado por <%= blockers.to_sentence(two_words_connector: " y ", last_word_connector: " y ") %>. Usa suspender para ocultarlo.</p>
         <% else %>
           <p class="mt-1"><span class="font-semibold text-[#0D2F32]">Eliminar:</span> disponible porque no hay historial asociado.</p>
         <% end %>
@@ -160,52 +205,183 @@
     </div>
   </div>
 
-  <div class="papayal-card p-6">
-    <div class="flex items-center justify-between mb-4">
+  <div class="papayal-card p-6 space-y-4" id="tarjetas">
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
       <div>
-        <p class="papayal-meta">Actividad reciente</p>
-        <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Últimas tarjetas</h2>
+        <p class="papayal-meta">Tarjetas de regalo</p>
+        <h2 class="text-xl font-bold text-[#2C3A43] mt-1">
+          Tarjetas del comercio
+          <span class="text-sm font-medium text-[#2C3A43]/60">(<%= @cards_total_count %>)</span>
+        </h2>
       </div>
-      <%= link_to "Editar comercio", edit_admin_merchant_path(@merchant), class: "papayal-btn-secondary text-sm" %>
+      <div class="flex flex-wrap gap-2">
+        <% { "all" => "Todas", "active" => "Activas", "redeemed" => "Canjeadas", "held" => "Retenidas", "disputed" => "Disputadas" }.each do |key, label| %>
+          <%= link_to label, admin_merchant_path(@merchant, cards: key, anchor: "tarjetas"),
+                class: "px-4 py-1.5 rounded-full text-sm font-medium border transition-colors #{@cards_filter == key ? 'bg-[#0D2F32] text-white border-[#0D2F32]' : 'bg-white text-[#2C3A43] border-black/10 hover:border-[#FCA50F]/50'}" %>
+        <% end %>
+      </div>
     </div>
-    <% if @recent_gift_cards.any? %>
-      <div class="overflow-hidden rounded-2xl border border-black/5">
+
+    <% if @gift_cards.any? %>
+      <div class="overflow-x-auto rounded-2xl border border-black/5">
         <table class="min-w-full divide-y divide-black/5">
           <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
             <tr>
               <th class="px-4 py-3">Tarjeta</th>
-              <th class="px-4 py-3">Monto</th>
+              <th class="px-4 py-3">Comprador</th>
+              <th class="px-4 py-3">Destinatario</th>
+              <th class="px-4 py-3 text-right">Monto</th>
+              <th class="px-4 py-3 text-right">Saldo</th>
               <th class="px-4 py-3">Estado</th>
-              <th class="px-4 py-3">Fecha</th>
+              <th class="px-4 py-3">Emitida</th>
+              <th class="px-4 py-3 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-black/5 text-sm">
-            <% @recent_gift_cards.each do |gift_card| %>
+            <% @gift_cards.each do |gift_card| %>
               <tr class="hover:bg-[#EBEBEB]/40 transition">
                 <td class="px-4 py-3">
                   <p class="font-medium text-[#2C3A43]">REM-<%= gift_card.id.to_s.last(6) %></p>
-                  <p class="text-xs text-[#2C3A43]/70">Para <%= gift_card.recipient&.name || "Sin destinatario" %></p>
-                </td>
-                <td class="px-4 py-3 font-medium">
-                  <%= number_to_currency(gift_card.amount / 100.0, unit: gift_card.currency == 'USD' ? '$' : gift_card.currency) %>
+                  <% if gift_card.held? %>
+                    <p class="text-[10px] text-amber-700">Retenida por riesgo</p>
+                  <% end %>
+                  <% if gift_card.disputed? %>
+                    <p class="text-[10px] text-rose-700">En disputa</p>
+                  <% end %>
                 </td>
                 <td class="px-4 py-3">
-                  <span class="<%= status_badge_classes(gift_card.status) %>">
-                    <%= status_badge_label(gift_card.status) %>
-                  </span>
+                  <% if gift_card.sender %>
+                    <%= link_to gift_card.sender.name.presence || gift_card.sender.email, admin_user_path(gift_card.sender), class: "text-[#0D2F32] hover:underline" %>
+                  <% else %>
+                    <span class="text-[#2C3A43]/50">—</span>
+                  <% end %>
                 </td>
-                <td class="px-4 py-3 text-[#2C3A43]/70">
-                  <%= gift_card.created_at.strftime('%d/%m/%Y') %>
+                <td class="px-4 py-3">
+                  <% if gift_card.recipient %>
+                    <%= link_to gift_card.recipient.name.presence || gift_card.recipient.email, admin_user_path(gift_card.recipient), class: "text-[#0D2F32] hover:underline" %>
+                  <% else %>
+                    <span class="text-[#2C3A43]/50">—</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-right font-medium">
+                  <%= number_to_currency(gift_card.amount / 100.0, unit: gift_card.currency == 'USD' ? '$' : gift_card.currency) %>
+                </td>
+                <td class="px-4 py-3 text-right text-[#2C3A43]/80">
+                  <%= number_to_currency(gift_card.remaining_balance / 100.0, unit: gift_card.currency == 'USD' ? '$' : gift_card.currency) %>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="<%= status_badge_classes(gift_card.status) %>"><%= status_badge_label(gift_card.status) %></span>
+                </td>
+                <td class="px-4 py-3 text-[#2C3A43]/70 whitespace-nowrap">
+                  <p><%= gift_card.created_at.strftime('%d/%m/%Y') %></p>
+                  <% if gift_card.redeemed_at %>
+                    <p class="text-[10px]">Canjeada <%= gift_card.redeemed_at.strftime('%d/%m/%Y') %></p>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <% if gift_card.payment_intent_id.present? && gift_card.refundable_to_buyer_cents > 0 %>
+                    <%= link_to "Reembolsar", new_admin_gift_card_refund_path(gift_card), class: "papayal-btn-ghost text-xs text-rose-700" %>
+                  <% end %>
                 </td>
               </tr>
             <% end %>
           </tbody>
         </table>
       </div>
+
+      <% if @cards_total_pages > 1 %>
+        <div class="flex items-center justify-between text-sm text-[#2C3A43]/70 pt-2">
+          <span>Página <%= @cards_page %> de <%= @cards_total_pages %></span>
+          <div class="flex gap-2">
+            <% if @cards_page > 1 %>
+              <%= link_to "← Anterior", admin_merchant_path(@merchant, cards: @cards_filter, cards_page: @cards_page - 1, anchor: "tarjetas"), class: "papayal-btn-ghost text-xs" %>
+            <% end %>
+            <% if @cards_page < @cards_total_pages %>
+              <%= link_to "Siguiente →", admin_merchant_path(@merchant, cards: @cards_filter, cards_page: @cards_page + 1, anchor: "tarjetas"), class: "papayal-btn-ghost text-xs" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
     <% else %>
       <div class="text-center py-10 text-sm text-[#2C3A43]/70">
-        Aún no hay tarjetas registradas para este comercio.
+        No hay tarjetas<%= { "active" => " activas", "redeemed" => " canjeadas", "held" => " retenidas", "disputed" => " en disputa" }[@cards_filter] %> para este comercio.
       </div>
     <% end %>
+  </div>
+
+  <div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 xl:col-span-7 papayal-card p-6 space-y-4" id="transacciones">
+      <div>
+        <p class="papayal-meta">Ledger</p>
+        <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Transacciones recientes</h2>
+      </div>
+      <% if @recent_transactions.any? %>
+        <div class="overflow-x-auto rounded-2xl border border-black/5">
+          <table class="min-w-full divide-y divide-black/5">
+            <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
+              <tr>
+                <th class="px-4 py-3">Tipo</th>
+                <th class="px-4 py-3">Tarjeta</th>
+                <th class="px-4 py-3 text-right">Monto</th>
+                <th class="px-4 py-3">Estado</th>
+                <th class="px-4 py-3">Fecha</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-black/5 text-sm">
+              <% @recent_transactions.each do |txn| %>
+                <tr class="hover:bg-[#EBEBEB]/40 transition">
+                  <td class="px-4 py-3 font-medium text-[#0D2F32]"><%= txn_type_labels[txn.txn_type] || txn.txn_type.humanize %></td>
+                  <td class="px-4 py-3 text-[#2C3A43]/80">
+                    <%= txn.gift_card ? "REM-#{txn.gift_card.id.to_s.last(6)}" : "—" %>
+                  </td>
+                  <td class="px-4 py-3 text-right font-medium">
+                    <%= number_to_currency(txn.amount / 100.0, unit: '$') %>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class="<%= status_badge_classes(txn.status == 'succeeded' ? 'active' : txn.status == 'failed' ? 'expired' : 'pending') %>">
+                      <%= txn_status_labels[txn.status] || txn.status.humanize %>
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-[#2C3A43]/70 whitespace-nowrap"><%= txn.created_at.strftime('%d/%m/%Y %H:%M') %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="text-center py-10 text-sm text-[#2C3A43]/70">Aún no hay transacciones para este comercio.</div>
+      <% end %>
+    </div>
+
+    <div class="col-span-12 xl:col-span-5 papayal-card p-6 space-y-4" id="liquidaciones">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="papayal-meta">Pagos</p>
+          <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Liquidaciones</h2>
+        </div>
+        <%= link_to "Ver pagos", admin_payouts_path, class: "papayal-btn-ghost text-sm" %>
+      </div>
+      <% if @settlements.any? %>
+        <div class="space-y-3">
+          <% @settlements.each do |settlement| %>
+            <%= link_to admin_payout_path(settlement), class: "block p-4 rounded-2xl border border-black/5 bg-[#F8F8F8] hover:border-[#FCA50F]/50 transition" do %>
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <p class="font-semibold text-[#0D2F32]"><%= number_to_currency(settlement.amount / 100.0, unit: '$') %></p>
+                  <p class="text-xs text-[#2C3A43]/70">
+                    <%= settlement.period_start.strftime('%d/%m/%Y') %> – <%= settlement.period_end.strftime('%d/%m/%Y') %>
+                  </p>
+                </div>
+                <span class="<%= status_badge_classes(settlement.payout_status == 'paid' ? 'active' : settlement.payout_status == 'failed' ? 'expired' : 'pending') %>">
+                  <%= payout_status_labels[settlement.payout_status] || settlement.payout_status.humanize %>
+                </span>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-center py-10 text-sm text-[#2C3A43]/70">Aún no hay liquidaciones para este comercio.</div>
+      <% end %>
+    </div>
   </div>
 </div>

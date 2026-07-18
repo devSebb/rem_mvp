@@ -1,0 +1,54 @@
+<tr class="hover:bg-[#EBEBEB]/40 transition cursor-pointer <%= 'bg-rose-50/30' if merchant.suspended? %>"
+    data-controller="clickable"
+    data-clickable-url-value="<%= admin_merchant_path(merchant) %>"
+    data-action="click->clickable#navigate">
+  <td class="px-4 py-3">
+    <div class="flex items-center gap-3">
+      <%= merchant_logo_image(merchant, size: 40, rounded: "xl") %>
+      <div>
+        <%= link_to merchant.store_name, admin_merchant_path(merchant), class: "font-semibold text-[#0D2F32] hover:underline" %>
+        <p class="text-xs text-[#2C3A43]/70"><%= merchant.contact_email.presence || "Sin email" %></p>
+      </div>
+    </div>
+  </td>
+  <td class="px-4 py-3">
+    <p class="font-medium text-[#2C3A43]"><%= merchant.user&.name || "Sin usuario" %></p>
+    <p class="text-xs text-[#2C3A43]/70"><%= merchant.user&.email %></p>
+  </td>
+  <td class="px-4 py-3">
+    <span class="<%= status_badge_classes(merchant.status) %>"><%= status_badge_label(merchant.status) %></span>
+    <% if merchant.partner_redemption? %>
+      <p class="text-[10px] text-[#2C3A43]/60 mt-1">Canje vía socio</p>
+    <% end %>
+  </td>
+  <td class="px-4 py-3 text-right">
+    <p class="font-semibold text-[#0D2F32]"><%= stats[:total_cards] %></p>
+    <p class="text-[10px] text-[#2C3A43]/60">
+      <%= link_to "#{stats[:active_cards]} activas", admin_merchant_path(merchant, cards: "active", anchor: "tarjetas"), class: "hover:underline" %>
+      ·
+      <%= link_to "#{stats[:redeemed_cards]} canjeadas", admin_merchant_path(merchant, cards: "redeemed", anchor: "tarjetas"), class: "hover:underline" %>
+    </p>
+  </td>
+  <td class="px-4 py-3 text-right font-medium text-[#0D2F32]">
+    <%= number_to_currency(stats[:issued_volume_cents] / 100.0, unit: '$') %>
+  </td>
+  <td class="px-4 py-3 text-right font-medium text-[#0D2F32]">
+    <%= number_to_currency(stats[:redemption_volume_cents] / 100.0, unit: '$') %>
+  </td>
+  <td class="px-4 py-3 text-right text-[#2C3A43]/80">
+    <%= number_to_currency(stats[:remaining_balance_cents] / 100.0, unit: '$') %>
+  </td>
+  <td class="px-4 py-3 text-[#2C3A43]/70 whitespace-nowrap">
+    <%= merchant.created_at.strftime("%d/%m/%Y") %>
+  </td>
+  <td class="px-4 py-3 text-right">
+    <div class="flex justify-end gap-2">
+      <%= link_to "Editar", edit_admin_merchant_path(merchant), class: "papayal-btn-secondary text-sm" %>
+      <% if merchant.active? %>
+        <%= button_to "Suspender", suspend_admin_merchant_path(merchant), method: :patch, class: "papayal-btn-ghost text-sm text-rose-700", data: { turbo_confirm: "¿Suspender este comercio? Dejará de aparecer en la app y no podrá usar la API." } %>
+      <% else %>
+        <%= button_to "Reactivar", reactivate_admin_merchant_path(merchant), method: :patch, class: "papayal-btn-ghost text-sm text-emerald-700", data: { turbo_confirm: "¿Reactivar este comercio? Volverá a aparecer en la app." } %>
+      <% end %>
+    </div>
+  </td>
+</tr>

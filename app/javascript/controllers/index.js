@@ -8,8 +8,14 @@ import HelloController from "./hello_controller"
 import LocaleController from "./locale_controller"
 import MarketingController from "./marketing_controller"
 import RedemptionCodeController from "./redemption_code_controller"
+import ViewToggleController from "./view_toggle_controller"
+import ClickableController from "./clickable_controller"
+import CopyController from "./copy_controller"
 
 application.register("hello", HelloController)
 application.register("locale", LocaleController)
 application.register("marketing", MarketingController)
 application.register("redemption-code", RedemptionCodeController)
+application.register("view-toggle", ViewToggleController)
+application.register("clickable", ClickableController)
+application.register("copy", CopyController)

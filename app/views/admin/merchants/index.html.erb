@@ -1,9 +1,13 @@
+<% content_for :title, "Papayal · Comercios" %>
 <div class="space-y-8">
   <div class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
     <div>
       <p class="papayal-meta text-[#0D2F32]">Panel Comercios</p>
       <h1 class="text-2xl font-bold text-[#0D2F32]">Gestión de comercios</h1>
-      <p class="text-sm text-[#2C3A43]/80 mt-1">Administra los socios activos y crea nuevos accesos de comercio.</p>
+      <p class="text-sm text-[#2C3A43]/80 mt-1">
+        Administra los socios activos y crea nuevos accesos de comercio.
+        <span class="font-semibold"><%= @total_count %></span> resultado<%= "s" unless @total_count == 1 %>.
+      </p>
     </div>
     <div class="flex flex-wrap gap-3">
       <%= link_to "Crear nuevo comercio", new_admin_merchant_path, class: "papayal-btn-primary" %>
@@ -42,67 +46,99 @@
     </div>
   <% end %>
 
-  <div class="papayal-card p-6">
-    <div class="flex items-center justify-between mb-4">
+  <div class="papayal-card p-6 space-y-4"
+       data-controller="view-toggle"
+       data-view-toggle-storage-key-value="admin_merchants_view">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div>
-        <p class="papayal-meta">Comercios activos</p>
+        <p class="papayal-meta">Comercios</p>
         <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Listado de comercios</h2>
       </div>
-      <%= link_to "Nuevo", new_admin_merchant_path, class: "papayal-btn-secondary text-sm" %>
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="inline-flex rounded-full border border-black/10 overflow-hidden" role="group" aria-label="Modo de vista">
+          <button type="button"
+                  data-view-toggle-target="listButton"
+                  data-action="view-toggle#showList"
+                  class="px-4 py-1.5 text-sm font-medium transition-colors bg-white text-[#2C3A43]">
+            Lista
+          </button>
+          <button type="button"
+                  data-view-toggle-target="gridButton"
+                  data-action="view-toggle#showGrid"
+                  class="px-4 py-1.5 text-sm font-medium transition-colors bg-white text-[#2C3A43]">
+            Cuadrícula
+          </button>
+        </div>
+        <%= link_to "Nuevo", new_admin_merchant_path, class: "papayal-btn-secondary text-sm" %>
+      </div>
+    </div>
+
+    <%= form_with url: admin_merchants_path, method: :get, local: true, class: "flex flex-col sm:flex-row gap-3" do %>
+      <input type="text" name="q" value="<%= @query %>" placeholder="Buscar por comercio, correo, propietario o public key…" class="papayal-input flex-1">
+      <input type="hidden" name="filter" value="<%= @filter %>">
+      <button type="submit" class="papayal-btn-primary">Buscar</button>
+      <% if @query.present? %>
+        <%= link_to "Limpiar", admin_merchants_path(filter: @filter), class: "papayal-btn-ghost" %>
+      <% end %>
+    <% end %>
+
+    <div class="flex flex-wrap gap-2">
+      <% { "all" => "Todos", "active" => "Activos", "suspended" => "Suspendidos" }.each do |key, label| %>
+        <%= link_to "#{label} (#{@status_counts[key]})", admin_merchants_path(filter: key, q: @query.presence),
+              class: "px-4 py-1.5 rounded-full text-sm font-medium border transition-colors #{@filter == key ? 'bg-[#0D2F32] text-white border-[#0D2F32]' : 'bg-white text-[#2C3A43] border-black/10 hover:border-[#FCA50F]/50'}" %>
+      <% end %>
     </div>
 
     <% if @merchants.any? %>
-      <div class="overflow-hidden rounded-2xl border border-black/5">
-        <table class="min-w-full divide-y divide-black/5">
-          <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
-            <tr>
-              <th class="px-4 py-3">Comercio</th>
-              <th class="px-4 py-3">Propietario</th>
-              <th class="px-4 py-3">Estado</th>
-              <th class="px-4 py-3">Public Key</th>
-              <th class="px-4 py-3">Creado</th>
-              <th class="px-4 py-3 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-black/5 text-sm">
-            <% @merchants.each do |merchant| %>
-              <tr class="hover:bg-[#EBEBEB]/40 transition <%= 'bg-rose-50/30' if merchant.suspended? %>">
-                <td class="px-4 py-3">
-                  <p class="font-semibold text-[#0D2F32]"><%= merchant.store_name %></p>
-                  <p class="text-xs text-[#2C3A43]/70"><%= merchant.contact_email.presence || "Sin email" %></p>
-                </td>
-                <td class="px-4 py-3">
-                  <p class="font-medium text-[#2C3A43]"><%= merchant.user&.name || "Sin usuario" %></p>
-                  <p class="text-xs text-[#2C3A43]/70"><%= merchant.user&.email %></p>
-                </td>
-                <td class="px-4 py-3">
-                  <span class="<%= status_badge_classes(merchant.status) %>"><%= status_badge_label(merchant.status) %></span>
-                </td>
-                <td class="px-4 py-3 font-mono text-xs text-[#0D2F32]/80 break-all">
-                  <%= merchant.public_key %>
-                </td>
-                <td class="px-4 py-3 text-[#2C3A43]/70">
-                  <%= merchant.created_at.strftime("%d/%m/%Y") %>
-                </td>
-                <td class="px-4 py-3 text-right">
-                  <div class="flex justify-end gap-2">
-                    <%= link_to "Detalles", admin_merchant_path(merchant), class: "papayal-btn-ghost text-sm" %>
-                    <%= link_to "Editar", edit_admin_merchant_path(merchant), class: "papayal-btn-secondary text-sm" %>
-                    <% if merchant.active? %>
-                      <%= button_to "Suspender", suspend_admin_merchant_path(merchant), method: :patch, class: "papayal-btn-ghost text-sm text-rose-700", data: { turbo_confirm: "¿Suspender este comercio? Dejará de aparecer en la app y no podrá usar la API." } %>
-                    <% else %>
-                      <%= button_to "Reactivar", reactivate_admin_merchant_path(merchant), method: :patch, class: "papayal-btn-ghost text-sm text-emerald-700", data: { turbo_confirm: "¿Reactivar este comercio? Volverá a aparecer en la app." } %>
-                    <% end %>
-                  </div>
-                </td>
+      <div data-view-toggle-target="list">
+        <div class="overflow-x-auto rounded-2xl border border-black/5">
+          <table class="min-w-full divide-y divide-black/5">
+            <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
+              <tr>
+                <th class="px-4 py-3">Comercio</th>
+                <th class="px-4 py-3">Propietario</th>
+                <th class="px-4 py-3">Estado</th>
+                <th class="px-4 py-3 text-right">Tarjetas</th>
+                <th class="px-4 py-3 text-right">Vol. emitido</th>
+                <th class="px-4 py-3 text-right">Vol. canjeado</th>
+                <th class="px-4 py-3 text-right">Saldo activo</th>
+                <th class="px-4 py-3">Creado</th>
+                <th class="px-4 py-3 text-right">Acciones</th>
               </tr>
-            <% end %>
-          </tbody>
-        </table>
+            </thead>
+            <tbody class="bg-white divide-y divide-black/5 text-sm">
+              <% @merchants.each do |merchant| %>
+                <%= render "merchant_row", merchant: merchant, stats: @merchant_stats.fetch(merchant.id) %>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      <div data-view-toggle-target="grid" class="hidden">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <% @merchants.each do |merchant| %>
+            <%= render "merchant_card", merchant: merchant, stats: @merchant_stats.fetch(merchant.id) %>
+          <% end %>
+        </div>
+      </div>
+
+      <% if @total_pages > 1 %>
+        <div class="flex items-center justify-between text-sm text-[#2C3A43]/70 pt-2">
+          <span>Página <%= @page %> de <%= @total_pages %></span>
+          <div class="flex gap-2">
+            <% if @page > 1 %>
+              <%= link_to "← Anterior", admin_merchants_path(filter: @filter, q: @query.presence, page: @page - 1), class: "papayal-btn-ghost text-xs" %>
+            <% end %>
+            <% if @page < @total_pages %>
+              <%= link_to "Siguiente →", admin_merchants_path(filter: @filter, q: @query.presence, page: @page + 1), class: "papayal-btn-ghost text-xs" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
     <% else %>
       <div class="text-center py-10 text-sm text-[#2C3A43]/70">
-        Aún no hay comercios creados.
+        No se encontraron comercios<%= " para \"#{@query}\"" if @query.present? %>.
       </div>
     <% end %>
   </div>

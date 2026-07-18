@@ -1,0 +1,58 @@
+<div class="papayal-card papayal-card-hover p-5 flex flex-col gap-4 cursor-pointer <%= 'ring-1 ring-rose-200' if merchant.suspended? %>"
+     data-controller="clickable"
+     data-clickable-url-value="<%= admin_merchant_path(merchant) %>"
+     data-action="click->clickable#navigate">
+  <div class="flex items-start justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <%= merchant_logo_image(merchant, size: 48, rounded: "xl") %>
+      <div class="min-w-0">
+        <%= link_to merchant.store_name, admin_merchant_path(merchant), class: "font-semibold text-[#0D2F32] hover:underline block truncate" %>
+        <p class="text-xs text-[#2C3A43]/70 truncate"><%= merchant.contact_email.presence || merchant.user&.email || "Sin email" %></p>
+      </div>
+    </div>
+    <span class="<%= status_badge_classes(merchant.status) %> shrink-0"><%= status_badge_label(merchant.status) %></span>
+  </div>
+
+  <div class="grid grid-cols-2 gap-2 text-sm">
+    <div class="p-3 rounded-xl bg-[#F8F8F8] border border-black/5">
+      <p class="papayal-meta text-[10px]">Tarjetas</p>
+      <p class="font-bold text-[#0D2F32]"><%= stats[:total_cards] %></p>
+      <p class="text-[10px] text-[#2C3A43]/60"><%= stats[:active_cards] %> activas</p>
+    </div>
+    <div class="p-3 rounded-xl bg-[#F8F8F8] border border-black/5">
+      <p class="papayal-meta text-[10px]">Canjeadas</p>
+      <p class="font-bold text-[#0D2F32]"><%= stats[:redeemed_cards] %></p>
+      <p class="text-[10px] text-[#2C3A43]/60"><%= number_to_currency(stats[:redemption_volume_cents] / 100.0, unit: '$') %></p>
+    </div>
+    <div class="p-3 rounded-xl bg-[#F8F8F8] border border-black/5">
+      <p class="papayal-meta text-[10px]">Vol. emitido</p>
+      <p class="font-bold text-[#0D2F32]"><%= number_to_currency(stats[:issued_volume_cents] / 100.0, unit: '$') %></p>
+    </div>
+    <div class="p-3 rounded-xl bg-[#F8F8F8] border border-black/5">
+      <p class="papayal-meta text-[10px]">Saldo activo</p>
+      <p class="font-bold text-[#0D2F32]"><%= number_to_currency(stats[:remaining_balance_cents] / 100.0, unit: '$') %></p>
+    </div>
+  </div>
+
+  <% if merchant.categories.present? && merchant.categories.any? %>
+    <div class="flex flex-wrap gap-1.5">
+      <% merchant.categories.first(3).each do |category| %>
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-[#FCA50F]/10 text-[#0D2F32] text-[10px] font-medium border border-[#FCA50F]/20"><%= category %></span>
+      <% end %>
+      <% if merchant.categories.size > 3 %>
+        <span class="text-[10px] text-[#2C3A43]/60 self-center">+<%= merchant.categories.size - 3 %></span>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="flex items-center justify-between pt-2 border-t border-black/5 mt-auto">
+    <p class="text-[11px] text-[#2C3A43]/60">
+      Creado <%= merchant.created_at.strftime("%d/%m/%Y") %>
+      <% if merchant.partner_redemption? %> · Canje vía socio<% end %>
+    </p>
+    <div class="flex gap-2">
+      <%= link_to "Editar", edit_admin_merchant_path(merchant), class: "papayal-btn-ghost text-xs" %>
+      <%= link_to "Detalles", admin_merchant_path(merchant), class: "papayal-btn-secondary text-xs" %>
+    </div>
+  </div>
+</div>

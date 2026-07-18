@@ -3,8 +3,41 @@ require "securerandom"
 class Admin::MerchantsController < Admin::BaseController
   before_action :set_merchant, only: [:show, :edit, :update, :suspend, :reactivate, :regenerate_secret, :destroy]
 
+  PER_PAGE = 24
+  STATUS_FILTERS = %w[all active suspended].freeze
+  CARD_FILTERS = %w[all active redeemed held disputed].freeze
+  CARDS_PER_PAGE = 20
+
   def index
-    @merchants = Merchant.includes(:user).order(created_at: :desc)
+    scope = Merchant.includes(:user)
+
+    @filter = STATUS_FILTERS.include?(params[:filter]) ? params[:filter] : "all"
+    scope = scope.where(status: @filter) unless @filter == "all"
+
+    @query = params[:q].to_s.strip
+    if @query.present?
+      like = "%#{ActiveRecord::Base.sanitize_sql_like(@query)}%"
+      scope = scope.left_joins(:user).where(
+        "merchants.store_name ILIKE :q OR merchants.contact_email ILIKE :q OR merchants.public_key ILIKE :q OR users.name ILIKE :q OR users.email ILIKE :q",
+        q: like
+      )
+    end
+
+    @status_counts = {
+      "all" => Merchant.count,
+      "active" => Merchant.active.count,
+      "suspended" => Merchant.suspended.count
+    }
+
+    @total_count = scope.count
+    @page = [params[:page].to_i, 1].max
+    @total_pages = [(@total_count.to_f / PER_PAGE).ceil, 1].max
+    @merchants = scope.order(created_at: :desc)
+                      .offset((@page - 1) * PER_PAGE)
+                      .limit(PER_PAGE)
+
+    @merchant_stats = batch_merchant_stats(@merchants.map(&:id))
+
     @created_merchant = Merchant.find_by(id: params[:created_id]) if params[:created_id].present?
     @generated_secret_key = flash[:generated_secret_key].presence || params[:secret]
     @generated_password = flash[:generated_password].presence || params[:password]
@@ -13,7 +46,31 @@ class Admin::MerchantsController < Admin::BaseController
   def show
     @user = @merchant.user
     @stats = merchant_stats(@merchant)
-    @recent_gift_cards = @merchant.gift_cards.includes(:sender, :recipient).order(created_at: :desc).limit(10)
+
+    @cards_filter = CARD_FILTERS.include?(params[:cards]) ? params[:cards] : "all"
+    cards_scope =
+      case @cards_filter
+      when "active" then @merchant.gift_cards.active
+      when "redeemed" then @merchant.gift_cards.redeemed
+      when "held" then @merchant.gift_cards.currently_held
+      when "disputed" then @merchant.gift_cards.disputed
+      else @merchant.gift_cards
+      end
+
+    @cards_total_count = cards_scope.count
+    @cards_page = [params[:cards_page].to_i, 1].max
+    @cards_total_pages = [(@cards_total_count.to_f / CARDS_PER_PAGE).ceil, 1].max
+    @gift_cards = cards_scope.includes(:sender, :recipient)
+                             .order(created_at: :desc)
+                             .offset((@cards_page - 1) * CARDS_PER_PAGE)
+                             .limit(CARDS_PER_PAGE)
+
+    @recent_transactions = Transaction.where(merchant_id: @merchant.id)
+                                      .includes(:gift_card, :user)
+                                      .order(created_at: :desc)
+                                      .limit(15)
+
+    @settlements = @merchant.settlements.order(created_at: :desc).limit(10)
   end
 
   def edit
@@ -102,7 +159,7 @@ class Admin::MerchantsController < Admin::BaseController
     blockers = @merchant.admin_delete_blockers
 
     if blockers.any?
-      redirect_to admin_merchant_path(@merchant), alert: "No se puede eliminar este comercio porque tiene #{blockers.to_sentence}. Suspéndelo si quieres ocultarlo."
+      redirect_to admin_merchant_path(@merchant), alert: "No se puede eliminar este comercio porque tiene #{blockers.to_sentence(two_words_connector: ' y ', last_word_connector: ' y ')}. Suspéndelo si quieres ocultarlo."
       return
     end
 
@@ -158,9 +215,40 @@ class Admin::MerchantsController < Admin::BaseController
       total_cards: gift_cards.count,
       active_cards: gift_cards.active.count,
       redeemed_cards: gift_cards.redeemed.count,
+      held_cards: gift_cards.currently_held.count,
+      disputed_cards: gift_cards.disputed.count,
       issued_volume_cents: gift_cards.sum(:amount),
-      remaining_balance_cents: gift_cards.sum(:remaining_balance),
-      redemption_volume_cents: merchant.transactions.successful.redemptions.sum(:amount)
+      remaining_balance_cents: gift_cards.active.sum(:remaining_balance),
+      redemption_volume_cents: Transaction.successful.redemptions.where(merchant_id: merchant.id).sum(:amount),
+      last_card_at: gift_cards.maximum(:created_at)
     }
+  end
+
+  # Per-merchant stats for the index, computed with one grouped query per
+  # metric instead of six queries per row.
+  def batch_merchant_stats(merchant_ids)
+    return {} if merchant_ids.empty?
+
+    cards = GiftCard.where(merchant_id: merchant_ids)
+    total_counts = cards.group(:merchant_id).count
+    active_counts = cards.active.group(:merchant_id).count
+    redeemed_counts = cards.redeemed.group(:merchant_id).count
+    issued_volume = cards.group(:merchant_id).sum(:amount)
+    active_balance = cards.active.group(:merchant_id).sum(:remaining_balance)
+    redeemed_volume = Transaction.successful.redemptions
+                                 .where(merchant_id: merchant_ids)
+                                 .group(:merchant_id)
+                                 .sum(:amount)
+
+    merchant_ids.index_with do |id|
+      {
+        total_cards: total_counts[id].to_i,
+        active_cards: active_counts[id].to_i,
+        redeemed_cards: redeemed_counts[id].to_i,
+        issued_volume_cents: issued_volume[id].to_i,
+        remaining_balance_cents: active_balance[id].to_i,
+        redemption_volume_cents: redeemed_volume[id].to_i
+      }
+    end
   end
 end
