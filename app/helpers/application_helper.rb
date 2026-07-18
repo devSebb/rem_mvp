@@ -21,6 +21,23 @@ module ApplicationHelper
     STATUS_PRESETS[status.to_s]&.fetch(:label, nil) || status.to_s.humanize
   end
 
+  # Disputed/held are flags on top of the status enum (a disputed card is
+  # still "active" in the enum), so they get their own chips — without
+  # these, a chargeback-frozen card looks indistinguishable from a healthy
+  # one in the admin views.
+  def gift_card_flag_badges(gift_card)
+    badges = []
+    if gift_card.disputed?
+      badges << tag.span("⚠️ Disputada",
+        class: "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200")
+    end
+    if gift_card.held?
+      badges << tag.span("🛡️ Retenida",
+        class: "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200")
+    end
+    safe_join(badges, " ")
+  end
+
   def navbar_subtitle
     return tag.span("comercio", class: "italic") if merchant_nav_context?
 

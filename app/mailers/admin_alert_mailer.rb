@@ -43,6 +43,37 @@ class AdminAlertMailer < ApplicationMailer
     )
   end
 
+  # A Stripe refund we already debited from the card failed at the bank.
+  # The card was restored, but the buyer did NOT get their money back —
+  # support follow-up needed. Primitives only for deliver_later.
+  def refund_failed(gift_card_id, refund_id, amount_cents, currency, failure_reason)
+    @gift_card = GiftCard.find(gift_card_id)
+    @refund_id = refund_id
+    @failure_reason = failure_reason.presence || "unknown"
+    @amount_formatted = format("$%.2f %s", amount_cents / 100.0, currency)
+
+    mail(
+      to: admin_recipient,
+      subject: "[ALERT] Refund #{refund_id} FAILED — gift card ##{@gift_card.id} restored"
+    )
+  end
+
+  # A buyer's payment attempt was declined. Informational (no money moved,
+  # no card exists) — sent at most once per PaymentIntent per day.
+  def payment_failed(payment_intent_id, amount_cents, currency, error_code, decline_code, sender_id, merchant_id)
+    @payment_intent_id = payment_intent_id
+    @error_code = error_code.presence || "unknown"
+    @decline_code = decline_code
+    @sender = sender_id.present? ? User.find_by(id: sender_id) : nil
+    @merchant = merchant_id.present? ? Merchant.find_by(id: merchant_id) : nil
+    @amount_formatted = format("$%.2f %s", amount_cents / 100.0, currency)
+
+    mail(
+      to: admin_recipient,
+      subject: "[ALERT] Payment declined — #{@amount_formatted} (#{@decline_code || @error_code})"
+    )
+  end
+
   private
 
   def admin_recipient

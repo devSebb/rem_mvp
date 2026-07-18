@@ -13,7 +13,10 @@
       <h1 class="text-3xl font-bold text-[#0D2F32] mt-2">Detalles de la Tarjeta de Regalo</h1>
       <p class="text-sm text-[#2C3A43]/70 mt-1">Visualiza toda la información clave antes de compartir o canjear.</p>
     </div>
-    <span class="<%= status_badge_classes(@gift_card.status) %>"><%= status_badge_label(@gift_card.status) %></span>
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="<%= status_badge_classes(@gift_card.status) %>"><%= status_badge_label(@gift_card.status) %></span>
+      <%= gift_card_flag_badges(@gift_card) %>
+    </div>
   </div>
 
   <div class="grid grid-cols-12 gap-6">

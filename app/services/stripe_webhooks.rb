@@ -29,6 +29,10 @@ class StripeWebhooks
     case event.type
     when 'payment_intent.succeeded'
       handle_payment_intent_succeeded(event.data.object)
+    when 'payment_intent.payment_failed'
+      handle_payment_intent_payment_failed(event.data.object)
+    when 'refund.created', 'refund.updated', 'refund.failed'
+      handle_refund_event(event.data.object)
     when 'charge.refunded'
       handle_charge_refunded(event.data.object)
     when 'charge.dispute.created'
@@ -412,63 +416,212 @@ class StripeWebhooks
   end
 
   # ──────────────────────────────────────────────────────────────────────
-  # charge.refunded — reconcile internal state with a Stripe-side refund.
-  # Triggered for refunds issued via the Admin tool (Refunds::IssueStripeRefund)
-  # AND for refunds issued directly in the Stripe Dashboard. Idempotent
-  # against re-delivery: we look up by stripe_refund_id metadata.
+  # refund.created / refund.updated / refund.failed — reconcile internal
+  # state with a Stripe-side refund. Triggered for refunds issued via the
+  # Admin tool (Refunds::IssueStripeRefund) AND for refunds issued directly
+  # in the Stripe Dashboard. These events carry the Refund object itself,
+  # unlike charge.refunded whose payload stopped embedding the refunds
+  # list on API versions >= 2022-11-15 (which silently broke the old
+  # handler). Idempotent against re-delivery and against overlap with
+  # charge.refunded: de-duped on stripe_refund_id metadata, backstopped by
+  # the unique index on processor_ref.
+  #
+  # Also called by `rake stripe:reconcile_refunds` for backfill/repair.
   # ──────────────────────────────────────────────────────────────────────
+  def self.handle_refund_event(refund)
+    gift_card = find_gift_card_for_refund(refund)
+    return unless gift_card
+
+    case refund.status
+    when "succeeded", "pending"
+      # `pending` still debits: card refunds almost always settle, and if
+      # this one doesn't, refund.failed arrives later and reverses it.
+      apply_refund!(gift_card, refund)
+    when "failed", "canceled"
+      reverse_refund!(gift_card, refund)
+    else
+      Rails.logger.info "[Refund] Ignoring refund #{refund.id} with status #{refund.status.inspect}"
+    end
+  rescue => e
+    Rails.logger.error "💥 refund event handler error: #{e.class} - #{e.message}"
+    Rails.logger.error e.backtrace.first(10).join("\n")
+    raise
+  end
+
+  # charge.refunded — defensive alias kept for older payloads and as a
+  # second delivery channel. Modern payloads no longer embed the refunds
+  # list, so when it's absent we fetch the refunds from the API and run
+  # them through the same reconciliation as refund.* events (de-dupe makes
+  # the overlap harmless).
   def self.handle_charge_refunded(charge)
-    payment_intent_id = charge.payment_intent
-    gift_card = GiftCard.find_by(payment_intent_id: payment_intent_id)
-    unless gift_card
-      Rails.logger.warn "[Refund] No gift card found for charge #{charge.id} (PI: #{payment_intent_id})"
-      return
-    end
+    refunds = charge.try(:refunds).try(:data)
+    refunds = Stripe::Refund.list(charge: charge.id).data if refunds.blank?
 
-    # Find the most recent refund on this charge that we haven't already
-    # recorded. Stripe sends one webhook per refund (and re-delivers on
-    # retry), so we de-dupe on the refund_id.
-    Array(charge.refunds&.data).each do |refund|
-      next if Transaction.refunds.where("metadata->>'stripe_refund_id' = ?", refund.id).exists?
-
-      Rails.logger.info "[Refund] Recording Stripe refund #{refund.id} for gift card #{gift_card.id} (amount: #{refund.amount})"
-
-      gift_card.with_lock do
-        gift_card.reload
-
-        # Decrement remaining_balance by the refund amount, floor at 0.
-        # A full refund cancels the card; partial leaves it active with
-        # the reduced balance.
-        new_balance = [gift_card.remaining_balance.to_i - refund.amount.to_i, 0].max
-        updates = { remaining_balance: new_balance }
-        if refund.amount.to_i >= gift_card.amount.to_i || new_balance.zero?
-          updates[:status] = :canceled
-        end
-        gift_card.update!(updates)
-
-        Transaction.create!(
-          gift_card: gift_card,
-          merchant: gift_card.merchant,
-          user: nil, # initiated externally (Stripe Dashboard) or via admin path
-          amount: refund.amount,
-          currency: refund.currency&.upcase || gift_card.currency,
-          txn_type: :refund,
-          status: :succeeded,
-          processor_ref: refund.id,
-          metadata: {
-            stripe_refund_id: refund.id,
-            stripe_charge_id: charge.id,
-            reason: refund.reason,
-            refunded_at: Time.current.iso8601,
-            source: "stripe_webhook"
-          }
-        )
-      end
-    end
+    Array(refunds).each { |refund| handle_refund_event(refund) }
   rescue => e
     Rails.logger.error "💥 charge.refunded handler error: #{e.class} - #{e.message}"
     Rails.logger.error e.backtrace.first(10).join("\n")
     raise
+  end
+
+  def self.find_gift_card_for_refund(refund)
+    payment_intent_id = refund.try(:payment_intent)
+    if payment_intent_id.blank?
+      Rails.logger.warn "[Refund] Refund #{refund.id} has no payment_intent; skipping"
+      return nil
+    end
+
+    gift_card = GiftCard.find_by(payment_intent_id: payment_intent_id)
+    unless gift_card
+      # Expected for orphaned-payment auto-refunds (no card was ever
+      # created — that's the point of the refund).
+      Rails.logger.warn "[Refund] No gift card found for refund #{refund.id} (PI: #{payment_intent_id})"
+      return nil
+    end
+
+    gift_card
+  end
+
+  def self.apply_refund!(gift_card, refund)
+    gift_card.with_lock do
+      gift_card.reload
+      return if Transaction.refunds.where("metadata->>'stripe_refund_id' = ?", refund.id).exists?
+
+      Rails.logger.info "[Refund] Recording Stripe refund #{refund.id} for gift card #{gift_card.id} (amount: #{refund.amount}, status: #{refund.status})"
+
+      # previous_status is stored so a later refund.failed can restore the
+      # card exactly as it was before this refund canceled it.
+      previous_status = gift_card.status
+
+      # Decrement remaining_balance by the refund amount, floor at 0.
+      # A full refund cancels the card; partial leaves it active with
+      # the reduced balance.
+      new_balance = [gift_card.remaining_balance.to_i - refund.amount.to_i, 0].max
+      updates = { remaining_balance: new_balance }
+      if refund.amount.to_i >= gift_card.amount.to_i || new_balance.zero?
+        updates[:status] = :canceled
+      end
+      gift_card.update!(updates)
+
+      Transaction.create!(
+        gift_card: gift_card,
+        merchant: gift_card.merchant,
+        user: nil, # initiated externally (Stripe Dashboard) or via admin path
+        amount: refund.amount,
+        currency: refund.currency&.upcase || gift_card.currency,
+        txn_type: :refund,
+        status: :succeeded,
+        processor_ref: refund.id,
+        metadata: {
+          stripe_refund_id: refund.id,
+          stripe_charge_id: refund.try(:charge),
+          reason: refund.reason,
+          refund_status_at_apply: refund.status,
+          previous_card_status: previous_status,
+          refunded_at: Time.current.iso8601,
+          source: "stripe_webhook"
+        }
+      )
+    end
+  rescue ActiveRecord::RecordNotUnique
+    # processor_ref unique index: another delivery (refund.updated,
+    # charge.refunded) recorded this refund concurrently. Nothing to do.
+    Rails.logger.warn "[Refund] Refund #{refund.id} already recorded concurrently; skipping"
+  end
+
+  # A refund we already debited did not go through (bank rejected it —
+  # rare, but real money). Restore the card to its pre-refund state, mark
+  # the ledger row failed, and alert the admin: the buyer did NOT get
+  # their money back, so support follow-up is needed.
+  def self.reverse_refund!(gift_card, refund)
+    reversed = false
+
+    gift_card.with_lock do
+      gift_card.reload
+
+      txn = Transaction.refunds.succeeded
+                       .where(gift_card_id: gift_card.id)
+                       .where("metadata->>'stripe_refund_id' = ?", refund.id)
+                       .first
+      unless txn
+        # Nothing was applied for this refund (or it was already reversed);
+        # either way there is nothing to undo.
+        Rails.logger.info "[Refund] No applied ledger row for failed refund #{refund.id}; nothing to reverse"
+        return
+      end
+
+      restored_balance = [gift_card.remaining_balance.to_i + txn.amount.to_i, gift_card.amount.to_i].min
+      updates = { remaining_balance: restored_balance }
+
+      previous_status = txn.metadata["previous_card_status"].to_s
+      if gift_card.canceled? && GiftCard.statuses.key?(previous_status)
+        updates[:status] = previous_status
+      end
+      gift_card.update!(updates)
+
+      txn.update!(
+        status: :failed,
+        metadata: txn.metadata.merge(
+          "refund_failed_at" => Time.current.iso8601,
+          "refund_failure_reason" => refund.try(:failure_reason)
+        )
+      )
+      reversed = true
+
+      Rails.logger.warn "[Refund] Reversed failed refund #{refund.id} on gift card #{gift_card.id}: balance restored to #{restored_balance}"
+    end
+
+    if reversed
+      AdminAlertMailer.refund_failed(
+        gift_card.id,
+        refund.id,
+        refund.amount.to_i,
+        refund.currency&.upcase || gift_card.currency,
+        refund.try(:failure_reason).to_s.presence
+      ).deliver_later
+    end
+  end
+
+  # ──────────────────────────────────────────────────────────────────────
+  # payment_intent.payment_failed — a buyer tried to pay and was declined.
+  # No money moved and no card exists; this is purely for visibility
+  # (declines were previously invisible — lost sales nobody knew about).
+  # Alert is throttled to one email per PaymentIntent per day: Stripe
+  # emits one event per attempt and buyers often retry many times.
+  # ──────────────────────────────────────────────────────────────────────
+  def self.handle_payment_intent_payment_failed(payment_intent)
+    error = payment_intent.try(:last_payment_error)
+    code = error.try(:code)
+    decline_code = error.try(:decline_code)
+    metadata = payment_intent.metadata || {}
+
+    Rails.logger.warn(
+      "[PaymentFailed] PI #{payment_intent.id} amount=#{payment_intent.amount} " \
+      "code=#{code.inspect} decline_code=#{decline_code.inspect} " \
+      "sender_id=#{metadata['sender_id'].inspect} merchant_id=#{metadata['merchant_id'].inspect}"
+    )
+
+    first_alert = Rails.cache.write(
+      "stripe:payment_failed_alert:#{payment_intent.id}",
+      true,
+      unless_exist: true,
+      expires_in: 24.hours
+    )
+    return unless first_alert
+
+    AdminAlertMailer.payment_failed(
+      payment_intent.id,
+      payment_intent.amount.to_i,
+      payment_intent.currency&.upcase || "USD",
+      code.to_s.presence,
+      decline_code.to_s.presence,
+      metadata["sender_id"].to_s.presence,
+      metadata["merchant_id"].to_s.presence
+    ).deliver_later
+  rescue => e
+    # Visibility must never break payment processing or trigger Stripe
+    # retries — log and move on.
+    Rails.logger.error "[PaymentFailed] Handler error for #{payment_intent.try(:id)}: #{e.class} - #{e.message}"
   end
 
   # ──────────────────────────────────────────────────────────────────────
@@ -495,9 +648,12 @@ class StripeWebhooks
   end
 
   # ──────────────────────────────────────────────────────────────────────
-  # charge.dispute.closed — outcome resolved. We don't auto-restore the
-  # card on a win (admin reviews case-by-case) but we do log the outcome
-  # so it's visible in the audit trail.
+  # charge.dispute.closed — outcome resolved. A LOST dispute means the
+  # bank clawed the money back: the card must stop being redeemable, so
+  # it is canceled and its remaining balance written off with an
+  # adjustment ledger row. We don't auto-restore the card on a win (admin
+  # reviews case-by-case — disputed_at stays set, which keeps redemption
+  # blocked until an admin clears it deliberately).
   # ──────────────────────────────────────────────────────────────────────
   def self.handle_charge_dispute_closed(dispute)
     payment_intent_id = dispute.payment_intent
@@ -505,9 +661,44 @@ class StripeWebhooks
     return unless gift_card
 
     Rails.logger.info "[Dispute] Closed for gift card #{gift_card.id}: status=#{dispute.status}"
+
+    cancel_card_for_lost_dispute!(gift_card, dispute) if dispute.status == "lost"
+
     AdminAlertMailer.dispute_closed(gift_card.id, dispute.id, dispute.status).deliver_later
   rescue => e
     Rails.logger.error "💥 charge.dispute.closed handler error: #{e.class} - #{e.message}"
     raise
+  end
+
+  def self.cancel_card_for_lost_dispute!(gift_card, dispute)
+    gift_card.with_lock do
+      gift_card.reload
+      # Idempotent against re-delivery: the write-off row is keyed on the
+      # dispute id via processor_ref (unique index).
+      return if Transaction.where(processor_ref: "dispute_#{dispute.id}").exists?
+
+      written_off = gift_card.remaining_balance.to_i
+
+      Transaction.create!(
+        gift_card: gift_card,
+        merchant: gift_card.merchant,
+        user: nil,
+        amount: written_off, # adjustment allows zero (already-drained card)
+        currency: gift_card.currency,
+        txn_type: :adjustment,
+        status: :succeeded,
+        processor_ref: "dispute_#{dispute.id}",
+        metadata: {
+          stripe_dispute_id: dispute.id,
+          source: "dispute_lost",
+          previous_card_status: gift_card.status,
+          previous_remaining_balance: written_off,
+          written_off_at: Time.current.iso8601
+        }
+      )
+
+      gift_card.update!(status: :canceled, remaining_balance: 0)
+      Rails.logger.warn "[Dispute] LOST — canceled gift card #{gift_card.id} and wrote off #{written_off} cents"
+    end
   end
 end

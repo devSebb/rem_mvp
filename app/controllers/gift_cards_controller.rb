@@ -47,6 +47,8 @@ class GiftCardsController < ApplicationController
       status: card.status,
       created_at: card.created_at,
       redeemed_at: card.redeemed_at,
+      disputed: card.disputed?,
+      held: card.held?,
       sender_id: card.sender_id,
       recipient_id: card.recipient_id,
       sender: serialize_wallet_party(card.sender),

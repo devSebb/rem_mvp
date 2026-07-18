@@ -1,0 +1,15 @@
+[ALERT] Refund failed — gift card restored
+======================================================
+
+Gift card:           #<%= @gift_card.id %> (<%= @gift_card.merchant&.store_name %>)
+Stripe refund ID:    <%= @refund_id %>
+Amount:              <%= @amount_formatted %>
+Failure reason:      <%= @failure_reason %>
+
+A refund that had already been debited from the gift card did not go
+through (the bank rejected it). The card's balance and status were
+restored automatically — but the buyer did NOT receive their money back.
+Follow up with the buyer and retry the refund from the admin panel or
+Stripe.
+
+Review in Stripe: https://dashboard.stripe.com/payments/<%= @gift_card.payment_intent_id %>

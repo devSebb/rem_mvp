@@ -1,0 +1,14 @@
+[ALERT] Payment declined
+======================================================
+
+Amount:        <%= @amount_formatted %>
+Buyer:         <%= @sender ? "#{@sender.name} (##{@sender.id}, #{@sender.email})" : "unknown" %>
+Merchant:      <%= @merchant ? "#{@merchant.store_name} (##{@merchant.id})" : "unknown" %>
+Error code:    <%= @error_code %>
+Decline code:  <%= @decline_code || "—" %>
+
+A buyer tried to purchase a gift card and their payment was declined.
+No money moved and no card was created — this is a lost sale, sent for
+visibility. At most one alert per payment per day.
+
+Review in Stripe: https://dashboard.stripe.com/payments/<%= @payment_intent_id %>

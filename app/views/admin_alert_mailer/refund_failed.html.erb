@@ -1,0 +1,36 @@
+<% content_for :preview_title, "Refund failed — gift card ##{@gift_card.id}" %>
+<% content_for :preheader do %>A Stripe refund of <%= @amount_formatted %> failed at the bank. The card was restored; the buyer did not get their money back.<% end %>
+
+<!-- Eyebrow -->
+<div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:14px;">
+  Internal alert · Refund
+</div>
+
+<h1 style="margin:0 0 16px 0; font-size:24px; line-height:1.2; font-weight:800; letter-spacing:-0.6px; color:#0D2F32;">
+  ⚠️ Refund failed at the bank
+</h1>
+
+<p style="margin:0 0 20px 0; font-size:15px; line-height:1.6; color:#2C3A43;">
+  A refund that had already been debited from the gift card did not go through
+  (the bank rejected it). The card's balance and status were restored automatically —
+  but the buyer did <strong>not</strong> receive their money back. Follow up with the
+  buyer and retry the refund from the admin panel or Stripe.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse; background:#FFFFFF; border:1px solid #F1E2CB; border-radius:12px; margin:0 0 24px 0;">
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Gift card:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;">#<%= @gift_card.id %> (<%= @gift_card.merchant&.store_name %>)</td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Stripe refund ID:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43; font-family:'Courier New',Courier,monospace;"><%= @refund_id %></td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Amount:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;"><%= @amount_formatted %></td></tr>
+  <tr><td style="padding:10px 16px; font-size:14px; color:#0D2F32; font-weight:700;">Failure reason:</td><td style="padding:10px 16px; font-size:14px; color:#2C3A43; font-family:'Courier New',Courier,monospace;"><%= @failure_reason %></td></tr>
+</table>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 4px 0;">
+  <tr>
+    <td align="center" bgcolor="#FCA50F" style="border-radius:999px;">
+      <a href="https://dashboard.stripe.com/payments/<%= @gift_card.payment_intent_id %>" class="pyl-btn"
+         style="display:inline-block; padding:13px 30px; font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:15px; font-weight:700; color:#3A1E00; text-decoration:none; border-radius:999px;">
+        Open in Stripe Dashboard
+      </a>
+    </td>
+  </tr>
+</table>

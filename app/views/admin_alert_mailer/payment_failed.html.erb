@@ -1,0 +1,42 @@
+<% content_for :preview_title, "Payment declined — #{@amount_formatted}" %>
+<% content_for :preheader do %>A buyer's payment of <%= @amount_formatted %> was declined (<%= @decline_code || @error_code %>). No money moved.<% end %>
+
+<!-- Eyebrow -->
+<div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:14px;">
+  Internal alert · Payment
+</div>
+
+<h1 style="margin:0 0 16px 0; font-size:24px; line-height:1.2; font-weight:800; letter-spacing:-0.6px; color:#0D2F32;">
+  💳 Payment declined
+</h1>
+
+<p style="margin:0 0 20px 0; font-size:15px; line-height:1.6; color:#2C3A43;">
+  A buyer tried to purchase a gift card and their payment was declined. No money moved
+  and no card was created — this is a lost sale, sent for visibility. Repeated attempts
+  on the same payment are grouped: at most one alert per payment per day.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse; background:#FFFFFF; border:1px solid #F1E2CB; border-radius:12px; margin:0 0 24px 0;">
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Amount:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;"><%= @amount_formatted %></td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Buyer:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;"><%= @sender ? "#{@sender.name} (##{@sender.id}, #{@sender.email})" : "unknown" %></td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Merchant:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;"><%= @merchant ? "#{@merchant.store_name} (##{@merchant.id})" : "unknown" %></td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Error code:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43; font-family:'Courier New',Courier,monospace;"><%= @error_code %></td></tr>
+  <tr><td style="padding:10px 16px; font-size:14px; color:#0D2F32; font-weight:700;">Decline code:</td><td style="padding:10px 16px; font-size:14px; color:#2C3A43; font-family:'Courier New',Courier,monospace;"><%= @decline_code || "—" %></td></tr>
+</table>
+
+<p style="margin:0 0 24px 0; font-size:14px; line-height:1.6; color:#2C3A43;">
+  <code style="font-family:'Courier New',Courier,monospace;">do_not_honor</code> and similar
+  decline codes come from the buyer's bank, not from Papayal — often international-charge
+  blocks on Ecuadorian cards. If the same buyer keeps failing, it may be worth reaching out.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 4px 0;">
+  <tr>
+    <td align="center" bgcolor="#FCA50F" style="border-radius:999px;">
+      <a href="https://dashboard.stripe.com/payments/<%= @payment_intent_id %>" class="pyl-btn"
+         style="display:inline-block; padding:13px 30px; font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:15px; font-weight:700; color:#3A1E00; text-decoration:none; border-radius:999px;">
+        Open in Stripe Dashboard
+      </a>
+    </td>
+  </tr>
+</table>

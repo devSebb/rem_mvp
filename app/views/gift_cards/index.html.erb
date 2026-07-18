@@ -337,10 +337,14 @@
               ${card.remaining_balance < card.amount ? `<div class="text-sm text-green-600 font-medium">Restante: ${currency}${remainingBalance}</div>` : ''}
             </div>
           </div>
-          <span class="inline-flex w-fit items-center px-3 py-1 rounded-full text-xs font-medium ${statusColors[card.status]}">
-            ${statusIcons[card.status]}
-            ${statusLabels[card.status] || card.status.charAt(0).toUpperCase() + card.status.slice(1)}
-          </span>
+          <div class="flex flex-col items-end gap-1">
+            <span class="inline-flex w-fit items-center px-3 py-1 rounded-full text-xs font-medium ${statusColors[card.status]}">
+              ${statusIcons[card.status]}
+              ${statusLabels[card.status] || card.status.charAt(0).toUpperCase() + card.status.slice(1)}
+            </span>
+            ${card.disputed ? '<span class="inline-flex w-fit items-center px-3 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">⚠️ Disputada</span>' : ''}
+            ${card.held ? '<span class="inline-flex w-fit items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">🛡️ Retenida</span>' : ''}
+          </div>
         </div>
         
         <!-- Recipient/From info -->
