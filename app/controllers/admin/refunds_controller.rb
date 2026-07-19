@@ -18,7 +18,7 @@ class Admin::RefundsController < Admin::BaseController
     reason = params[:reason]&.strip
 
     if refund_amount.nil? || refund_amount <= 0
-      flash[:alert] = 'Please enter a valid refund amount.'
+      flash[:alert] = "Ingresa un monto de reembolso válido."
       redirect_to new_admin_gift_card_refund_path(@gift_card) and return
     end
 
@@ -26,12 +26,12 @@ class Admin::RefundsController < Admin::BaseController
     # row lock, which is the authoritative enforcement.
     max_refund = @gift_card.refundable_to_buyer_cents
     if refund_amount > max_refund
-      flash[:alert] = "Refund amount exceeds remaining refundable amount (#{format_amount(max_refund, @gift_card.currency)})."
+      flash[:alert] = "El monto excede lo reembolsable (#{format_amount(max_refund, @gift_card.currency)})."
       redirect_to new_admin_gift_card_refund_path(@gift_card) and return
     end
 
     if reason.blank?
-      flash[:alert] = 'Please provide a reason for the refund.'
+      flash[:alert] = "Indica el motivo del reembolso."
       redirect_to new_admin_gift_card_refund_path(@gift_card) and return
     end
 
@@ -46,24 +46,24 @@ class Admin::RefundsController < Admin::BaseController
         actor: current_user
       )
 
-      flash[:notice] = "Stripe refund #{refund.id} issued for #{format_amount(refund_amount, @gift_card.currency)}. " \
-                       "Internal balance updates when the charge.refunded webhook arrives."
-      redirect_to gift_card_path(@gift_card)
+      flash[:notice] = "Reembolso Stripe #{refund.id} emitido por #{format_amount(refund_amount, @gift_card.currency)}. " \
+                       "El saldo interno se actualiza cuando llegue el webhook de Stripe."
+      redirect_to admin_gift_card_path(@gift_card)
     rescue Refunds::IssueStripeRefund::MissingPaymentIntent
-      flash[:alert] = "This gift card was not created via Stripe — no payment to refund."
+      flash[:alert] = "Esta tarjeta no se creó vía Stripe — no hay pago que reembolsar."
       redirect_to new_admin_gift_card_refund_path(@gift_card)
     rescue Refunds::IssueStripeRefund::AlreadyFullyRefunded
-      flash[:alert] = "This card is already canceled or fully refunded."
-      redirect_to gift_card_path(@gift_card)
+      flash[:alert] = "Esta tarjeta ya está cancelada o totalmente reembolsada."
+      redirect_to admin_gift_card_path(@gift_card)
     rescue Refunds::IssueStripeRefund::InvalidAmount
-      flash[:alert] = "Invalid refund amount."
+      flash[:alert] = "Monto de reembolso inválido."
       redirect_to new_admin_gift_card_refund_path(@gift_card)
     rescue Refunds::IssueStripeRefund::ExceedsRefundableBalance
-      flash[:alert] = "Refund amount exceeds the card's refundable balance (redeemed value cannot be refunded to the buyer)."
+      flash[:alert] = "El monto excede el saldo reembolsable (el valor ya canjeado no se devuelve al comprador)."
       redirect_to new_admin_gift_card_refund_path(@gift_card)
     rescue Stripe::StripeError => e
       Rails.logger.error "[AdminRefund] Stripe error for gift_card=#{@gift_card.id}: #{e.class} #{e.message}"
-      flash[:alert] = "Stripe rejected the refund: #{e.message}"
+      flash[:alert] = "Stripe rechazó el reembolso: #{e.message}"
       redirect_to new_admin_gift_card_refund_path(@gift_card)
     end
   end

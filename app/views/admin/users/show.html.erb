@@ -68,13 +68,13 @@
         <% if @received_gift_cards.any? %>
           <div class="space-y-3">
             <% @received_gift_cards.each do |card| %>
-              <div class="flex items-center justify-between rounded-2xl border border-black/5 px-4 py-3 bg-[#EBEBEB]/40">
+              <%= link_to admin_gift_card_path(card), class: "flex items-center justify-between rounded-2xl border border-black/5 px-4 py-3 bg-[#EBEBEB]/40 hover:border-[#FCA50F]/50 transition" do %>
                 <div>
                   <p class="font-semibold text-[#0D2F32]"><%= number_to_currency(card.amount / 100.0, unit: '$') %> · <%= card.merchant&.store_name || "—" %></p>
                   <p class="text-xs text-[#2C3A43]/70">De <%= card.sender&.name || "—" %> · <%= card.created_at.strftime('%d/%m/%Y') %> · saldo <%= number_to_currency(card.remaining_balance / 100.0, unit: '$') %></p>
                 </div>
                 <span class="<%= status_badge_classes(card.status) %>"><%= status_badge_label(card.status) %></span>
-              </div>
+              <% end %>
             <% end %>
           </div>
         <% else %>
@@ -87,13 +87,13 @@
         <% if @sent_gift_cards.any? %>
           <div class="space-y-3">
             <% @sent_gift_cards.each do |card| %>
-              <div class="flex items-center justify-between rounded-2xl border border-black/5 px-4 py-3 bg-[#EBEBEB]/40">
+              <%= link_to admin_gift_card_path(card), class: "flex items-center justify-between rounded-2xl border border-black/5 px-4 py-3 bg-[#EBEBEB]/40 hover:border-[#FCA50F]/50 transition" do %>
                 <div>
                   <p class="font-semibold text-[#0D2F32]"><%= number_to_currency(card.amount / 100.0, unit: '$') %> · <%= card.merchant&.store_name || "—" %></p>
                   <p class="text-xs text-[#2C3A43]/70">Para <%= card.recipient&.name || card.recipient&.email || "—" %> · <%= card.created_at.strftime('%d/%m/%Y') %></p>
                 </div>
                 <span class="<%= status_badge_classes(card.status) %>"><%= status_badge_label(card.status) %></span>
-              </div>
+              <% end %>
             <% end %>
           </div>
         <% else %>

@@ -50,7 +50,13 @@
               <% if public_legal_page? %>
                 <%= render "shared/language_toggle" %>
               <% end %>
-              <% if user_signed_in? %>
+              <% if admin_nav_context? %>
+                <% admin_nav_links.each do |label, path, controllers| %>
+                  <%= link_to label, path,
+                        class: "text-sm px-3 py-1.5 rounded-full font-medium transition-colors #{admin_nav_link_active?(controllers) ? 'bg-[#0D2F32] text-white' : 'text-[#2C3A43] hover:bg-black/5'}" %>
+                <% end %>
+                <%= button_to "Salir", destroy_user_session_path, method: :delete, class: "papayal-btn-ghost text-sm", form: { class: "contents" } %>
+              <% elsif user_signed_in? %>
                 <% unless current_user&.merchant? || merchant_nav_context? %>
                   <%= link_to "Inicio", navbar_home_path, class: "papayal-btn-ghost text-sm" %>
                 <% end %>
@@ -90,7 +96,13 @@
           <!-- Mobile menu -->
           <div class="md:hidden hidden pb-6" id="mobile-menu">
             <div class="space-y-2 border-t border-black/5 pt-4">
-              <% if user_signed_in? %>
+              <% if admin_nav_context? %>
+                <% admin_nav_links.each do |label, path, controllers| %>
+                  <%= link_to label, path,
+                        class: "block w-full text-left px-4 py-2 rounded-xl text-sm font-medium #{admin_nav_link_active?(controllers) ? 'bg-[#0D2F32] text-white' : 'text-[#2C3A43] hover:bg-black/5'}" %>
+                <% end %>
+                <%= button_to "Cerrar Sesión", destroy_user_session_path, method: :delete, class: "w-full papayal-btn-ghost justify-center", form: { class: "w-full" } %>
+              <% elsif user_signed_in? %>
                 <% unless current_user&.merchant? || merchant_nav_context? %>
                   <%= link_to "Inicio", navbar_home_path, class: "block w-full papayal-btn-ghost text-left justify-start" %>
                 <% end %>

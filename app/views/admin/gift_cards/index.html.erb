@@ -1,0 +1,132 @@
+<% content_for :title, "Papayal · Tarjetas" %>
+<div class="space-y-8">
+  <div class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p class="papayal-meta text-[#0D2F32]">Panel Tarjetas</p>
+      <h1 class="text-2xl font-bold text-[#0D2F32]">Tarjetas de regalo</h1>
+      <p class="text-sm text-[#2C3A43]/80 mt-1">
+        Todas las tarjetas de la plataforma, con su historial completo de movimientos.
+        <span class="font-semibold"><%= @total_count %></span> resultado<%= "s" unless @total_count == 1 %>.
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <%= link_to "Centro de control", admin_root_path, class: "papayal-btn-ghost" %>
+    </div>
+  </div>
+
+  <div class="papayal-card p-6 space-y-4">
+    <div>
+      <p class="papayal-meta">Tarjetas</p>
+      <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Listado de tarjetas</h2>
+    </div>
+
+    <%= form_with url: admin_gift_cards_path, method: :get, local: true, class: "flex flex-col sm:flex-row gap-3" do %>
+      <input type="text" name="q" value="<%= @query %>" placeholder="Buscar por REM-XXXXXX, comprador, destinatario, comercio o payment intent…" class="papayal-input flex-1">
+      <input type="hidden" name="filter" value="<%= @filter %>">
+      <button type="submit" class="papayal-btn-primary">Buscar</button>
+      <% if @query.present? %>
+        <%= link_to "Limpiar", admin_gift_cards_path(filter: @filter), class: "papayal-btn-ghost" %>
+      <% end %>
+    <% end %>
+
+    <div class="flex flex-wrap gap-2">
+      <% { "all" => "Todas", "active" => "Activas", "redeemed" => "Canjeadas", "canceled" => "Canceladas", "held" => "Retenidas", "disputed" => "Disputadas" }.each do |key, label| %>
+        <%= link_to "#{label} (#{@status_counts[key]})", admin_gift_cards_path(filter: key, q: @query.presence),
+              class: "px-4 py-1.5 rounded-full text-sm font-medium border transition-colors #{@filter == key ? 'bg-[#0D2F32] text-white border-[#0D2F32]' : 'bg-white text-[#2C3A43] border-black/10 hover:border-[#FCA50F]/50'}" %>
+      <% end %>
+    </div>
+
+    <% if @gift_cards.any? %>
+      <div class="overflow-x-auto rounded-2xl border border-black/5">
+        <table class="min-w-full divide-y divide-black/5">
+          <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
+            <tr>
+              <th class="px-4 py-3">Tarjeta</th>
+              <th class="px-4 py-3">Comercio</th>
+              <th class="px-4 py-3">Comprador</th>
+              <th class="px-4 py-3">Destinatario</th>
+              <th class="px-4 py-3 text-right">Monto</th>
+              <th class="px-4 py-3 text-right">Saldo</th>
+              <th class="px-4 py-3">Estado</th>
+              <th class="px-4 py-3">Emitida</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-black/5 text-sm">
+            <% @gift_cards.each do |gift_card| %>
+              <tr class="hover:bg-[#EBEBEB]/40 transition cursor-pointer"
+                  data-controller="clickable"
+                  data-clickable-url-value="<%= admin_gift_card_path(gift_card) %>"
+                  data-action="click->clickable#navigate">
+                <td class="px-4 py-3">
+                  <%= link_to admin_gift_card_path(gift_card), class: "font-medium text-[#0D2F32] hover:underline" do %>
+                    REM-<%= gift_card.id.to_s.last(6) %>
+                  <% end %>
+                  <% if gift_card.held? %>
+                    <p class="text-[10px] text-amber-700">Retenida por riesgo</p>
+                  <% end %>
+                  <% if gift_card.disputed? %>
+                    <p class="text-[10px] text-rose-700">En disputa</p>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3">
+                  <% if gift_card.merchant %>
+                    <%= link_to gift_card.merchant.store_name, admin_merchant_path(gift_card.merchant), class: "text-[#0D2F32] hover:underline" %>
+                  <% else %>
+                    <span class="text-[#2C3A43]/50">—</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3">
+                  <% if gift_card.sender %>
+                    <%= link_to gift_card.sender.name.presence || gift_card.sender.email, admin_user_path(gift_card.sender), class: "text-[#0D2F32] hover:underline" %>
+                  <% else %>
+                    <span class="text-[#2C3A43]/50">—</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3">
+                  <% if gift_card.recipient %>
+                    <%= link_to gift_card.recipient.name.presence || gift_card.recipient.email, admin_user_path(gift_card.recipient), class: "text-[#0D2F32] hover:underline" %>
+                  <% else %>
+                    <span class="text-[#2C3A43]/50">—</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-right font-medium">
+                  <%= number_to_currency(gift_card.amount / 100.0, unit: '$') %>
+                </td>
+                <td class="px-4 py-3 text-right text-[#2C3A43]/80">
+                  <%= number_to_currency(gift_card.remaining_balance / 100.0, unit: '$') %>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="<%= status_badge_classes(gift_card.status) %>"><%= status_badge_label(gift_card.status) %></span>
+                </td>
+                <td class="px-4 py-3 text-[#2C3A43]/70 whitespace-nowrap">
+                  <p><%= gift_card.created_at.strftime('%d/%m/%Y') %></p>
+                  <% if gift_card.redeemed_at %>
+                    <p class="text-[10px]">Canjeada <%= gift_card.redeemed_at.strftime('%d/%m/%Y') %></p>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if @total_pages > 1 %>
+        <div class="flex items-center justify-between text-sm text-[#2C3A43]/70 pt-2">
+          <span>Página <%= @page %> de <%= @total_pages %></span>
+          <div class="flex gap-2">
+            <% if @page > 1 %>
+              <%= link_to "← Anterior", admin_gift_cards_path(filter: @filter, q: @query.presence, page: @page - 1), class: "papayal-btn-ghost text-xs" %>
+            <% end %>
+            <% if @page < @total_pages %>
+              <%= link_to "Siguiente →", admin_gift_cards_path(filter: @filter, q: @query.presence, page: @page + 1), class: "papayal-btn-ghost text-xs" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="text-center py-10 text-sm text-[#2C3A43]/70">
+        No se encontraron tarjetas<%= " para \"#{@query}\"" if @query.present? %>.
+      </div>
+    <% end %>
+  </div>
+</div>

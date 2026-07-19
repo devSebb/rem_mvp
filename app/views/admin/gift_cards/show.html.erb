@@ -1,0 +1,236 @@
+<% content_for :title, "Papayal · Tarjeta REM-#{@gift_card.id.to_s.last(6)}" %>
+<div class="space-y-8">
+  <div class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p class="papayal-meta text-[#0D2F32]">Panel Tarjetas</p>
+      <div class="flex flex-wrap items-center gap-3">
+        <h1 class="text-2xl font-bold text-[#0D2F32]">Tarjeta REM-<%= @gift_card.id.to_s.last(6) %></h1>
+        <span class="<%= status_badge_classes(@gift_card.status) %>"><%= status_badge_label(@gift_card.status) %></span>
+        <%= gift_card_flag_badges(@gift_card) %>
+      </div>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">
+        <%= @gift_card.merchant&.store_name || "Sin comercio" %> · emitida el <%= @gift_card.created_at.strftime("%d/%m/%Y %H:%M") %>
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <%= link_to "Volver al listado", admin_gift_cards_path, class: "papayal-btn-ghost" %>
+      <% if @gift_card.payment_intent_id.present? && @gift_card.refundable_to_buyer_cents > 0 %>
+        <%= link_to "Emitir reembolso", new_admin_gift_card_refund_path(@gift_card), class: "papayal-btn-primary" %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-12 gap-4">
+    <div class="col-span-6 xl:col-span-3 papayal-card papayal-card-hover p-5">
+      <p class="papayal-meta">Monto</p>
+      <p class="text-3xl font-bold mt-2"><%= number_to_currency(@gift_card.amount / 100.0, unit: '$') %></p>
+      <p class="text-xs text-[#2C3A43]/70 mt-1">Valor emitido</p>
+    </div>
+    <div class="col-span-6 xl:col-span-3 papayal-card papayal-card-hover p-5">
+      <p class="papayal-meta">Saldo restante</p>
+      <p class="text-3xl font-bold mt-2 text-emerald-700"><%= number_to_currency(@gift_card.remaining_balance / 100.0, unit: '$') %></p>
+      <p class="text-xs text-[#2C3A43]/70 mt-1">Disponible para canjear</p>
+    </div>
+    <div class="col-span-6 xl:col-span-3 papayal-card papayal-card-hover p-5">
+      <p class="papayal-meta">Canjeado</p>
+      <p class="text-3xl font-bold mt-2 text-blue-700"><%= number_to_currency(@total_redeemed / 100.0, unit: '$') %></p>
+      <p class="text-xs text-[#2C3A43]/70 mt-1">Suma de canjes exitosos</p>
+    </div>
+    <div class="col-span-6 xl:col-span-3 papayal-card papayal-card-hover p-5">
+      <p class="papayal-meta">Reembolsado al comprador</p>
+      <p class="text-3xl font-bold mt-2 text-rose-700"><%= number_to_currency(@stripe_refunded_cents / 100.0, unit: '$') %></p>
+      <p class="text-xs text-[#2C3A43]/70 mt-1">Refunds Stripe aplicados</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-12 gap-6">
+    <div class="col-span-12 lg:col-span-7 papayal-card p-6 space-y-4">
+      <div>
+        <p class="papayal-meta">Partes</p>
+        <h2 class="text-xl font-semibold text-[#0D2F32]">Personas y comercio</h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+          <p class="papayal-meta">Comprador</p>
+          <% if @gift_card.sender %>
+            <%= link_to @gift_card.sender.name.presence || @gift_card.sender.email, admin_user_path(@gift_card.sender), class: "font-semibold text-[#0D2F32] hover:underline" %>
+            <p class="text-xs text-[#2C3A43]/70"><%= @gift_card.sender.email %></p>
+          <% else %>
+            <p class="font-semibold text-[#0D2F32]">—</p>
+          <% end %>
+        </div>
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+          <p class="papayal-meta">Destinatario</p>
+          <% if @gift_card.recipient %>
+            <%= link_to @gift_card.recipient.name.presence || @gift_card.recipient.email, admin_user_path(@gift_card.recipient), class: "font-semibold text-[#0D2F32] hover:underline" %>
+            <p class="text-xs text-[#2C3A43]/70">
+              <%= @gift_card.recipient.email.presence || @gift_card.recipient.phone %>
+              <% if @gift_card.recipient.claimed_at.nil? %>
+                · <span class="text-amber-700">pendiente de reclamar</span>
+              <% end %>
+            </p>
+          <% else %>
+            <p class="font-semibold text-[#0D2F32]">—</p>
+          <% end %>
+        </div>
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+          <p class="papayal-meta">Comercio</p>
+          <% if @gift_card.merchant %>
+            <%= link_to @gift_card.merchant.store_name, admin_merchant_path(@gift_card.merchant), class: "font-semibold text-[#0D2F32] hover:underline" %>
+            <% if @gift_card.merchant.partner_redemption? %>
+              <p class="text-xs text-[#2C3A43]/70">Canje vía socio: <%= @gift_card.merchant.redemption_partner_display %></p>
+            <% end %>
+          <% else %>
+            <p class="font-semibold text-[#0D2F32]">—</p>
+          <% end %>
+        </div>
+        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+          <p class="papayal-meta">Entrega</p>
+          <% delivery = [("WhatsApp" if @gift_card.sent_via_whatsapp?), ("SMS" if @gift_card.sent_via_sms?), ("Email" if @gift_card.sent_via_email?), ("Push" if @gift_card.sent_via_push?)].compact %>
+          <p class="font-semibold text-[#0D2F32]"><%= delivery.any? ? delivery.join(" · ") : "Sin envíos registrados" %></p>
+          <% if @gift_card.note.present? %>
+            <p class="text-xs text-[#2C3A43]/70 mt-1 italic">Nota: "<%= @gift_card.note %>"</p>
+          <% end %>
+        </div>
+        <% if @gift_card.payment_intent_id.present? %>
+          <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8] md:col-span-2"
+               data-controller="copy"
+               data-copy-text-value="<%= @gift_card.payment_intent_id %>">
+            <div class="flex items-center justify-between gap-2">
+              <p class="papayal-meta">Payment Intent (Stripe)</p>
+              <div class="flex items-center gap-3">
+                <button type="button" data-copy-target="button" data-action="copy#copy" class="text-xs font-medium text-[#0D2F32] underline decoration-dotted hover:text-[#FCA50F] transition">Copiar</button>
+                <%= link_to "Ver en Stripe ↗", "https://dashboard.stripe.com/payments/#{@gift_card.payment_intent_id}", target: "_blank", rel: "noopener", class: "text-xs font-medium text-[#0D2F32] underline decoration-dotted hover:text-[#FCA50F] transition" %>
+              </div>
+            </div>
+            <p class="font-mono text-xs text-[#0D2F32]/80 break-words mt-1"><%= @gift_card.payment_intent_id %></p>
+          </div>
+        <% else %>
+          <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8] md:col-span-2">
+            <p class="papayal-meta">Pago</p>
+            <p class="font-semibold text-[#0D2F32]">Sin pago Stripe</p>
+            <p class="text-xs text-[#2C3A43]/70 mt-1">Emitida fuera de Stripe (semilla, prueba o emisión manual) — no admite reembolso al comprador.</p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="col-span-12 lg:col-span-5 space-y-6">
+      <div class="papayal-card p-6 space-y-4">
+        <div>
+          <p class="papayal-meta">Riesgo y estado</p>
+          <h2 class="text-xl font-semibold text-[#0D2F32]">Señales de seguridad</h2>
+        </div>
+        <div class="space-y-3 text-sm">
+          <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+            <p class="papayal-meta">Retención por riesgo</p>
+            <% if @gift_card.held? %>
+              <p class="font-semibold text-amber-700">Retenida hasta <%= @gift_card.held_until.in_time_zone.strftime("%d/%m/%Y %H:%M") %></p>
+            <% elsif @gift_card.held_until.present? %>
+              <p class="font-semibold text-[#0D2F32]">Estuvo retenida — venció el <%= @gift_card.held_until.in_time_zone.strftime("%d/%m/%Y %H:%M") %></p>
+            <% else %>
+              <p class="font-semibold text-[#0D2F32]">Sin retenciones</p>
+            <% end %>
+            <% if @gift_card.risk_score.present? %>
+              <p class="text-xs text-[#2C3A43]/70 mt-1">Radar score: <%= @gift_card.risk_score %><%= " · #{@gift_card.risk_level}" if @gift_card.risk_level.present? %></p>
+            <% end %>
+          </div>
+          <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+            <p class="papayal-meta">Disputa</p>
+            <% if @gift_card.disputed? %>
+              <p class="font-semibold text-rose-700">En disputa desde el <%= @gift_card.disputed_at.in_time_zone.strftime("%d/%m/%Y") %></p>
+              <p class="text-xs text-[#2C3A43]/70 mt-1">El canje está bloqueado mientras la disputa siga abierta.</p>
+            <% else %>
+              <p class="font-semibold text-[#0D2F32]">Sin disputas</p>
+            <% end %>
+          </div>
+          <% if @gift_card.redeemed_at.present? %>
+            <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+              <p class="papayal-meta">Canje total</p>
+              <p class="font-semibold text-[#0D2F32]"><%= @gift_card.redeemed_at.in_time_zone.strftime("%d/%m/%Y %H:%M") %></p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <% if @gift_card.held? %>
+        <div class="papayal-card p-6 space-y-4 border border-amber-100 bg-amber-50/50">
+          <div>
+            <p class="papayal-meta text-amber-800">Acción administrativa</p>
+            <h2 class="text-lg font-semibold text-[#0D2F32]">Liberar retención</h2>
+            <p class="text-sm text-[#2C3A43]/70 mt-1">Libera la tarjeta antes de que venza la retención. Requiere un motivo — queda registrado para auditoría.</p>
+          </div>
+          <%= form_with url: release_admin_hold_path(@gift_card), method: :post, local: true, class: "flex flex-col sm:flex-row gap-3" do %>
+            <input type="text" name="reason" required placeholder="Motivo (ej. comprador verificado por teléfono)" class="papayal-input flex-1">
+            <button type="submit" class="papayal-btn-secondary text-amber-800" data-turbo-confirm="¿Liberar la retención de seguridad de esta tarjeta?">Liberar</button>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="papayal-card p-6 space-y-5" id="movimientos">
+    <div>
+      <p class="papayal-meta">Ledger</p>
+      <h2 class="text-xl font-bold text-[#2C3A43] mt-1">
+        Historial de movimientos
+        <span class="text-sm font-medium text-[#2C3A43]/60">(<%= @transactions.size %>)</span>
+      </h2>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">Cada movimiento con sus datos completos, del más reciente al más antiguo.</p>
+    </div>
+
+    <% if @transactions.any? %>
+      <ol class="relative border-l border-black/10 ml-3 space-y-6">
+        <% @transactions.each do |txn| %>
+          <% presentation = admin_txn_presentation(txn) %>
+          <% tone = admin_txn_tone_classes(presentation[:tone]) %>
+          <li class="ml-6">
+            <span class="absolute -left-[5px] mt-2 h-2.5 w-2.5 rounded-full <%= tone[:dot] %>"></span>
+            <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex flex-wrap items-center gap-3">
+                  <p class="font-semibold <%= tone[:text] %>"><%= presentation[:label] %></p>
+                  <span class="<%= status_badge_classes(txn.status == 'succeeded' ? 'active' : txn.status == 'failed' ? 'expired' : 'pending') %>">
+                    <%= { "pending" => "Pendiente", "succeeded" => "Exitosa", "failed" => "Fallida" }[txn.status] || txn.status.humanize %>
+                  </span>
+                </div>
+                <p class="font-bold text-[#0D2F32]"><%= number_to_currency(txn.amount / 100.0, unit: '$') %></p>
+              </div>
+              <p class="text-xs text-[#2C3A43]/70 mt-1">
+                <%= txn.created_at.strftime("%d/%m/%Y %H:%M:%S") %>
+                <% if txn.merchant %>
+                  · <%= link_to txn.merchant.store_name, admin_merchant_path(txn.merchant), class: "hover:underline" %>
+                <% end %>
+                <% if txn.user %>
+                  · <%= link_to (txn.user.name.presence || txn.user.email), admin_user_path(txn.user), class: "hover:underline" %>
+                <% end %>
+              </p>
+              <% if presentation[:note] %>
+                <p class="text-xs text-[#2C3A43]/60 mt-1"><%= presentation[:note] %></p>
+              <% end %>
+              <% metadata_rows = admin_txn_metadata_rows(txn) %>
+              <% if metadata_rows.any? || txn.processor_ref.present? %>
+                <div class="mt-3 pt-3 border-t border-black/5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-1.5 text-xs">
+                  <% if txn.processor_ref.present? %>
+                    <div class="flex justify-between gap-3 sm:col-span-2 xl:col-span-3">
+                      <span class="text-[#2C3A43]/60">Referencia</span>
+                      <span class="font-mono text-[#0D2F32]/80 break-all text-right"><%= txn.processor_ref %></span>
+                    </div>
+                  <% end %>
+                  <% metadata_rows.each do |label, value| %>
+                    <div class="flex justify-between gap-3">
+                      <span class="text-[#2C3A43]/60"><%= label %></span>
+                      <span class="text-[#0D2F32] break-all text-right"><%= value %></span>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </li>
+        <% end %>
+      </ol>
+    <% else %>
+      <div class="text-center py-10 text-sm text-[#2C3A43]/70">Esta tarjeta no tiene movimientos registrados.</div>
+    <% end %>
+  </div>
+</div>

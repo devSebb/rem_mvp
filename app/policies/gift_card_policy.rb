@@ -58,12 +58,12 @@ class GiftCardPolicy < ApplicationPolicy
   end
 
   class Scope < Scope
+    # Wallet semantics for everyone, admins included: your own cards only.
+    # Admins browse the whole platform through Admin::GiftCardsController;
+    # returning scope.all here leaked every card (web wallet JSON + mobile
+    # API) to any admin account acting as a consumer.
     def resolve
-      if user.admin?
-        scope.all
-      else
-        scope.where(sender: user).or(scope.where(recipient: user))
-      end
+      scope.where(sender: user).or(scope.where(recipient: user))
     end
   end
 end

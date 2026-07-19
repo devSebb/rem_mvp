@@ -241,7 +241,7 @@
             <% @gift_cards.each do |gift_card| %>
               <tr class="hover:bg-[#EBEBEB]/40 transition">
                 <td class="px-4 py-3">
-                  <p class="font-medium text-[#2C3A43]">REM-<%= gift_card.id.to_s.last(6) %></p>
+                  <%= link_to "REM-#{gift_card.id.to_s.last(6)}", admin_gift_card_path(gift_card), class: "font-medium text-[#0D2F32] hover:underline" %>
                   <% if gift_card.held? %>
                     <p class="text-[10px] text-amber-700">Retenida por riesgo</p>
                   <% end %>

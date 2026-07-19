@@ -1,0 +1,122 @@
+<% content_for :title, "Papayal · Pagos rechazados" %>
+<div class="space-y-8">
+  <div class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p class="papayal-meta text-[#0D2F32]">Panel Pagos rechazados</p>
+      <h1 class="text-2xl font-bold text-[#0D2F32]">Intentos de compra rechazados</h1>
+      <p class="text-sm text-[#2C3A43]/80 mt-1">
+        Ventas que no se concretaron porque el banco rechazó el pago. No se movió dinero ni existe tarjeta.
+        <span class="font-semibold"><%= number_to_currency(@lost_volume_cents / 100.0, unit: '$') %></span> en intentos sin resolver.
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <%= link_to "Centro de control", admin_root_path, class: "papayal-btn-ghost" %>
+      <%= link_to "Movimientos", admin_transactions_path, class: "papayal-btn-ghost" %>
+    </div>
+  </div>
+
+  <div class="papayal-card p-6 space-y-4">
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="papayal-meta">Rechazos</p>
+        <h2 class="text-xl font-bold text-[#2C3A43] mt-1">
+          Listado
+          <span class="text-sm font-medium text-[#2C3A43]/60">(<%= @total_count %>)</span>
+        </h2>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <% { "unresolved" => "Sin resolver", "resolved" => "Resueltos", "all" => "Todos" }.each do |key, label| %>
+          <%= link_to "#{label} (#{@counts[key]})", admin_payment_failures_path(filter: key),
+                class: "px-4 py-1.5 rounded-full text-sm font-medium border transition-colors #{@filter == key ? 'bg-[#0D2F32] text-white border-[#0D2F32]' : 'bg-white text-[#2C3A43] border-black/10 hover:border-[#FCA50F]/50'}" %>
+        <% end %>
+      </div>
+    </div>
+
+    <% if @payment_failures.any? %>
+      <div class="overflow-x-auto rounded-2xl border border-black/5">
+        <table class="min-w-full divide-y divide-black/5">
+          <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
+            <tr>
+              <th class="px-4 py-3">Último intento</th>
+              <th class="px-4 py-3">Comprador</th>
+              <th class="px-4 py-3">Comercio</th>
+              <th class="px-4 py-3 text-right">Monto</th>
+              <th class="px-4 py-3 text-center">Intentos</th>
+              <th class="px-4 py-3">Motivo del banco</th>
+              <th class="px-4 py-3">Estado</th>
+              <th class="px-4 py-3">Payment Intent</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-black/5 text-sm">
+            <% @payment_failures.each do |failure| %>
+              <tr class="hover:bg-[#EBEBEB]/40 transition">
+                <td class="px-4 py-3 text-[#2C3A43]/70 whitespace-nowrap">
+                  <p><%= failure.last_failed_at.strftime('%d/%m/%Y %H:%M') %></p>
+                  <% if failure.attempts > 1 %>
+                    <p class="text-[10px]">Primero <%= failure.first_failed_at.strftime('%d/%m/%Y %H:%M') %></p>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3">
+                  <% if failure.sender %>
+                    <%= link_to (failure.sender.name.presence || failure.sender.email), admin_user_path(failure.sender), class: "text-[#0D2F32] hover:underline" %>
+                  <% else %>
+                    <span class="text-[#2C3A43]/50">Desconocido</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3">
+                  <% if failure.merchant %>
+                    <%= link_to failure.merchant.store_name, admin_merchant_path(failure.merchant), class: "text-[#0D2F32] hover:underline" %>
+                  <% else %>
+                    <span class="text-[#2C3A43]/50">—</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-right font-medium"><%= number_to_currency(failure.amount / 100.0, unit: '$') %></td>
+                <td class="px-4 py-3 text-center">
+                  <span class="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full text-xs font-semibold <%= failure.attempts > 3 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-[#0D2F32]/5 text-[#0D2F32]' %>">
+                    <%= failure.attempts %>
+                  </span>
+                </td>
+                <td class="px-4 py-3">
+                  <p class="font-medium text-[#0D2F32]"><%= failure.decline_code.presence || failure.error_code.presence || "—" %></p>
+                  <% if failure.error_message.present? %>
+                    <p class="text-[11px] text-[#2C3A43]/60 max-w-[260px] truncate" title="<%= failure.error_message %>"><%= failure.error_message %></p>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3">
+                  <% if failure.resolved_at %>
+                    <span class="<%= status_badge_classes('active') %>">Resuelto</span>
+                    <p class="text-[10px] text-[#2C3A43]/60 mt-0.5"><%= failure.resolved_at.strftime('%d/%m/%Y %H:%M') %></p>
+                  <% else %>
+                    <span class="<%= status_badge_classes('expired') %>">Sin resolver</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3">
+                  <%= link_to "Ver en Stripe ↗", "https://dashboard.stripe.com/payments/#{failure.payment_intent_id}", target: "_blank", rel: "noopener", class: "text-xs font-medium text-[#0D2F32] underline decoration-dotted hover:text-[#FCA50F] transition" %>
+                  <p class="font-mono text-[10px] text-[#2C3A43]/60 max-w-[160px] truncate" title="<%= failure.payment_intent_id %>"><%= failure.payment_intent_id %></p>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if @total_pages > 1 %>
+        <div class="flex items-center justify-between text-sm text-[#2C3A43]/70 pt-2">
+          <span>Página <%= @page %> de <%= @total_pages %></span>
+          <div class="flex gap-2">
+            <% if @page > 1 %>
+              <%= link_to "← Anterior", admin_payment_failures_path(filter: @filter, page: @page - 1), class: "papayal-btn-ghost text-xs" %>
+            <% end %>
+            <% if @page < @total_pages %>
+              <%= link_to "Siguiente →", admin_payment_failures_path(filter: @filter, page: @page + 1), class: "papayal-btn-ghost text-xs" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="text-center py-10 text-sm text-[#2C3A43]/70">
+        <%= { "unresolved" => "No hay rechazos sin resolver — todo lo intentado se concretó o aún no hay rechazos.", "resolved" => "No hay rechazos resueltos.", "all" => "Aún no se ha registrado ningún pago rechazado." }[@filter] %>
+      </div>
+    <% end %>
+  </div>
+</div>

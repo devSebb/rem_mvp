@@ -1,120 +1,90 @@
-<div class="max-w-2xl mx-auto">
-  <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-    <div class="px-6 py-8">
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">Issue Refund</h1>
-        <%= link_to "Back to Gift Card", gift_card_path(@gift_card), class: "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
+<% content_for :title, "Papayal · Reembolso REM-#{@gift_card.id.to_s.last(6)}" %>
+<div class="max-w-3xl mx-auto space-y-8">
+  <div class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p class="papayal-meta text-[#0D2F32]">Panel Tarjetas</p>
+      <div class="flex flex-wrap items-center gap-3">
+        <h1 class="text-2xl font-bold text-[#0D2F32]">Emitir reembolso</h1>
+        <span class="<%= status_badge_classes(@gift_card.status) %>"><%= status_badge_label(@gift_card.status) %></span>
+        <%= gift_card_flag_badges(@gift_card) %>
       </div>
-
-      <!-- Gift Card Information -->
-      <div class="bg-gray-50 rounded-lg p-6 mb-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Gift Card Details</h3>
-        
-        <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <dt class="text-sm font-medium text-gray-500">Original Amount</dt>
-            <dd class="text-lg font-semibold text-gray-900">
-              <%= number_to_currency(@gift_card.amount / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
-            </dd>
-          </div>
-          
-          <div>
-            <dt class="text-sm font-medium text-gray-500">Remaining Balance</dt>
-            <dd class="text-lg font-semibold text-green-600">
-              <%= number_to_currency(@gift_card.remaining_balance / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
-            </dd>
-          </div>
-          
-          <div>
-            <dt class="text-sm font-medium text-gray-500">Total Redeemed</dt>
-            <dd class="text-lg font-semibold text-blue-600">
-              <%= number_to_currency(@total_redeemed / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
-            </dd>
-          </div>
-          
-          <div>
-            <dt class="text-sm font-medium text-gray-500">Status</dt>
-            <dd class="text-sm font-medium">
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= 
-                case @gift_card.status
-                when 'active'
-                  'bg-green-100 text-green-800'
-                when 'redeemed'
-                  'bg-blue-100 text-blue-800'
-                when 'expired'
-                  'bg-red-100 text-red-800'
-                when 'canceled'
-                  'bg-gray-100 text-gray-800'
-                else
-                  'bg-gray-100 text-gray-800'
-                end
-              %>">
-                <%= @gift_card.status.humanize %>
-              </span>
-            </dd>
-          </div>
-        </dl>
-      </div>
-
-      <!-- Refund Form -->
-      <%= form_with url: admin_gift_card_refunds_path(@gift_card), method: :post, local: true, class: "space-y-6" do |form| %>
-        <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-              </svg>
-            </div>
-            <div class="ml-3">
-              <h3 class="text-sm font-medium text-yellow-800">Important</h3>
-              <div class="mt-2 text-sm text-yellow-700">
-                <p>This sends money back to the buyer's original payment method at Stripe and reduces the card's available balance (a full refund cancels the card). Redeemed value cannot be refunded. This action cannot be undone.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="space-y-4">
-          <div>
-            <%= form.label :refund_amount, "Refund Amount", class: "block text-sm font-medium text-gray-700 mb-2" %>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span class="text-gray-500 sm:text-sm"><%= @gift_card.currency == 'USD' ? '$' : @gift_card.currency %></span>
-              </div>
-              <%= form.number_field :refund_amount,
-                  step: 0.01,
-                  min: 0.01,
-                  max: @max_refund_amount / 100.0,
-                  class: "block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
-                  placeholder: "0.00" %>
-            </div>
-            <p class="mt-1 text-sm text-gray-500">
-              Maximum refundable: <%= number_to_currency(@max_refund_amount / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
-            </p>
-          </div>
-          
-          <div>
-            <%= form.label :reason, "Reason for Refund", class: "block text-sm font-medium text-gray-700 mb-2" %>
-            <%= form.text_area :reason, 
-                rows: 3,
-                class: "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
-                placeholder: "Please provide a reason for this refund..." %>
-            <p class="mt-1 text-sm text-gray-500">
-              This reason will be recorded in the transaction history.
-            </p>
-          </div>
-        </div>
-        
-        <div class="flex items-center justify-between">
-          <%= link_to "Cancel", gift_card_path(@gift_card), class: "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
-          <%= form.submit "Issue Refund", 
-              class: "bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline",
-              data: { 
-                disable_with: "Processing...",
-                turbo_confirm: "Are you sure you want to issue this refund? This action cannot be undone."
-              } %>
-        </div>
-      <% end %>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">
+        Tarjeta REM-<%= @gift_card.id.to_s.last(6) %> · <%= @gift_card.merchant&.store_name || "Sin comercio" %>
+      </p>
     </div>
+    <div class="flex flex-wrap gap-3">
+      <%= link_to "Volver a la tarjeta", admin_gift_card_path(@gift_card), class: "papayal-btn-ghost" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-12 gap-4">
+    <div class="col-span-6 md:col-span-3 papayal-card p-5">
+      <p class="papayal-meta">Monto</p>
+      <p class="text-2xl font-bold mt-2"><%= number_to_currency(@gift_card.amount / 100.0, unit: '$') %></p>
+    </div>
+    <div class="col-span-6 md:col-span-3 papayal-card p-5">
+      <p class="papayal-meta">Saldo restante</p>
+      <p class="text-2xl font-bold mt-2 text-emerald-700"><%= number_to_currency(@gift_card.remaining_balance / 100.0, unit: '$') %></p>
+    </div>
+    <div class="col-span-6 md:col-span-3 papayal-card p-5">
+      <p class="papayal-meta">Canjeado</p>
+      <p class="text-2xl font-bold mt-2 text-blue-700"><%= number_to_currency(@total_redeemed / 100.0, unit: '$') %></p>
+    </div>
+    <div class="col-span-6 md:col-span-3 papayal-card p-5">
+      <p class="papayal-meta">Máx. reembolsable</p>
+      <p class="text-2xl font-bold mt-2 text-rose-700"><%= number_to_currency(@max_refund_amount / 100.0, unit: '$') %></p>
+    </div>
+  </div>
+
+  <div class="papayal-card p-6 space-y-6">
+    <div class="p-4 rounded-2xl border border-amber-200 bg-amber-50 text-sm text-amber-800">
+      <p class="font-semibold">Importante</p>
+      <p class="mt-1">
+        Esto devuelve dinero al método de pago original del comprador en Stripe y reduce el saldo
+        disponible de la tarjeta (un reembolso total la cancela). El valor ya canjeado no se puede
+        reembolsar. Esta acción no se puede deshacer.
+      </p>
+    </div>
+
+    <%= form_with url: admin_gift_card_refunds_path(@gift_card), method: :post, local: true, class: "space-y-5" do |form| %>
+      <div>
+        <%= form.label :refund_amount, "Monto a reembolsar", class: "block text-sm font-medium text-[#0D2F32] mb-2" %>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <span class="text-[#2C3A43]/60 text-sm">$</span>
+          </div>
+          <%= form.number_field :refund_amount,
+              step: 0.01,
+              min: 0.01,
+              max: @max_refund_amount / 100.0,
+              required: true,
+              class: "papayal-input w-full pl-8",
+              placeholder: "0.00" %>
+        </div>
+        <p class="mt-1 text-xs text-[#2C3A43]/70">
+          Máximo reembolsable: <%= number_to_currency(@max_refund_amount / 100.0, unit: '$') %> (el valor canjeado no se devuelve al comprador).
+        </p>
+      </div>
+
+      <div>
+        <%= form.label :reason, "Motivo del reembolso", class: "block text-sm font-medium text-[#0D2F32] mb-2" %>
+        <%= form.text_area :reason,
+            rows: 3,
+            required: true,
+            class: "papayal-input w-full",
+            placeholder: "Explica por qué se emite este reembolso…" %>
+        <p class="mt-1 text-xs text-[#2C3A43]/70">El motivo queda registrado en el historial de movimientos de la tarjeta.</p>
+      </div>
+
+      <div class="flex items-center justify-between pt-2">
+        <%= link_to "Cancelar", admin_gift_card_path(@gift_card), class: "papayal-btn-ghost" %>
+        <%= form.submit "Emitir reembolso",
+            class: "papayal-btn-primary bg-rose-600 hover:bg-rose-700 text-white cursor-pointer",
+            data: {
+              disable_with: "Procesando…",
+              turbo_confirm: "¿Emitir este reembolso al comprador? Esta acción no se puede deshacer."
+            } %>
+      </div>
+    <% end %>
   </div>
 </div>

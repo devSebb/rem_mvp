@@ -52,8 +52,20 @@ class StripeWebhooks
   # so Stripe retries the delivery.
   def self.handle_payment_intent_succeeded(payment_intent)
     fulfill_payment_intent!(payment_intent)
+    mark_payment_failures_resolved(payment_intent)
   rescue UnfulfillablePaymentError => e
     refund_unfulfillable_payment(payment_intent, e)
+  end
+
+  # A PI that failed earlier and now succeeded means the buyer retried and
+  # got through — close the decline record so the admin list shows only
+  # genuinely lost sales. Never lets bookkeeping break fulfillment.
+  def self.mark_payment_failures_resolved(payment_intent)
+    PaymentFailure.unresolved
+                  .where(payment_intent_id: payment_intent.id)
+                  .update_all(resolved_at: Time.current)
+  rescue => e
+    Rails.logger.error "[PaymentFailed] Could not mark #{payment_intent.try(:id)} resolved: #{e.class} - #{e.message}"
   end
 
   def self.refund_unfulfillable_payment(payment_intent, error)
@@ -600,6 +612,8 @@ class StripeWebhooks
       "code=#{code.inspect} decline_code=#{decline_code.inspect} " \
       "sender_id=#{metadata['sender_id'].inspect} merchant_id=#{metadata['merchant_id'].inspect}"
     )
+
+    PaymentFailure.record_attempt!(payment_intent)
 
     first_alert = Rails.cache.write(
       "stripe:payment_failed_alert:#{payment_intent.id}",

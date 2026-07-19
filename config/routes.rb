@@ -142,9 +142,11 @@ Rails.application.routes.draw do
         post :regenerate_secret
       end
     end
-    resources :gift_cards, only: [] do
+    resources :gift_cards, only: [:index, :show] do
       resources :refunds, only: [:new, :create], path: 'refund'
     end
+    resources :transactions, only: [:index]
+    resources :payment_failures, only: [:index]
     resources :payouts, only: [:index, :show, :create] do
       member { post :mark_paid }
     end

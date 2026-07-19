@@ -21,12 +21,12 @@ class Admin::HoldsController < Admin::BaseController
     reason = params[:reason].to_s.strip
     if reason.blank?
       flash[:alert] = "Debes proporcionar una razón para liberar el bloqueo."
-      redirect_to admin_holds_path and return
+      redirect_back fallback_location: admin_holds_path and return
     end
 
     unless @gift_card.held?
       flash[:alert] = "Esta tarjeta no está bajo bloqueo de seguridad."
-      redirect_to admin_holds_path and return
+      redirect_back fallback_location: admin_holds_path and return
     end
 
     # Setting held_until to "now - 1 second" is cleaner than nulling it —
@@ -40,7 +40,7 @@ class Admin::HoldsController < Admin::BaseController
     )
 
     flash[:notice] = "Bloqueo liberado para tarjeta ##{@gift_card.id}."
-    redirect_to admin_holds_path
+    redirect_back fallback_location: admin_holds_path
   end
 
   private

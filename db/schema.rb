@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_12_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_18_183202) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -113,6 +113,27 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_12_120000) do
     t.index ["secret_key_digest"], name: "index_merchants_on_secret_key_digest", unique: true
     t.index ["store_name"], name: "index_merchants_on_store_name"
     t.index ["user_id"], name: "index_merchants_on_user_id"
+  end
+
+  create_table "payment_failures", force: :cascade do |t|
+    t.string "payment_intent_id", null: false
+    t.integer "amount", default: 0, null: false
+    t.string "currency", default: "USD", null: false
+    t.bigint "sender_id"
+    t.bigint "merchant_id"
+    t.string "error_code"
+    t.string "decline_code"
+    t.string "error_message"
+    t.integer "attempts", default: 1, null: false
+    t.datetime "first_failed_at", null: false
+    t.datetime "last_failed_at", null: false
+    t.datetime "resolved_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["last_failed_at"], name: "index_payment_failures_on_last_failed_at"
+    t.index ["merchant_id"], name: "index_payment_failures_on_merchant_id"
+    t.index ["payment_intent_id"], name: "index_payment_failures_on_payment_intent_id", unique: true
+    t.index ["sender_id"], name: "index_payment_failures_on_sender_id"
   end
 
   create_table "platform_settings", force: :cascade do |t|

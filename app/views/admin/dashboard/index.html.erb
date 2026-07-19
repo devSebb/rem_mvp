@@ -12,9 +12,12 @@
       </div>
       <div class="flex flex-wrap gap-3">
         <%= link_to "Comercios", admin_merchants_path, class: "papayal-btn-primary" %>
+        <%= link_to "Tarjetas", admin_gift_cards_path, class: "papayal-btn-secondary" %>
         <%= link_to "Usuarios", admin_users_path, class: "papayal-btn-secondary" %>
+        <%= link_to "Movimientos", admin_transactions_path, class: "papayal-btn-ghost" %>
         <%= link_to "Pagos", admin_payouts_path, class: "papayal-btn-ghost" %>
         <%= link_to "Bloqueos", admin_holds_path, class: "papayal-btn-ghost" %>
+        <%= link_to "Rechazos", admin_payment_failures_path, class: "papayal-btn-ghost" %>
         <%= link_to "Tarifas y controles", admin_platform_settings_path, class: "papayal-btn-ghost" %>
         <%= link_to "Sidekiq", "/sidekiq", class: "papayal-btn-ghost" %>
       </div>
@@ -76,20 +79,23 @@
     </div>
 
     <div class="col-span-12 md:col-span-6 xl:col-span-3 papayal-card p-6">
-      <p class="papayal-meta">Tarjetas</p>
+      <div class="flex items-center justify-between">
+        <p class="papayal-meta">Tarjetas</p>
+        <%= link_to "Ver todas", admin_gift_cards_path, class: "text-xs font-semibold text-[#FCA50F] hover:underline" %>
+      </div>
       <p class="text-3xl font-bold mt-3"><%= @cards[:active] %> <span class="text-base font-normal text-[#2C3A43]/60">activas</span></p>
       <div class="mt-3 space-y-1 text-sm text-[#2C3A43]/80">
         <p><span class="font-semibold text-blue-700"><%= @cards[:redeemed] %></span> canjeadas por completo</p>
         <p>
           <% if @cards[:held].positive? %>
-            <span class="font-semibold text-amber-700"><%= @cards[:held] %> retenidas por seguridad</span>
+            <%= link_to admin_gift_cards_path(filter: "held"), class: "font-semibold text-amber-700 hover:underline" do %><%= @cards[:held] %> retenidas por seguridad<% end %>
           <% else %>
             Sin retenciones de seguridad
           <% end %>
         </p>
         <p>
           <% if @cards[:disputed].positive? %>
-            <span class="font-semibold text-rose-700"><%= @cards[:disputed] %> con disputa</span>
+            <%= link_to admin_gift_cards_path(filter: "disputed"), class: "font-semibold text-rose-700 hover:underline" do %><%= @cards[:disputed] %> con disputa<% end %>
           <% else %>
             Sin disputas
           <% end %>
@@ -135,6 +141,20 @@
           </p>
         <% else %>
           <p class="text-rose-700 font-semibold">Sidekiq/Redis no disponible</p>
+        <% end %>
+        <p>
+          <% if @incidents[:unresolved_declines].positive? %>
+            <%= link_to admin_payment_failures_path, class: "font-semibold text-rose-700 hover:underline" do %><%= @incidents[:unresolved_declines] %> pago<%= "s" unless @incidents[:unresolved_declines] == 1 %> rechazado<%= "s" unless @incidents[:unresolved_declines] == 1 %> sin resolver<% end %>
+            <span class="text-xs text-[#2C3A43]/60">(<%= @incidents[:declines_7d] %> esta semana)</span>
+          <% else %>
+            Sin pagos rechazados pendientes
+          <% end %>
+        </p>
+        <% if @incidents[:failed_refunds].positive? %>
+          <p>
+            <%= link_to admin_transactions_path(type: "refund", status: "failed"), class: "font-semibold text-rose-700 hover:underline" do %><%= @incidents[:failed_refunds] %> reembolso<%= "s" unless @incidents[:failed_refunds] == 1 %> fallido<%= "s" unless @incidents[:failed_refunds] == 1 %><% end %>
+            <span class="text-xs text-[#2C3A43]/60">— el comprador no recibió su dinero</span>
+          </p>
         <% end %>
         <div class="flex flex-wrap gap-2 pt-1">
           <% if @cards[:held].positive? %>

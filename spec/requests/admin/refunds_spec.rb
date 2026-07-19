@@ -30,7 +30,7 @@ RSpec.describe "Admin::Refunds", type: :request do
              params: { refund_amount: "200.00", reason: "full refund attempt" }
 
         expect(response).to redirect_to(new_admin_gift_card_refund_path(gift_card))
-        expect(flash[:alert]).to include("exceeds")
+        expect(flash[:alert]).to include("excede")
       end
 
       it "issues a refund within the refundable balance" do
@@ -41,7 +41,7 @@ RSpec.describe "Admin::Refunds", type: :request do
         post admin_gift_card_refunds_path(gift_card),
              params: { refund_amount: "10.00", reason: "customer request" }
 
-        expect(response).to redirect_to(gift_card_path(gift_card))
+        expect(response).to redirect_to(admin_gift_card_path(gift_card))
         expect(flash[:notice]).to include("re_req_ok")
       end
     end

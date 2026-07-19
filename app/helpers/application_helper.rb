@@ -40,8 +40,33 @@ module ApplicationHelper
 
   def navbar_subtitle
     return tag.span("comercio", class: "italic") if merchant_nav_context?
+    return tag.span("administración", class: "italic") if admin_nav_context?
 
     "Tu billetera de regalos"
+  end
+
+  def admin_nav_context?
+    controller_path.start_with?("admin/") && current_user&.admin?
+  end
+
+  # Section links for the admin navbar: [label, path, active-controller
+  # prefixes]. Refund and hold flows highlight "Tarjetas" — they operate on
+  # cards even though they live in their own controllers. Bloqueos and
+  # Tarifas stay off the bar (reachable from the dashboard) to keep it sane.
+  def admin_nav_links
+    [
+      ["Inicio", admin_root_path, %w[admin/dashboard]],
+      ["Comercios", admin_merchants_path, %w[admin/merchants]],
+      ["Tarjetas", admin_gift_cards_path, %w[admin/gift_cards admin/refunds admin/holds]],
+      ["Usuarios", admin_users_path, %w[admin/users]],
+      ["Movimientos", admin_transactions_path, %w[admin/transactions]],
+      ["Pagos", admin_payouts_path, %w[admin/payouts]],
+      ["Rechazos", admin_payment_failures_path, %w[admin/payment_failures]]
+    ]
+  end
+
+  def admin_nav_link_active?(controllers)
+    controllers.include?(controller_path)
   end
 
   def locale_tag(locale, tag: :span, class: nil, data: {}, **options, &block)

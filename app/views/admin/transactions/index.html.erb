@@ -1,0 +1,139 @@
+<% content_for :title, "Papayal · Movimientos" %>
+<div class="space-y-8">
+  <div class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p class="papayal-meta text-[#0D2F32]">Panel Movimientos</p>
+      <h1 class="text-2xl font-bold text-[#0D2F32]">Ledger de la plataforma</h1>
+      <p class="text-sm text-[#2C3A43]/80 mt-1">
+        Todos los movimientos de dinero, directamente del ledger.
+        <span class="font-semibold"><%= @total_count %></span> resultado<%= "s" unless @total_count == 1 %>
+        · volumen exitoso <span class="font-semibold"><%= number_to_currency(@total_volume_cents / 100.0, unit: '$') %></span>.
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <%= link_to "Centro de control", admin_root_path, class: "papayal-btn-ghost" %>
+      <%= link_to "Tarjetas", admin_gift_cards_path, class: "papayal-btn-ghost" %>
+    </div>
+  </div>
+
+  <div class="papayal-card p-6 space-y-4">
+    <div>
+      <p class="papayal-meta">Movimientos</p>
+      <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Listado de movimientos</h2>
+    </div>
+
+    <%= form_with url: admin_transactions_path, method: :get, local: true, class: "grid grid-cols-1 md:grid-cols-12 gap-3 items-end" do %>
+      <input type="hidden" name="type" value="<%= @type unless @type == "all" %>">
+      <input type="hidden" name="status" value="<%= @status unless @status == "all" %>">
+      <div class="md:col-span-4">
+        <label class="papayal-meta block mb-1">Buscar referencia</label>
+        <input type="text" name="q" value="<%= @query %>" placeholder="processor_ref, payment intent, idempotency…" class="papayal-input w-full">
+      </div>
+      <div class="md:col-span-3">
+        <label class="papayal-meta block mb-1">Comercio</label>
+        <select name="merchant_id" class="papayal-input w-full">
+          <option value="">Todos</option>
+          <% @merchants.each do |name, id| %>
+            <option value="<%= id %>" <%= "selected" if @merchant_id == id %>><%= name %></option>
+          <% end %>
+        </select>
+      </div>
+      <div class="md:col-span-2">
+        <label class="papayal-meta block mb-1">Desde</label>
+        <input type="date" name="from" value="<%= @from&.iso8601 %>" class="papayal-input w-full">
+      </div>
+      <div class="md:col-span-2">
+        <label class="papayal-meta block mb-1">Hasta</label>
+        <input type="date" name="to" value="<%= @to&.iso8601 %>" class="papayal-input w-full">
+      </div>
+      <div class="md:col-span-1">
+        <button type="submit" class="papayal-btn-primary w-full">Filtrar</button>
+      </div>
+    <% end %>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <% { "all" => "Todos", "purchase" => "Compras", "redemption" => "Canjes", "refund" => "Reembolsos", "adjustment" => "Ajustes", "issuance" => "Emisiones" }.each do |key, label| %>
+        <% count = key == "all" ? @type_counts.values.sum : @type_counts.fetch(key, 0) %>
+        <%= link_to "#{label} (#{count})", admin_transactions_filter_path(type: key, page: nil),
+              class: "px-4 py-1.5 rounded-full text-sm font-medium border transition-colors #{@type == key ? 'bg-[#0D2F32] text-white border-[#0D2F32]' : 'bg-white text-[#2C3A43] border-black/10 hover:border-[#FCA50F]/50'}" %>
+      <% end %>
+      <span class="mx-2 h-5 w-px bg-black/10 hidden sm:inline-block"></span>
+      <% { "all" => "Todos", "succeeded" => "Exitosos", "pending" => "Pendientes", "failed" => "Fallidos" }.each do |key, label| %>
+        <%= link_to label, admin_transactions_filter_path(status: key, page: nil),
+              class: "px-4 py-1.5 rounded-full text-sm font-medium border transition-colors #{@status == key ? 'bg-[#0D2F32] text-white border-[#0D2F32]' : 'bg-white text-[#2C3A43] border-black/10 hover:border-[#FCA50F]/50'}" %>
+      <% end %>
+      <% if @query.present? || @merchant_id || @from || @to %>
+        <%= link_to "Limpiar filtros", admin_transactions_path, class: "papayal-btn-ghost text-xs" %>
+      <% end %>
+    </div>
+
+    <% if @transactions.any? %>
+      <div class="overflow-x-auto rounded-2xl border border-black/5">
+        <table class="min-w-full divide-y divide-black/5">
+          <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
+            <tr>
+              <th class="px-4 py-3">Fecha</th>
+              <th class="px-4 py-3">Tipo</th>
+              <th class="px-4 py-3">Tarjeta</th>
+              <th class="px-4 py-3">Comercio</th>
+              <th class="px-4 py-3">Usuario</th>
+              <th class="px-4 py-3 text-right">Monto</th>
+              <th class="px-4 py-3">Estado</th>
+              <th class="px-4 py-3">Referencia</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-black/5 text-sm">
+            <% @transactions.each do |txn| %>
+              <tr class="hover:bg-[#EBEBEB]/40 transition">
+                <td class="px-4 py-3 text-[#2C3A43]/70 whitespace-nowrap"><%= txn.created_at.strftime('%d/%m/%Y %H:%M') %></td>
+                <td class="px-4 py-3 font-medium text-[#0D2F32]"><%= admin_txn_type_label(txn.txn_type) %></td>
+                <td class="px-4 py-3">
+                  <% if txn.gift_card %>
+                    <%= link_to "REM-#{txn.gift_card.id.to_s.last(6)}", admin_gift_card_path(txn.gift_card), class: "text-[#0D2F32] hover:underline font-medium" %>
+                  <% else %>
+                    <span class="text-[#2C3A43]/50">—</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3">
+                  <% if txn.merchant %>
+                    <%= link_to txn.merchant.store_name, admin_merchant_path(txn.merchant), class: "text-[#0D2F32] hover:underline" %>
+                  <% else %>
+                    <span class="text-[#2C3A43]/50">—</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3">
+                  <% if txn.user %>
+                    <%= link_to (txn.user.name.presence || txn.user.email), admin_user_path(txn.user), class: "text-[#0D2F32] hover:underline" %>
+                  <% else %>
+                    <span class="text-[#2C3A43]/50">—</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-right font-medium"><%= number_to_currency(txn.amount / 100.0, unit: '$') %></td>
+                <td class="px-4 py-3"><%= admin_txn_status_badge(txn.status) %></td>
+                <td class="px-4 py-3 font-mono text-[11px] text-[#2C3A43]/70 max-w-[220px] truncate" title="<%= txn.processor_ref %>"><%= txn.processor_ref %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if @total_pages > 1 %>
+        <div class="flex items-center justify-between text-sm text-[#2C3A43]/70 pt-2">
+          <span>Página <%= @page %> de <%= @total_pages %></span>
+          <div class="flex gap-2">
+            <% if @page > 1 %>
+              <%= link_to "← Anterior", admin_transactions_filter_path(page: @page - 1), class: "papayal-btn-ghost text-xs" %>
+            <% end %>
+            <% if @page < @total_pages %>
+              <%= link_to "Siguiente →", admin_transactions_filter_path(page: @page + 1), class: "papayal-btn-ghost text-xs" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="text-center py-10 text-sm text-[#2C3A43]/70">
+        No se encontraron movimientos con estos filtros.
+      </div>
+    <% end %>
+  </div>
+</div>

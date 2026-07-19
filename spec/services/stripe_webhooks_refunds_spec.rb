@@ -244,6 +244,42 @@ RSpec.describe StripeWebhooks do
 
       expect { described_class.handle_payment_intent_payment_failed(broken) }.not_to raise_error
     end
+
+    it "persists a PaymentFailure row with the decline details" do
+      described_class.handle_payment_intent_payment_failed(build_failed_pi(id: "pi_persist"))
+
+      failure = PaymentFailure.find_by(payment_intent_id: "pi_persist")
+      expect(failure).to be_present
+      expect(failure.amount).to eq(800)
+      expect(failure.decline_code).to eq("do_not_honor")
+      expect(failure.error_code).to eq("card_declined")
+      expect(failure.attempts).to eq(1)
+      expect(failure.resolved_at).to be_nil
+    end
+
+    it "increments attempts on repeat failures instead of adding rows" do
+      3.times { described_class.handle_payment_intent_payment_failed(build_failed_pi(id: "pi_retry")) }
+
+      expect(PaymentFailure.where(payment_intent_id: "pi_retry").count).to eq(1)
+      expect(PaymentFailure.find_by(payment_intent_id: "pi_retry").attempts).to eq(3)
+    end
+  end
+
+  describe ".mark_payment_failures_resolved" do
+    it "closes the decline record when the same PI later succeeds" do
+      failure = PaymentFailure.create!(
+        payment_intent_id: "pi_recovered", amount: 800, currency: "USD",
+        first_failed_at: 1.hour.ago, last_failed_at: 1.hour.ago
+      )
+
+      described_class.mark_payment_failures_resolved(OpenStruct.new(id: "pi_recovered"))
+
+      expect(failure.reload.resolved_at).to be_present
+    end
+
+    it "never raises even with a broken payment intent" do
+      expect { described_class.mark_payment_failures_resolved(OpenStruct.new) }.not_to raise_error
+    end
   end
 
   describe ".process_event routing" do

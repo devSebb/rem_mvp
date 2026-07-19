@@ -40,3 +40,6 @@
 
 /node_modules
 /dump.rdb
+
+# Claude Code local files
+.claude/

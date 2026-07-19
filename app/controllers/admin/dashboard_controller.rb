@@ -58,6 +58,15 @@ class Admin::DashboardController < Admin::BaseController
       suspended: Merchant.suspended.count
     }
 
+    # Incident states that need an admin's eyes: declined purchases that
+    # never recovered, and refunds Stripe reported as failed (buyer did NOT
+    # get their money back).
+    @incidents = {
+      unresolved_declines: PaymentFailure.unresolved.count,
+      declines_7d: PaymentFailure.where(last_failed_at: week_ago..).count,
+      failed_refunds: Transaction.refunds.where(status: :failed).count
+    }
+
     @recent_gift_cards = GiftCard.includes(:recipient).order(created_at: :desc).limit(5)
     @recent_transactions = Transaction.includes(:merchant, gift_card: :sender).order(created_at: :desc).limit(8)
     @latest_merchants = Merchant.order(created_at: :desc).limit(5)
