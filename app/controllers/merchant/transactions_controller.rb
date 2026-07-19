@@ -5,7 +5,7 @@ class Merchant::TransactionsController < ApplicationController
   def refund
     authorize @gift_card, :refund?
 
-    redemption = @gift_card.transactions.successful.redemptions.find_by!(id: params[:transaction_id], merchant_id: current_user.merchant_id)
+    redemption = @gift_card.transactions.successful.redemptions.find_by!(id: params[:transaction_id], merchant_id: current_user.merchant&.id)
     reason = params[:reason].to_s.strip.presence || "Refund requested by merchant"
 
     Refunds::Issue.call(
