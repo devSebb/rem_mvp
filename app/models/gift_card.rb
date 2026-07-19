@@ -274,48 +274,10 @@ class GiftCard < ApplicationRecord
     canceled? ? 0 : remaining_balance.to_i
   end
 
-  def refund!(refund_amount:, reason:, actor:)
-    transaction do
-      lock!
-      reload
-
-      # Validate refund amount
-      total_redeemed = transactions.successful.redemptions.sum(:amount)
-      return false if refund_amount > total_redeemed
-      return false if refund_amount <= 0
-
-      # Create refund transaction
-      transactions.create!(
-        amount: refund_amount,
-        txn_type: :refund,
-        status: :succeeded,
-        processor_ref: "refund_#{SecureRandom.uuid}",
-        merchant: merchant,
-        user: actor,
-        currency: currency,
-        metadata: {
-          actor_id: actor.id,
-          reason: reason,
-          refunded_at: Time.current.iso8601
-        }
-      )
-
-      # Restore balance
-      update!(remaining_balance: remaining_balance + refund_amount)
-
-      # Track owner activity for refund
-      touch_owner_activity!
-
-      # Revert to active if any balance is restored (or fully refunded)
-      if redeemed? && remaining_balance.positive?
-        update!(status: :active, redeemed_at: nil)
-      elsif remaining_balance == amount
-        update!(status: :active, redeemed_at: nil)
-      end
-    end
-
-    true
-  end
+  # NOTE: redemption reversals go through Refunds::Issue (writes the
+  # reversal_of_transaction_id marker every money aggregate nets against).
+  # A legacy GiftCard#refund! that wrote unmarked reversal rows was removed
+  # 2026-07-19 — do not reintroduce reversal writes outside Refunds::Issue.
 
   def transfer_to!(new_recipient:, actor:)
     transaction do

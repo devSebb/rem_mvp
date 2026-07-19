@@ -12,16 +12,19 @@ class Merchant::DashboardController < ApplicationController
     
     # Today's redemptions (count of transactions, not gift cards)
     @today_redemptions = @redemption_transactions.where(created_at: Date.current.all_day).count
-    
-    # Pending settlement (sum of all redemption amounts redeemed by this merchant)
-    total_redemption_amount = @redemption_transactions.sum(:amount)
-    @pending_settlement = total_redemption_amount
-    
+
+    # Pending settlement: redemptions not yet covered by any settlement,
+    # net of reversals — the same math the admin payout flow uses. (This
+    # was previously lifetime gross: it never dropped after a payout and
+    # never subtracted reversed redemptions.)
+    @pending_settlement = @merchant.unsettled_net_redeemed_cents
+
     # Recent redemptions (transactions, not gift cards)
     @recent_redemptions = @redemption_transactions.order(created_at: :desc).limit(10)
-    
-    # Additional stats for partial redemptions
-    @total_redemption_amount = total_redemption_amount
+
+    # Lifetime redeemed, net of reversals; reversed total shown alongside.
+    @total_reversed_amount = Transaction.successful.reversals.where(merchant_id: @merchant.id).sum(:amount)
+    @total_redemption_amount = @redemption_transactions.sum(:amount) - @total_reversed_amount
     @unique_gift_cards_redeemed = @redemption_transactions.select(:gift_card_id).distinct.count
   end
 

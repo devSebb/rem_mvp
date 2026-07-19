@@ -15,6 +15,33 @@ class Merchant < ApplicationRecord
 
   enum status: { active: 0, suspended: 1 }
 
+  # ── Unsettled money ─────────────────────────────────────────────────
+  # Transactions dated outside every existing settlement period. Shared by
+  # the admin payout flow and the merchant dashboard so "pendiente" always
+  # means the same thing on both sides. Note: transactions here are the
+  # ones REDEEMED BY this merchant (merchant_id on the row), not the
+  # through-gift_cards association above (issuer semantics).
+
+  def unsettled_redemptions
+    excluding_settled_periods(Transaction.successful.redemptions.where(merchant_id: id))
+  end
+
+  def unsettled_reversals
+    excluding_settled_periods(Transaction.successful.reversals.where(merchant_id: id))
+  end
+
+  # What we actually still owe for redemptions (before commission): net of
+  # reversals. Can be negative when reversals outpace new redemptions —
+  # payout creation blocks on that instead of hiding it.
+  def unsettled_net_redeemed_cents
+    unsettled_redemptions.sum(:amount) - unsettled_reversals.sum(:amount)
+  end
+
+  private def excluding_settled_periods(scope)
+    settlements.each { |s| scope = scope.where.not(created_at: s.period_range) }
+    scope
+  end
+
   validates :store_name, presence: true
   validates :name, presence: true
   validates :public_key, presence: true, uniqueness: true

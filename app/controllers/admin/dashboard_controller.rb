@@ -45,7 +45,10 @@ class Admin::DashboardController < Admin::BaseController
       stripe_costs_cents: purchases.sum(Arel.sql("COALESCE((metadata->>'stripe_fee_cents')::bigint, 0)")).to_i
     }
 
-    redeemed_total = redemptions.sum(:amount)
+    # Owed basis is NET redeemed (redemptions minus merchant reversals) —
+    # reversed value went back onto cards and is our liability again, not
+    # something we owe merchants.
+    redeemed_total = Transaction.total_net_redeemed_cents
     commission = @settings.merchant_commission_cents_for(redeemed_total)
     @payouts = {
       owed_cents: (redeemed_total - commission) - Settlement.paid.sum(:amount),

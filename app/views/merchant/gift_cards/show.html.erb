@@ -214,9 +214,15 @@
 
       <div class="mt-4 p-4 bg-[#EBEBEB]/60 rounded-lg">
         <div class="flex items-center justify-between text-sm">
-          <span class="font-medium text-[#2C3A43]/70">Total Canjeado:</span>
-          <span class="font-bold text-[#0D2F32]"><%= number_to_currency(@transactions.sum(:amount) / 100.0, unit: '$') %></span>
+          <span class="font-medium text-[#2C3A43]/70">Total Canjeado (neto):</span>
+          <span class="font-bold text-[#0D2F32]"><%= number_to_currency(@total_redeemed_net / 100.0, unit: '$') %></span>
         </div>
+        <% if @total_reversed.positive? %>
+          <div class="flex items-center justify-between text-sm mt-1">
+            <span class="font-medium text-[#2C3A43]/70">Reembolsado:</span>
+            <span class="font-bold text-rose-700">−<%= number_to_currency(@total_reversed / 100.0, unit: '$') %></span>
+          </div>
+        <% end %>
         <div class="flex items-center justify-between text-sm mt-1">
           <span class="font-medium text-[#2C3A43]/70">Número de Canjes:</span>
           <span class="font-bold text-[#0D2F32]"><%= @transactions.count %></span>

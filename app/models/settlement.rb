@@ -29,6 +29,15 @@ class Settlement < ApplicationRecord
               .where(created_at: period_range)
   end
 
+  # Merchant reversals dated in this settlement's window: they reduce what
+  # the merchant is paid for the period (including reversals of redemptions
+  # that were already paid out in an earlier settlement).
+  def reversals
+    Transaction.successful.reversals
+               .where(merchant: merchant)
+               .where(created_at: period_range)
+  end
+
   # Get all gift cards included in this settlement
   def gift_cards
     GiftCard.joins(:transactions)
@@ -41,9 +50,10 @@ class Settlement < ApplicationRecord
     period_start.beginning_of_day..period_end.end_of_day
   end
 
-  # Calculate the total amount that should be settled for this period
+  # Total that should be settled for this period: redemptions net of
+  # reversals dated in the window.
   def calculated_amount
-    transactions.sum(:amount)
+    transactions.sum(:amount) - reversals.sum(:amount)
   end
 
   # Check if the settlement amount matches the calculated amount.

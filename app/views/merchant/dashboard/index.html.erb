@@ -38,7 +38,13 @@
       <p class="text-3xl font-bold text-[#0D2F32] mt-2">
         <%= number_to_currency(@total_redemption_amount / 100.0, unit: '$') %>
       </p>
-      <p class="text-sm text-[#2C3A43]/70 mt-1">Acumulado histórico</p>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">
+        <% if @total_reversed_amount.positive? %>
+          Neto histórico (−<%= number_to_currency(@total_reversed_amount / 100.0, unit: '$') %> en reembolsos)
+        <% else %>
+          Acumulado histórico
+        <% end %>
+      </p>
     </div>
   </div>
 

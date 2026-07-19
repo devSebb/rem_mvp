@@ -8,11 +8,10 @@ class Admin::PayoutsController < Admin::BaseController
     @merchants = Merchant.includes(:settlements).order(:store_name)
     @settings = PlatformSetting.current
 
-    # Compute per-merchant totals with two grouped queries (no N+1).
-    redeemed_by_merchant = Transaction
-                             .where(txn_type: :redemption, status: :succeeded)
-                             .group(:merchant_id)
-                             .sum(:amount)
+    # Per-merchant totals with grouped queries (no N+1). "Redeemed" is net
+    # of merchant reversals — a reversed redemption returns value to the
+    # card, so the merchant is never paid for it.
+    redeemed_by_merchant = Transaction.net_redeemed_cents_by_merchant
 
     settled_by_merchant = Settlement
                             .where(payout_status: :paid)
@@ -59,6 +58,8 @@ class Admin::PayoutsController < Admin::BaseController
     @merchant = @settlement.merchant
     @transactions = @settlement.transactions.includes(gift_card: [:sender, :recipient])
                               .order(created_at: :desc)
+    @reversals = @settlement.reversals.includes(gift_card: [:sender, :recipient])
+                            .order(created_at: :desc)
   end
 
   # Create a Settlement covering all unsettled redemptions for a merchant.
@@ -66,15 +67,27 @@ class Admin::PayoutsController < Admin::BaseController
   def create
     merchant = Merchant.find(params[:merchant_id])
 
-    unsettled_scope = unsettled_redemptions_for(merchant)
-    if unsettled_scope.empty?
+    unsettled_redemptions = merchant.unsettled_redemptions
+    unsettled_reversals = merchant.unsettled_reversals
+    if unsettled_redemptions.empty? && unsettled_reversals.empty?
       redirect_to admin_payouts_path, alert: "No hay canjes sin liquidar para #{merchant.store_name}."
       return
     end
 
-    period_start = unsettled_scope.minimum(:created_at).to_date
+    # gross = what the merchant actually earned this window: redemptions
+    # minus reversals. Negative or zero means reversals outpaced new
+    # redemptions — the merchant owes value back; block instead of writing
+    # a nonsensical settlement (future redemptions will absorb it).
+    gross = unsettled_redemptions.sum(:amount) - unsettled_reversals.sum(:amount)
+    if gross <= 0
+      redirect_to admin_payouts_path,
+                  alert: "Las reversas superan los canjes sin liquidar de #{merchant.store_name} " \
+                         "(neto #{format('%.2f', gross / 100.0)} USD). Se compensará con futuros canjes."
+      return
+    end
+
+    period_start = [unsettled_redemptions.minimum(:created_at), unsettled_reversals.minimum(:created_at)].compact.min.to_date
     period_end = Time.current.to_date
-    gross = unsettled_scope.sum(:amount)
 
     # amount = what we actually pay the merchant (gross minus platform
     # commission). The gross and rate are stored so the payout stays
@@ -119,16 +132,7 @@ class Admin::PayoutsController < Admin::BaseController
     @settlement = Settlement.find(params[:id])
   end
 
-  # Redemption transactions for this merchant that haven't been included
-  # in any settlement yet (succeeded redemptions outside of every existing
-  # settlement period for this merchant). Uses Settlement#period_range so
-  # the last day of a period is fully excluded — a bare date range ends at
-  # midnight and would let same-day redemptions be settled twice.
-  def unsettled_redemptions_for(merchant)
-    base = Transaction.where(merchant: merchant, txn_type: :redemption, status: :succeeded)
-    merchant.settlements.each do |s|
-      base = base.where.not(created_at: s.period_range)
-    end
-    base
-  end
+  # Unsettled-window logic lives on Merchant (unsettled_redemptions /
+  # unsettled_reversals / unsettled_net_redeemed_cents), shared with the
+  # merchant dashboard so both sides always agree on "pendiente".
 end

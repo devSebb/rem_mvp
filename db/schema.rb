@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_18_183202) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_19_014144) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -212,12 +212,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_18_183202) do
     t.string "idempotency_key"
     t.string "decline_reason"
     t.string "merchant_reference"
+    t.bigint "reversal_of_transaction_id"
     t.index ["gift_card_id"], name: "index_transactions_on_gift_card_id"
     t.index ["merchant_id", "idempotency_key"], name: "index_transactions_on_merchant_id_and_idempotency_key", unique: true, where: "(idempotency_key IS NOT NULL)"
     t.index ["merchant_id", "txn_type", "status", "created_at"], name: "index_transactions_on_merchant_txn_status_created"
     t.index ["merchant_id"], name: "index_transactions_on_merchant_id"
     t.index ["metadata"], name: "index_transactions_on_metadata", using: :gin
     t.index ["redemption_token_id"], name: "index_transactions_on_redemption_token_id"
+    t.index ["reversal_of_transaction_id"], name: "index_transactions_on_reversal_of_txn_id", unique: true, where: "(reversal_of_transaction_id IS NOT NULL)"
     t.index ["status"], name: "index_transactions_on_status"
     t.index ["txn_type"], name: "index_transactions_on_txn_type"
     t.index ["user_id"], name: "index_transactions_on_user_id"

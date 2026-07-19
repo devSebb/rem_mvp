@@ -219,7 +219,7 @@ class Admin::MerchantsController < Admin::BaseController
       disputed_cards: gift_cards.disputed.count,
       issued_volume_cents: gift_cards.sum(:amount),
       remaining_balance_cents: gift_cards.active.sum(:remaining_balance),
-      redemption_volume_cents: Transaction.successful.redemptions.where(merchant_id: merchant.id).sum(:amount),
+      redemption_volume_cents: Transaction.net_redeemed_cents(merchant_id: merchant.id),
       last_card_at: gift_cards.maximum(:created_at)
     }
   end
@@ -235,10 +235,8 @@ class Admin::MerchantsController < Admin::BaseController
     redeemed_counts = cards.redeemed.group(:merchant_id).count
     issued_volume = cards.group(:merchant_id).sum(:amount)
     active_balance = cards.active.group(:merchant_id).sum(:remaining_balance)
-    redeemed_volume = Transaction.successful.redemptions
-                                 .where(merchant_id: merchant_ids)
-                                 .group(:merchant_id)
-                                 .sum(:amount)
+    redeemed_volume = Transaction.net_redeemed_cents_by_merchant
+                                 .slice(*merchant_ids)
 
     merchant_ids.index_with do |id|
       {

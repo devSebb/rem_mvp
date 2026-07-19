@@ -135,6 +135,36 @@
         No se encontraron canjes en este periodo.
       </div>
     <% end %>
+
+    <% if @reversals.any? %>
+      <div class="mt-6">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <p class="papayal-meta">Reversas del período</p>
+            <p class="text-sm text-[#2C3A43]/70">Canjes reembolsados por el comercio — descuentan del total pagado.</p>
+          </div>
+          <span class="text-sm font-semibold text-rose-700">−<%= number_to_currency(@reversals.sum(&:amount) / 100.0, unit: '$') %></span>
+        </div>
+        <div class="overflow-hidden rounded-2xl border border-rose-100">
+          <table class="min-w-full divide-y divide-black/5">
+            <tbody class="bg-rose-50/30 divide-y divide-black/5 text-sm">
+              <% @reversals.each do |txn| %>
+                <tr>
+                  <td class="px-4 py-3 text-[#2C3A43]/80"><%= txn.created_at.strftime("%d/%m/%Y %H:%M") %></td>
+                  <td class="px-4 py-3">
+                    <p class="font-medium text-[#0D2F32]">PAY-<%= txn.gift_card_id %></p>
+                    <p class="text-xs text-[#2C3A43]/70">Reversa del canje #<%= txn.reversal_of_transaction_id %></p>
+                  </td>
+                  <td class="px-4 py-3 text-right font-semibold text-rose-700">
+                    −<%= number_to_currency(txn.amount.to_f / 100, unit: '$') %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% end %>
   </div>
 
   <div class="flex justify-between">

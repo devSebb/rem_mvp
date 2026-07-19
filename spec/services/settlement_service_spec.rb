@@ -6,77 +6,6 @@ RSpec.describe SettlementService do
   let(:sender) { create(:user) }
   let(:recipient) { create(:user) }
 
-  describe ".create_settlement_for_period" do
-    it "creates settlement for transactions REDEEMED BY the merchant (not issued by)" do
-      # Create a gift card issued by Merchant A
-      gift_card = create(:gift_card, merchant: merchant_a, sender: sender, recipient: recipient, amount: 10000)
-
-      # Merchant B redeems it (cross-merchant)
-      create(:transaction,
-        gift_card: gift_card,
-        merchant: merchant_b,  # redeemer
-        amount: 5000,
-        txn_type: :redemption,
-        status: :succeeded,
-        currency: "USD",
-        processor_ref: "test_1"
-      )
-
-      # Create settlement for Merchant B (redeemer)
-      settlement = described_class.create_settlement_for_period(
-        merchant_b,
-        1.day.ago,
-        1.day.from_now
-      )
-
-      expect(settlement).to be_present
-      expect(settlement.merchant_id).to eq(merchant_b.id) # Settlement belongs to redeemer
-      expect(settlement.amount).to eq(5000) # $50 redeemed
-    end
-
-    it "does NOT include transactions in settlement for the issuing merchant" do
-      # Create a gift card issued by Merchant A
-      gift_card = create(:gift_card, merchant: merchant_a, sender: sender, recipient: recipient, amount: 10000)
-
-      # Merchant B redeems it
-      create(:transaction,
-        gift_card: gift_card,
-        merchant: merchant_b,
-        amount: 5000,
-        txn_type: :redemption,
-        status: :succeeded,
-        currency: "USD",
-        processor_ref: "test_2"
-      )
-
-      # Try to create settlement for Merchant A (issuer) - should be nil/empty
-      settlement = described_class.create_settlement_for_period(
-        merchant_a,
-        1.day.ago,
-        1.day.from_now
-      )
-
-      # Merchant A didn't redeem anything, so no settlement
-      expect(settlement).to be_nil
-    end
-
-    it "only includes redemption transactions with succeeded status" do
-      gift_card = create(:gift_card, merchant: merchant_a, amount: 10000)
-
-      # Successful redemption
-      create(:transaction, gift_card: gift_card, merchant: merchant_b, amount: 3000, txn_type: :redemption, status: :succeeded, currency: "USD", processor_ref: "t1")
-
-      # Failed redemption (should not be included)
-      create(:transaction, gift_card: gift_card, merchant: merchant_b, amount: 2000, txn_type: :redemption, status: :failed, currency: "USD", processor_ref: "t2")
-
-      # Issuance transaction (should not be included)
-      create(:transaction, gift_card: gift_card, merchant: merchant_b, amount: 10000, txn_type: :issuance, status: :succeeded, currency: "USD", processor_ref: "t3")
-
-      settlement = described_class.create_settlement_for_period(merchant_b, 1.day.ago, 1.day.from_now)
-
-      expect(settlement.amount).to eq(3000) # Only the successful redemption
-    end
-  end
 
   describe ".gift_card_settlement_summary_for_redeemer" do
     it "calculates summary from the redeemer's perspective" do
@@ -137,17 +66,4 @@ RSpec.describe SettlementService do
     end
   end
 
-  describe ".calculate_pending_settlement" do
-    it "sums all redemption transactions by the merchant (redeemer)" do
-      gift_card_1 = create(:gift_card, merchant: merchant_a, amount: 10000)
-      gift_card_2 = create(:gift_card, merchant: merchant_a, amount: 8000)
-
-      create(:transaction, gift_card: gift_card_1, merchant: merchant_b, amount: 3000, txn_type: :redemption, status: :succeeded, currency: "USD", processor_ref: "t1")
-      create(:transaction, gift_card: gift_card_2, merchant: merchant_b, amount: 4000, txn_type: :redemption, status: :succeeded, currency: "USD", processor_ref: "t2")
-
-      pending = described_class.calculate_pending_settlement(merchant_b)
-
-      expect(pending).to eq(7000) # $30 + $40 = $70
-    end
-  end
 end

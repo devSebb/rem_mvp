@@ -12,15 +12,17 @@ class Merchant::GiftCardsController < ApplicationController
     actor_ids = @transactions.map { |t| t.metadata['actor_id'] }.compact.uniq
     @transaction_users = User.where(id: actor_ids).index_by(&:id)
 
-    redemption_ids = @transactions.map(&:id).map(&:to_s)
+    redemption_ids = @transactions.map(&:id)
     refunds = if redemption_ids.any?
-      @gift_card.transactions
-                .refunds
-                .where("metadata->>'refund_of_transaction_id' IN (?)", redemption_ids)
+      @gift_card.transactions.reversals.where(reversal_of_transaction_id: redemption_ids)
     else
       Transaction.none
     end
-    @refunds_by_redemption_id = refunds.index_by { |t| t.metadata["refund_of_transaction_id"].to_s }
+    @refunds_by_redemption_id = refunds.index_by { |t| t.reversal_of_transaction_id.to_s }
+
+    # Net consumption for the totals footer: redemptions minus reversals.
+    @total_reversed = refunds.sum(&:amount)
+    @total_redeemed_net = @transactions.sum(:amount) - @total_reversed
 
     # Get the sender (spender) details
     @spender = @gift_card.sender

@@ -80,11 +80,7 @@ module Refunds
     end
 
     def already_refunded?(redemption)
-      Transaction
-        .refunds
-        .where(merchant_id: merchant.id)
-        .where("metadata->>'refund_of_transaction_id' = ?", redemption.id.to_s)
-        .exists?
+      Transaction.reversals.where(reversal_of_transaction_id: redemption.id).exists?
     end
 
     def create_refund_transaction!(gift_card:, redemption:)
@@ -98,6 +94,7 @@ module Refunds
         status: :succeeded,
         processor_ref: "refund_#{SecureRandom.uuid}",
         idempotency_key: idempotency_key,
+        reversal_of_transaction_id: redemption.id,
         merchant_reference: redemption.merchant_reference,
         metadata: {
           refund_of_transaction_id: redemption.id,
@@ -110,7 +107,11 @@ module Refunds
         }.compact
       )
     rescue ActiveRecord::RecordNotUnique
-      txn = Transaction.find_by(merchant_id: merchant.id, idempotency_key: idempotency_key)
+      # Either the idempotency key or the reversal unique index tripped —
+      # both mean this refund (or another for the same redemption) already
+      # exists. Return it when it's ours; reject otherwise.
+      txn = Transaction.find_by(merchant_id: merchant.id, idempotency_key: idempotency_key) if idempotency_key
+      txn ||= Transaction.reversals.find_by(reversal_of_transaction_id: redemption.id)
       return txn if txn&.refund?
 
       raise ValidationError, "idempotency_key already used"
