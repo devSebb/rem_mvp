@@ -5,7 +5,7 @@ Aquí tienes el recibo de tu compra.
 
 TOTAL PAGADO: <%= @currency %> <%= format("%.2f", @total_cents / 100.0) %>
 
-Comercio:            <%= @merchant&.name %>
+Comercio:            <%= @merchant&.store_name %>
 Enviada a:           <%= @recipient_label %>
 Valor de la tarjeta: <%= @currency %> <%= format("%.2f", @subtotal_cents / 100.0) %>
 <% if @fee_cents.positive? -%>

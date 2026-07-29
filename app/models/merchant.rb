@@ -114,8 +114,15 @@ class Merchant < ApplicationRecord
 
   private
 
+  # `name` is a legacy mirror of `store_name`, added alongside the merchant API
+  # credentials and still part of the v1 merchant response shape. Nothing edits
+  # it directly — the admin form only exposes `store_name` — so it is kept in
+  # lockstep on every save. It previously only filled in when blank, which left
+  # `name` frozen at the value a merchant was created with: renaming a store
+  # updated `store_name` everywhere but the receipt email and the API kept
+  # printing the original name.
   def sync_display_name
-    self.name = store_name if name.blank? && store_name.present?
+    self.name = store_name if store_name.present?
   end
 
   def ensure_api_keys
