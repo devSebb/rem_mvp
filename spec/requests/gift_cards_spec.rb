@@ -15,7 +15,7 @@ RSpec.describe "GiftCards", type: :request do
     it "returns 200 and wallet page content" do
       get "/gift_cards"
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Mi Billetera", "Billetera")
+      expect(response.body).to include("Mis tarjetas")
     end
 
     it "returns wallet data as JSON with same contract (array, include sender/recipient/merchant)" do

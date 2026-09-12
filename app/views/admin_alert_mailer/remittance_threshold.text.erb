@@ -1,0 +1,12 @@
+Remittance-rule counter (RELOADABLE_CARD_PLAN.md §4.5)
+
+Loads paid by buyers outside Ecuador — each a potential CFPB "remittance
+transfer" (12 CFR 1005.30). The safe harbor is <%= @summary[:safe_harbor] %> per
+calendar year (prior AND current year).
+
+Year <%= @summary[:year] %>:     <%= @summary[:current_year] %> loads
+Year <%= @summary[:year] - 1 %>: <%= @summary[:prior_year] %> loads
+Alert threshold: <%= @summary[:alert_threshold] %>
+
+Action: a US payments counsel opinion is required BEFORE the count passes
+<%= @summary[:safe_harbor] %> in any calendar year (plan §14.2). This email is sent once per year.

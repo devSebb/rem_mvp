@@ -1,14 +1,19 @@
+# Merchant view of a card it has served (§5.12): balance, this merchant's
+# redemptions and reversals. No raw code (D12) and no other merchants'
+# activity. Buyer identity stays out — a merchant only needs the recipient
+# who is standing at the till.
 class Merchant::GiftCardsController < ApplicationController
   before_action :ensure_merchant
   before_action :find_gift_card
 
   def show
-    # Get all redemption transactions for this gift card
-    @transactions = @gift_card.transactions
-                               .where(txn_type: :redemption)
-                               .order(created_at: :desc)
+    @merchant = current_user.merchant
+    @balances = @gift_card.balances
 
-    # Preload users who performed the redemptions
+    @transactions = @gift_card.transactions
+                              .where(txn_type: :redemption, merchant_id: @merchant.id)
+                              .order(created_at: :desc)
+
     actor_ids = @transactions.map { |t| t.metadata['actor_id'] }.compact.uniq
     @transaction_users = User.where(id: actor_ids).index_by(&:id)
 
@@ -22,12 +27,8 @@ class Merchant::GiftCardsController < ApplicationController
 
     # Net consumption for the totals footer: redemptions minus reversals.
     @total_reversed = refunds.sum(&:amount)
-    @total_redeemed_net = @transactions.sum(:amount) - @total_reversed
+    @total_redeemed_net = @transactions.where(status: :succeeded).sum(:amount) - @total_reversed
 
-    # Get the sender (spender) details
-    @spender = @gift_card.sender
-
-    # Get the recipient details
     @recipient = @gift_card.recipient
   end
 

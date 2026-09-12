@@ -29,7 +29,7 @@
       <p class="text-sm text-[#2C3A43]/70 mt-1">En cola para pago</p>
     </div>
     <div class="col-span-12 sm:col-span-6 lg:col-span-3 papayal-card papayal-card-hover p-6">
-      <p class="papayal-meta text-[#2C3A43]/60">Tarjetas únicas</p>
+      <p class="papayal-meta text-[#2C3A43]/60">Tarjetas atendidas</p>
       <p class="text-3xl font-bold text-[#0D2F32] mt-2"><%= @unique_gift_cards_redeemed %></p>
       <p class="text-sm text-[#2C3A43]/70 mt-1">Clientes impactados</p>
     </div>
@@ -109,9 +109,9 @@
           <thead class="bg-[#EBEBEB]/60 text-left text-xs font-semibold text-[#2C3A43]/70 uppercase tracking-wider">
             <tr>
               <th class="px-4 py-3">Detalle</th>
-              <th class="px-4 py-3">Cliente</th>
-              <th class="px-4 py-3">Emisor</th>
-              <th class="px-4 py-3">Monto</th>
+              <th class="px-4 py-3">Titular</th>
+              <th class="px-4 py-3">Tarjeta de</th>
+              <th class="px-4 py-3">Saldo</th>
               <th class="px-4 py-3">Estado</th>
               <th class="px-4 py-3 text-right">Detalle</th>
             </tr>
@@ -129,7 +129,7 @@
                   </p>
                 </td>
                 <td class="px-4 py-4 text-[#2C3A43]/80">
-                  De <%= transaction.gift_card.sender.name %>
+                  <%= transaction.gift_card.recipient&.name || "—" %>
                 </td>
                 <td class="px-4 py-4">
                   <% if is_cross_merchant %>
@@ -141,13 +141,14 @@
                   <% end %>
                 </td>
                 <td class="px-4 py-4">
-                  <% if transaction.gift_card.remaining_balance > 0 %>
+                  <% spendable = transaction.gift_card.spendable_cents %>
+                  <% if spendable > 0 %>
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                      Parcial · Restante <%= number_to_currency(transaction.gift_card.remaining_balance / 100.0, unit: '$') %>
+                      Saldo disponible <%= number_to_currency(spendable / 100.0, unit: '$') %>
                     </span>
                   <% else %>
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
-                      Completo
+                      Sin saldo
                     </span>
                   <% end %>
                 </td>

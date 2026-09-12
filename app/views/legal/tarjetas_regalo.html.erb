@@ -15,39 +15,82 @@
 
         <div class="prose prose-slate max-w-none text-[#2C3A43]">
           <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">1. Naturaleza del Saldo</h2>
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">1. Naturaleza del saldo</h2>
+            <p class="mb-3">
+              El saldo de una Tarjeta de Regalo es un crédito prepagado para adquirir bienes o servicios únicamente en el Comercio afiliado indicado en la Tarjeta.
+              No es dinero, depósito, cuenta, billetera electrónica ni remesa; no es canjeable por efectivo, no genera intereses ni puede transferirse a otra persona.
+            </p>
             <p>
-              Las Tarjetas de Regalo representan valor prepagado, no dinero.
+              Papayal actúa como agente de cobro del Comercio: el pago de una recarga extingue la obligación del Comprador, y el Comercio honra el saldo como obligación propia.
             </p>
           </section>
 
           <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">2. Redención</h2>
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">2. Una tarjeta por comercio y recargas</h2>
+            <p class="mb-3">
+              Cada beneficiario tiene una sola Tarjeta de Regalo por Comercio. Cada compra realizada por el beneficiario o por un tercero se acredita como una recarga a esa Tarjeta.
+            </p>
             <p>
-              Solo canjeables en comercios afiliados mediante los métodos autorizados por Papayal.
+              Cada recarga se registra por separado. Las redenciones consumen primero las recargas más antiguas.
             </p>
           </section>
 
           <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">3. No Expiración</h2>
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">3. Titularidad</h2>
             <p>
-              Las Tarjetas de Regalo no tienen fecha de expiración, salvo que la ley aplicable disponga lo contrario.
+              El beneficiario es el titular de la Tarjeta. Quien paga una recarga ("Comprador") no adquiere derechos sobre el saldo, salvo el derecho de reembolso descrito en la
+              <%= link_to "Política de Pagos y Reembolsos", legal_pagos_reembolsos_path, class: "text-[#FCA50F] hover:underline" %> respecto de su propia recarga.
             </p>
           </section>
 
           <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">4. Pérdida o Uso No Autorizado</h2>
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">4. Redención</h2>
+            <p class="mb-3">
+              El saldo solo puede canjearse en el Comercio de la Tarjeta, o en los locales del mismo grupo comercial cuando así se indique, mediante el código dinámico que genera la app de Papayal.
+            </p>
+            <p>
+              La lista de Comercios participantes está publicada en la app y en <%= link_to "papayal.app", root_path, class: "text-[#FCA50F] hover:underline" %>.
+              Si un Comercio deja de participar, Papayal reembolsará el saldo no redimido a los Compradores de cada recarga.
+            </p>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">5. Límites</h2>
+            <p class="mb-3">Por seguridad y cumplimiento normativo aplican los siguientes límites, que Papayal puede reducir en cualquier momento:</p>
+            <ul class="list-disc pl-6 space-y-2">
+              <li>Entre $5.00 y $200.00 por recarga.</li>
+              <li>Hasta 2 recargas y $400.00 por Tarjeta cada 24 horas.</li>
+              <li>Saldo máximo de $500.00 por Tarjeta.</li>
+              <li>Hasta 3 recargas y $600.00 por Comprador cada 24 horas, y $2,000.00 por Comprador cada 30 días.</li>
+              <li>Hasta $1,000.00 recibidos por beneficiario cada 30 días.</li>
+            </ul>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">6. No expiración</h2>
+            <p class="mb-3">
+              El saldo no caduca. Las Tarjetas de Regalo no tienen fecha de expiración, salvo que la ley aplicable disponga lo contrario.
+            </p>
+            <p class="text-sm text-[#2C3A43]/80">
+              <em>English (US unclaimed-property notice):</em> Balances do not expire. A balance inquiry, load, or redemption is an indication of interest for unclaimed-property purposes.
+            </p>
+          </section>
+
+          <section class="mb-8">
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">7. Pérdida o uso no autorizado</h2>
             <p class="mb-4">Papayal no es responsable por:</p>
             <ul class="list-disc pl-6 space-y-2">
-              <li>Pérdida de acceso</li>
+              <li>Pérdida de acceso a la cuenta del beneficiario</li>
               <li>Uso no autorizado por terceros</li>
             </ul>
           </section>
 
           <section class="mb-8">
-            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">5. No Reembolsables</h2>
+            <h2 class="text-2xl font-bold text-[#0D2F32] mb-4">8. Reembolsos</h2>
             <p>
-              Salvo obligación legal, las Tarjetas de Regalo no son reembolsables.
+              Salvo lo previsto en la <%= link_to "Política de Pagos y Reembolsos", legal_pagos_reembolsos_path, class: "text-[#FCA50F] hover:underline" %>
+              (reembolso al Comprador de la parte no redimida de su recarga dentro de los 3 días posteriores al pago) u obligación legal, las Tarjetas de Regalo no son reembolsables.
+              Los saldos ya canjeados se gestionan directamente con el Comercio.
             </p>
           </section>
         </div>

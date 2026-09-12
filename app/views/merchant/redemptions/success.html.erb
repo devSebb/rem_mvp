@@ -40,7 +40,7 @@
           <div class="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
             <p class="papayal-meta text-emerald-800">Monto canjeado</p>
             <p class="text-2xl font-bold text-emerald-900 mt-1">
-              <%= number_to_currency((@gift_card.amount - @gift_card.remaining_balance) / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+              <%= @redeemed_cents ? number_to_currency(@redeemed_cents / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) : "—" %>
             </p>
           </div>
           <div class="rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
@@ -58,15 +58,15 @@
           </div>
           <div class="flex justify-between">
             <span class="papayal-meta text-[#2C3A43]/60">Fecha</span>
-            <span><%= (@gift_card.redeemed_at || Time.current).strftime('%d %b %Y %I:%M %p') %></span>
+            <span><%= Time.current.strftime('%d %b %Y %I:%M %p') %></span>
           </div>
           <div class="flex justify-between">
-            <span class="papayal-meta text-[#2C3A43]/60">De</span>
-            <span><%= @gift_card.sender.name %></span>
-          </div>
-          <div class="flex justify-between">
-            <span class="papayal-meta text-[#2C3A43]/60">Para</span>
+            <span class="papayal-meta text-[#2C3A43]/60">Titular</span>
             <span><%= @gift_card.recipient&.name || 'Desconocido' %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="papayal-meta text-[#2C3A43]/60">Saldo disponible</span>
+            <span><%= number_to_currency(@gift_card.spendable_cents / 100.0, unit: '$') %></span>
           </div>
         </div>
       <% end %>

@@ -1,5 +1,5 @@
-<% content_for :preview_title, "Tu compra está bajo revisión de seguridad" %>
-<% content_for :preheader do %>Tu tarjeta se entregará normalmente; estará activa el <%= @unlock_time.strftime("%d de %B a las %H:%M") %>.<% end %>
+<% content_for :preview_title, "Tu recarga está bajo revisión de seguridad" %>
+<% content_for :preheader do %>La recarga se entregará normalmente; estará disponible el <%= @unlock_time.strftime("%d de %B a las %H:%M") %>.<% end %>
 
 <!-- Eyebrow -->
 <div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:14px;">
@@ -7,7 +7,7 @@
 </div>
 
 <h1 style="margin:0 0 18px 0; font-size:28px; line-height:1.2; font-weight:800; letter-spacing:-0.8px; color:#0D2F32;">
-  Tu compra está bajo revisión
+  Tu recarga está bajo revisión
 </h1>
 
 <p style="margin:0 0 18px 0; font-size:16px; line-height:1.65; color:#2C3A43;">
@@ -15,8 +15,8 @@
 </p>
 
 <p style="margin:0 0 22px 0; font-size:16px; line-height:1.65; color:#2C3A43;">
-  Recibimos tu compra de una tarjeta de regalo. Para tu protección y la del titular de la tarjeta,
-  esta compra fue marcada por nuestro sistema de seguridad para una breve revisión.
+  Recibimos tu recarga de <%= @amount_formatted %> para la tarjeta de regalo de <%= @gift_card.merchant&.store_name %>. Para tu protección y la del titular de la tarjeta,
+  esta recarga fue marcada por nuestro sistema de seguridad para una breve revisión.
 </p>
 
 <!-- Summary -->
@@ -37,7 +37,7 @@
         </tr>
         <tr><td style="padding:0 0 12px 0; font-size:15px; font-weight:600; color:#0D2F32;"><%= @gift_card.merchant&.store_name %></td></tr>
         <tr>
-          <td style="padding:6px 0; font-size:12px; font-weight:700; letter-spacing:0.6px; text-transform:uppercase; color:#6A7780;">Estará activa el</td>
+          <td style="padding:6px 0; font-size:12px; font-weight:700; letter-spacing:0.6px; text-transform:uppercase; color:#6A7780;">Estará disponible el</td>
         </tr>
         <tr><td style="padding:0; font-size:15px; font-weight:600; color:#0D2F32;"><%= @unlock_time.strftime("%d de %B de %Y a las %H:%M") %></td></tr>
       </table>
@@ -50,17 +50,17 @@
   <tr>
     <td style="padding:16px 18px; background-color:#FDF1E1; border:1px solid #F1E2CB; border-radius:12px; font-size:14px; line-height:1.65; color:#2C3A43;">
       <strong style="color:#0D2F32;">¿Qué significa esto?</strong><br>
-      La tarjeta se entregará a <%= @recipient_label %> normalmente, pero no podrá canjearse hasta el momento indicado.
+      Solo esta recarga queda en revisión: no podrá canjearse hasta el momento indicado. El resto del saldo de la tarjeta de <%= @recipient_label %> sigue disponible.
       Esto reduce el riesgo de uso indebido en casos de tarjetas robadas o transacciones no autorizadas.
     </td>
   </tr>
 </table>
 
 <p style="margin:0 0 18px 0; font-size:16px; line-height:1.65; color:#2C3A43;">
-  Si reconoces esta compra, no necesitas hacer nada — la tarjeta se activará automáticamente.
+  Si reconoces esta compra, no necesitas hacer nada — la recarga se liberará automáticamente.
 </p>
 
 <p style="margin:0 0 4px 0; font-size:16px; line-height:1.65; color:#2C3A43;">
   <strong style="color:#0D2F32;">Si no reconoces esta compra,</strong> contáctanos inmediatamente en
-  <a href="mailto:<%= @support_email %>" style="color:#E08A00; font-weight:600; text-decoration:none;"><%= @support_email %></a> para que cancelemos la transacción y reembolsemos tu tarjeta.
+  <a href="mailto:<%= @support_email %>" style="color:#E08A00; font-weight:600; text-decoration:none;"><%= @support_email %></a> para que anulemos la recarga y la devolvamos a tu tarjeta de pago.
 </p>

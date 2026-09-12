@@ -27,8 +27,26 @@ RSpec.describe "Admin::Dashboard", type: :request do
       # Fee revenue and Stripe cost tiles read from ledger metadata
       expect(response.body).to include("$1.30")
       expect(response.body).to include("$1.75")
-      # Outstanding liability from active card balances
+      # Outstanding liability from active + frozen card balances
       expect(response.body).to include("$50.00")
+    end
+
+    it "shows the §9 KPIs: frozen cards, disputed cents, remittance counter and last reconcile" do
+      merchant = create(:merchant)
+      frozen = create(:gift_card, merchant: merchant, amount: 0, status: :frozen_by_admin)
+      stripe_load!(frozen, 4_000, sender: create(:user, country_of_residence: "US"))
+      disputed = create(:gift_card, merchant: merchant, amount: 0)
+      stripe_load!(disputed, 2_500, sender: create(:user, country_of_residence: "EC"), disputed_at: 1.hour.ago)
+      Rails.cache.write(Ledger::ReconcileJob::LAST_RESULT_KEY, { ran_at: Time.current.iso8601, drift_count: 0, cards_checked: 2 })
+
+      sign_in admin
+      get admin_root_path
+
+      expect(response.body).to include("1 congelada")
+      expect(response.body).to include("1 en disputa · $25.00")
+      expect(response.body).to include("$65.00") # liability incl. frozen
+      expect(response.body).to include("Contador CFPB (§4.5)")
+      expect(response.body).to include("sin desvíos")
     end
 
     it "blocks non-admins" do

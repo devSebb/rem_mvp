@@ -10,15 +10,25 @@ module Api
 
           authorize @gift_card, :view_code?
 
+          if @gift_card.frozen_by_admin?
+            return render json: { error: "Esta tarjeta está congelada.", code: "gift_card.frozen" }, status: :unprocessable_entity
+          end
+
           unless @gift_card.active?
-            return render json: { error: "Tarjeta inactiva o no disponible" }, status: :unprocessable_entity
+            return render json: { error: "Tarjeta inactiva o no disponible", code: "gift_card.inactive" }, status: :unprocessable_entity
+          end
+
+          spendable = @gift_card.spendable_cents
+          if spendable <= 0
+            return render json: { error: "Esta tarjeta no tiene saldo disponible ahora.", code: "gift_card.no_spendable_balance" }, status: :unprocessable_entity
           end
 
           result = RedemptionTokens::Issue.call(gift_card: @gift_card)
 
           render json: {
             token: result[:token],
-            expires_at: result[:expires_at].iso8601
+            expires_at: result[:expires_at].iso8601,
+            spendable_cents: spendable
           }
         rescue StandardError => e
           Rails.logger.error("💥 Failed to issue redemption token: #{e.class} - #{e.message}")

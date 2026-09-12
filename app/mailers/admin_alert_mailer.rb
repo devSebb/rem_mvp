@@ -126,6 +126,17 @@ class AdminAlertMailer < ApplicationMailer
     )
   end
 
+  # §4.5: potential CFPB remittance transfers are approaching the 500/year
+  # safe harbor. `summary` is Loads::RemittanceCounter.summary (primitives).
+  def remittance_threshold(summary)
+    @summary = summary.symbolize_keys
+
+    mail(
+      to: admin_recipient,
+      subject: "[ALERT] Remittance counter at #{@summary[:current_year]} loads in #{@summary[:year]} (safe harbor #{@summary[:safe_harbor]})"
+    )
+  end
+
   private
 
   def admin_recipient

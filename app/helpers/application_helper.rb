@@ -8,6 +8,8 @@ module ApplicationHelper
     "redeemed" => { label: "Canjeada", classes: "bg-blue-50 text-blue-700 border border-blue-100" },
     "expired" => { label: "Vencida", classes: "bg-rose-50 text-rose-700 border border-rose-100" },
     "canceled" => { label: "Cancelada", classes: "bg-gray-100 text-gray-600 border border-gray-200" },
+    "frozen_by_admin" => { label: "Congelada", classes: "bg-sky-50 text-sky-700 border border-sky-200" },
+    "frozen" => { label: "Congelada", classes: "bg-sky-50 text-sky-700 border border-sky-200" },
     "suspended" => { label: "Suspendido", classes: "bg-rose-50 text-rose-700 border border-rose-100" },
     "pending" => { label: "Pendiente", classes: "bg-amber-50 text-amber-700 border border-amber-100" }
   }.freeze
@@ -42,7 +44,7 @@ module ApplicationHelper
     return tag.span("comercio", class: "italic") if merchant_nav_context?
     return tag.span("administración", class: "italic") if admin_nav_context?
 
-    "Tu billetera de regalos"
+    "Tus tarjetas de regalo"
   end
 
   def admin_nav_context?

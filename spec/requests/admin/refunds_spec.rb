@@ -29,7 +29,8 @@ RSpec.describe "Admin::Refunds", type: :request do
         post admin_gift_card_refunds_path(gift_card),
              params: { refund_amount: "200.00", reason: "full refund attempt" }
 
-        expect(response.location).to start_with("http://www.example.com#{new_admin_gift_card_refund_path(gift_card)}")
+        load = gift_card.loads.sole
+        expect(response.location).to eq("http://www.example.com#{new_admin_gift_card_load_refund_path(gift_card, load)}")
         expect(flash[:alert]).to include("excede")
       end
 
@@ -43,6 +44,22 @@ RSpec.describe "Admin::Refunds", type: :request do
 
         expect(response).to redirect_to(admin_gift_card_path(gift_card))
         expect(flash[:notice]).to include("re_req_ok")
+      end
+
+      it "refunds the chosen load through the per-load route (§9)" do
+        second = stripe_load!(gift_card, 4_000, sender: create(:user), payment_intent_id: "pi_req_second")
+        refund = OpenStruct.new(id: "re_req_load2", amount: 1_500, currency: "usd")
+        expect(Stripe::Refund).to receive(:create).with(hash_including(payment_intent: "pi_req_second", amount: 1_500), anything).and_return(refund)
+
+        get new_admin_gift_card_load_refund_path(gift_card, second)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Seleccionada")
+
+        post admin_gift_card_load_refund_path(gift_card, second),
+             params: { refund_amount: "15.00", reason: "buyer asked" }
+
+        expect(response).to redirect_to(admin_gift_card_path(gift_card))
+        expect(flash[:notice]).to include("re_req_load2").and include("##{second.id}")
       end
     end
   end

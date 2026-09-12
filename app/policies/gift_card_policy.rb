@@ -1,6 +1,8 @@
 class GiftCardPolicy < ApplicationPolicy
+  # Who may see a card (§5.10): its recipient, anyone who has paid a load
+  # onto it, and admins. The deprecated card `sender_id` is never read.
   def show?
-    user.present? && (record.sender == user || record.recipient == user || user.admin?)
+    user.present? && (record.recipient == user || user.admin? || record.sent_by?(user))
   end
 
   def create?
@@ -15,7 +17,8 @@ class GiftCardPolicy < ApplicationPolicy
     user.present?
   end
 
-  # Only recipients (and admins) can see the raw gift card code
+  # Only recipients (and admins) can see the raw gift card code / mint a
+  # redemption token.
   def view_code?
     user.present? && (record.recipient == user || user.admin?)
   end
@@ -35,16 +38,16 @@ class GiftCardPolicy < ApplicationPolicy
     user&.admin?
   end
 
-  # Sender-side sharing (claim link + resend of the delivery notification).
-  # Senders only: recipients already have the card in their wallet, and the
-  # claim link exists to hand the gift to its recipient.
+  # Card-level sharing compat shim (§5.9): allowed for anyone who paid a
+  # load onto the card; the controller resolves which load. Per-load
+  # authorization lives in GiftCardLoadPolicy.
   def share?
-    user.present? && (record.sender == user || user.admin?)
+    user.present? && (user.admin? || record.sent_by?(user))
   end
 
   # transfer? removed (D9): balance never moves between users.
 
-  # Admin-only: review held cards + release a hold early. Held-card
+  # Admin-only: review held loads + release a hold early. Held-load
   # management is a fraud-team function, not for merchants.
   def index_holds?
     user&.admin?
@@ -54,13 +57,28 @@ class GiftCardPolicy < ApplicationPolicy
     user&.admin?
   end
 
+  # Admin-only card actions (§5.8, §9): freeze/unfreeze for confirmed fraud,
+  # cancel only at zero balance (enforced by the controller/model).
+  def freeze?
+    user&.admin?
+  end
+
+  def unfreeze?
+    user&.admin?
+  end
+
+  def cancel_card?
+    user&.admin?
+  end
+
   class Scope < Scope
-    # Wallet semantics for everyone, admins included: your own cards only.
-    # Admins browse the whole platform through Admin::GiftCardsController;
-    # returning scope.all here leaked every card (web wallet JSON + mobile
-    # API) to any admin account acting as a consumer.
+    # Wallet semantics for everyone, admins included: your own cards only
+    # (received, or any card you have loaded). Admins browse the platform
+    # through Admin::GiftCardsController; returning scope.all here leaked
+    # every card to any admin account acting as a consumer.
     def resolve
-      scope.where(sender: user).or(scope.where(recipient: user))
+      scope.where(recipient_id: user.id)
+           .or(scope.where(id: GiftCardLoad.in_scope.where(sender_id: user.id).select(:gift_card_id)))
     end
   end
 end

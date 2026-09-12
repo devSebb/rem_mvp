@@ -24,6 +24,7 @@ module Api
 
       def show
         transaction = Transaction.find_by!(merchant_id: current_merchant.id, id: params[:id])
+        balances = transaction.gift_card&.balances || {}
         result = {
           transaction: transaction,
           approved: transaction.succeeded?,
@@ -32,7 +33,9 @@ module Api
           transaction_id: transaction.id,
           gift_card_id: transaction.gift_card_id,
           amount_cents: transaction.amount,
-          remaining_balance_cents: transaction.gift_card&.remaining_balance,
+          remaining_balance_cents: balances[:spendable_cents],
+          spendable_cents: balances[:spendable_cents],
+          total_balance_cents: balances[:remaining_balance],
           currency: transaction.currency
         }
 
@@ -73,12 +76,17 @@ module Api
           transaction_id: result[:transaction_id],
           gift_card_id: result[:gift_card_id],
           amount_cents: result[:amount_cents],
+          # §8.4: keeps its name, now means "spendable right now"
           remaining_balance_cents: result[:remaining_balance_cents],
+          spendable_cents: result[:spendable_cents],
+          total_balance_cents: result[:total_balance_cents],
           currency: result[:currency]
         }
 
         payload[:decline_reason] = result[:decline_reason] if result[:decline_reason].present?
         payload[:held_until] = result[:held_until] if result[:held_until].present?
+        payload[:held_cents] = result[:held_cents] if result.key?(:held_cents)
+        payload[:disputed_cents] = result[:disputed_cents] if result.key?(:disputed_cents)
         payload
       end
 

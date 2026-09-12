@@ -1,13 +1,13 @@
+# Deploy-transition shim, same reason as NotificationJob (§10.2e): jobs
+# enqueued by the pre-Push-B code carry a gift card id. Resend the card's
+# first load (pre-reloadable cards have exactly one). Delete in Phase 5.
 class ResendNotificationJob < ApplicationJob
   queue_as :default
 
-  # Sender-triggered resend. Unlike NotificationJob this ignores the
-  # sent_via_* first-delivery flags (see Messaging::Notifier#resend_delivery);
-  # throttling happens upstream in GiftCards::ResendDelivery.
   def perform(gift_card_id)
-    gift_card = GiftCard.find_by(id: gift_card_id)
-    return unless gift_card&.recipient
+    load = GiftCard.find_by(id: gift_card_id)&.first_load
+    return unless load
 
-    Messaging::Notifier.new(gift_card).resend_delivery
+    LoadResendNotificationJob.perform_now(load.id)
   end
 end

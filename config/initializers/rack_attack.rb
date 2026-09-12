@@ -98,13 +98,13 @@ class Rack::Attack
   # Sender-side share/resend. Resend also has per-card service-level limits
   # (GiftCards::ResendDelivery); this adds a per-IP backstop.
   throttle('api/me/share_link/ip', limit: 30, period: 5.minutes) do |req|
-    if req.path =~ %r{\A/api/v1/me/gift_cards/\d+/share_link\z} && req.post?
+    if req.path =~ %r{\A/api/v1/me/gift_cards/\d+(/loads/\d+)?/share_link\z} && req.post?
       req.ip
     end
   end
 
   throttle('api/me/resend/ip', limit: 10, period: 5.minutes) do |req|
-    if req.path =~ %r{\A/api/v1/me/gift_cards/\d+/resend\z} && req.post?
+    if req.path =~ %r{\A/api/v1/me/gift_cards/\d+(/loads/\d+)?/resend\z} && req.post?
       req.ip
     end
   end

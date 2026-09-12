@@ -1,4 +1,5 @@
 <% content_for :title, "Papayal · Tarjeta REM-#{@gift_card.id.to_s.last(6)}" %>
+<% load_status_labels = { "available" => "Disponible", "held" => "Retenida", "disputed" => "En disputa", "exhausted" => "Agotada", "refunded" => "Reembolsada", "written_off" => "Anulada", "canceled" => "Cancelada" } %>
 <div class="space-y-8">
   <div class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
     <div>
@@ -9,58 +10,47 @@
         <%= gift_card_flag_badges(@gift_card) %>
       </div>
       <p class="text-sm text-[#2C3A43]/70 mt-1">
-        <%= @gift_card.merchant&.store_name || "Sin comercio" %> · emitida el <%= @gift_card.created_at.strftime("%d/%m/%Y %H:%M") %>
+        <%= @gift_card.merchant&.store_name || "Sin comercio" %> · creada el <%= @gift_card.created_at.strftime("%d/%m/%Y %H:%M") %>
+        · <%= @loads.size %> recarga<%= "s" unless @loads.size == 1 %>
       </p>
     </div>
     <div class="flex flex-wrap gap-3">
       <%= link_to "Volver al listado", admin_gift_cards_path, class: "papayal-btn-ghost" %>
-      <% if @gift_card.payment_intent_id.present? && @gift_card.refundable_to_buyer_cents > 0 %>
+      <% if @gift_card.refundable_to_buyer_cents > 0 %>
         <%= link_to "Emitir reembolso", new_admin_gift_card_refund_path(@gift_card), class: "papayal-btn-primary" %>
       <% end %>
     </div>
   </div>
 
+  <%# ── Tiles (§9) ────────────────────────────────────────────────────── %>
   <div class="grid grid-cols-12 gap-4">
-    <div class="col-span-6 xl:col-span-3 papayal-card papayal-card-hover p-5">
-      <p class="papayal-meta">Monto</p>
-      <p class="text-3xl font-bold mt-2"><%= number_to_currency(@gift_card.amount / 100.0, unit: '$') %></p>
-      <p class="text-xs text-[#2C3A43]/70 mt-1">Valor emitido</p>
-    </div>
-    <div class="col-span-6 xl:col-span-3 papayal-card papayal-card-hover p-5">
-      <p class="papayal-meta">Saldo restante</p>
-      <p class="text-3xl font-bold mt-2 text-emerald-700"><%= number_to_currency(@gift_card.remaining_balance / 100.0, unit: '$') %></p>
-      <p class="text-xs text-[#2C3A43]/70 mt-1">Disponible para canjear</p>
-    </div>
-    <div class="col-span-6 xl:col-span-3 papayal-card papayal-card-hover p-5">
-      <p class="papayal-meta">Canjeado</p>
-      <p class="text-3xl font-bold mt-2 text-blue-700"><%= number_to_currency(@total_redeemed / 100.0, unit: '$') %></p>
-      <p class="text-xs text-[#2C3A43]/70 mt-1">Suma de canjes exitosos</p>
-    </div>
-    <div class="col-span-6 xl:col-span-3 papayal-card papayal-card-hover p-5">
-      <p class="papayal-meta">Reembolsado al comprador</p>
-      <p class="text-3xl font-bold mt-2 text-rose-700"><%= number_to_currency(@stripe_refunded_cents / 100.0, unit: '$') %></p>
-      <p class="text-xs text-[#2C3A43]/70 mt-1">Refunds Stripe aplicados</p>
-    </div>
+    <% [
+      ["Saldo total", @balances[:remaining_balance], "text-[#0D2F32]", "Incluye retenido y en disputa"],
+      ["Disponible", @balances[:spendable_cents], "text-emerald-700", "Lo que puede canjear ahora"],
+      ["Retenido", @balances[:held_cents], "text-amber-700", @balances[:held_until] ? "Hasta #{@balances[:held_until].in_time_zone.strftime('%d/%m %H:%M')}" : "Sin retenciones"],
+      ["En disputa", @balances[:disputed_cents], "text-rose-700", "Contracargos abiertos"],
+      ["Cargado total", @gift_card.total_loaded_cents, "text-[#0D2F32]", "Suma de recargas"],
+      ["Canjeado neto", @net_redeemed, "text-blue-700", "Canjes − reversas"],
+      ["Reembolsado", @stripe_refunded_cents, "text-rose-700", "Devuelto a compradores"],
+      ["Anulado", @written_off_cents, "text-rose-700", "Disputas perdidas"]
+    ].each do |label, cents, tone, hint| %>
+      <div class="col-span-6 md:col-span-3 papayal-card papayal-card-hover p-4">
+        <p class="papayal-meta"><%= label %></p>
+        <p class="text-2xl font-bold mt-1 <%= tone %>"><%= number_to_currency(cents.to_i / 100.0, unit: '$') %></p>
+        <p class="text-xs text-[#2C3A43]/70 mt-1"><%= hint %></p>
+      </div>
+    <% end %>
   </div>
 
   <div class="grid grid-cols-12 gap-6">
     <div class="col-span-12 lg:col-span-7 papayal-card p-6 space-y-4">
       <div>
         <p class="papayal-meta">Partes</p>
-        <h2 class="text-xl font-semibold text-[#0D2F32]">Personas y comercio</h2>
+        <h2 class="text-xl font-semibold text-[#0D2F32]">Titular y comercio</h2>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
         <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
-          <p class="papayal-meta">Comprador</p>
-          <% if @gift_card.sender %>
-            <%= link_to @gift_card.sender.name.presence || @gift_card.sender.email, admin_user_path(@gift_card.sender), class: "font-semibold text-[#0D2F32] hover:underline" %>
-            <p class="text-xs text-[#2C3A43]/70"><%= @gift_card.sender.email %></p>
-          <% else %>
-            <p class="font-semibold text-[#0D2F32]">—</p>
-          <% end %>
-        </div>
-        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
-          <p class="papayal-meta">Destinatario</p>
+          <p class="papayal-meta">Destinatario (titular)</p>
           <% if @gift_card.recipient %>
             <%= link_to @gift_card.recipient.name.presence || @gift_card.recipient.email, admin_user_path(@gift_card.recipient), class: "font-semibold text-[#0D2F32] hover:underline" %>
             <p class="text-xs text-[#2C3A43]/70">
@@ -77,98 +67,132 @@
           <p class="papayal-meta">Comercio</p>
           <% if @gift_card.merchant %>
             <%= link_to @gift_card.merchant.store_name, admin_merchant_path(@gift_card.merchant), class: "font-semibold text-[#0D2F32] hover:underline" %>
-            <% if @gift_card.merchant.partner_redemption? %>
-              <p class="text-xs text-[#2C3A43]/70">Canje vía socio: <%= @gift_card.merchant.redemption_partner_display %></p>
+            <% if @gift_card.merchant.redemption_group %>
+              <p class="text-xs text-[#2C3A43]/70">Grupo de canje: <%= @gift_card.merchant.redemption_group.name %></p>
             <% end %>
           <% else %>
             <p class="font-semibold text-[#0D2F32]">—</p>
           <% end %>
         </div>
-        <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
-          <p class="papayal-meta">Entrega</p>
-          <% delivery = [("WhatsApp" if @gift_card.sent_via_whatsapp?), ("SMS" if @gift_card.sent_via_sms?), ("Email" if @gift_card.sent_via_email?), ("Push" if @gift_card.sent_via_push?)].compact %>
-          <p class="font-semibold text-[#0D2F32]"><%= delivery.any? ? delivery.join(" · ") : "Sin envíos registrados" %></p>
-          <% if @gift_card.note.present? %>
-            <p class="text-xs text-[#2C3A43]/70 mt-1 italic">Nota: "<%= @gift_card.note %>"</p>
-          <% end %>
-        </div>
-        <% if @gift_card.payment_intent_id.present? %>
-          <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8] md:col-span-2"
-               data-controller="copy"
-               data-copy-text-value="<%= @gift_card.payment_intent_id %>">
-            <div class="flex items-center justify-between gap-2">
-              <p class="papayal-meta">Payment Intent (Stripe)</p>
-              <div class="flex items-center gap-3">
-                <button type="button" data-copy-target="button" data-action="copy#copy" class="text-xs font-medium text-[#0D2F32] underline decoration-dotted hover:text-[#FCA50F] transition">Copiar</button>
-                <%= link_to "Ver en Stripe ↗", "https://dashboard.stripe.com/payments/#{@gift_card.payment_intent_id}", target: "_blank", rel: "noopener", class: "text-xs font-medium text-[#0D2F32] underline decoration-dotted hover:text-[#FCA50F] transition" %>
-              </div>
-            </div>
-            <p class="font-mono text-xs text-[#0D2F32]/80 break-words mt-1"><%= @gift_card.payment_intent_id %></p>
-          </div>
-        <% else %>
-          <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8] md:col-span-2">
-            <p class="papayal-meta">Pago</p>
-            <p class="font-semibold text-[#0D2F32]">Sin pago Stripe</p>
-            <p class="text-xs text-[#2C3A43]/70 mt-1">Emitida fuera de Stripe (semilla, prueba o emisión manual) — no admite reembolso al comprador.</p>
+        <% if @gift_card.frozen_reason.present? %>
+          <div class="p-4 rounded-2xl border border-sky-100 bg-sky-50 md:col-span-2">
+            <p class="papayal-meta text-sky-800"><%= @gift_card.frozen_by_admin? ? "Motivo de congelación" : "Último motivo administrativo" %></p>
+            <p class="text-sm text-[#0D2F32]"><%= @gift_card.frozen_reason %><% if @gift_card.frozen_at %> · <%= @gift_card.frozen_at.in_time_zone.strftime("%d/%m/%Y %H:%M") %><% end %></p>
           </div>
         <% end %>
       </div>
     </div>
 
-    <div class="col-span-12 lg:col-span-5 space-y-6">
-      <div class="papayal-card p-6 space-y-4">
-        <div>
-          <p class="papayal-meta">Riesgo y estado</p>
-          <h2 class="text-xl font-semibold text-[#0D2F32]">Señales de seguridad</h2>
-        </div>
-        <div class="space-y-3 text-sm">
-          <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
-            <p class="papayal-meta">Retención por riesgo</p>
-            <% if @gift_card.held? %>
-              <p class="font-semibold text-amber-700">Retenida hasta <%= @gift_card.held_until.in_time_zone.strftime("%d/%m/%Y %H:%M") %></p>
-            <% elsif @gift_card.held_until.present? %>
-              <p class="font-semibold text-[#0D2F32]">Estuvo retenida — venció el <%= @gift_card.held_until.in_time_zone.strftime("%d/%m/%Y %H:%M") %></p>
-            <% else %>
-              <p class="font-semibold text-[#0D2F32]">Sin retenciones</p>
-            <% end %>
-            <% if @gift_card.risk_score.present? %>
-              <p class="text-xs text-[#2C3A43]/70 mt-1">Radar score: <%= @gift_card.risk_score %><%= " · #{@gift_card.risk_level}" if @gift_card.risk_level.present? %></p>
-            <% end %>
-          </div>
-          <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
-            <p class="papayal-meta">Disputa</p>
-            <% if @gift_card.disputed? %>
-              <p class="font-semibold text-rose-700">En disputa desde el <%= @gift_card.disputed_at.in_time_zone.strftime("%d/%m/%Y") %></p>
-              <p class="text-xs text-[#2C3A43]/70 mt-1">El canje está bloqueado mientras la disputa siga abierta.</p>
-            <% else %>
-              <p class="font-semibold text-[#0D2F32]">Sin disputas</p>
-            <% end %>
-          </div>
-          <% if @gift_card.redeemed_at.present? %>
-            <div class="p-4 rounded-2xl border border-black/5 bg-[#F8F8F8]">
-              <p class="papayal-meta">Canje total</p>
-              <p class="font-semibold text-[#0D2F32]"><%= @gift_card.redeemed_at.in_time_zone.strftime("%d/%m/%Y %H:%M") %></p>
-            </div>
-          <% end %>
-        </div>
+    <div class="col-span-12 lg:col-span-5 papayal-card p-6 space-y-4">
+      <div>
+        <p class="papayal-meta">Acciones</p>
+        <h2 class="text-xl font-semibold text-[#0D2F32]">Estado de la tarjeta</h2>
+        <p class="text-sm text-[#2C3A43]/70 mt-1">Congelar bloquea canjes y recargas. Cancelar solo con saldo cero. Nunca mueve dinero.</p>
       </div>
-
-      <% if @gift_card.held? %>
-        <div class="papayal-card p-6 space-y-4 border border-amber-100 bg-amber-50/50">
-          <div>
-            <p class="papayal-meta text-amber-800">Acción administrativa</p>
-            <h2 class="text-lg font-semibold text-[#0D2F32]">Liberar retención</h2>
-            <p class="text-sm text-[#2C3A43]/70 mt-1">Libera la tarjeta antes de que venza la retención. Requiere un motivo — queda registrado para auditoría.</p>
-          </div>
-          <%= form_with url: release_admin_hold_path(@gift_card), method: :post, local: true, class: "flex flex-col sm:flex-row gap-3" do %>
-            <input type="text" name="reason" required placeholder="Motivo (ej. comprador verificado por teléfono)" class="papayal-input flex-1">
-            <button type="submit" class="papayal-btn-secondary text-amber-800" data-turbo-confirm="¿Liberar la retención de seguridad de esta tarjeta?">Liberar</button>
-          <% end %>
-        </div>
+      <% if @gift_card.active? %>
+        <%= form_with url: freeze_admin_gift_card_path(@gift_card), method: :patch, local: true, class: "flex flex-col sm:flex-row gap-2" do %>
+          <input type="text" name="reason" required placeholder="Motivo para congelar" class="papayal-input flex-1">
+          <button type="submit" class="papayal-btn-secondary text-sky-800" data-turbo-confirm="¿Congelar esta tarjeta? No podrá canjearse ni recargarse.">Congelar</button>
+        <% end %>
+      <% elsif @gift_card.frozen_by_admin? %>
+        <%= button_to "Descongelar", unfreeze_admin_gift_card_path(@gift_card), method: :patch, class: "papayal-btn-secondary text-emerald-700", data: { turbo_confirm: "¿Descongelar esta tarjeta?" } %>
+      <% end %>
+      <% unless @gift_card.canceled? %>
+        <%= form_with url: cancel_admin_gift_card_path(@gift_card), method: :patch, local: true, class: "flex flex-col sm:flex-row gap-2" do %>
+          <input type="text" name="reason" required placeholder="Motivo para cancelar" class="papayal-input flex-1">
+          <button type="submit" class="papayal-btn-ghost text-rose-700" <%= "disabled" unless @gift_card.remaining_balance.to_i.zero? %> data-turbo-confirm="¿Cancelar esta tarjeta? Esta acción no se puede deshacer.">Cancelar<%= " (requiere saldo cero)" unless @gift_card.remaining_balance.to_i.zero? %></button>
+        <% end %>
       <% end %>
     </div>
   </div>
 
+  <%# ── Recargas table (§9) ───────────────────────────────────────────── %>
+  <div class="papayal-card p-6 space-y-4" id="recargas">
+    <div>
+      <p class="papayal-meta">Recargas</p>
+      <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Recargas <span class="text-sm font-medium text-[#2C3A43]/60">(<%= @loads.size %>)</span></h2>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">Cada pago es una recarga con su propio comprador, retención, disputa y reembolso. Los canjes consumen las más antiguas primero.</p>
+    </div>
+    <% if @loads.any? %>
+      <div class="overflow-x-auto rounded-2xl border border-black/5">
+        <table class="min-w-full divide-y divide-black/5">
+          <thead class="bg-[#EBEBEB]/60 text-left text-xs font-medium text-[#2C3A43]/70 uppercase tracking-wider">
+            <tr>
+              <th class="px-3 py-3">#</th>
+              <th class="px-3 py-3">Comprador</th>
+              <th class="px-3 py-3">Pago</th>
+              <th class="px-3 py-3 text-right">Monto</th>
+              <th class="px-3 py-3 text-right">Restante</th>
+              <th class="px-3 py-3 text-right">Reembolsado</th>
+              <th class="px-3 py-3 text-right">Anulado</th>
+              <th class="px-3 py-3">Estado</th>
+              <th class="px-3 py-3">Retención / disputa</th>
+              <th class="px-3 py-3 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-black/5 text-sm">
+            <% @loads.each do |load| %>
+              <tr class="hover:bg-[#EBEBEB]/40 transition align-top" id="recarga-<%= load.id %>">
+                <td class="px-3 py-3 font-mono text-xs text-[#2C3A43]/70"><%= load.id %><p class="text-[10px] whitespace-nowrap"><%= load.created_at.strftime('%d/%m/%Y %H:%M') %></p></td>
+                <td class="px-3 py-3">
+                  <% if load.sender %>
+                    <%= link_to load.sender.name.presence || load.sender.email, admin_user_path(load.sender), class: "text-[#0D2F32] hover:underline" %>
+                    <% if load.self_load? %><p class="text-[10px] text-[#2C3A43]/60">recarga propia</p><% end %>
+                  <% else %>
+                    <span class="text-[#2C3A43]/50"><%= load.source.humanize %></span>
+                  <% end %>
+                  <% if load.note.present? %><p class="text-[10px] italic text-[#2C3A43]/60">“<%= load.note %>”</p><% end %>
+                  <% delivery = [("WhatsApp" if load.sent_via_whatsapp?), ("SMS" if load.sent_via_sms?), ("Email" if load.sent_via_email?), ("Push" if load.sent_via_push?)].compact %>
+                  <p class="text-[10px] text-[#2C3A43]/60"><%= delivery.any? ? "Avisado por #{delivery.join(' · ')}" : "Sin avisos registrados" %></p>
+                </td>
+                <td class="px-3 py-3">
+                  <% if load.payment_intent_id.present? %>
+                    <%= link_to load.payment_intent_id.last(10), "https://dashboard.stripe.com/payments/#{load.payment_intent_id}", target: "_blank", rel: "noopener", class: "font-mono text-xs text-[#0D2F32] underline decoration-dotted", title: load.payment_intent_id %>
+                    <% if load.risk_score.present? %><p class="text-[10px] text-[#2C3A43]/60">Radar <%= load.risk_score %><%= " · #{load.risk_level}" if load.risk_level.present? %></p><% end %>
+                  <% else %>
+                    <span class="text-xs text-[#2C3A43]/50"><%= { "issuance" => "Emisión", "migration_merge" => "Fusión", "admin_adjustment" => "Ajuste" }[load.source] || load.source %></span>
+                  <% end %>
+                </td>
+                <td class="px-3 py-3 text-right font-medium"><%= number_to_currency(load.amount_cents / 100.0, unit: '$') %></td>
+                <td class="px-3 py-3 text-right text-emerald-700"><%= number_to_currency(load.remaining_cents / 100.0, unit: '$') %></td>
+                <td class="px-3 py-3 text-right text-rose-700"><%= load.refunded_cents.positive? ? number_to_currency(load.refunded_cents / 100.0, unit: '$') : "—" %></td>
+                <td class="px-3 py-3 text-right text-rose-700"><%= load.written_off_cents.positive? ? number_to_currency(load.written_off_cents / 100.0, unit: '$') : "—" %></td>
+                <td class="px-3 py-3"><span class="<%= status_badge_classes(load.derived_status == :available ? 'active' : (load.derived_status == :held ? 'pending' : (%i[disputed written_off].include?(load.derived_status) ? 'expired' : 'canceled'))) %>"><%= load_status_labels[load.derived_status.to_s] %></span></td>
+                <td class="px-3 py-3 text-xs text-[#2C3A43]/80">
+                  <% if load.held? %>
+                    <p class="text-amber-700">Retenida hasta <%= load.held_until.in_time_zone.strftime("%d/%m %H:%M") %></p>
+                  <% elsif load.held_until.present? %>
+                    <p>Retención terminó <%= load.held_until.in_time_zone.strftime("%d/%m %H:%M") %><%= " (liberada por #{load.hold_released_by.name})" if load.hold_released_by %></p>
+                  <% end %>
+                  <% if load.dispute_open? %>
+                    <p class="text-rose-700">Disputa abierta desde <%= load.disputed_at.in_time_zone.strftime("%d/%m/%Y") %></p>
+                  <% elsif load.dispute_outcome.present? %>
+                    <p>Disputa <%= load.dispute_outcome == "won" ? "ganada" : "perdida" %></p>
+                  <% end %>
+                  <% if !load.held? && !load.dispute_open? && load.held_until.nil? && load.dispute_outcome.nil? %>—<% end %>
+                </td>
+                <td class="px-3 py-3 text-right whitespace-nowrap">
+                  <% if load.held? %>
+                    <%= form_with url: release_admin_hold_path(load), method: :post, local: true, class: "inline-flex items-center gap-1" do |f| %>
+                      <%= f.text_field :reason, placeholder: "Motivo", required: true, class: "papayal-input text-xs py-1 w-28" %>
+                      <%= f.submit "Liberar retención", class: "papayal-btn-secondary text-xs text-amber-800 cursor-pointer", data: { turbo_confirm: "¿Liberar la retención de la recarga ##{load.id}?" } %>
+                    <% end %>
+                  <% end %>
+                  <% if load.payment_intent_id.present? && load.refundable_cents.positive? %>
+                    <%= link_to "Reembolsar", new_admin_gift_card_load_refund_path(@gift_card, load), class: "papayal-btn-ghost text-xs text-rose-700" %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="text-center py-8 text-sm text-[#2C3A43]/70">Esta tarjeta no tiene recargas.</div>
+    <% end %>
+  </div>
+
+  <%# ── Ledger timeline with allocation breakdown ─────────────────────── %>
   <div class="papayal-card p-6 space-y-5" id="movimientos">
     <div>
       <p class="papayal-meta">Ledger</p>
@@ -176,7 +200,7 @@
         Historial de movimientos
         <span class="text-sm font-medium text-[#2C3A43]/60">(<%= @transactions.size %>)</span>
       </h2>
-      <p class="text-sm text-[#2C3A43]/70 mt-1">Cada movimiento con sus datos completos, del más reciente al más antiguo.</p>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">Cada movimiento con sus datos completos, del más reciente al más antiguo. Los canjes muestran de qué recargas salió el dinero.</p>
     </div>
 
     <% if @transactions.any? %>
@@ -193,6 +217,7 @@
                   <span class="<%= status_badge_classes(txn.status == 'succeeded' ? 'active' : txn.status == 'failed' ? 'expired' : 'pending') %>">
                     <%= { "pending" => "Pendiente", "succeeded" => "Exitosa", "failed" => "Fallida" }[txn.status] || txn.status.humanize %>
                   </span>
+                  <% if txn.decline_reason.present? %><span class="text-xs text-rose-700"><%= txn.decline_reason %></span><% end %>
                 </div>
                 <p class="font-bold text-[#0D2F32]"><%= number_to_currency(txn.amount / 100.0, unit: '$') %></p>
               </div>
@@ -204,9 +229,22 @@
                 <% if txn.user %>
                   · <%= link_to (txn.user.name.presence || txn.user.email), admin_user_path(txn.user), class: "hover:underline" %>
                 <% end %>
+                <% if txn.gift_card_load_id %>
+                  · <a href="#recarga-<%= txn.gift_card_load_id %>" class="hover:underline">recarga #<%= txn.gift_card_load_id %></a>
+                <% end %>
               </p>
               <% if presentation[:note] %>
                 <p class="text-xs text-[#2C3A43]/60 mt-1"><%= presentation[:note] %></p>
+              <% end %>
+              <% allocations = txn.redemption_allocations.to_a %>
+              <% if allocations.any? %>
+                <div class="mt-2 flex flex-wrap gap-2 text-xs">
+                  <% allocations.each do |alloc| %>
+                    <span class="px-2 py-0.5 rounded-full border <%= alloc.debit? ? 'border-blue-200 bg-blue-50 text-blue-800' : 'border-amber-200 bg-amber-50 text-amber-800' %>">
+                      <%= alloc.debit? ? "−" : "+" %><%= number_to_currency(alloc.amount_cents / 100.0, unit: '$') %> · recarga #<%= alloc.gift_card_load_id %>
+                    </span>
+                  <% end %>
+                </div>
               <% end %>
               <% metadata_rows = admin_txn_metadata_rows(txn) %>
               <% if metadata_rows.any? || txn.processor_ref.present? %>

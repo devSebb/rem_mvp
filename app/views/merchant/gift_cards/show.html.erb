@@ -5,9 +5,9 @@
     style="background: linear-gradient(135deg, #FCA50F 0%, #FFC65C 45%, #EBEBE8 100%);"
   >
     <div>
-      <p class="papayal-meta text-[#0D2F32]/80">Detalles de Tarjeta Regalo</p>
-      <h1 class="text-3xl font-bold text-[#0D2F32]">Tarjeta Canjeada</h1>
-      <p class="text-sm text-[#0D2F32]/80 mt-2">Información completa de la tarjeta y sus consumos.</p>
+      <p class="papayal-meta text-[#0D2F32]/80">Detalle de tarjeta</p>
+      <h1 class="text-3xl font-bold text-[#0D2F32]">Tarjeta de <%= @gift_card.merchant&.store_name || "Papayal" %></h1>
+      <p class="text-sm text-[#0D2F32]/80 mt-2">Saldo de la tarjeta y los canjes realizados en tu comercio.</p>
     </div>
     <div class="flex flex-wrap gap-3">
       <%= link_to "← Volver al Panel", merchant_root_path,
@@ -16,92 +16,58 @@
   </div>
 
   <div class="grid grid-cols-12 gap-6">
-    <!-- Gift Card Details -->
-    <div class="col-span-12 lg:col-span-4 papayal-card p-6">
-      <p class="papayal-meta text-[#2C3A43]/60">Información de la Tarjeta</p>
-      <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Detalles</h2>
+    <!-- Card balance -->
+    <div class="col-span-12 lg:col-span-6 papayal-card p-6">
+      <p class="papayal-meta text-[#2C3A43]/60">Información de la tarjeta</p>
+      <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Saldo</h2>
 
-      <div class="mt-6 space-y-4">
+      <div class="mt-6 grid grid-cols-2 gap-4">
         <div>
-          <p class="text-sm font-medium text-[#2C3A43]/70">Código de Tarjeta</p>
-          <p class="text-lg font-mono font-bold text-[#0D2F32]"><%= @gift_card.raw_code %></p>
+          <p class="text-sm font-medium text-[#2C3A43]/70">Saldo disponible</p>
+          <p class="text-2xl font-bold text-emerald-700"><%= number_to_currency(@balances[:spendable_cents] / 100.0, unit: '$') %></p>
         </div>
-
         <div>
-          <p class="text-sm font-medium text-[#2C3A43]/70">ID de Tarjeta (DB)</p>
-          <p class="text-sm font-mono text-[#0D2F32]/80"><%= @gift_card.id %></p>
+          <p class="text-sm font-medium text-[#2C3A43]/70">Saldo total</p>
+          <p class="text-2xl font-bold text-[#0D2F32]"><%= number_to_currency(@balances[:remaining_balance] / 100.0, unit: '$') %></p>
         </div>
-
+        <% if @balances[:held_cents].positive? %>
+          <div>
+            <p class="text-sm font-medium text-[#2C3A43]/70">Retenido</p>
+            <p class="text-lg font-bold text-amber-700"><%= number_to_currency(@balances[:held_cents] / 100.0, unit: '$') %></p>
+          </div>
+        <% end %>
+        <% if @balances[:disputed_cents].positive? %>
+          <div>
+            <p class="text-sm font-medium text-[#2C3A43]/70">En disputa</p>
+            <p class="text-lg font-bold text-rose-700"><%= number_to_currency(@balances[:disputed_cents] / 100.0, unit: '$') %></p>
+          </div>
+        <% end %>
         <div>
-          <p class="text-sm font-medium text-[#2C3A43]/70">Monto Original</p>
-          <p class="text-lg font-bold text-[#0D2F32]"><%= number_to_currency(@gift_card.amount / 100.0, unit: '$') %></p>
+          <p class="text-sm font-medium text-[#2C3A43]/70">Cargado total</p>
+          <p class="text-lg font-bold text-[#0D2F32]"><%= number_to_currency(@gift_card.total_loaded_cents / 100.0, unit: '$') %></p>
+          <p class="text-xs text-[#2C3A43]/60"><%= @gift_card.loads_count %> recarga<%= "s" unless @gift_card.loads_count == 1 %></p>
         </div>
-
-        <div>
-          <p class="text-sm font-medium text-[#2C3A43]/70">Saldo Restante</p>
-          <p class="text-lg font-bold text-[#0D2F32]"><%= number_to_currency(@gift_card.remaining_balance / 100.0, unit: '$') %></p>
-        </div>
-
         <div>
           <p class="text-sm font-medium text-[#2C3A43]/70">Estado</p>
           <span class="<%= status_badge_classes(@gift_card.status) %>">
             <%= status_badge_label(@gift_card.status) %>
           </span>
         </div>
-
         <div>
-          <p class="text-sm font-medium text-[#2C3A43]/70">Fecha de Creación</p>
+          <p class="text-sm font-medium text-[#2C3A43]/70">ID de tarjeta</p>
+          <p class="text-sm font-mono text-[#0D2F32]/80"><%= @gift_card.id %></p>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-[#2C3A43]/70">Creada</p>
           <p class="text-sm text-[#2C3A43]/80"><%= @gift_card.created_at.strftime('%d %b %Y') %></p>
-        </div>
-
-        <% if @gift_card.redeemed_at %>
-          <div>
-            <p class="text-sm font-medium text-[#2C3A43]/70">Fecha de Canje Completo</p>
-            <p class="text-sm text-[#2C3A43]/80"><%= @gift_card.redeemed_at.strftime('%d %b %Y') %></p>
-          </div>
-        <% end %>
-      </div>
-    </div>
-
-    <!-- Spender Details -->
-    <div class="col-span-12 lg:col-span-4 papayal-card p-6">
-      <p class="papayal-meta text-[#2C3A43]/60">Información del Comprador</p>
-      <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Quien Regalo</h2>
-
-      <div class="mt-6 space-y-4">
-        <div>
-          <p class="text-sm font-medium text-[#2C3A43]/70">Nombre</p>
-          <p class="text-lg font-bold text-[#0D2F32]"><%= @spender.name %></p>
-        </div>
-
-        <div>
-          <p class="text-sm font-medium text-[#2C3A43]/70">Email</p>
-          <p class="text-sm text-[#2C3A43]/80"><%= @spender.email %></p>
-        </div>
-
-        <div>
-          <p class="text-sm font-medium text-[#2C3A43]/70">Teléfono</p>
-          <p class="text-sm text-[#2C3A43]/80"><%= @spender.phone || 'No registrado' %></p>
-        </div>
-
-        <div>
-          <p class="text-sm font-medium text-[#2C3A43]/70">Tipo de Usuario</p>
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium <%= @spender.admin? ? 'bg-purple-50 text-purple-700 border border-purple-100' : 'bg-blue-50 text-blue-700 border border-blue-100' %>">
-            <%= @spender.admin? ? 'Administrador' : 'Usuario Regular' %>
-          </span>
-        </div>
-
-        <div>
-          <p class="text-sm font-medium text-[#2C3A43]/70">Miembro desde</p>
-          <p class="text-sm text-[#2C3A43]/80"><%= @spender.created_at.strftime('%d %b %Y') %></p>
         </div>
       </div>
     </div>
 
     <!-- Recipient Details -->
-    <div class="col-span-12 lg:col-span-4 papayal-card p-6">
-      <p class="papayal-meta text-[#2C3A43]/60">Información del Destinatario</p>
-      <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Quien Recibió</h2>
+    <div class="col-span-12 lg:col-span-6 papayal-card p-6">
+      <p class="papayal-meta text-[#2C3A43]/60">Información del titular</p>
+      <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Quien canjea</h2>
 
       <% if @recipient %>
         <div class="mt-6 space-y-4">
@@ -109,38 +75,29 @@
             <p class="text-sm font-medium text-[#2C3A43]/70">Nombre</p>
             <p class="text-lg font-bold text-[#0D2F32]"><%= @recipient.name %></p>
           </div>
-
           <div>
             <p class="text-sm font-medium text-[#2C3A43]/70">Email</p>
-            <p class="text-sm text-[#2C3A43]/80"><%= @recipient.email %></p>
+            <p class="text-sm text-[#2C3A43]/80"><%= @recipient.placeholder_email? ? "No registrado" : @recipient.email %></p>
           </div>
-
           <div>
             <p class="text-sm font-medium text-[#2C3A43]/70">Teléfono</p>
             <p class="text-sm text-[#2C3A43]/80"><%= @recipient.phone || 'No registrado' %></p>
           </div>
-
-          <div>
-            <p class="text-sm font-medium text-[#2C3A43]/70">Tipo de Usuario</p>
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium <%= @recipient.admin? ? 'bg-purple-50 text-purple-700 border border-purple-100' : 'bg-blue-50 text-blue-700 border border-blue-100' %>">
-              <%= @recipient.admin? ? 'Administrador' : 'Usuario Regular' %>
-            </span>
-          </div>
         </div>
       <% else %>
         <div class="mt-6">
-          <p class="text-sm text-[#2C3A43]/70">Esta tarjeta no fue enviada a un destinatario específico.</p>
+          <p class="text-sm text-[#2C3A43]/70">Esta tarjeta no tiene titular registrado.</p>
         </div>
       <% end %>
     </div>
   </div>
 
-  <!-- Transactions History -->
+  <!-- Transactions History (this merchant only) -->
   <div class="papayal-card p-6">
     <div class="flex items-center justify-between mb-4">
       <div>
-        <p class="papayal-meta text-[#2C3A43]/60">Historial de Consumos</p>
-        <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Todos los Canjes</h2>
+        <p class="papayal-meta text-[#2C3A43]/60">Historial en tu comercio</p>
+        <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Canjes y devoluciones</h2>
       </div>
     </div>
 
@@ -178,9 +135,13 @@
                   </span>
                 </td>
                 <td class="px-4 py-4">
-                  <% if refund_txn %>
+                  <% if transaction.failed? %>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                      Rechazado<%= " · #{transaction.decline_reason}" if transaction.decline_reason.present? %>
+                    </span>
+                  <% elsif refund_txn %>
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
-                      Reembolsado
+                      Devuelto
                     </span>
                     <p class="text-xs text-[#2C3A43]/70 mt-1">
                       <%= refund_txn.created_at.strftime('%d %b %Y %I:%M %p') %>
@@ -195,15 +156,15 @@
                   <%= @transaction_users[transaction.metadata['actor_id']]&.name || 'Usuario desconocido' %>
                 </td>
                 <td class="px-4 py-4">
-                  <% if refund_txn %>
+                  <% if refund_txn || transaction.failed? %>
                     <span class="text-xs text-[#2C3A43]/70">—</span>
                   <% else %>
-                    <%= button_to "Reembolsar",
+                    <%= button_to "Devolver",
                           merchant_gift_card_refund_transaction_path(@gift_card, transaction_id: transaction.id),
                           method: :post,
                           params: { reason: "Refund requested by merchant" },
                           class: "papayal-btn-ghost text-center border border-rose-200 text-rose-700 bg-rose-50/60 hover:bg-rose-100 text-xs px-3 py-2",
-                          data: { turbo_confirm: "¿Seguro que quieres reembolsar este canje? Esta acción no se puede deshacer." } %>
+                          data: { turbo_confirm: "¿Seguro que quieres devolver este canje a la tarjeta? Esta acción no se puede deshacer." } %>
                   <% end %>
                 </td>
               </tr>
@@ -214,24 +175,24 @@
 
       <div class="mt-4 p-4 bg-[#EBEBEB]/60 rounded-lg">
         <div class="flex items-center justify-between text-sm">
-          <span class="font-medium text-[#2C3A43]/70">Total Canjeado (neto):</span>
+          <span class="font-medium text-[#2C3A43]/70">Total canjeado en tu comercio (neto):</span>
           <span class="font-bold text-[#0D2F32]"><%= number_to_currency(@total_redeemed_net / 100.0, unit: '$') %></span>
         </div>
         <% if @total_reversed.positive? %>
           <div class="flex items-center justify-between text-sm mt-1">
-            <span class="font-medium text-[#2C3A43]/70">Reembolsado:</span>
+            <span class="font-medium text-[#2C3A43]/70">Devuelto:</span>
             <span class="font-bold text-rose-700">−<%= number_to_currency(@total_reversed / 100.0, unit: '$') %></span>
           </div>
         <% end %>
         <div class="flex items-center justify-between text-sm mt-1">
-          <span class="font-medium text-[#2C3A43]/70">Número de Canjes:</span>
+          <span class="font-medium text-[#2C3A43]/70">Número de canjes:</span>
           <span class="font-bold text-[#0D2F32]"><%= @transactions.count %></span>
         </div>
       </div>
     <% else %>
       <div class="text-center py-8">
-        <p class="text-lg font-semibold text-[#2C3A43]">No hay consumos registrados</p>
-        <p class="text-sm text-[#2C3A43]/70 mt-1">Esta tarjeta aún no ha sido canjeada.</p>
+        <p class="text-lg font-semibold text-[#2C3A43]">No hay canjes registrados</p>
+        <p class="text-sm text-[#2C3A43]/70 mt-1">Esta tarjeta aún no ha sido canjeada en tu comercio.</p>
       </div>
     <% end %>
   </div>

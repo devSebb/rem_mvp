@@ -335,6 +335,8 @@ class StripeWebhooks
     return unless recorded
 
     AdminAlertMailer.dispute_created(card.id, dispute.id).deliver_later
+    # §5.8: the recipient learns that one reload is on hold, not the card.
+    Messaging::LoadEventPusher.dispute_opened(load)
   rescue => e
     Rails.logger.error "💥 charge.dispute.created handler error: #{e.class} - #{e.message}"
     raise

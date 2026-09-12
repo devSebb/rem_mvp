@@ -52,8 +52,9 @@ RSpec.describe "Merchant::Dashboards", type: :request do
         expect(response).to have_http_status(:ok)
         # Should show the redemption transaction
         expect(response.body).to include("$25.00")
-        # Should show sender info
-        expect(response.body).to include("John Sender")
+        # Should show the card holder (the person at the till), never the buyer
+        expect(response.body).to include("Jane Recipient")
+        expect(response.body).not_to include("John Sender")
         # Should indicate cross-merchant with "Emisor" column showing the issuer
         expect(response.body).to include("Other Store")
       end
@@ -79,7 +80,7 @@ RSpec.describe "Merchant::Dashboards", type: :request do
         # Should NOT show this transaction in the recent redemptions
         # The pending settlement should be $0 (no redemptions by us)
         # Check that Other Store's redemption is NOT listed
-        expect(response.body).not_to include("De John Sender") # The sender of the card we issued
+        expect(response.body).not_to include("Jane Recipient") # the holder of the card we issued
       end
 
       it "correctly calculates pending settlement as sum of transactions REDEEMED BY this merchant" do

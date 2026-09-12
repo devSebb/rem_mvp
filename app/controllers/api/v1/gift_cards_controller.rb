@@ -1,8 +1,12 @@
 module Api
   module V1
+    # Merchant-facing balance checks on a redemption token (§8.4). Request
+    # shapes are unchanged; `remaining_balance_cents` / `balance_cents` now
+    # mean "what this card can spend right now" (§5.4), with the total
+    # incl. held/disputed funds exposed as `total_balance_cents`.
     class GiftCardsController < MerchantBaseController
       before_action :set_token_context
-      before_action :ensure_merchant_owns_gift_card!, only: [:validate, :show]
+      before_action :ensure_merchant_can_redeem!, only: [:validate, :show]
 
       def validate
         return unless ensure_token_active!(include_validation_payload: true)
@@ -11,7 +15,7 @@ module Api
 
         return unless ensure_gift_card_redeemable!
 
-        if gift_card.remaining_balance < amount_cents
+        if balances[:spendable_cents] < amount_cents
           return render json: insufficient_funds_payload, status: :unprocessable_entity
         end
 
@@ -23,15 +27,23 @@ module Api
 
         render json: {
           gift_card_id: gift_card.id,
-          balance_cents: gift_card.remaining_balance,
+          balance_cents: balances[:spendable_cents],
+          spendable_cents: balances[:spendable_cents],
+          total_balance_cents: balances[:remaining_balance],
+          held_cents: balances[:held_cents],
+          disputed_cents: balances[:disputed_cents],
           currency: gift_card.currency,
-          status: gift_card.status
+          status: gift_card.public_status
         }, status: :ok
       end
 
       private
 
       attr_reader :gift_card, :redemption_token
+
+      def balances
+        @balances ||= gift_card.balances
+      end
 
       def set_token_context
         raw_token = params.require(:token).to_s.strip.upcase
@@ -41,9 +53,13 @@ module Api
         @gift_card = @redemption_token.gift_card || raise(ActiveRecord::RecordNotFound)
       end
 
-      def ensure_merchant_owns_gift_card!
-        # Gift cards can be redeemed by any merchant; keep token validation only
-        true
+      # D6: only the issuing merchant or one in its redemption group may
+      # act on the card. Same envelope the redemption endpoint uses.
+      def ensure_merchant_can_redeem!
+        return true if Merchants::CanRedeem.call(redeemer: current_merchant, issuer: gift_card.merchant)
+
+        render json: base_validation_payload.merge(valid: false, error: "merchant_mismatch"), status: :forbidden
+        false
       end
 
       def normalize_amount_cents
@@ -70,7 +86,11 @@ module Api
       end
 
       def ensure_gift_card_redeemable!
-        return true if gift_card.active? && !gift_card.expired?
+        if gift_card.frozen_by_admin?
+          render json: base_validation_payload.merge(valid: false, error: "card_frozen"), status: :unprocessable_entity
+          return false
+        end
+        return true if gift_card.active?
 
         render json: invalid_gift_card_payload, status: :unprocessable_entity
         false
@@ -106,11 +126,14 @@ module Api
       def base_validation_payload
         {
           gift_card_id: gift_card.id,
-          remaining_balance_cents: gift_card.remaining_balance,
+          remaining_balance_cents: balances[:spendable_cents],
+          spendable_cents: balances[:spendable_cents],
+          total_balance_cents: balances[:remaining_balance],
+          held_cents: balances[:held_cents],
+          disputed_cents: balances[:disputed_cents],
           currency: gift_card.currency
         }
       end
     end
   end
 end
-

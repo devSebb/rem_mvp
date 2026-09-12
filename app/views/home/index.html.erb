@@ -14,7 +14,7 @@
         </p>
       </div>
       <div class="col-span-12 lg:col-span-4 flex flex-wrap gap-3 justify-start lg:justify-end">
-        <%= link_to "Mi Billetera", gift_cards_path, class: "papayal-btn-secondary w-full sm:w-auto" %>
+        <%= link_to "Mis tarjetas", gift_cards_path, class: "papayal-btn-secondary w-full sm:w-auto" %>
         <span class="text-xs text-[#2C3A43]/60 self-center">Compra desde la app móvil Papayal</span>
       </div>
     </div>
@@ -53,7 +53,7 @@
           <p class="papayal-meta text-white/70">Tu Papayal en el bolsillo</p>
           <h2 class="text-2xl font-bold mt-1">Descarga la app móvil</h2>
           <p class="text-sm text-white/80 mt-2 max-w-xl">
-            Compra tarjetas de regalo, escanea códigos en caja y recibe notificaciones al instante. Toda tu billetera, lista cuando la necesites.
+            Compra tarjetas de regalo, escanea códigos en caja y recibe notificaciones al instante. Todas tus tarjetas de regalo, listas cuando las necesites.
           </p>
         </div>
         <div class="flex flex-wrap gap-3 flex-shrink-0">
@@ -100,7 +100,7 @@
             <p class="papayal-meta">Actividad reciente</p>
             <h2 class="text-xl font-bold text-[#2C3A43] mt-1">Tus últimas tarjetas</h2>
           </div>
-          <%= link_to "Ver billetera", gift_cards_path, class: "papayal-btn-ghost text-sm" %>
+          <%= link_to "Ver mis tarjetas", gift_cards_path, class: "papayal-btn-ghost text-sm" %>
         </div>
         <div class="grid grid-cols-12 gap-4">
           <% @recent_gift_cards.each do |gift_card| %>
@@ -132,7 +132,7 @@
         <p class="text-xl font-semibold text-[#2C3A43]">Aún no tienes tarjetas recientes</p>
         <p class="text-sm text-[#2C3A43]/70">Recibe una tarjeta o cómprala desde la app móvil Papayal para ver tu actividad aquí.</p>
         <div class="flex flex-wrap justify-center gap-3">
-          <%= link_to "Explorar billetera", gift_cards_path, class: "papayal-btn-secondary" %>
+          <%= link_to "Ver mis tarjetas", gift_cards_path, class: "papayal-btn-secondary" %>
         </div>
       </div>
     <% end %>

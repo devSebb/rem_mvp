@@ -49,7 +49,7 @@ RSpec.describe "Merchant::Redemptions", type: :request do
       idempotency_token: idempotency
     }
 
-    expect(response).to redirect_to(success_merchant_redemptions_path(gift_card_id: gift_card.id))
+    expect(response).to redirect_to(success_merchant_redemptions_path(gift_card_id: gift_card.id, amount_cents: 1_000))
     expect(gift_card.reload.remaining_balance).to eq(4_000)
 
     token_record = RedemptionToken.find_by(token_digest: RedemptionToken.digest(token_value))
@@ -80,7 +80,8 @@ RSpec.describe "Merchant::Redemptions", type: :request do
       redemption_token: formatted_token
     )
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Canje en red") # Cross-merchant indicator
+    expect(response.body).not_to include("Canje en red") # D6: group membership is silent, mismatch is a decline
+    expect(response.body).to include(other_merchant.store_name)
 
     doc = Nokogiri::HTML(response.body)
     idempotency = doc.at_css("input[name='idempotency_token']")&.[]("value")
@@ -95,7 +96,7 @@ RSpec.describe "Merchant::Redemptions", type: :request do
       idempotency_token: idempotency
     }
 
-    expect(response).to redirect_to(success_merchant_redemptions_path(gift_card_id: other_gift_card.id))
+    expect(response).to redirect_to(success_merchant_redemptions_path(gift_card_id: other_gift_card.id, amount_cents: 2_000))
     expect(other_gift_card.reload.remaining_balance).to eq(3_000) # 5000 - 2000
 
     # Token should be marked as used
@@ -107,6 +108,32 @@ RSpec.describe "Merchant::Redemptions", type: :request do
     expect(redemption_txn).to be_present
     expect(redemption_txn.merchant_id).to eq(merchant.id) # Redeemer is logged-in merchant
     expect(redemption_txn.merchant_id).not_to eq(other_merchant.id) # NOT the issuing merchant
+  end
+
+  it "declines a card issued for a merchant outside the redemption group (D6)" do
+    outsider = create(:merchant) # no group
+    outsider_card = create(:gift_card, sender: sender, recipient: create(:user), merchant: outsider, amount: 5_000)
+    outsider_token = RedemptionTokens::Issue.call(gift_card: outsider_card)[:token]
+
+    post merchant_redemptions_path, params: { code: outsider_token }
+    expect(response).to redirect_to(new_merchant_redemption_path)
+    expect(flash[:alert]).to include(outsider.store_name)
+
+    get confirm_merchant_redemptions_path(gift_card_id: outsider_card.id, redemption_mode: "token", redemption_token: outsider_token)
+    expect(response).to redirect_to(new_merchant_redemption_path)
+    expect(outsider_card.reload.remaining_balance).to eq(5_000)
+  end
+
+  it "shows spendable, not total, when part of the balance is held (§5.4)" do
+    stripe_load!(gift_card, 3_000, sender: sender, held_until: 2.hours.from_now)
+
+    get confirm_merchant_redemptions_path(gift_card_id: gift_card.id, redemption_mode: "token", redemption_token: token_value_with_hyphens)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Saldo disponible")
+    expect(response.body).to include("$50.00") # spendable
+    expect(response.body).to include("$80.00") # total
+    expect(response.body).to include("en revisión")
   end
 
   it "rejects static gift-card codes in the merchant UI" do

@@ -1,61 +1,52 @@
 require "rails_helper"
 
+# §10.2e deploy-transition shims: jobs serialized by the pre-Push-B code
+# carry a GIFT CARD id. They must deliver that card's first load, never
+# read the card id as a load id.
 RSpec.describe NotificationJob, type: :job do
-  let(:recipient) { create(:user, email: "recipient-job@example.com", phone: "+15550009999") }
-  let(:gift_card) { create(:gift_card, recipient:) }
+  let(:merchant) { create(:merchant, store_name: "Medicity") }
+  let(:sender) { create(:user, first_name: "Ana") }
+  let(:recipient) { create(:user, first_name: "Rita", email: "shim-recipient@example.com") }
+  let(:gift_card) { create(:gift_card, recipient:, merchant:, amount: 0) }
 
-  it "sends notifications when given only the gift card id" do
-    notifier = instance_double(
-      Messaging::Notifier,
-      send_all_notifications: { email: { success: true } }
-    )
-    allow(Messaging::Notifier).to receive(:new).and_return(notifier)
+  before { allow(LoadNotificationJob).to receive(:perform_now) }
 
+  it "delivers the card's first load (legacy card-id argument, legacy raw code tolerated)" do
+    first = stripe_load!(gift_card, 3_000, sender: sender, at: 2.days.ago)
+    stripe_load!(gift_card, 2_000, sender: sender)
+
+    described_class.perform_now(gift_card.id, "LEGACY-RAW-CODE")
+
+    expect(LoadNotificationJob).to have_received(:perform_now).with(first.id)
+  end
+
+  it "retries later (LoadNotReady) when the old webhook's card has no load yet" do
+    gift_card # created, no loads — waits for ledger:backfill_missing_loads
+    expect { described_class.perform_now(gift_card.id) }.to have_enqueued_job(described_class).with(gift_card.id)
+    expect(LoadNotificationJob).not_to have_received(:perform_now)
+  end
+
+  it "logs and returns for an unknown card" do
+    expect { described_class.perform_now(-1) }.not_to raise_error
+    expect(LoadNotificationJob).not_to have_received(:perform_now)
+  end
+end
+
+RSpec.describe ResendNotificationJob, type: :job do
+  let(:merchant) { create(:merchant) }
+  let(:gift_card) { create(:gift_card, recipient: create(:user), merchant:, amount: 0) }
+
+  before { allow(LoadResendNotificationJob).to receive(:perform_now) }
+
+  it "resends the card's first load for a legacy card-id job" do
+    first = stripe_load!(gift_card, 1_000, sender: create(:user))
     described_class.perform_now(gift_card.id)
-
-    expect(notifier).to have_received(:send_all_notifications)
+    expect(LoadResendNotificationJob).to have_received(:perform_now).with(first.id)
   end
 
-  it "still deserializes legacy jobs enqueued with a raw code second argument" do
-    notifier = instance_double(
-      Messaging::Notifier,
-      send_all_notifications: { email: { success: true } }
-    )
-    allow(Messaging::Notifier).to receive(:new).and_return(notifier)
-
-    expect {
-      described_class.perform_now(gift_card.id, "LEGACY-RAW-CODE")
-    }.not_to raise_error
-
-    expect(notifier).to have_received(:send_all_notifications)
-  end
-
-  describe "Sidekiq retry after partial failure" do
-    it "skips channels whose delivery flag is already set (no double-send)" do
-      gift_card.update!(sent_via_email: true, sent_via_whatsapp: true)
-
-      notifier = Messaging::Notifier.new(gift_card)
-      allow(Messaging::Notifier).to receive(:new).and_return(notifier)
-      allow(notifier).to receive(:send_push).and_return({ success: false, error: "no tokens" })
-      expect(notifier).not_to receive(:send_email)
-      expect(notifier).not_to receive(:send_phone_channel)
-
-      described_class.perform_now(gift_card.id)
-    end
-
-    it "still sends the channels that have not been delivered yet" do
-      gift_card.update!(sent_via_whatsapp: true)
-
-      notifier = Messaging::Notifier.new(gift_card)
-      allow(Messaging::Notifier).to receive(:new).and_return(notifier)
-      allow(notifier).to receive(:send_email).and_return({ success: true })
-      allow(notifier).to receive(:send_push).and_return({ success: false, error: "no tokens" })
-      expect(notifier).not_to receive(:send_phone_channel)
-
-      described_class.perform_now(gift_card.id)
-
-      expect(notifier).to have_received(:send_email)
-      expect(gift_card.reload.sent_via_email).to be(true)
-    end
+  it "does nothing for a card without loads or an unknown id" do
+    described_class.perform_now(gift_card.id)
+    described_class.perform_now(-1)
+    expect(LoadResendNotificationJob).not_to have_received(:perform_now)
   end
 end

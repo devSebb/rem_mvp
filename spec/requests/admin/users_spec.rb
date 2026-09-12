@@ -53,16 +53,24 @@ RSpec.describe "Admin::Users", type: :request do
   end
 
   describe "GET /admin/users/:id" do
-    it "shows account details, balance and activity" do
+    it "shows account details, spendable/total balance, cards and loads sent" do
       user = create(:user, first_name: "Diana", last_name: "Vera")
-      merchant = create(:merchant)
-      create(:gift_card, recipient: user, merchant: merchant, amount: 3_000)
+      merchant = create(:merchant, store_name: "Medicity")
+      card = create(:gift_card, recipient: user, merchant: merchant, amount: 0)
+      stripe_load!(card, 3_000, sender: create(:user))
+      stripe_load!(card, 1_000, sender: create(:user), held_until: 2.hours.from_now)
+      other_card = create(:gift_card, recipient: create(:user, first_name: "Pepe"), amount: 0)
+      stripe_load!(other_card, 700, sender: user)
 
       get admin_user_path(user)
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Diana Vera")
-      expect(response.body).to include("$30.00")
+      expect(response.body).to include("$30.00") # spendable
+      expect(response.body).to include("de $40.00 en total")
+      expect(response.body).to include("Medicity · disponible $30.00")
+      expect(response.body).to include("Recargas enviadas")
+      expect(response.body).to include("$7.00", "Para Pepe")
       expect(response.body).to include(user.email)
     end
   end

@@ -1,17 +1,25 @@
 ¡Gracias por tu compra!
 
-Tu tarjeta de regalo ya está en camino a <%= @recipient_label %>.
+<% if @self_load -%>
+Tu tarjeta de regalo digital de <%= @merchant&.store_name %> ya tiene <%= money(@subtotal_cents) %> más.
+<% elsif @first_load -%>
+<%= @recipient_label %> recibirá una tarjeta de regalo digital de <%= @merchant&.store_name %> con <%= money(@subtotal_cents) %>. Ya le avisamos.
+<% else -%>
+Añadimos <%= money(@subtotal_cents) %> a la tarjeta de <%= @merchant&.store_name %> de <%= @recipient_label %>. Ya le avisamos.
+<% end -%>
 Aquí tienes el recibo de tu compra.
 
-TOTAL PAGADO: <%= @currency %> <%= format("%.2f", @total_cents / 100.0) %>
+TOTAL PAGADO: <%= money(@total_cents) %>
 
-Comercio:            <%= @merchant&.store_name %>
-Enviada a:           <%= @recipient_label %>
-Valor de la tarjeta: <%= @currency %> <%= format("%.2f", @subtotal_cents / 100.0) %>
-<% if @fee_cents.positive? -%>
-Costo de servicio:   <%= @currency %> <%= format("%.2f", @fee_cents / 100.0) %>
+Comercio:      <%= @merchant&.store_name %>
+<% unless @self_load -%>
+Enviada a:     <%= @recipient_label %>
 <% end -%>
-Total:               <%= @currency %> <%= format("%.2f", @total_cents / 100.0) %>
+<%= @first_load ? "Monto:  " : "Recarga:" %>       <%= money(@subtotal_cents) %>
+<% if @fee_cents.positive? -%>
+Tarifa:        <%= money(@fee_cents) %>
+<% end -%>
+Total a pagar: <%= money(@total_cents) %>
 
 <% if @reference.present? -%>
 Referencia: <%= @reference %>

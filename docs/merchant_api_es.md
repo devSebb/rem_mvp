@@ -2,6 +2,8 @@
 
 Estos endpoints permiten a los comercios validar y consultar gift cards usando el mismo token efímero que se emplea para las redenciones. Todas las cantidades están expresadas en centavos (`amount_cents`, `remaining_balance_cents`, `balance_cents`) y **siempre** debes autenticarte con el `secret_key` del comercio:
 
+> **Tarjetas recargables (2026-09).** Cada cliente tiene una sola tarjeta por comercio y cada compra es una recarga sobre esa tarjeta. Para tu integración **nada cambia en los requests**. En las respuestas, `remaining_balance_cents` / `balance_cents` ahora significan **"lo que la tarjeta puede canjear ahora mismo"** (excluye saldo retenido por revisión de seguridad o en disputa), y se añaden los campos informativos `spendable_cents`, `total_balance_cents`, `held_cents` y `disputed_cents`. Hay dos motivos de rechazo nuevos: `merchant_mismatch` (la tarjeta pertenece a otro comercio fuera de tu grupo de canje) y `card_frozen` (tarjeta congelada por Papayal).
+
 ```
 Authorization: Bearer <MERCHANT_SECRET_KEY>
 ```
@@ -30,9 +32,15 @@ Authorization: Bearer <MERCHANT_SECRET_KEY>
   "valid": true,
   "gift_card_id": 42,
   "remaining_balance_cents": 8000,
+  "spendable_cents": 8000,
+  "total_balance_cents": 11000,
+  "held_cents": 3000,
+  "disputed_cents": 0,
   "currency": "USD"
 }
 ```
+
+`remaining_balance_cents` es el saldo canjeable ahora (= `spendable_cents`). `total_balance_cents` incluye el saldo retenido o en disputa, que no se puede canjear todavía.
 
 ### Respuesta 422 - ejemplo `insufficient_funds`
 
@@ -42,11 +50,23 @@ Authorization: Bearer <MERCHANT_SECRET_KEY>
   "error": "insufficient_funds",
   "gift_card_id": 42,
   "remaining_balance_cents": 1500,
+  "spendable_cents": 1500,
+  "total_balance_cents": 1500,
+  "held_cents": 0,
+  "disputed_cents": 0,
   "currency": "USD"
 }
 ```
 
-Otros posibles errores (`valid: false`): `inactive_gift_card`, `expired_token`, `token_used`.
+Otros posibles errores (`valid: false`): `inactive_gift_card`, `card_frozen`, `expired_token`, `token_used`.
+
+### Respuesta 403 - `merchant_mismatch`
+
+La tarjeta pertenece a un comercio fuera de tu grupo de canje.
+
+```json
+{ "valid": false, "error": "merchant_mismatch", "gift_card_id": 42, "remaining_balance_cents": 8000, "currency": "USD" }
+```
 
 ### cURL de ejemplo
 
@@ -72,9 +92,21 @@ curl -X POST https://api.papayal.app/api/v1/gift_cards/validate \
 {
   "gift_card_id": 42,
   "balance_cents": 8000,
+  "spendable_cents": 8000,
+  "total_balance_cents": 11000,
+  "held_cents": 3000,
+  "disputed_cents": 0,
   "currency": "USD",
   "status": "active"
 }
+```
+
+`status` puede ser `active`, `frozen` (congelada por Papayal, no canjeable) o `canceled`.
+
+### Respuesta 403 - `merchant_mismatch`
+
+```json
+{ "valid": false, "error": "merchant_mismatch", "gift_card_id": 42, "remaining_balance_cents": 8000, "currency": "USD" }
 ```
 
 ### Respuesta 404
@@ -95,6 +127,62 @@ curl -X POST https://api.papayal.app/api/v1/gift_cards/validate \
 curl -X GET https://api.papayal.app/api/v1/gift_cards/RAW_TOKEN_COMPARTIDO \
   -H "Authorization: Bearer <MERCHANT_SECRET_KEY>"
 ```
+
+---
+
+## Canjear (redimir) con el token
+
+`POST /api/v1/redemptions`
+
+### Body (JSON)
+
+```json
+{
+  "token": "RAW_TOKEN_COMPARTIDO",
+  "amount_cents": 2500,
+  "idempotency_key": "uuid-o-string-único",
+  "merchant_reference": "ticket-123 (opcional)"
+}
+```
+
+### Respuesta 200 OK (aprobado)
+
+```json
+{
+  "approved": true,
+  "status": "succeeded",
+  "transaction_id": 456,
+  "gift_card_id": 42,
+  "amount_cents": 2500,
+  "remaining_balance_cents": 5500,
+  "spendable_cents": 5500,
+  "total_balance_cents": 8500,
+  "currency": "USD"
+}
+```
+
+### Respuesta 422 (rechazado)
+
+```json
+{
+  "approved": false,
+  "status": "failed",
+  "decline_reason": "insufficient_balance",
+  "transaction_id": 457,
+  "gift_card_id": 42,
+  "amount_cents": 9000,
+  "remaining_balance_cents": 5500,
+  "spendable_cents": 5500,
+  "total_balance_cents": 8500,
+  "held_cents": 3000,
+  "disputed_cents": 0,
+  "currency": "USD"
+}
+```
+
+Motivos de rechazo (`decline_reason`): `invalid_token`, `expired_token`, `token_used`, `merchant_mismatch` (**403**; tarjeta de otro comercio fuera de tu grupo), `card_frozen` (congelada por Papayal), `gift_card_inactive`, `card_held_security_review` (todo el saldo está en revisión; incluye `held_until`), `card_disputed` (todo el saldo está en disputa), `insufficient_balance`.
+
+La misma `idempotency_key` devuelve siempre la misma respuesta (aprobada o rechazada) sin volver a cobrar.
 
 ---
 
@@ -128,6 +216,7 @@ curl -X GET https://api.papayal.app/api/v1/gift_cards/RAW_TOKEN_COMPARTIDO \
   "gift_card_id": 42,
   "amount_cents": 2500,
   "remaining_balance_cents": 10000,
+  "spendable_cents": 10000,
   "currency": "USD"
 }
 ```

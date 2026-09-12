@@ -20,8 +20,8 @@
       <p class="text-[10px] text-[#2C3A43]/60"><%= stats[:active_cards] %> activas</p>
     </div>
     <div class="p-3 rounded-xl bg-[#F8F8F8] border border-black/5">
-      <p class="papayal-meta text-[10px]">Canjeadas</p>
-      <p class="font-bold text-[#0D2F32]"><%= stats[:redeemed_cards] %></p>
+      <p class="papayal-meta text-[10px]">Recargas</p>
+      <p class="font-bold text-[#0D2F32]"><%= stats[:loads_count] %></p>
       <p class="text-[10px] text-[#2C3A43]/60"><%= number_to_currency(stats[:redemption_volume_cents] / 100.0, unit: '$') %></p>
     </div>
     <div class="p-3 rounded-xl bg-[#F8F8F8] border border-black/5">

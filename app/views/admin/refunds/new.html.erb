@@ -1,10 +1,10 @@
 <% content_for :title, "Papayal · Reembolso REM-#{@gift_card.id.to_s.last(6)}" %>
-<div class="max-w-3xl mx-auto space-y-8">
+<div class="max-w-4xl mx-auto space-y-8">
   <div class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
     <div>
       <p class="papayal-meta text-[#0D2F32]">Panel Tarjetas</p>
       <div class="flex flex-wrap items-center gap-3">
-        <h1 class="text-2xl font-bold text-[#0D2F32]">Emitir reembolso</h1>
+        <h1 class="text-2xl font-bold text-[#0D2F32]">Reembolsar una recarga</h1>
         <span class="<%= status_badge_classes(@gift_card.status) %>"><%= status_badge_label(@gift_card.status) %></span>
         <%= gift_card_flag_badges(@gift_card) %>
       </div>
@@ -19,11 +19,11 @@
 
   <div class="grid grid-cols-12 gap-4">
     <div class="col-span-6 md:col-span-3 papayal-card p-5">
-      <p class="papayal-meta">Monto</p>
-      <p class="text-2xl font-bold mt-2"><%= number_to_currency(@gift_card.amount / 100.0, unit: '$') %></p>
+      <p class="papayal-meta">Cargado total</p>
+      <p class="text-2xl font-bold mt-2"><%= number_to_currency(@gift_card.total_loaded_cents / 100.0, unit: '$') %></p>
     </div>
     <div class="col-span-6 md:col-span-3 papayal-card p-5">
-      <p class="papayal-meta">Saldo restante</p>
+      <p class="papayal-meta">Saldo total</p>
       <p class="text-2xl font-bold mt-2 text-emerald-700"><%= number_to_currency(@gift_card.remaining_balance / 100.0, unit: '$') %></p>
     </div>
     <div class="col-span-6 md:col-span-3 papayal-card p-5">
@@ -31,22 +31,68 @@
       <p class="text-2xl font-bold mt-2 text-blue-700"><%= number_to_currency(@total_redeemed / 100.0, unit: '$') %></p>
     </div>
     <div class="col-span-6 md:col-span-3 papayal-card p-5">
-      <p class="papayal-meta">Máx. reembolsable</p>
+      <p class="papayal-meta">Máx. de esta recarga</p>
       <p class="text-2xl font-bold mt-2 text-rose-700"><%= number_to_currency(@max_refund_amount / 100.0, unit: '$') %></p>
     </div>
   </div>
 
+  <%# ── Load picker (§5.7: refunds are per load) ─────────────────────── %>
+  <div class="papayal-card p-6 space-y-3">
+    <div>
+      <p class="papayal-meta">Recargas</p>
+      <h2 class="text-lg font-semibold text-[#0D2F32]">Elige la recarga a reembolsar</h2>
+      <p class="text-sm text-[#2C3A43]/70 mt-1">Cada recarga se devuelve solo a quien la pagó, por la parte que no se ha canjeado ni reembolsado.</p>
+    </div>
+    <div class="overflow-x-auto rounded-2xl border border-black/5">
+      <table class="min-w-full divide-y divide-black/5 text-sm">
+        <thead class="bg-[#EBEBEB]/60 text-left text-xs font-medium text-[#2C3A43]/70 uppercase tracking-wider">
+          <tr>
+            <th class="px-3 py-2">#</th>
+            <th class="px-3 py-2">Comprador</th>
+            <th class="px-3 py-2">Fecha</th>
+            <th class="px-3 py-2 text-right">Monto</th>
+            <th class="px-3 py-2 text-right">Restante</th>
+            <th class="px-3 py-2 text-right">Reembolsable</th>
+            <th class="px-3 py-2"></th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-black/5">
+          <% @loads.each do |load| %>
+            <tr class="<%= @selected_load&.id == load.id ? 'bg-amber-50' : '' %>">
+              <td class="px-3 py-2 font-mono text-xs"><%= load.id %></td>
+              <td class="px-3 py-2"><%= load.sender ? (load.sender.name.presence || load.sender.email) : load.source.humanize %></td>
+              <td class="px-3 py-2 text-[#2C3A43]/70"><%= load.created_at.strftime('%d/%m/%Y') %></td>
+              <td class="px-3 py-2 text-right"><%= number_to_currency(load.amount_cents / 100.0, unit: '$') %></td>
+              <td class="px-3 py-2 text-right"><%= number_to_currency(load.remaining_cents / 100.0, unit: '$') %></td>
+              <td class="px-3 py-2 text-right font-semibold <%= load.refundable_cents.positive? ? 'text-rose-700' : 'text-[#2C3A43]/50' %>"><%= number_to_currency(load.refundable_cents / 100.0, unit: '$') %></td>
+              <td class="px-3 py-2 text-right">
+                <% if load.payment_intent_id.present? && load.refundable_cents.positive? && @selected_load&.id != load.id %>
+                  <%= link_to "Elegir", new_admin_gift_card_load_refund_path(@gift_card, load), class: "papayal-btn-ghost text-xs" %>
+                <% elsif @selected_load&.id == load.id %>
+                  <span class="text-xs font-semibold text-amber-800">Seleccionada</span>
+                <% elsif load.payment_intent_id.blank? %>
+                  <span class="text-xs text-[#2C3A43]/50">Sin pago Stripe</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <% if @selected_load && @selected_load.payment_intent_id.present? %>
   <div class="papayal-card p-6 space-y-6">
     <div class="p-4 rounded-2xl border border-amber-200 bg-amber-50 text-sm text-amber-800">
       <p class="font-semibold">Importante</p>
       <p class="mt-1">
-        Esto devuelve dinero al método de pago original del comprador en Stripe y reduce el saldo
-        disponible de la tarjeta (un reembolso total la cancela). El valor ya canjeado no se puede
-        reembolsar. Esta acción no se puede deshacer.
+        Esto devuelve dinero al método de pago original de quien pagó la recarga #<%= @selected_load.id %>
+        (<%= @selected_load.sender ? (@selected_load.sender.name.presence || @selected_load.sender.email) : "—" %>) en Stripe y reduce el saldo de la tarjeta.
+        La tarjeta sigue activa. El valor ya canjeado no se puede reembolsar. Esta acción no se puede deshacer.
       </p>
     </div>
 
-    <%= form_with url: admin_gift_card_refunds_path(@gift_card), method: :post, local: true, class: "space-y-5" do |form| %>
+    <%= form_with url: admin_gift_card_load_refund_path(@gift_card, @selected_load), method: :post, local: true, class: "space-y-5" do |form| %>
       <div>
         <%= form.label :refund_amount, "Monto a reembolsar", class: "block text-sm font-medium text-[#0D2F32] mb-2" %>
         <div class="relative">
@@ -57,12 +103,13 @@
               step: 0.01,
               min: 0.01,
               max: @max_refund_amount / 100.0,
+              value: @max_refund_amount / 100.0,
               required: true,
               class: "papayal-input w-full pl-8",
               placeholder: "0.00" %>
         </div>
         <p class="mt-1 text-xs text-[#2C3A43]/70">
-          Máximo reembolsable: <%= number_to_currency(@max_refund_amount / 100.0, unit: '$') %> (el valor canjeado no se devuelve al comprador).
+          Máximo reembolsable de esta recarga: <%= number_to_currency(@max_refund_amount / 100.0, unit: '$') %>.
         </p>
       </div>
 
@@ -82,9 +129,12 @@
             class: "papayal-btn-primary bg-rose-600 hover:bg-rose-700 text-white cursor-pointer",
             data: {
               disable_with: "Procesando…",
-              turbo_confirm: "¿Emitir este reembolso al comprador? Esta acción no se puede deshacer."
+              turbo_confirm: "¿Emitir este reembolso al comprador de la recarga ##{@selected_load.id}? Esta acción no se puede deshacer."
             } %>
       </div>
     <% end %>
   </div>
+  <% else %>
+    <div class="papayal-card p-6 text-sm text-[#2C3A43]/70">Esta tarjeta no tiene recargas reembolsables.</div>
+  <% end %>
 </div>

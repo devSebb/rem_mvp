@@ -62,21 +62,7 @@ class GiftCardSerializer
   end
 
   def serialize_load(load)
-    {
-      id: load.id,
-      amount_cents: load.amount_cents,
-      remaining_cents: load.remaining_cents,
-      refunded_cents: load.refunded_cents,
-      written_off_cents: load.written_off_cents,
-      sender_id: load.sender_id,
-      sender: serialize_sender(load.sender),
-      note: load.note,
-      status: load.derived_status.to_s,
-      held_until: load.held? ? load.held_until.iso8601 : nil,
-      disputed_at: load.dispute_open? ? load.disputed_at.iso8601 : nil,
-      created_at: load.created_at&.iso8601,
-      is_self: load.sender_id.present? && load.sender_id == card.recipient_id
-    }
+    GiftCardLoadSerializer.call(load, attachment_url: attachment_url)
   end
 
   private
@@ -84,10 +70,7 @@ class GiftCardSerializer
   attr_reader :card, :attachment_url
 
   def public_status
-    return "frozen" if card.frozen_by_admin?
-    return "active" if card.redeemed? || card.expired?
-
-    card.status
+    card.public_status
   end
 
   def serialize_sender(sender)

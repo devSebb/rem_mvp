@@ -23,7 +23,11 @@
     </div>
     <div class="text-right">
       <p class="papayal-meta">Saldo disponible</p>
-      <p class="text-3xl font-bold text-[#0D2F32]"><%= number_to_currency(@balance_cents / 100.0, unit: '$') %></p>
+      <p class="text-3xl font-bold text-[#0D2F32]"><%= number_to_currency(@spendable_cents / 100.0, unit: '$') %></p>
+      <p class="text-xs text-[#2C3A43]/70">de <%= number_to_currency(@balance_cents / 100.0, unit: '$') %> en total</p>
+      <% if @user.purchases_blocked? %>
+        <p class="text-xs font-semibold text-rose-700 mt-1">Compras bloqueadas<%= @user.dispute_open_count.to_i.positive? ? " · #{@user.dispute_open_count} disputa(s) abierta(s)" : "" %><%= @user.purchases_blocked_at ? " · desde #{@user.purchases_blocked_at.strftime('%d/%m/%Y')}" : "" %></p>
+      <% end %>
     </div>
   </div>
 
@@ -64,40 +68,42 @@
 
     <div class="col-span-12 lg:col-span-7 space-y-6">
       <div class="papayal-card p-6">
-        <p class="papayal-meta mb-3">Tarjetas recibidas (últimas 5)</p>
+        <p class="papayal-meta mb-3">Sus tarjetas (una por comercio)</p>
         <% if @received_gift_cards.any? %>
           <div class="space-y-3">
             <% @received_gift_cards.each do |card| %>
+              <% balances = card.balances %>
               <%= link_to admin_gift_card_path(card), class: "flex items-center justify-between rounded-2xl border border-black/5 px-4 py-3 bg-[#EBEBEB]/40 hover:border-[#FCA50F]/50 transition" do %>
                 <div>
-                  <p class="font-semibold text-[#0D2F32]"><%= number_to_currency(card.amount / 100.0, unit: '$') %> · <%= card.merchant&.store_name || "—" %></p>
-                  <p class="text-xs text-[#2C3A43]/70">De <%= card.sender&.name || "—" %> · <%= card.created_at.strftime('%d/%m/%Y') %> · saldo <%= number_to_currency(card.remaining_balance / 100.0, unit: '$') %></p>
+                  <p class="font-semibold text-[#0D2F32]"><%= card.merchant&.store_name || "—" %> · disponible <%= number_to_currency(balances[:spendable_cents] / 100.0, unit: '$') %> <span class="text-xs font-normal text-[#2C3A43]/60">/ total <%= number_to_currency(balances[:remaining_balance] / 100.0, unit: '$') %></span></p>
+                  <p class="text-xs text-[#2C3A43]/70"><%= card.loads_count %> recarga<%= "s" unless card.loads_count == 1 %> · cargado <%= number_to_currency(card.total_loaded_cents / 100.0, unit: '$') %> · última <%= (card.last_loaded_at || card.created_at).strftime('%d/%m/%Y') %></p>
                 </div>
                 <span class="<%= status_badge_classes(card.status) %>"><%= status_badge_label(card.status) %></span>
               <% end %>
             <% end %>
           </div>
         <% else %>
-          <p class="text-sm text-[#2C3A43]/70 py-4 text-center">No ha recibido tarjetas.</p>
+          <p class="text-sm text-[#2C3A43]/70 py-4 text-center">No tiene tarjetas.</p>
         <% end %>
       </div>
 
       <div class="papayal-card p-6">
-        <p class="papayal-meta mb-3">Tarjetas enviadas (últimas 5)</p>
-        <% if @sent_gift_cards.any? %>
+        <p class="papayal-meta mb-3">Recargas enviadas (últimas 10)</p>
+        <% if @sent_loads.any? %>
           <div class="space-y-3">
-            <% @sent_gift_cards.each do |card| %>
-              <%= link_to admin_gift_card_path(card), class: "flex items-center justify-between rounded-2xl border border-black/5 px-4 py-3 bg-[#EBEBEB]/40 hover:border-[#FCA50F]/50 transition" do %>
+            <% @sent_loads.each do |load| %>
+              <% card = load.gift_card %>
+              <%= link_to admin_gift_card_path(card, anchor: "recarga-#{load.id}"), class: "flex items-center justify-between rounded-2xl border border-black/5 px-4 py-3 bg-[#EBEBEB]/40 hover:border-[#FCA50F]/50 transition" do %>
                 <div>
-                  <p class="font-semibold text-[#0D2F32]"><%= number_to_currency(card.amount / 100.0, unit: '$') %> · <%= card.merchant&.store_name || "—" %></p>
-                  <p class="text-xs text-[#2C3A43]/70">Para <%= card.recipient&.name || card.recipient&.email || "—" %> · <%= card.created_at.strftime('%d/%m/%Y') %></p>
+                  <p class="font-semibold text-[#0D2F32]"><%= number_to_currency(load.amount_cents / 100.0, unit: '$') %> · <%= card.merchant&.store_name || "—" %></p>
+                  <p class="text-xs text-[#2C3A43]/70"><%= load.self_load? ? "Recarga propia" : "Para #{card.recipient&.name.presence || card.recipient&.email || '—'}" %> · <%= load.created_at.strftime('%d/%m/%Y') %> · restante <%= number_to_currency(load.remaining_cents / 100.0, unit: '$') %></p>
                 </div>
-                <span class="<%= status_badge_classes(card.status) %>"><%= status_badge_label(card.status) %></span>
+                <span class="text-xs text-[#2C3A43]/70"><%= load.derived_status.to_s.humanize %></span>
               <% end %>
             <% end %>
           </div>
         <% else %>
-          <p class="text-sm text-[#2C3A43]/70 py-4 text-center">No ha enviado tarjetas.</p>
+          <p class="text-sm text-[#2C3A43]/70 py-4 text-center">No ha enviado recargas.</p>
         <% end %>
       </div>
 

@@ -1,0 +1,15 @@
+<% content_for :preview_title, "Remittance counter alert" %>
+<div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:14px;">Compliance</div>
+<h1 style="margin:0 0 18px 0; font-size:26px; line-height:1.2; font-weight:800; color:#0D2F32;">Remittance-rule counter at <%= @summary[:current_year] %></h1>
+<p style="margin:0 0 16px 0; font-size:15px; line-height:1.6; color:#2C3A43;">
+  Loads paid by buyers outside Ecuador are potential CFPB "remittance transfers" (12 CFR 1005.30).
+  The safe harbor is <strong><%= @summary[:safe_harbor] %></strong> per calendar year, prior <em>and</em> current.
+</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="font-size:15px; color:#2C3A43; margin:0 0 16px 0;">
+  <tr><td style="padding:6px 16px 6px 0;">Year <%= @summary[:year] %></td><td style="padding:6px 0; font-weight:700; color:#0D2F32;"><%= @summary[:current_year] %> loads</td></tr>
+  <tr><td style="padding:6px 16px 6px 0;">Year <%= @summary[:year] - 1 %></td><td style="padding:6px 0; font-weight:700; color:#0D2F32;"><%= @summary[:prior_year] %> loads</td></tr>
+  <tr><td style="padding:6px 16px 6px 0;">Alert threshold</td><td style="padding:6px 0;"><%= @summary[:alert_threshold] %></td></tr>
+</table>
+<p style="margin:0; font-size:14px; line-height:1.6; color:#2C3A43;">
+  <strong>Action:</strong> a US payments counsel opinion is required before the count passes <%= @summary[:safe_harbor] %> in any calendar year (plan §14.2). This email is sent once per year.
+</p>

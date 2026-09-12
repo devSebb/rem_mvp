@@ -240,7 +240,7 @@ end
   def refundable_to_buyer_cents
   return 0 if canceled?
 
-  loads.sum(&:refundable_cents)
+  loads.select { |l| l.payment_intent_id.present? }.sum(&:refundable_cents)
 end
 
   # ── Ledger invariants (RELOADABLE_CARD_PLAN.md §7) ──────────────────
@@ -270,12 +270,49 @@ end
 
   # removed (D9): transfers — balance never moves between users.
 
-  # Trigger notification delivery
+  # Console convenience: (re)deliver the notification for the latest load.
+  # Loads::Fulfill enqueues per load itself (§5.9).
   def send_notifications!
     return false unless recipient.present?
 
-    NotificationJob.perform_later(id)
+    load = loads.in_scope.fifo.last
+    return false unless load
+
+    LoadNotificationJob.perform_later(load.id)
     true
+  end
+
+  # First (oldest, non-canceled) load: the one whose delivery announced the
+  # card; every later load is a reload (§5.9 template branching).
+  def first_load
+    loads.in_scope.fifo.first
+  end
+
+  def latest_load
+    loads.in_scope.fifo.last
+  end
+
+  # Latest load paid by `user` — what the card-level share/resend compat
+  # shims act on (§5.9).
+  def latest_load_sent_by(user)
+    return nil unless user
+
+    loads.in_scope.where(sender_id: user.id).fifo.last
+  end
+
+  # Everyone who has ever paid onto this card (policy scope, §5.10).
+  def sent_by?(user)
+    return false unless user
+
+    loads.in_scope.where(sender_id: user.id).exists?
+  end
+
+  # Public status label (§8.1): the enum key is frozen_by_admin (§10.2a).
+  def public_status
+    return "frozen" if frozen_by_admin?
+    return "active" if redeemed? || expired?
+
+    status
   end
 
   # Method to get raw code for display (only for recipients)

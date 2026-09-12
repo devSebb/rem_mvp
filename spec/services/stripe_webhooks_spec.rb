@@ -9,8 +9,8 @@ RSpec.describe StripeWebhooks do
   let!(:merchant) { create(:merchant) }
 
   before do
-    allow(NotificationJob).to receive(:perform_later)
-    allow(NotificationJob).to receive(:perform_now)
+    allow(LoadNotificationJob).to receive(:perform_later)
+    allow(LoadNotificationJob).to receive(:perform_now)
     allow(Refunds::RefundOrphanedPayment).to receive(:call)
     allow(GiftCardHoldMailer).to receive(:held).and_return(double(deliver_later: true))
     allow(PurchaseConfirmationMailer).to receive(:receipt).and_return(double(deliver_later: true))
@@ -110,7 +110,7 @@ RSpec.describe StripeWebhooks do
         expect(load).to be_held
         expect(load.gift_card).to be_held
         expect(load.gift_card.balances[:spendable_cents]).to eq(0)
-        expect(GiftCardHoldMailer).to have_received(:held).with(load.gift_card_id)
+        expect(GiftCardHoldMailer).to have_received(:held).with(load.id)
       end
 
       it "does not hold when the risk score is below the threshold" do

@@ -2,14 +2,18 @@ module Api
   module V1
     module Me
       class GiftCardsController < Api::V1::BaseController
+        include LoadSharing
+
         before_action :set_gift_card, only: [:show, :redemption_token, :share_link, :resend]
 
         def index
           gift_cards = policy_scope(GiftCard)
-            .includes(:sender, sender: { avatar_attachment: :blob }, merchant: { logo_attachment: :blob }, loads: { sender: { avatar_attachment: :blob } })
+            .not_merged
+            .includes(merchant: { logo_attachment: :blob }, loads: { sender: { avatar_attachment: :blob } })
             .order(updated_at: :desc, id: :desc)
 
-          # Track owner activity for balance check (batch update to avoid N+1)
+          # Balance views are an "indication of interest" (§14.2 escheat):
+          # batch update to avoid N+1.
           gift_card_ids = gift_cards.pluck(:id)
           GiftCard.where(id: gift_card_ids).update_all(last_owner_activity_at: Time.current) if gift_card_ids.any?
 
@@ -18,18 +22,16 @@ module Api
 
         def show
           authorize @gift_card, :show?
-          # Track owner activity for balance check
           @gift_card.touch_owner_activity!
           render_success(data: serialize_gift_card(@gift_card))
         end
 
-        # Post-checkout polling endpoint: the mobile app polls this with the
-        # Stripe payment intent id until the webhook creates the card, so a
-        # 404 here means "not created yet" and is part of the contract. The
-        # policy scope also turns other users' cards into 404s (no existence leak).
-        # Resolves the LOAD for the payment intent (§5.3) and answers with the
-        # card serialized at top level (old-app compat) plus `load` and its
-        # `top_up` alias. Visible to the load's buyer or the card's recipient.
+        # Post-checkout polling endpoint (§5.3): the app polls with the Stripe
+        # payment intent id until the webhook creates the LOAD, so a 404 means
+        # "not created yet" and is part of the contract. Answers with the card
+        # serialized at top level (old-app compat) plus `load` and its `top_up`
+        # alias. Visible to the load's buyer or the card's recipient; anyone
+        # else gets the same 404 (no existence leak).
         def by_payment_intent
           load = GiftCardLoad.includes(:sender, gift_card: [:recipient, :loads, { merchant: { logo_attachment: :blob } }])
                              .find_by!(payment_intent_id: params[:payment_intent_id])
@@ -44,14 +46,39 @@ module Api
           render_success(data: data)
         end
 
+        # §8.3: 422 `gift_card.frozen` / `gift_card.no_spendable_balance`;
+        # the response carries `spendable_cents` so the app can show it.
         def redemption_token
           authorize @gift_card, :view_code?
+
+          if @gift_card.frozen_by_admin?
+            return render_error(
+              code: "gift_card.frozen",
+              message: "Esta tarjeta está congelada. Escríbenos si crees que es un error.",
+              status: :unprocessable_entity
+            )
+          end
 
           unless @gift_card.active?
             return render_error(
               code: "gift_card.inactive",
               message: "Tarjeta inactiva o no disponible",
               status: :unprocessable_entity
+            )
+          end
+
+          balances = @gift_card.balances
+          if balances[:spendable_cents] <= 0
+            return render_error(
+              code: "gift_card.no_spendable_balance",
+              message: "Esta tarjeta no tiene saldo disponible ahora.",
+              status: :unprocessable_entity,
+              details: {
+                spendable_cents: balances[:spendable_cents],
+                held_cents: balances[:held_cents],
+                disputed_cents: balances[:disputed_cents],
+                held_until: balances[:held_until]&.iso8601
+              }.compact
             )
           end
 
@@ -60,80 +87,45 @@ module Api
           render_success(
             data: {
               token: result[:token],
-              expires_at: result[:expires_at].iso8601
+              expires_at: result[:expires_at].iso8601,
+              spendable_cents: balances[:spendable_cents]
             }
           )
         end
 
-        # Sender-side sharing for the native share sheet: the claim URL plus
-        # a prewritten message. Copy lives server-side so wording can be
-        # tuned without an app release. The link is a doorway, not a key —
-        # claiming still requires the recipient's OTP at signup.
+        # Card-level compat shims for the store app (§5.9): act on the latest
+        # load the current user paid onto this card. Per-load routes live in
+        # Me::LoadsController.
         def share_link
           authorize @gift_card, :share?
+          load = @gift_card.latest_load_sent_by(current_user)
+          return render_no_load unless load
 
-          unless @gift_card.active?
-            return render_error(
-              code: "gift_card.inactive",
-              message: "Tarjeta inactiva o no disponible",
-              status: :unprocessable_entity
-            )
-          end
-
-          claim_url = ::GiftCards::ClaimLink.url_for(@gift_card)
-
-          render_success(
-            data: {
-              claim_url: claim_url,
-              message: share_message(claim_url)
-            }
-          )
+          render_share_link(load)
         end
 
-        # Sender-triggered re-delivery of the original notification
-        # (WhatsApp/SMS/email/push). Throttled per card in
-        # GiftCards::ResendDelivery so it can't spam the recipient.
         def resend
           authorize @gift_card, :share?
+          load = @gift_card.latest_load_sent_by(current_user)
+          return render_no_load unless load
 
-          unless @gift_card.active?
-            return render_error(
-              code: "gift_card.inactive",
-              message: "Tarjeta inactiva o no disponible",
-              status: :unprocessable_entity
-            )
-          end
-
-          ::GiftCards::ResendDelivery.call(gift_card: @gift_card)
-
-          render_success(data: { resent: true })
-        rescue ::GiftCards::ResendDelivery::Throttled => e
-          render_error(
-            code: "gift_card.resend_throttled",
-            message: "Ya reenviamos la notificación hace poco. Intenta de nuevo más tarde.",
-            status: :too_many_requests,
-            details: { retry_in_seconds: e.retry_in_seconds }
-          )
+          render_resend(load)
         end
 
         private
 
-        def share_message(claim_url)
-          amount_label = "#{@gift_card.currency} #{format("%.2f", @gift_card.amount / 100.0)}"
-          merchant_name = @gift_card.merchant&.store_name || "Papayal"
-
-          <<~MESSAGE.strip
-            🎁 ¡Te envié un regalo! Una tarjeta de #{amount_label} para #{merchant_name} en Papayal.
-
-            👉 Reclámala aquí: #{claim_url}
-
-            Crea tu cuenta con tu número de teléfono y la tarjeta te estará esperando. Sin fecha de vencimiento. 🎉
-          MESSAGE
+        def render_no_load
+          render_error(
+            code: "gift_card.no_load_sent",
+            message: "No has recargado esta tarjeta.",
+            status: :unprocessable_entity
+          )
         end
 
         def set_gift_card
           @gift_card = policy_scope(GiftCard)
-            .includes(:sender, sender: { avatar_attachment: :blob }, merchant: { logo_attachment: :blob }, loads: { sender: { avatar_attachment: :blob } })
+            .not_merged
+            .includes(merchant: { logo_attachment: :blob }, loads: { sender: { avatar_attachment: :blob } })
             .find(params[:id])
         end
 
@@ -145,4 +137,3 @@ module Api
     end
   end
 end
-

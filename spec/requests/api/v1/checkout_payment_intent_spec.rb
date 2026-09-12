@@ -370,6 +370,75 @@ RSpec.describe "POST /api/v1/checkout/payment_intent", type: :request do
     end
   end
 
+  describe "recipient.self and target (§8.3)" do
+    before do
+      allow(Stripe::PaymentIntent).to receive(:create).and_return(
+        double(id: "pi_self_1", client_secret: "pi_self_1_secret", last_response: nil)
+      )
+    end
+
+    it "reloads the buyer's own card: no recipient contact needed, recipient_user_id in metadata, target filled" do
+      card = create(:gift_card, recipient: user, merchant: merchant, amount: 0)
+      stripe_load!(card, 4_000, sender: create(:user), at: 2.days.ago)
+
+      expect(Stripe::PaymentIntent).to receive(:create).with(
+        hash_including(metadata: hash_including(recipient_user_id: user.id.to_s, sender_id: user.id.to_s, recipient_phone: user.phone.to_s)),
+        hash_including(:idempotency_key)
+      ).and_return(double(id: "pi_self_1", client_secret: "pi_self_1_secret", last_response: nil))
+
+      post "/api/v1/checkout/payment_intent",
+           params: valid_params.merge(amount_cents: 3_000, recipient: { self: true }).to_json,
+           headers: auth_headers(access_token)
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data["target"]).to eq(
+        "self" => true, "existing_card_id" => card.id, "current_balance_cents" => 4_000, "projected_balance_cents" => 7_000
+      )
+    end
+
+    it "returns a null target card for a recipient with no card at this merchant yet" do
+      post "/api/v1/checkout/payment_intent", params: valid_params.to_json, headers: auth_headers(access_token)
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data["target"]).to eq(
+        "self" => false, "existing_card_id" => nil, "current_balance_cents" => 0, "projected_balance_cents" => 2_500
+      )
+    end
+
+    it "fills the target for a known recipient's existing card" do
+      other = create(:user, phone: "+15551234567")
+      card = create(:gift_card, recipient: other, merchant: merchant, amount: 0)
+      stripe_load!(card, 1_000, sender: create(:user), at: 2.days.ago)
+
+      post "/api/v1/checkout/payment_intent", params: valid_params.to_json, headers: auth_headers(access_token)
+
+      expect(parsed_data["target"]).to include("existing_card_id" => card.id, "current_balance_cents" => 1_000, "projected_balance_cents" => 3_500)
+    end
+
+    it "returns checkout.card_balance_limit with room details when the reload would overflow the card" do
+      card = create(:gift_card, recipient: user, merchant: merchant, amount: 0)
+      3.times { |i| stripe_load!(card, 16_000, sender: create(:user), at: (i + 2).days.ago) } # $480 on the card
+
+      post "/api/v1/checkout/payment_intent",
+           params: valid_params.merge(amount_cents: 5_000, recipient: { self: true }).to_json,
+           headers: auth_headers(access_token)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(parsed_error["code"]).to eq("checkout.card_balance_limit")
+      expect(parsed_error["details"]).to include("limit_cents" => 50_000, "used_cents" => 48_000, "room_cents" => 2_000)
+      expect(parsed_error["message"]).to include("$20.00")
+    end
+
+    it "returns checkout.load_amount_out_of_range below the $5 floor" do
+      post "/api/v1/checkout/payment_intent",
+           params: valid_params.merge(amount_cents: 400).to_json,
+           headers: auth_headers(access_token)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(parsed_error["code"]).to eq("checkout.load_amount_out_of_range")
+    end
+  end
+
   describe "load caps (§4.1)" do
     before do
       # 3 Stripe loads by this buyer in the last 24 hours = launch daily count cap

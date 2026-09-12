@@ -5,12 +5,12 @@
       <p class="papayal-meta text-[#0D2F32]">Panel Tarjetas</p>
       <h1 class="text-2xl font-bold text-[#0D2F32]">Tarjetas de regalo</h1>
       <p class="text-sm text-[#2C3A43]/80 mt-1">
-        Todas las tarjetas de la plataforma, con su historial completo de movimientos.
-        <span class="font-semibold"><%= @total_count %></span> resultado<%= "s" unless @total_count == 1 %>.
+        Una tarjeta por persona y comercio; cada compra es una recarga. <span class="font-semibold"><%= @total_count %></span> resultado<%= "s" unless @total_count == 1 %>.
       </p>
     </div>
     <div class="flex flex-wrap gap-3">
       <%= link_to "Centro de control", admin_root_path, class: "papayal-btn-ghost" %>
+      <%= link_to "Retenciones", admin_holds_path, class: "papayal-btn-ghost" %>
     </div>
   </div>
 
@@ -30,7 +30,7 @@
     <% end %>
 
     <div class="flex flex-wrap gap-2">
-      <% { "all" => "Todas", "active" => "Activas", "redeemed" => "Canjeadas", "canceled" => "Canceladas", "held" => "Retenidas", "disputed" => "Disputadas" }.each do |key, label| %>
+      <% { "all" => "Todas", "active" => "Activas", "frozen" => "Congeladas", "canceled" => "Canceladas", "with_held" => "Con retención", "with_disputed" => "En disputa", "zero_balance" => "Sin saldo" }.each do |key, label| %>
         <%= link_to "#{label} (#{@status_counts[key]})", admin_gift_cards_path(filter: key, q: @query.presence),
               class: "px-4 py-1.5 rounded-full text-sm font-medium border transition-colors #{@filter == key ? 'bg-[#0D2F32] text-white border-[#0D2F32]' : 'bg-white text-[#2C3A43] border-black/10 hover:border-[#FCA50F]/50'}" %>
       <% end %>
@@ -42,17 +42,17 @@
           <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
             <tr>
               <th class="px-4 py-3">Tarjeta</th>
-              <th class="px-4 py-3">Comercio</th>
-              <th class="px-4 py-3">Comprador</th>
               <th class="px-4 py-3">Destinatario</th>
-              <th class="px-4 py-3 text-right">Monto</th>
-              <th class="px-4 py-3 text-right">Saldo</th>
+              <th class="px-4 py-3">Comercio</th>
+              <th class="px-4 py-3 text-right">Disponible / total</th>
+              <th class="px-4 py-3 text-right">Recargas</th>
               <th class="px-4 py-3">Estado</th>
-              <th class="px-4 py-3">Emitida</th>
+              <th class="px-4 py-3">Última recarga</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-black/5 text-sm">
             <% @gift_cards.each do |gift_card| %>
+              <% balances = gift_card.balances %>
               <tr class="hover:bg-[#EBEBEB]/40 transition cursor-pointer"
                   data-controller="clickable"
                   data-clickable-url-value="<%= admin_gift_card_path(gift_card) %>"
@@ -61,25 +61,11 @@
                   <%= link_to admin_gift_card_path(gift_card), class: "font-medium text-[#0D2F32] hover:underline" do %>
                     REM-<%= gift_card.id.to_s.last(6) %>
                   <% end %>
-                  <% if gift_card.held? %>
-                    <p class="text-[10px] text-amber-700">Retenida por riesgo</p>
+                  <% if balances[:held_cents].positive? %>
+                    <p class="text-[10px] text-amber-700">Retenido <%= number_to_currency(balances[:held_cents] / 100.0, unit: '$') %></p>
                   <% end %>
-                  <% if gift_card.disputed? %>
-                    <p class="text-[10px] text-rose-700">En disputa</p>
-                  <% end %>
-                </td>
-                <td class="px-4 py-3">
-                  <% if gift_card.merchant %>
-                    <%= link_to gift_card.merchant.store_name, admin_merchant_path(gift_card.merchant), class: "text-[#0D2F32] hover:underline" %>
-                  <% else %>
-                    <span class="text-[#2C3A43]/50">—</span>
-                  <% end %>
-                </td>
-                <td class="px-4 py-3">
-                  <% if gift_card.sender %>
-                    <%= link_to gift_card.sender.name.presence || gift_card.sender.email, admin_user_path(gift_card.sender), class: "text-[#0D2F32] hover:underline" %>
-                  <% else %>
-                    <span class="text-[#2C3A43]/50">—</span>
+                  <% if balances[:disputed_cents].positive? %>
+                    <p class="text-[10px] text-rose-700">En disputa <%= number_to_currency(balances[:disputed_cents] / 100.0, unit: '$') %></p>
                   <% end %>
                 </td>
                 <td class="px-4 py-3">
@@ -89,20 +75,25 @@
                     <span class="text-[#2C3A43]/50">—</span>
                   <% end %>
                 </td>
-                <td class="px-4 py-3 text-right font-medium">
-                  <%= number_to_currency(gift_card.amount / 100.0, unit: '$') %>
+                <td class="px-4 py-3">
+                  <% if gift_card.merchant %>
+                    <%= link_to gift_card.merchant.store_name, admin_merchant_path(gift_card.merchant), class: "text-[#0D2F32] hover:underline" %>
+                  <% else %>
+                    <span class="text-[#2C3A43]/50">—</span>
+                  <% end %>
                 </td>
-                <td class="px-4 py-3 text-right text-[#2C3A43]/80">
-                  <%= number_to_currency(gift_card.remaining_balance / 100.0, unit: '$') %>
+                <td class="px-4 py-3 text-right">
+                  <span class="font-medium text-emerald-700"><%= number_to_currency(balances[:spendable_cents] / 100.0, unit: '$') %></span>
+                  <span class="text-[#2C3A43]/60">/ <%= number_to_currency(balances[:remaining_balance] / 100.0, unit: '$') %></span>
+                  <p class="text-[10px] text-[#2C3A43]/60">cargado <%= number_to_currency(gift_card.total_loaded_cents / 100.0, unit: '$') %></p>
                 </td>
+                <td class="px-4 py-3 text-right text-[#2C3A43]/80"><%= gift_card.loads_count %></td>
                 <td class="px-4 py-3">
                   <span class="<%= status_badge_classes(gift_card.status) %>"><%= status_badge_label(gift_card.status) %></span>
                 </td>
                 <td class="px-4 py-3 text-[#2C3A43]/70 whitespace-nowrap">
-                  <p><%= gift_card.created_at.strftime('%d/%m/%Y') %></p>
-                  <% if gift_card.redeemed_at %>
-                    <p class="text-[10px]">Canjeada <%= gift_card.redeemed_at.strftime('%d/%m/%Y') %></p>
-                  <% end %>
+                  <p><%= (gift_card.last_loaded_at || gift_card.created_at).strftime('%d/%m/%Y') %></p>
+                  <p class="text-[10px]">creada <%= gift_card.created_at.strftime('%d/%m/%Y') %></p>
                 </td>
               </tr>
             <% end %>

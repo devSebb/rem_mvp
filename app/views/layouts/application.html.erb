@@ -61,7 +61,7 @@
                   <%= link_to "Inicio", navbar_home_path, class: "papayal-btn-ghost text-sm" %>
                 <% end %>
                 <% if current_user.admin? %>
-                  <%= link_to "Mi Billetera", gift_cards_path, class: "papayal-btn-ghost text-sm" %>
+                  <%= link_to "Mis tarjetas", gift_cards_path, class: "papayal-btn-ghost text-sm" %>
                 <% elsif !current_user.merchant? %>
                   <%= link_to "Papayal App", proximamente_path, class: "papayal-btn-ghost text-sm" %>
                 <% end %>
@@ -107,7 +107,7 @@
                   <%= link_to "Inicio", navbar_home_path, class: "block w-full papayal-btn-ghost text-left justify-start" %>
                 <% end %>
                 <% if current_user.admin? %>
-                  <%= link_to "Mi Billetera", gift_cards_path, class: "block w-full papayal-btn-ghost text-left justify-start" %>
+                  <%= link_to "Mis tarjetas", gift_cards_path, class: "block w-full papayal-btn-ghost text-left justify-start" %>
                 <% elsif !current_user.merchant? %>
                   <%= link_to "Papayal App", proximamente_path, class: "block w-full papayal-btn-ghost text-left justify-start" %>
                 <% end %>

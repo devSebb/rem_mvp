@@ -30,40 +30,34 @@
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <div>
-              <p class="papayal-meta text-[#2C3A43]/60">Monto original</p>
-              <p class="text-2xl font-bold text-[#0D2F32]">
-                <%= number_to_currency(@gift_card.amount / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+              <p class="papayal-meta text-[#2C3A43]/60">Saldo disponible</p>
+              <p class="text-2xl font-bold text-emerald-700">
+                <%= number_to_currency(@balances[:spendable_cents] / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
               </p>
             </div>
             <div>
-              <p class="papayal-meta text-[#2C3A43]/60">Saldo restante</p>
-              <p class="text-2xl font-bold text-emerald-700">
-                <%= number_to_currency(@gift_card.remaining_balance / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+              <p class="papayal-meta text-[#2C3A43]/60">Saldo total</p>
+              <p class="text-2xl font-bold text-[#0D2F32]">
+                <%= number_to_currency(@balances[:remaining_balance] / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
               </p>
+              <% if @balances[:held_cents].positive? || @balances[:disputed_cents].positive? %>
+                <p class="text-xs text-amber-700">
+                  <%= number_to_currency((@balances[:held_cents] + @balances[:disputed_cents]) / 100.0, unit: '$') %> en revisión
+                </p>
+              <% end %>
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3 text-sm text-[#2C3A43]/80">
             <div>
-              <p class="papayal-meta text-[#2C3A43]/60">De</p>
-              <p class="font-semibold text-[#0D2F32]"><%= @gift_card.sender.name %></p>
+              <p class="papayal-meta text-[#2C3A43]/60">Tarjeta de</p>
+              <p class="font-semibold text-[#0D2F32]"><%= @issuing_merchant&.store_name || 'Papayal' %></p>
             </div>
             <div>
-              <p class="papayal-meta text-[#2C3A43]/60">Para</p>
+              <p class="papayal-meta text-[#2C3A43]/60">Titular</p>
               <p class="font-semibold text-[#0D2F32]"><%= @gift_card.recipient&.name || 'Desconocido' %></p>
             </div>
-            <%# Gift card expiration removed - gift cards never expire %>
           </div>
-
-          <% if @is_cross_merchant %>
-            <div class="rounded-2xl border border-purple-100 bg-purple-50/60 p-4">
-              <p class="text-sm font-medium text-purple-800">Canje en red</p>
-              <div class="text-xs text-purple-700 mt-2 space-y-1">
-                <p><span class="font-medium">Emitida por:</span> <%= @issuing_merchant.store_name %></p>
-                <p><span class="font-medium">Canjeando en:</span> <%= @redeeming_merchant.store_name %></p>
-              </div>
-            </div>
-          <% end %>
 
           <div class="rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
             <p class="text-sm font-medium text-amber-800">Verifica los datos</p>
@@ -93,15 +87,15 @@
                 <span class="text-[#2C3A43]/60 sm:text-sm"><%= @gift_card.currency == 'USD' ? '$' : @gift_card.currency %></span>
               </div>
               <%= form.number_field :redemption_amount,
-                    value: @gift_card.remaining_balance / 100.0,
+                    value: @balances[:spendable_cents] / 100.0,
                     step: 0.01,
                     min: 0.01,
-                    max: @gift_card.remaining_balance / 100.0,
+                    max: @balances[:spendable_cents] / 100.0,
                     class: "papayal-input pl-8 text-lg font-semibold",
                     placeholder: "0.00" %>
             </div>
             <p class="text-xs text-[#2C3A43]/60">
-              Máximo: <%= number_to_currency(@gift_card.remaining_balance / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
+              Máximo: <%= number_to_currency(@balances[:spendable_cents] / 100.0, unit: @gift_card.currency == 'USD' ? '$' : @gift_card.currency) %>
             </p>
           </div>
 

@@ -19,9 +19,29 @@ class Merchant::RedemptionsController < ApplicationController
     if (active_token = active_redemption_token_for(token_candidate))
       @gift_card = active_token.gift_card
 
+      # D6: only the issuing merchant or one in its redemption group.
+      unless Merchants::CanRedeem.call(redeemer: current_user.merchant, issuer: @gift_card.merchant)
+        Rails.logger.warn "❌ Gift card #{@gift_card.id} issued for merchant #{@gift_card.merchant_id}; #{current_user.merchant&.id} cannot redeem it"
+        flash[:alert] = "Esta tarjeta es de #{@gift_card.merchant&.store_name} y no puede canjearse en tu comercio."
+        redirect_to new_merchant_redemption_path and return
+      end
+
+      if @gift_card.frozen_by_admin?
+        flash[:alert] = 'Esta tarjeta está congelada por Papayal y no puede canjearse.'
+        redirect_to new_merchant_redemption_path and return
+      end
+
       unless @gift_card.can_be_redeemed?
-        Rails.logger.warn "❌ Gift card #{@gift_card.id} cannot be redeemed - Status: #{@gift_card.status}, Expired: #{@gift_card.expired?}, Balance: #{@gift_card.remaining_balance}"
-        flash[:alert] = 'This gift card cannot be redeemed (expired, inactive, or has no remaining balance).'
+        balances = @gift_card.balances
+        Rails.logger.warn "❌ Gift card #{@gift_card.id} cannot be redeemed - Status: #{@gift_card.status}, spendable: #{balances[:spendable_cents]} (held #{balances[:held_cents]}, disputed #{balances[:disputed_cents]})"
+        flash[:alert] =
+          if balances[:held_cents].positive?
+            'Esta tarjeta tiene su saldo en revisión de seguridad. Inténtalo más tarde.'
+          elsif balances[:disputed_cents].positive?
+            'Esta tarjeta tiene su saldo en disputa y no puede canjearse por ahora.'
+          else
+            'Esta tarjeta no tiene saldo disponible o está inactiva.'
+          end
         redirect_to new_merchant_redemption_path and return
       end
 
@@ -49,14 +69,18 @@ class Merchant::RedemptionsController < ApplicationController
     @redemption_token_value = normalized_token(params[:redemption_token])
     @redemption_token = active_redemption_token_for(@redemption_token_value) if @redemption_token_value.present?
 
-    # Network redemption: any merchant in the network can redeem any gift card.
-    # Track issuing vs redeeming merchant for transparency in UI.
     @issuing_merchant = @gift_card.merchant
     @redeeming_merchant = current_user.merchant
-    @is_cross_merchant = @issuing_merchant.id != @redeeming_merchant.id
+    @balances = @gift_card.balances
 
     unless @redemption_token && @redemption_token.gift_card_id == @gift_card.id
       flash[:alert] = 'The dynamic code is invalid, expired, or does not match this gift card.'
+      redirect_to new_merchant_redemption_path and return
+    end
+
+    # D6 is a decline, not a banner (§5.12).
+    unless Merchants::CanRedeem.call(redeemer: @redeeming_merchant, issuer: @issuing_merchant)
+      flash[:alert] = "Esta tarjeta es de #{@issuing_merchant&.store_name} y no puede canjearse en tu comercio."
       redirect_to new_merchant_redemption_path and return
     end
     
@@ -117,7 +141,7 @@ class Merchant::RedemptionsController < ApplicationController
       notify_recipient_of_redemption(@gift_card, result[:amount_cents])
 
       flash[:notice] = "Successfully redeemed #{format_amount(result[:amount_cents], result[:currency])}. Remaining balance: #{format_amount(result[:remaining_balance_cents], result[:currency])}."
-      redirect_to success_merchant_redemptions_path(gift_card_id: @gift_card.id)
+      redirect_to success_merchant_redemptions_path(gift_card_id: @gift_card.id, amount_cents: result[:amount_cents])
     else
       Rails.logger.warn "❌ Dynamic token redemption declined: #{result[:decline_reason] || 'unknown_reason'}"
       flash[:alert] = "Could not redeem: #{(result[:decline_reason] || 'invalid or expired token').to_s.humanize}."
@@ -140,6 +164,9 @@ class Merchant::RedemptionsController < ApplicationController
 
   def success
     @gift_card = GiftCard.find(params[:gift_card_id]) if params[:gift_card_id]
+    # Amount captured by the redemption that just happened (passed on redirect).
+    # Never derive it from the card: total_loaded - remaining also counts refunds.
+    @redeemed_cents = params[:amount_cents].to_i if params[:amount_cents].present?
   rescue ActiveRecord::RecordNotFound
     flash[:alert] = 'Gift card not found.'
     redirect_to new_merchant_redemption_path
@@ -156,14 +183,7 @@ class Merchant::RedemptionsController < ApplicationController
 
   def format_amount(amount_cents, currency)
     return "-" if amount_cents.nil?
-    case currency.upcase
-    when 'USD'
-      "$#{amount_cents / 100.0}"
-    when 'EUR'
-      "€#{amount_cents / 100.0}"
-    else
-      "#{amount_cents / 100.0} #{currency}"
-    end
+    Messaging::Money.format(amount_cents, currency: currency)
   end
 
   def normalized_token(value)

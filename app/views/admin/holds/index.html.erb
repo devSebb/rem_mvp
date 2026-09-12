@@ -1,17 +1,17 @@
-<% content_for :title, "Papayal · Bloqueos de seguridad" %>
+<% content_for :title, "Papayal · Retenciones de seguridad" %>
 <div class="space-y-8">
   <div class="papayal-card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
     <div>
-      <p class="papayal-meta text-[#0D2F32]">Panel Bloqueos</p>
-      <h1 class="text-2xl font-bold text-[#0D2F32]">Bloqueos de seguridad</h1>
+      <p class="papayal-meta text-[#0D2F32]">Panel Retenciones</p>
+      <h1 class="text-2xl font-bold text-[#0D2F32]">Retenciones de seguridad</h1>
       <p class="text-sm text-[#2C3A43]/80 mt-1">
-        Tarjetas en revisión de 24 h por riesgo elevado (Stripe Radar score ≥ <%= GiftCard::RISK_HOLD_THRESHOLD %>).
-        Libéralas antes solo si verificaste al comprador por otro canal.
+        Recargas en revisión de 24 h por riesgo elevado (Stripe Radar score ≥ <%= GiftCard::RISK_HOLD_THRESHOLD %>).
+        Solo esa recarga queda retenida; el resto del saldo de la tarjeta sigue disponible. Libéralas antes solo si verificaste al comprador por otro canal.
       </p>
     </div>
     <div class="flex flex-wrap gap-3">
       <%= link_to "Centro de control", admin_root_path, class: "papayal-btn-ghost" %>
-      <%= link_to "Tarjetas", admin_gift_cards_path(filter: "held"), class: "papayal-btn-ghost" %>
+      <%= link_to "Tarjetas", admin_gift_cards_path(filter: "with_held"), class: "papayal-btn-ghost" %>
     </div>
   </div>
 
@@ -19,20 +19,21 @@
     <div>
       <p class="papayal-meta">Retenciones activas</p>
       <h2 class="text-xl font-bold text-[#2C3A43] mt-1">
-        Tarjetas retenidas
-        <span class="text-sm font-medium text-[#2C3A43]/60">(<%= @held_gift_cards.size %>)</span>
+        Recargas retenidas
+        <span class="text-sm font-medium text-[#2C3A43]/60">(<%= @held_loads.size %>)</span>
       </h2>
     </div>
 
-    <% if @held_gift_cards.empty? %>
+    <% if @held_loads.empty? %>
       <div class="text-center py-10 text-sm text-[#2C3A43]/70">
-        No hay tarjetas bajo bloqueo de seguridad en este momento.
+        No hay recargas bajo retención de seguridad en este momento.
       </div>
     <% else %>
       <div class="overflow-x-auto rounded-2xl border border-black/5">
         <table class="min-w-full divide-y divide-black/5">
           <thead class="bg-[#EBEBEB]/60 text-left text-sm font-medium text-[#2C3A43]/70 uppercase tracking-wider">
             <tr>
+              <th class="px-4 py-3">Recarga</th>
               <th class="px-4 py-3">Tarjeta</th>
               <th class="px-4 py-3">Comprador</th>
               <th class="px-4 py-3">Destinatario</th>
@@ -44,14 +45,16 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-black/5 text-sm">
-            <% @held_gift_cards.each do |gc| %>
+            <% @held_loads.each do |load| %>
+              <% gc = load.gift_card %>
               <tr class="hover:bg-[#EBEBEB]/40 transition">
+                <td class="px-4 py-3 font-mono text-xs text-[#2C3A43]/80">#<%= load.id %></td>
                 <td class="px-4 py-3">
-                  <%= link_to "REM-#{gc.id.to_s.last(6)}", admin_gift_card_path(gc), class: "font-medium text-[#0D2F32] hover:underline" %>
+                  <%= link_to "REM-#{gc.id.to_s.last(6)}", admin_gift_card_path(gc, anchor: "recarga-#{load.id}"), class: "font-medium text-[#0D2F32] hover:underline" %>
                 </td>
                 <td class="px-4 py-3">
-                  <% if gc.sender %>
-                    <%= link_to (gc.sender.name.presence || gc.sender.email), admin_user_path(gc.sender), class: "text-[#0D2F32] hover:underline" %>
+                  <% if load.sender %>
+                    <%= link_to (load.sender.name.presence || load.sender.email), admin_user_path(load.sender), class: "text-[#0D2F32] hover:underline" %>
                   <% else %>
                     <span class="text-[#2C3A43]/50">—</span>
                   <% end %>
@@ -70,23 +73,26 @@
                     <span class="text-[#2C3A43]/50">—</span>
                   <% end %>
                 </td>
-                <td class="px-4 py-3 text-right font-medium"><%= number_to_currency(gc.amount / 100.0, unit: '$') %></td>
+                <td class="px-4 py-3 text-right font-medium">
+                  <%= number_to_currency(load.remaining_cents / 100.0, unit: '$') %>
+                  <% if load.remaining_cents != load.amount_cents %><p class="text-[10px] text-[#2C3A43]/60">de <%= number_to_currency(load.amount_cents / 100.0, unit: '$') %></p><% end %>
+                </td>
                 <td class="px-4 py-3 text-center">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold <%= gc.risk_score.to_i >= 75 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-amber-50 text-amber-700 border border-amber-200' %>">
-                    <%= gc.risk_score %> · <%= gc.risk_level.presence || "desconocido" %>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold <%= load.risk_score.to_i >= 75 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-amber-50 text-amber-700 border border-amber-200' %>">
+                    <%= load.risk_score %> · <%= load.risk_level.presence || "desconocido" %>
                   </span>
                 </td>
                 <td class="px-4 py-3 text-[#2C3A43]/70 whitespace-nowrap">
-                  <p><%= gc.held_until.in_time_zone.strftime("%d/%m/%Y %H:%M") %></p>
-                  <p class="text-[10px]">en <%= time_ago_in_words(gc.held_until) %></p>
+                  <p><%= load.held_until.in_time_zone.strftime("%d/%m/%Y %H:%M") %></p>
+                  <p class="text-[10px]">en <%= time_ago_in_words(load.held_until) %></p>
                 </td>
                 <td class="px-4 py-3 text-right">
-                  <%= form_with url: release_admin_hold_path(gc), method: :post, local: true, class: "inline-flex items-center gap-2" do |f| %>
+                  <%= form_with url: release_admin_hold_path(load), method: :post, local: true, class: "inline-flex items-center gap-2" do |f| %>
                     <%= f.text_field :reason, placeholder: "Motivo (obligatorio)", required: true,
                           class: "papayal-input text-xs py-1.5 w-44" %>
                     <%= f.submit "Liberar",
                           class: "papayal-btn-secondary text-xs text-amber-800 cursor-pointer",
-                          data: { turbo_confirm: "¿Liberar el bloqueo de la tarjeta REM-#{gc.id.to_s.last(6)}? Esta acción queda registrada." } %>
+                          data: { turbo_confirm: "¿Liberar la retención de la recarga ##{load.id} (tarjeta REM-#{gc.id.to_s.last(6)})? Esta acción queda registrada." } %>
                   <% end %>
                 </td>
               </tr>

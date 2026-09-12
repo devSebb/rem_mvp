@@ -40,6 +40,7 @@ class GiftCardLoad < ApplicationRecord
   validates :payment_intent_id, uniqueness: true, allow_nil: true
   validates :checkout_session_id, uniqueness: true, allow_nil: true
   validates :dispute_outcome, inclusion: { in: %w[won lost] }, allow_nil: true
+  validates :link_token_digest, uniqueness: true, allow_nil: true
   validate :remaining_within_amount
 
   before_validation :set_defaults, on: :create
@@ -72,6 +73,16 @@ class GiftCardLoad < ApplicationRecord
   end
 
   # ── Predicates ──────────────────────────────────────────────────────
+  # The buyer topped up their own card (§5.9: push only).
+  def self_load?
+    sender_id.present? && sender_id == gift_card&.recipient_id
+  end
+
+  # A hold that ended (timer or admin release) — activity feed "hold_released".
+  def hold_released?
+    held_until.present? && held_until <= Time.current
+  end
+
   def held?
     held_until.present? && held_until > Time.current
   end

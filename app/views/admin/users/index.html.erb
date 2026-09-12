@@ -60,7 +60,7 @@
                   <% end %>
                 </td>
                 <td class="px-4 py-3 text-right font-medium"><%= user.received_gift_cards.size %></td>
-                <td class="px-4 py-3 text-right text-[#2C3A43]/70"><%= user.sent_gift_cards.size %></td>
+                <td class="px-4 py-3 text-right text-[#2C3A43]/70"><%= user.sent_loads.size %></td>
                 <td class="px-4 py-3 text-[#2C3A43]/70"><%= user.created_at.strftime('%d/%m/%Y') %></td>
                 <td class="px-4 py-3 text-right">
                   <%= link_to "Ver", admin_user_path(user), class: "papayal-btn-ghost text-xs" %>

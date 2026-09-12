@@ -7,8 +7,12 @@ class AppLinksController < ApplicationController
   skip_before_action :authenticate_user!
   layout "marketing"
 
+  # A claim link resolves a LOAD (§5.9): the page shows that load's sender,
+  # amount and note plus the card's merchant.
   def claim
-    @gift_card = GiftCards::ClaimLink.find_by_token(params[:token])
+    @load = GiftCards::ClaimLink.find_by_token(params[:token])
+    @gift_card = @load&.gift_card
+    @is_reload = @load.present? && @gift_card.first_load&.id != @load.id
     @download_url = AppLinks.download_url
     # Best-effort "open in app" for the pasted-into-browser case, where
     # universal links don't trigger even with the app installed.

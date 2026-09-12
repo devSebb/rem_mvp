@@ -586,15 +586,294 @@ paths:
                   message: You are not authorized to perform this action
                 request_id: 123e4567
         "422":
-          description: Gift card inactive
+          description: Gift card inactive, frozen, or without spendable balance
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                inactive:
+                  value:
+                    error: { code: gift_card.inactive, message: Tarjeta inactiva o no disponible }
+                    request_id: 123e4567
+                frozen:
+                  value:
+                    error: { code: gift_card.frozen, message: Esta tarjeta está congelada. }
+                    request_id: 123e4567
+                no_spendable_balance:
+                  value:
+                    error:
+                      code: gift_card.no_spendable_balance
+                      message: Esta tarjeta no tiene saldo disponible ahora.
+                      details: { spendable_cents: 0, held_cents: 3000, disputed_cents: 0, held_until: "2026-09-12T10:00:00Z" }
+                    request_id: 123e4567
+  /api/v1/me/gift_cards/{id}/loads:
+    get:
+      summary: Loads on a card (paginated)
+      description: The recipient sees every load; a buyer sees only the loads they paid for.
+      tags: [GiftCards]
+      security:
+        - AccessToken: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+        - { in: query, name: page, schema: { type: integer, default: 1 } }
+        - { in: query, name: per_page, schema: { type: integer, default: 20, maximum: 100 } }
+      responses:
+        "200":
+          description: Loads, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      gift_card_id: { type: integer }
+                      loads:
+                        type: array
+                        items: { $ref: "#/components/schemas/GiftCardLoad" }
+                      page: { type: integer }
+                      per_page: { type: integer }
+                      total_count: { type: integer }
+                      has_more: { type: boolean }
+                  request_id: { type: string }
+  /api/v1/me/gift_cards/{id}/loads/{load_id}/share_link:
+    post:
+      summary: Claim URL + prewritten WhatsApp message for one load (sender only)
+      tags: [GiftCards]
+      security:
+        - AccessToken: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+        - { in: path, name: load_id, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Share payload
+          content:
+            application/json:
+              example:
+                data: { load_id: 9, gift_card_id: 42, claim_url: "https://papayal.app/claim/abc", message: "¡Hola Ana! Te envié una tarjeta de regalo digital de Medicity por $30.00 con Papayal. Ábrela aquí: https://papayal.app/claim/abc" }
+                request_id: 123e4567
+        "403": { description: Not the load's sender }
+  /api/v1/me/gift_cards/{id}/loads/{load_id}/resend:
+    post:
+      summary: Re-deliver one load's notification (sender only, throttled per card)
+      tags: [GiftCards]
+      security:
+        - AccessToken: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+        - { in: path, name: load_id, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Resent }
+        "429":
+          description: Throttled
+          content:
+            application/json:
+              example:
+                error: { code: gift_card.resend_throttled, message: Ya reenviamos la notificación hace poco., details: { retry_in_seconds: 42 } }
+                request_id: 123e4567
+  /api/v1/me/gift_cards/{id}/share_link:
+    post:
+      summary: COMPAT — share link for the latest load the caller paid onto the card
+      tags: [GiftCards]
+      security:
+        - AccessToken: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Same payload as the per-load endpoint }
+        "422": { description: gift_card.no_load_sent — the caller never loaded this card }
+  /api/v1/me/gift_cards/{id}/resend:
+    post:
+      summary: COMPAT — resend for the latest load the caller paid onto the card
+      tags: [GiftCards]
+      security:
+        - AccessToken: []
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Resent }
+        "429": { description: Throttled }
+  /api/v1/me/loads:
+    get:
+      summary: Loads I paid ("Enviadas")
+      tags: [GiftCards]
+      security:
+        - AccessToken: []
+      parameters:
+        - { in: query, name: role, required: true, schema: { type: string, enum: [sent] } }
+        - { in: query, name: page, schema: { type: integer, default: 1 } }
+        - { in: query, name: per_page, schema: { type: integer, default: 20, maximum: 100 } }
+      responses:
+        "200":
+          description: Loads with card summary, masked recipient, claim_status and refundable_cents
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      role: { type: string }
+                      loads:
+                        type: array
+                        items: { $ref: "#/components/schemas/SentLoad" }
+                      page: { type: integer }
+                      per_page: { type: integer }
+                      total_count: { type: integer }
+                      has_more: { type: boolean }
+                  request_id: { type: string }
+  /api/v1/me/activity:
+    get:
+      summary: Activity feed ("Historial"), newest first, cursor-paginated
+      tags: [GiftCards]
+      security:
+        - AccessToken: []
+      parameters:
+        - { in: query, name: cursor, schema: { type: string } }
+        - { in: query, name: limit, schema: { type: integer, default: 30, maximum: 100 } }
+      responses:
+        "200":
+          description: Events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      events:
+                        type: array
+                        items: { $ref: "#/components/schemas/ActivityEvent" }
+                      next_cursor: { type: string, nullable: true }
+                  request_id: { type: string }
+  /api/v1/gift_cards/by_payment_intent/{payment_intent_id}:
+    get:
+      summary: Post-checkout polling — the card (top level) plus the load for this payment
+      description: 404 until the webhook has created the load. Visible to the load's buyer or the card's recipient.
+      tags: [GiftCards]
+      security:
+        - AccessToken: []
+      parameters:
+        - { in: path, name: payment_intent_id, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: GiftCard fields at top level + `load` (and `top_up` alias)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    allOf:
+                      - $ref: "#/components/schemas/GiftCard"
+                      - type: object
+                        properties:
+                          load: { $ref: "#/components/schemas/GiftCardLoad" }
+                          top_up: { $ref: "#/components/schemas/GiftCardLoad" }
+                  request_id: { type: string }
+        "404": { description: Not created yet (keep polling) or not yours }
+  /api/v1/claim/{token}:
+    get:
+      summary: Public claim-link teaser for one LOAD
+      tags: [GiftCards]
+      parameters:
+        - { in: path, name: token, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Teaser
+          content:
+            application/json:
+              example:
+                data:
+                  gift_card_id: 42
+                  load_id: 9
+                  status: active
+                  load_status: available
+                  is_reload: false
+                  amount_cents: 3000
+                  currency: USD
+                  merchant_name: Medicity
+                  merchant_logo_url: null
+                  sender_first_name: Ana
+                  note: Feliz cumple
+                  recipient_masked_phone: "+593•••3456"
+                  recipient_registered: false
+                  teaser: "Ana te envió una tarjeta de regalo digital de Medicity · $30.00"
+                request_id: 123e4567
+        "404": { description: claim_link.not_found }
+  /api/v1/config:
+    get:
+      summary: Public remote config (fees, limits, kill switch, min versions)
+      tags: [Config]
+      responses:
+        "200":
+          description: Config
+          content:
+            application/json:
+              example:
+                data:
+                  purchases_enabled: true
+                  min_supported_version: { ios: null, android: null }
+                  fees: { buyer_fee_bps: 0, buyer_fee_fixed_cents: 0 }
+                  gift_card_limits: { min_cents: 500, max_cents: 20000 }
+                  limits:
+                    min_load_cents: 500
+                    max_load_cents: 20000
+                    max_daily_load_per_card_cents: 40000
+                    max_card_balance_cents: 50000
+                    max_loads_per_card_per_day: 2
+                    max_daily_load_per_buyer_cents: 60000
+                    max_daily_loads_per_buyer: 3
+                    max_30d_load_per_recipient_cents: 100000
+                    max_30d_load_per_buyer_cents: 200000
+                    buyer_refund_window_hours: 72
+                request_id: 123e4567
+  /api/v1/checkout/payment_intent:
+    post:
+      summary: Create a Stripe PaymentIntent for a load (gift or self-reload)
+      tags: [Checkout]
+      security:
+        - AccessToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            examples:
+              gift:
+                value: { merchant_id: 4, amount_cents: 3000, currency: USD, recipient: { name: Ana, phone: "+593999123456", note: "Feliz cumple" }, draft_id: "uuid" }
+              self:
+                value: { merchant_id: 4, amount_cents: 3000, currency: USD, recipient: { self: true } }
+      responses:
+        "200":
+          description: Client secret + quote + target card
+          content:
+            application/json:
+              example:
+                data:
+                  client_secret: pi_secret
+                  payment_intent_id: pi_123
+                  quote: { subtotal_cents: 3000, fee_cents: 0, total_cents: 3000, currency: USD }
+                  target: { self: false, existing_card_id: 42, current_balance_cents: 4000, projected_balance_cents: 7000 }
+                request_id: 123e4567
+        "422":
+          description: |
+            Cap exceeded (§4.1). `code` is one of checkout.load_amount_out_of_range,
+            checkout.card_daily_load_limit, checkout.card_daily_count_limit, checkout.card_balance_limit,
+            checkout.buyer_daily_limit, checkout.buyer_daily_count_limit, checkout.recipient_monthly_limit,
+            checkout.buyer_monthly_limit, checkout.buyer_dispute_open; `details` carries
+            limit_cents|limit, used_cents|used, room_cents|room, resets_at.
+          content:
+            application/json:
               example:
                 error:
-                  code: gift_card.inactive
-                  message: Tarjeta inactiva o no disponible
+                  code: checkout.card_balance_limit
+                  message: "Esta tarjeta puede tener un saldo máximo de $500.0. Puedes recargar hasta $100.00."
+                  details: { limit_cents: 50000, used_cents: 40000, room_cents: 10000, resets_at: null }
                 request_id: 123e4567
 components:
   securitySchemes:
@@ -655,19 +934,172 @@ components:
           $ref: "#/components/schemas/GiftCard"
         request_id:
           type: string
+    GiftCardLoad:
+      type: object
+      description: One payment credited onto a card (RELOADABLE_CARD_PLAN.md §3.2).
+      properties:
+        id:
+          type: integer
+        gift_card_id:
+          type: integer
+        amount_cents:
+          type: integer
+        remaining_cents:
+          type: integer
+        refunded_cents:
+          type: integer
+        written_off_cents:
+          type: integer
+        currency:
+          type: string
+        source:
+          type: string
+          enum: [stripe, issuance, migration_merge, admin_adjustment]
+        sender_id:
+          type: integer
+          nullable: true
+        sender:
+          $ref: "#/components/schemas/Sender"
+        note:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [available, held, disputed, exhausted, refunded, written_off, canceled]
+        held_until:
+          type: string
+          format: date-time
+          nullable: true
+        disputed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        is_self:
+          type: boolean
+          description: The buyer topped up their own card.
+    SentLoad:
+      allOf:
+        - $ref: "#/components/schemas/GiftCardLoad"
+        - type: object
+          properties:
+            refundable_cents:
+              type: integer
+            claim_status:
+              type: string
+              enum: [pending_claim, claimed]
+            recipient:
+              type: object
+              nullable: true
+              properties:
+                id: { type: integer }
+                name: { type: string, nullable: true }
+                full_name: { type: string, nullable: true }
+                masked_phone: { type: string, nullable: true }
+                masked_email: { type: string, nullable: true }
+                registered: { type: boolean }
+            gift_card:
+              type: object
+              nullable: true
+              properties:
+                id: { type: integer }
+                status: { type: string }
+                merchant_id: { type: integer }
+                merchant: { type: object, nullable: true }
+                spendable_cents: { type: integer }
+                remaining_balance_cents: { type: integer }
+                total_loaded_cents: { type: integer }
+                loads_count: { type: integer }
+    Sender:
+      type: object
+      nullable: true
+      properties:
+        id: { type: integer }
+        name: { type: string, nullable: true }
+        last_name: { type: string, nullable: true }
+        full_name: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        avatar_url: { type: string, nullable: true }
+    ActivityEvent:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [load_received, load_sent, load_self, redemption, reversal, refund, write_off, hold_released]
+        amount_cents: { type: integer }
+        currency: { type: string }
+        gift_card_id: { type: integer }
+        load_id: { type: integer, nullable: true }
+        transaction_id: { type: integer, nullable: true }
+        merchant:
+          type: object
+          nullable: true
+          properties:
+            id: { type: integer }
+            store_name: { type: string }
+        counterpart:
+          type: object
+          nullable: true
+          properties:
+            id: { type: integer }
+            name: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
     GiftCard:
       type: object
+      description: |
+        One reloadable card per (recipient, merchant) — RELOADABLE_CARD_PLAN.md §8.1.
+        COMPAT fields (kept for the store app, never removed before Phase 5):
+        amount_cents = total_loaded_cents; remaining_balance_cents = total remaining incl.
+        held/disputed; held_until = earliest hold among held loads; sender/sender_id/note =
+        latest load's.
       properties:
         id:
           type: integer
         amount_cents:
           type: integer
+          description: COMPAT = total_loaded_cents
         remaining_balance_cents:
           type: integer
+          description: Total remaining incl. held/disputed (COMPAT)
+        spendable_cents:
+          type: integer
+          description: What can be redeemed right now
+        held_cents:
+          type: integer
+        disputed_cents:
+          type: integer
+        total_loaded_cents:
+          type: integer
+        loads_count:
+          type: integer
+        last_loaded_at:
+          type: string
+          format: date-time
+          nullable: true
+        frozen_reason:
+          type: string
+          nullable: true
+        held_until:
+          type: string
+          format: date-time
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        sender:
+          $ref: "#/components/schemas/Sender"
+        loads:
+          type: array
+          description: Newest first, max 20; full list via /me/gift_cards/{id}/loads
+          items:
+            $ref: "#/components/schemas/GiftCardLoad"
         currency:
           type: string
         status:
           type: string
+          enum: [active, frozen, canceled]
         expires_at:
           type: string
           format: date-time

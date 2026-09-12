@@ -30,18 +30,20 @@ class Admin::UsersController < Admin::BaseController
     @page = [params[:page].to_i, 1].max
     @total_pages = [(@total_count.to_f / PER_PAGE).ceil, 1].max
     @users = scope.order(created_at: :desc)
-                  .includes(:received_gift_cards, :sent_gift_cards)
+                  .includes(:received_gift_cards, :sent_loads)
                   .offset((@page - 1) * PER_PAGE)
                   .limit(PER_PAGE)
   end
 
+  # §9: cards with spendable/total, plus the loads this user paid.
   def show
     @user = User.find(params[:id])
-    @sent_gift_cards = @user.sent_gift_cards.includes(:merchant, :recipient).order(created_at: :desc).limit(5)
-    @received_gift_cards = @user.received_gift_cards.includes(:merchant, :sender).order(created_at: :desc).limit(5)
+    @received_gift_cards = @user.received_gift_cards.not_merged.includes(:merchant, :loads).order(updated_at: :desc).limit(10)
+    @sent_loads = @user.sent_loads.in_scope.includes(gift_card: [:merchant, :recipient]).order(created_at: :desc).limit(10)
     @recent_transactions = Transaction.where(user_id: @user.id).includes(:merchant).order(created_at: :desc).limit(10)
     @active_sessions_count = UserSession.where(user_id: @user.id, revoked_at: nil).count
     @push_tokens_count = @user.push_tokens.where(active: true).count
-    @balance_cents = @user.received_gift_cards.active.sum(:remaining_balance)
+    @balance_cents = @user.received_gift_cards.not_merged.active_or_frozen.sum(:remaining_balance)
+    @spendable_cents = @user.received_gift_cards.not_merged.active.includes(:loads).sum(&:spendable_cents)
   end
 end

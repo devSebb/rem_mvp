@@ -10,8 +10,8 @@ RSpec.describe Loads::Fulfill do
   let!(:recipient) { create(:user, email: "recipient@example.com", phone: "+15550001234") }
 
   before do
-    allow(NotificationJob).to receive(:perform_later)
-    allow(NotificationJob).to receive(:perform_now)
+    allow(LoadNotificationJob).to receive(:perform_later)
+    allow(LoadNotificationJob).to receive(:perform_now)
     allow(Refunds::RefundOrphanedPayment).to receive(:call)
     allow(GiftCardHoldMailer).to receive(:held).and_return(double(deliver_later: true))
     allow(PurchaseConfirmationMailer).to receive(:receipt).and_return(double(deliver_later: true))
@@ -49,7 +49,8 @@ RSpec.describe Loads::Fulfill do
     purchase = card.transactions.purchases.sole
     expect(purchase).to have_attributes(amount: 1_500, gift_card_load_id: load.id, processor_ref: pi.id)
     expect(card.verify_ledger!).to be(true)
-    expect(NotificationJob).to have_received(:perform_later).with(card.id)
+    expect(LoadNotificationJob).to have_received(:perform_later).with(load.id)
+    expect(PurchaseConfirmationMailer).to have_received(:receipt).with(load.id)
     expect(Refunds::RefundOrphanedPayment).not_to have_received(:call)
   end
 
@@ -122,7 +123,7 @@ RSpec.describe Loads::Fulfill do
       expect(held.risk_score).to eq(GiftCard::RISK_HOLD_THRESHOLD)
       expect(card.balances).to include(remaining_balance: 3_500, held_cents: 2_000, spendable_cents: 1_500)
       expect(card.held_until).to be_nil # deprecated card column untouched
-      expect(GiftCardHoldMailer).to have_received(:held).with(card.id)
+      expect(GiftCardHoldMailer).to have_received(:held).with(held.id)
     end
 
     it "does not hold below the threshold" do

@@ -66,14 +66,14 @@ RSpec.describe "Admin::Merchants", type: :request do
       expect(response.body).to include("$25.00") # redeemed volume
     end
 
-    it "filters gift cards by status" do
+    it "filters gift cards by balance (drained cards stay active, D3)" do
       merchant = create(:merchant)
       active_card = create(:gift_card, merchant: merchant, status: :active)
       redeemed_card = create(:gift_card, merchant: merchant)
       redeem_card!(redeemed_card, redeemed_card.remaining_balance, merchant: merchant, actor: merchant.user)
-      redeemed_card.update_columns(status: GiftCard.statuses[:redeemed]) # legacy filter value; never written by app code (D3)
+      expect(redeemed_card.reload.status).to eq("active")
 
-      get admin_merchant_path(merchant, cards: "redeemed")
+      get admin_merchant_path(merchant, cards: "zero_balance")
 
       expect(response.body).to include("REM-#{redeemed_card.id.to_s.last(6)}")
       expect(response.body).not_to include("REM-#{active_card.id.to_s.last(6)}")

@@ -106,6 +106,47 @@ services:
       - key: SENTRY_DSN
         sync: false
 
+  # Nightly ledger reconciliation (RELOADABLE_CARD_PLAN.md §4.6, §10.1):
+  # verifies the §7 invariants on every card, refreshes stale hold statuses,
+  # records the result for the admin dashboard and emails on drift. The only
+  # infra addition of the reloadable-card plan. 06:00 UTC = 01:00 Ecuador.
+  - type: cron
+    name: rem-mvp-ledger-reconcile
+    env: ruby
+    schedule: "0 6 * * *"
+    buildCommand: "./bin/render-build.sh"
+    startCommand: "bundle exec rake ledger:reconcile"
+    envVars:
+      - key: RAILS_MASTER_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rem-mvp-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: rem-mvp-redis
+          type: redis
+          property: connectionString
+      - key: RAILS_ENV
+        value: production
+      - key: RAILS_LOG_TO_STDOUT
+        value: true
+      - key: SECRET_KEY_BASE
+        generateValue: true
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+      - key: ADMIN_ALERT_EMAIL
+        sync: false
+      - key: APP_HOST
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+
   - type: redis
     name: rem-mvp-redis
     plan: starter

@@ -40,7 +40,7 @@
           <dd class="font-mono text-xs text-[#0D2F32]"><%= @merchant.bank_account_iban.presence || "(no registrado)" %></dd>
         </div>
         <div class="flex justify-between">
-          <dt class="text-[#2C3A43]/70">Monto a transferir</dt>
+          <dt class="text-[#2C3A43]/70">Monto a pagar</dt>
           <dd class="font-bold text-[#0D2F32]"><%= number_to_currency(@settlement.amount.to_f / 100, unit: '$') %></dd>
         </div>
       </dl>

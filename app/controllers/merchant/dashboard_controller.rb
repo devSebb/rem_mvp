@@ -8,7 +8,7 @@ class Merchant::DashboardController < ApplicationController
     # This now correctly shows redemptions performed by this merchant, not cards issued by them.
     @redemption_transactions = Transaction.where(merchant: @merchant)
                                         .where(txn_type: :redemption, status: :succeeded)
-                                        .includes(gift_card: [:sender, :recipient, :merchant])
+                                        .includes(gift_card: [:recipient, :merchant, :loads])
     
     # Today's redemptions (count of transactions, not gift cards)
     @today_redemptions = @redemption_transactions.where(created_at: Date.current.all_day).count

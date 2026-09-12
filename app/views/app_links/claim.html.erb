@@ -1,18 +1,27 @@
 <% set_locale_titles es: "Recibiste un regalo | Papayal", en: "You received a gift | Papayal" %>
 <% content_for :meta_description, "Alguien te envió una tarjeta de regalo Papayal. Descarga la app para reclamarla y usarla en comercios aliados de Ecuador." %>
 
-<% if @gift_card.present? && @gift_card.active? %>
+<% if @load.present? && @gift_card&.active? %>
   <section class="marketing-hero overflow-hidden">
     <div class="marketing-hero-grid"></div>
     <div class="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-10 px-5 pb-16 pt-14 sm:px-6 md:pt-18 lg:grid-cols-12 lg:px-8 lg:pb-24">
       <div class="relative z-10 lg:col-span-7">
         <p class="marketing-pill" data-reveal>🎁 <%= localized_text es: "Tienes un regalo", en: "You have a gift" %></p>
         <h1 class="marketing-hero-title" data-reveal>
-          <% sender_name = @gift_card.sender&.first_name.presence %>
-          <%= localized_text(
-            es: sender_name ? "#{sender_name} te envió una tarjeta de regalo." : "Te enviaron una tarjeta de regalo.",
-            en: sender_name ? "#{sender_name} sent you a gift card." : "Someone sent you a gift card."
-          ) %>
+          <% sender_name = @load.sender&.first_name.presence %>
+          <% merchant_name = @gift_card.merchant&.store_name || "Papayal" %>
+          <% amount_label = Messaging::Money.format(@load.amount_cents, currency: @load.currency) %>
+          <% if @is_reload %>
+            <%= localized_text(
+              es: "#{sender_name || 'Alguien'} recargó tu tarjeta de #{merchant_name} con #{amount_label}",
+              en: "#{sender_name || 'Someone'} added #{amount_label} to your #{merchant_name} card"
+            ) %>
+          <% else %>
+            <%= localized_text(
+              es: "#{sender_name || 'Alguien'} te envió una tarjeta de regalo digital de #{merchant_name} · #{amount_label}",
+              en: "#{sender_name || 'Someone'} sent you a #{merchant_name} digital gift card · #{amount_label}"
+            ) %>
+          <% end %>
         </h1>
         <p class="marketing-hero-copy" data-reveal>
           <%= localized_text es: "Descarga la app de Papayal y crea tu cuenta con el número de teléfono donde recibiste el mensaje. Tu tarjeta te estará esperando — sin fecha de vencimiento.", en: "Download the Papayal app and create your account with the phone number that received the message. Your card will be waiting — it never expires." %>
@@ -59,12 +68,12 @@
           </div>
 
           <p class="mt-6 text-5xl font-extrabold tracking-tight text-white">
-            <%= @gift_card.currency %> <%= format("%.2f", @gift_card.amount / 100.0) %>
+            <%= Messaging::Money.format(@load.amount_cents, currency: @load.currency) %>
           </p>
 
-          <% if @gift_card.note.present? %>
+          <% if @load.note.present? %>
             <p class="mt-5 rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-base font-medium italic leading-6 text-white/90">
-              “<%= @gift_card.note %>”
+              “<%= @load.note %>”
             </p>
           <% end %>
 
@@ -72,7 +81,7 @@
             <% [
               ["Descarga la app de Papayal.", "Download the Papayal app."],
               ["Crea tu cuenta con el número que recibió este enlace.", "Create your account with the number that received this link."],
-              ["Confirma el código de verificación y tu tarjeta aparecerá en tu billetera.", "Confirm the verification code and your card will appear in your wallet."]
+              ["Confirma el código y tu tarjeta aparecerá en Mis tarjetas.", "Confirm the code and your card will appear under My cards."]
             ].each_with_index do |(es_text, en_text), i| %>
               <li class="flex gap-3">
                 <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F4B126] text-sm font-extrabold text-[#14343A]"><%= i + 1 %></span>

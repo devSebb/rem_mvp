@@ -27,7 +27,7 @@ module Loads
       #    is already money on a card.
       if (existing = GiftCardLoad.for_payment_intent(payment_intent.id))
         Rails.logger.warn "⚠️ Load already exists for payment intent #{payment_intent.id} (load #{existing.id}); re-checking notification"
-        enqueue_notification(existing.gift_card_id) unless notified?(existing)
+        enqueue_notification(existing.id) unless notified?(existing)
         return nil
       end
 
@@ -116,20 +116,20 @@ module Loads
       end
       card.reload
 
-      # 7. Notifications (card-level until Phase 3b moves them per load).
+      # 7. Notifications, receipt and hold mail are per load (§5.9).
       if load.held?
         Rails.logger.warn "🛡️ Load #{load.id} on card #{card.id} placed on security hold until #{load.held_until.iso8601} (risk_score=#{risk[:score]}, level=#{risk[:level]})"
-        GiftCardHoldMailer.held(card.id).deliver_later
+        GiftCardHoldMailer.held(load.id).deliver_later
       end
 
       begin
-        PurchaseConfirmationMailer.receipt(card.id).deliver_later
+        PurchaseConfirmationMailer.receipt(load.id).deliver_later
       rescue => e
-        Rails.logger.error "✉️ Failed to enqueue purchase receipt for card #{card.id}: #{e.class} - #{e.message}"
+        Rails.logger.error "✉️ Failed to enqueue purchase receipt for load #{load.id}: #{e.class} - #{e.message}"
         Sentry.capture_exception(e) if defined?(Sentry)
       end
 
-      enqueue_notification(card.id)
+      enqueue_notification(load.id)
 
       Rails.logger.info "✅ Fulfilled payment intent #{payment_intent.id}: load #{load.id} (#{subtotal_cents} #{load.currency}) on card #{card.id} for #{recipient.email}; balance now #{card.remaining_balance}"
       load
@@ -189,22 +189,20 @@ module Loads
     end
 
     def notified?(load)
-      card = load.gift_card
-      load.sent_via_email? || load.sent_via_sms? || load.sent_via_whatsapp? || load.sent_via_push? ||
-        card.sent_via_email? || card.sent_via_sms? || card.sent_via_whatsapp? || card.sent_via_push?
+      load.sent_via_email? || load.sent_via_sms? || load.sent_via_whatsapp? || load.sent_via_push?
     end
 
     # In production never block the webhook on a sync send; in development
     # and test fall back to perform_now when Sidekiq/Redis is unavailable.
-    def enqueue_notification(gift_card_id)
-      NotificationJob.perform_later(gift_card_id)
-      Rails.logger.info "📤 Enqueued notification job for gift card #{gift_card_id} (async)"
+    def enqueue_notification(load_id)
+      LoadNotificationJob.perform_later(load_id)
+      Rails.logger.info "📤 Enqueued notification job for load #{load_id} (async)"
     rescue NoMethodError, Redis::CannotConnectError => e
       if Rails.env.production?
-        Rails.logger.error "❌ Sidekiq/Redis unavailable (#{e.class}); notification not sent for gift_card_id=#{gift_card_id}."
+        Rails.logger.error "❌ Sidekiq/Redis unavailable (#{e.class}); notification not sent for load_id=#{load_id}."
       else
         Rails.logger.warn "⚠️ Sidekiq not available (#{e.class}), sending notification synchronously"
-        NotificationJob.perform_now(gift_card_id)
+        LoadNotificationJob.perform_now(load_id)
       end
     rescue => e
       Rails.logger.error "❌ Failed to enqueue/send notification: #{e.message}"

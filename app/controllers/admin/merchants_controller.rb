@@ -5,7 +5,7 @@ class Admin::MerchantsController < Admin::BaseController
 
   PER_PAGE = 24
   STATUS_FILTERS = %w[all active suspended].freeze
-  CARD_FILTERS = %w[all active redeemed held disputed].freeze
+  CARD_FILTERS = %w[all active frozen zero_balance held disputed].freeze
   CARDS_PER_PAGE = 20
 
   def index
@@ -48,19 +48,21 @@ class Admin::MerchantsController < Admin::BaseController
     @stats = merchant_stats(@merchant)
 
     @cards_filter = CARD_FILTERS.include?(params[:cards]) ? params[:cards] : "all"
+    cards = @merchant.gift_cards.not_merged
     cards_scope =
       case @cards_filter
-      when "active" then @merchant.gift_cards.active
-      when "redeemed" then @merchant.gift_cards.redeemed
-      when "held" then @merchant.gift_cards.currently_held
-      when "disputed" then @merchant.gift_cards.disputed
-      else @merchant.gift_cards
+      when "active" then cards.active
+      when "frozen" then cards.frozen_by_admin
+      when "zero_balance" then cards.where(remaining_balance: 0).where.not(status: GiftCard.statuses[:canceled])
+      when "held" then cards.currently_held
+      when "disputed" then cards.disputed
+      else cards
       end
 
     @cards_total_count = cards_scope.count
     @cards_page = [params[:cards_page].to_i, 1].max
     @cards_total_pages = [(@cards_total_count.to_f / CARDS_PER_PAGE).ceil, 1].max
-    @gift_cards = cards_scope.includes(:sender, :recipient)
+    @gift_cards = cards_scope.includes(:recipient, :loads)
                              .order(created_at: :desc)
                              .offset((@cards_page - 1) * CARDS_PER_PAGE)
                              .limit(CARDS_PER_PAGE)
@@ -209,18 +211,23 @@ class Admin::MerchantsController < Admin::BaseController
     params.require(:user).permit(:first_name, :last_name, :email, :phone, :password, :password_confirmation)
   end
 
+  # §9: card counts from cards, volume from loads (one card now carries many
+  # purchases), redeemed volume from the ledger (unchanged, I10).
   def merchant_stats(merchant)
-    gift_cards = merchant.gift_cards
+    gift_cards = merchant.gift_cards.not_merged
+    loads = GiftCardLoad.in_scope.where(gift_card_id: gift_cards.select(:id))
     {
       total_cards: gift_cards.count,
       active_cards: gift_cards.active.count,
-      redeemed_cards: gift_cards.redeemed.count,
+      frozen_cards: gift_cards.frozen_by_admin.count,
+      zero_balance_cards: gift_cards.where(remaining_balance: 0).where.not(status: GiftCard.statuses[:canceled]).count,
       held_cards: gift_cards.currently_held.count,
       disputed_cards: gift_cards.disputed.count,
-      issued_volume_cents: gift_cards.sum(:amount),
-      remaining_balance_cents: gift_cards.active.sum(:remaining_balance),
+      loads_count: loads.count,
+      issued_volume_cents: loads.sum(:amount_cents),
+      remaining_balance_cents: gift_cards.active_or_frozen.sum(:remaining_balance),
       redemption_volume_cents: Transaction.net_redeemed_cents(merchant_id: merchant.id),
-      last_card_at: gift_cards.maximum(:created_at)
+      last_load_at: loads.maximum(:created_at)
     }
   end
 
@@ -229,12 +236,15 @@ class Admin::MerchantsController < Admin::BaseController
   def batch_merchant_stats(merchant_ids)
     return {} if merchant_ids.empty?
 
-    cards = GiftCard.where(merchant_id: merchant_ids)
+    cards = GiftCard.not_merged.where(merchant_id: merchant_ids)
     total_counts = cards.group(:merchant_id).count
     active_counts = cards.active.group(:merchant_id).count
-    redeemed_counts = cards.redeemed.group(:merchant_id).count
-    issued_volume = cards.group(:merchant_id).sum(:amount)
-    active_balance = cards.active.group(:merchant_id).sum(:remaining_balance)
+    zero_counts = cards.where(remaining_balance: 0).where.not(status: GiftCard.statuses[:canceled]).group(:merchant_id).count
+    issued_volume = GiftCardLoad.in_scope.joins(:gift_card).where(gift_cards: { merchant_id: merchant_ids, merged_into_id: nil })
+                                .group("gift_cards.merchant_id").sum(:amount_cents)
+    load_counts = GiftCardLoad.in_scope.joins(:gift_card).where(gift_cards: { merchant_id: merchant_ids, merged_into_id: nil })
+                              .group("gift_cards.merchant_id").count
+    active_balance = cards.active_or_frozen.group(:merchant_id).sum(:remaining_balance)
     redeemed_volume = Transaction.net_redeemed_cents_by_merchant
                                  .slice(*merchant_ids)
 
@@ -242,7 +252,8 @@ class Admin::MerchantsController < Admin::BaseController
       {
         total_cards: total_counts[id].to_i,
         active_cards: active_counts[id].to_i,
-        redeemed_cards: redeemed_counts[id].to_i,
+        zero_balance_cards: zero_counts[id].to_i,
+        loads_count: load_counts[id].to_i,
         issued_volume_cents: issued_volume[id].to_i,
         remaining_balance_cents: active_balance[id].to_i,
         redemption_volume_cents: redeemed_volume[id].to_i

@@ -16,15 +16,31 @@ class Admin::DashboardController < Admin::BaseController
       deleted: consumers.where.not(deleted_at: nil).count
     }
 
+    # §9: liability = every non-canceled card's balance (frozen cards still
+    # owe); issued volume = every load ever credited.
+    cards = GiftCard.not_merged
+    loads = GiftCardLoad.in_scope
     @cards = {
-      total: GiftCard.count,
-      active: GiftCard.active.count,
-      redeemed: GiftCard.redeemed.count,
-      held: GiftCard.currently_held.count,
-      disputed: GiftCard.disputed.count,
-      issued_volume_cents: GiftCard.sum(:amount),
-      liability_cents: GiftCard.active.sum(:remaining_balance)
+      total: cards.count,
+      active: cards.active.count,
+      frozen: cards.frozen_by_admin.count,
+      zero_balance: cards.where(remaining_balance: 0).where.not(status: GiftCard.statuses[:canceled]).count,
+      held: cards.currently_held.count,
+      held_cents: loads.currently_held.sum(:remaining_cents),
+      disputed: cards.disputed.count,
+      disputed_cents: loads.dispute_open.sum(:remaining_cents),
+      loads_total: loads.count,
+      issued_volume_cents: loads.sum(:amount_cents),
+      liability_cents: cards.active_or_frozen.sum(:remaining_balance)
     }
+
+    # §4.5 remittance-rule counter: each Stripe load from a buyer outside
+    # Ecuador is a potential CFPB "remittance transfer"; the safe harbor is
+    # 500 per calendar year (current and prior).
+    @remittances = Loads::RemittanceCounter.summary
+
+    # §12.4: last nightly reconcile (drift count + when).
+    @ledger = Ledger::ReconcileJob.last_result
 
     purchases = Transaction.where(txn_type: :purchase, status: :succeeded)
     redemptions = Transaction.where(txn_type: :redemption, status: :succeeded)
@@ -70,8 +86,8 @@ class Admin::DashboardController < Admin::BaseController
       failed_refunds: Transaction.refunds.where(status: :failed).count
     }
 
-    @recent_gift_cards = GiftCard.includes(:recipient).order(created_at: :desc).limit(5)
-    @recent_transactions = Transaction.includes(:merchant, gift_card: :sender).order(created_at: :desc).limit(8)
+    @recent_gift_cards = GiftCard.not_merged.includes(:recipient).order(Arel.sql("COALESCE(last_loaded_at, created_at) DESC")).limit(5)
+    @recent_transactions = Transaction.includes(:merchant, :user, gift_card: :recipient).order(created_at: :desc).limit(8)
     @latest_merchants = Merchant.order(created_at: :desc).limit(5)
     @redeemed_by_merchant = redemptions.group(:merchant_id).sum(:amount)
 

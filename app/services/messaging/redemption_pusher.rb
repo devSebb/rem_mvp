@@ -18,7 +18,8 @@ module Messaging
       recipient = @gift_card.recipient
       return { success: false, error: "No recipient" } unless recipient
 
-      remaining_cents = @gift_card.reload.remaining_balance
+      # "Saldo restante" is what the customer can still spend now (§3.4).
+      remaining_cents = @gift_card.reload.spendable_cents
       currency = @gift_card.currency
       merchant_name = @merchant&.store_name || "Papayal"
       amount_label = format_amount(@amount_cents, currency)
@@ -42,7 +43,7 @@ module Messaging
 
     def format_amount(cents, currency)
       return "-" if cents.nil?
-      "#{currency} #{format("%.2f", cents / 100.0)}"
+      Money.format(cents, currency: currency)
     end
   end
 end

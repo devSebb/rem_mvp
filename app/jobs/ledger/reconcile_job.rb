@@ -33,6 +33,13 @@ module Ledger
         AdminAlertMailer.ledger_drift(summary).deliver_later
       end
 
+      # §4.5: remittance-rule counter, alert at 400 (once per year).
+      begin
+        Loads::RemittanceCounter.alert_if_needed!
+      rescue => e
+        Rails.logger.error "[Ledger::ReconcileJob] remittance counter failed: #{e.class} - #{e.message}"
+      end
+
       summary
     end
 
@@ -43,11 +50,13 @@ module Ledger
     private
 
     # Status is derived at write time; a hold expiring is not a write. Bring
-    # the cached column back in line so admin filters stay truthful.
+    # the cached column back in line so admin filters stay truthful, and
+    # tell the recipient their funds are spendable (§4.4 "hold released").
     def sync_stale_load_statuses
       synced = 0
       GiftCardLoad.where(status: :held).where("held_until IS NULL OR held_until <= ?", Time.current).find_each do |load|
-        load.sync_status!
+        new_status = load.sync_status!
+        Messaging::LoadEventPusher.hold_released(load) if new_status == :available
         synced += 1
       end
       synced

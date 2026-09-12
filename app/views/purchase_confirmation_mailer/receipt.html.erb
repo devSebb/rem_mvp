@@ -1,8 +1,8 @@
 <% content_for :preview_title, "Tu recibo de Papayal" %>
-<% content_for :preheader do %>Compra confirmada — <%= @currency %> <%= format("%.2f", @total_cents / 100.0) %> para <%= @merchant&.store_name %>.<% end %>
+<% content_for :preheader do %>Compra confirmada — <%= money(@total_cents) %> para <%= @merchant&.store_name %>.<% end %>
 
 <div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:14px;">
-  Compra confirmada
+  <%= @first_load && !@self_load ? "Compra confirmada" : "Recarga confirmada" %>
 </div>
 
 <h1 style="margin:0 0 8px 0; font-size:28px; line-height:1.2; font-weight:800; letter-spacing:-0.6px; color:#0D2F32;">
@@ -10,7 +10,13 @@
 </h1>
 
 <p style="margin:0 0 24px 0; font-size:16px; line-height:1.65; color:#2C3A43;">
-  Tu tarjeta de regalo ya está en camino a <strong style="color:#0D2F32;"><%= @recipient_label %></strong>.
+  <% if @self_load %>
+    Tu tarjeta de regalo digital de <strong style="color:#0D2F32;"><%= @merchant&.store_name %></strong> ya tiene <%= money(@subtotal_cents) %> más.
+  <% elsif @first_load %>
+    <strong style="color:#0D2F32;"><%= @recipient_label %></strong> recibirá una tarjeta de regalo digital de <%= @merchant&.store_name %> con <%= money(@subtotal_cents) %>. Ya le avisamos.
+  <% else %>
+    Añadimos <%= money(@subtotal_cents) %> a la tarjeta de <%= @merchant&.store_name %> de <strong style="color:#0D2F32;"><%= @recipient_label %></strong>. Ya le avisamos.
+  <% end %>
   Aquí tienes el recibo de tu compra.
 </p>
 
@@ -18,7 +24,7 @@
 <div style="text-align:center; background:#FDF1E1; border:1px solid #F1E2CB; border-radius:16px; padding:22px 16px; margin:0 0 24px 0;">
   <div style="font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#8A7A63; margin-bottom:6px;">Total pagado</div>
   <div style="font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:36px; font-weight:800; letter-spacing:-1px; color:#0D2F32;">
-    <%= @currency %> <%= format("%.2f", @total_cents / 100.0) %>
+    <%= money(@total_cents) %>
   </div>
 </div>
 
@@ -28,23 +34,25 @@
     <td style="padding:11px 0; border-top:1px solid #F1E2CB; color:#6A7780;">Comercio</td>
     <td align="right" style="padding:11px 0; border-top:1px solid #F1E2CB; font-weight:600; color:#0D2F32;"><%= @merchant&.store_name %></td>
   </tr>
+  <% unless @self_load %>
   <tr>
     <td style="padding:11px 0; border-top:1px solid #F1E2CB; color:#6A7780;">Enviada a</td>
     <td align="right" style="padding:11px 0; border-top:1px solid #F1E2CB; font-weight:600; color:#0D2F32;"><%= @recipient_label %></td>
   </tr>
+  <% end %>
   <tr>
-    <td style="padding:11px 0; border-top:1px solid #F1E2CB; color:#6A7780;">Valor de la tarjeta</td>
-    <td align="right" style="padding:11px 0; border-top:1px solid #F1E2CB;"><%= @currency %> <%= format("%.2f", @subtotal_cents / 100.0) %></td>
+    <td style="padding:11px 0; border-top:1px solid #F1E2CB; color:#6A7780;"><%= @first_load ? "Monto" : "Recarga" %></td>
+    <td align="right" style="padding:11px 0; border-top:1px solid #F1E2CB;"><%= money(@subtotal_cents) %></td>
   </tr>
   <% if @fee_cents.positive? %>
   <tr>
-    <td style="padding:11px 0; border-top:1px solid #F1E2CB; color:#6A7780;">Costo de servicio</td>
-    <td align="right" style="padding:11px 0; border-top:1px solid #F1E2CB;"><%= @currency %> <%= format("%.2f", @fee_cents / 100.0) %></td>
+    <td style="padding:11px 0; border-top:1px solid #F1E2CB; color:#6A7780;">Tarifa</td>
+    <td align="right" style="padding:11px 0; border-top:1px solid #F1E2CB;"><%= money(@fee_cents) %></td>
   </tr>
   <% end %>
   <tr>
-    <td style="padding:13px 0; border-top:2px solid #F1E2CB; font-weight:800; color:#0D2F32;">Total</td>
-    <td align="right" style="padding:13px 0; border-top:2px solid #F1E2CB; font-weight:800; color:#0D2F32;"><%= @currency %> <%= format("%.2f", @total_cents / 100.0) %></td>
+    <td style="padding:13px 0; border-top:2px solid #F1E2CB; font-weight:800; color:#0D2F32;">Total a pagar</td>
+    <td align="right" style="padding:13px 0; border-top:2px solid #F1E2CB; font-weight:800; color:#0D2F32;"><%= money(@total_cents) %></td>
   </tr>
 </table>
 

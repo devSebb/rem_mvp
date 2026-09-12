@@ -75,21 +75,31 @@ Rails.application.routes.draw do
       # Public remote config (fees, limits, kill switches, min app versions)
       get "config", to: "config#show"
 
-      # Public claim-link teaser (unauthenticated; throttled in rack_attack)
+      # Public claim-link teaser (unauthenticated; throttled in rack_attack).
+      # The token resolves a LOAD (§8.2).
       get "claim/:token", to: "claim_links#show"
 
-      # Mobile post-checkout polling: returns the buyer's gift card for a
-      # Stripe payment intent once the webhook has created it (404 until then).
+      # Mobile post-checkout polling: returns the card + load for a Stripe
+      # payment intent once the webhook has created the load (404 until then).
       get "gift_cards/by_payment_intent/:payment_intent_id", to: "me/gift_cards#by_payment_intent"
+
+      # Buyer's "Enviadas" list (loads I paid) and the activity feed (§8.2).
+      get "me/loads", to: "me/loads#sent"
+      get "me/activity", to: "me/activity#index"
 
       namespace :me do
         resources :gift_cards, only: [:index, :show] do
           post :redemption_token, on: :member
-          # Sender-side sharing: a claim URL + prewritten message for the
-          # native share sheet, and a throttled re-delivery of the original
-          # WhatsApp/SMS/email notification.
+          # Card-level share/resend kept as compat shims for the store app:
+          # they act on the latest load the caller paid onto the card (§5.9).
           post :share_link, on: :member
           post :resend, on: :member
+          # Per-load sharing: claim URL + prewritten message for the native
+          # share sheet, and a throttled re-delivery of that load's notification.
+          resources :loads, only: [:index] do
+            post :share_link, on: :member
+            post :resend, on: :member
+          end
         end
         resource :push_tokens, only: [:create, :destroy]
       end
@@ -139,6 +149,16 @@ Rails.application.routes.draw do
       end
     end
     resources :gift_cards, only: [:index, :show] do
+      member do
+        patch :freeze
+        patch :unfreeze
+        patch :cancel
+      end
+      # Type B refunds are per LOAD (§9): /admin/gift_cards/:id/loads/:load_id/refund
+      resources :loads, only: [] do
+        resource :refund, only: [:new, :create], controller: "refunds"
+      end
+      # Card-level path kept for old links; defaults to the latest refundable load.
       resources :refunds, only: [:new, :create], path: 'refund'
     end
     resources :transactions, only: [:index]
@@ -146,6 +166,7 @@ Rails.application.routes.draw do
     resources :payouts, only: [:index, :show, :create] do
       member { post :mark_paid }
     end
+    # Held LOADS; release is per load (§9).
     resources :holds, only: [:index] do
       member { post :release }
     end

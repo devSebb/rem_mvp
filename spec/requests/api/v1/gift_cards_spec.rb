@@ -68,7 +68,7 @@ RSpec.describe "Api::V1::GiftCards", type: :request do
       expect(body["error"]).to eq("Unauthorized")
     end
 
-    it "allows validation even when the gift card was issued by another merchant" do
+    it "declines merchant_mismatch (403) for a merchant outside the issuer's redemption group (D6)" do
       other_secret = "other-secret"
       create_merchant(secret: other_secret)
 
@@ -76,9 +76,52 @@ RSpec.describe "Api::V1::GiftCards", type: :request do
            params: { token: raw_token, amount_cents: 2_000 }.to_json,
            headers: auth_headers(other_secret)
 
-      expect(response).to have_http_status(:ok)
+      expect(response).to have_http_status(:forbidden)
       body = JSON.parse(response.body)
-      expect(body["valid"]).to eq(true)
+      expect(body["valid"]).to eq(false)
+      expect(body["error"]).to eq("merchant_mismatch")
+    end
+
+    it "allows validation by a merchant in the same redemption group" do
+      group = RedemptionGroup.create!(name: "Farmaenlace")
+      other_secret = "other-secret"
+      merchant.update!(redemption_group: group)
+      create_merchant(secret: other_secret).update!(redemption_group: group)
+
+      post endpoint,
+           params: { token: raw_token, amount_cents: 2_000 }.to_json,
+           headers: auth_headers(other_secret)
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["valid"]).to eq(true)
+    end
+
+    it "reports spendable (not total) balance and the held/disputed breakdown (§5.4)" do
+      stripe_load!(gift_card, 3_000, sender: gift_card.recipient, held_until: 2.hours.from_now)
+
+      post endpoint,
+           params: { token: raw_token, amount_cents: 11_000 }.to_json,
+           headers: auth_headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      body = JSON.parse(response.body)
+      expect(body["error"]).to eq("insufficient_funds")
+      expect(body["remaining_balance_cents"]).to eq(10_000)
+      expect(body["spendable_cents"]).to eq(10_000)
+      expect(body["total_balance_cents"]).to eq(13_000)
+      expect(body["held_cents"]).to eq(3_000)
+      expect(body["disputed_cents"]).to eq(0)
+    end
+
+    it "declines card_frozen for an admin-frozen card" do
+      gift_card.update!(status: :frozen_by_admin)
+
+      post endpoint,
+           params: { token: raw_token, amount_cents: 2_000 }.to_json,
+           headers: auth_headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["error"]).to eq("card_frozen")
     end
   end
 
@@ -90,8 +133,23 @@ RSpec.describe "Api::V1::GiftCards", type: :request do
       body = JSON.parse(response.body)
       expect(body["gift_card_id"]).to eq(gift_card.id)
       expect(body["balance_cents"]).to eq(gift_card.remaining_balance)
+      expect(body["spendable_cents"]).to eq(gift_card.remaining_balance)
+      expect(body["total_balance_cents"]).to eq(gift_card.remaining_balance)
       expect(body["currency"]).to eq(gift_card.currency)
       expect(body["status"]).to eq(gift_card.status)
+    end
+
+    it "reports the spendable balance and 'frozen' status" do
+      stripe_load!(gift_card, 2_000, sender: gift_card.recipient, disputed_at: 1.hour.ago)
+      get "/api/v1/gift_cards/#{raw_token}", headers: auth_headers
+      body = JSON.parse(response.body)
+      expect(body["balance_cents"]).to eq(10_000)
+      expect(body["total_balance_cents"]).to eq(12_000)
+      expect(body["disputed_cents"]).to eq(2_000)
+
+      gift_card.update!(status: :frozen_by_admin)
+      get "/api/v1/gift_cards/#{raw_token}", headers: auth_headers
+      expect(JSON.parse(response.body)["status"]).to eq("frozen")
     end
 
     it "returns 404 when the token is unknown" do

@@ -1,17 +1,30 @@
-<% content_for :preview_title, "Recibiste una tarjeta de regalo Papayal" %>
-<% content_for :preheader do %><%= @sender.name %> te envió una tarjeta de regalo de <%= @gift_card.currency %> <%= format("%.2f", @gift_card.amount / 100.0) %>.<% end %>
+<% if @first_load %>
+  <% content_for :preview_title, "Recibiste una tarjeta de regalo digital" %>
+  <% content_for :preheader do %><%= @sender_name %> te envió una tarjeta de regalo digital de <%= @merchant_name %> por <%= @amount_label %>.<% end %>
+<% else %>
+  <% content_for :preview_title, "Recarga en tu tarjeta de #{@merchant_name}" %>
+  <% content_for :preheader do %><%= @sender_name %> añadió <%= @amount_label %> a tu tarjeta de <%= @merchant_name %>. Saldo disponible: <%= @spendable_label %>.<% end %>
+<% end %>
 
 <!-- Eyebrow -->
 <div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:14px;">
-  Recibiste un regalo
+  <%= @first_load ? "Recibiste un regalo" : "Recarga recibida" %>
 </div>
 
 <h1 style="margin:0 0 18px 0; font-size:30px; line-height:1.2; font-weight:800; letter-spacing:-0.8px; color:#0D2F32;">
-  ¡Tienes una tarjeta de regalo Papayal!
+  <% if @first_load %>
+    ¡Recibiste una tarjeta de regalo digital de <%= @merchant_name %>!
+  <% else %>
+    <%= @sender_name %> recargó tu tarjeta de <%= @merchant_name %>
+  <% end %>
 </h1>
 
 <p style="margin:0 0 22px 0; font-size:16px; line-height:1.65; color:#2C3A43;">
-  <%= @sender.name %> te envió una tarjeta de regalo para que la disfrutes en los comercios afiliados de Papayal.
+  <% if @first_load %>
+    <%= @sender_name %> te envió <%= @amount_label %> para usar en <%= @merchant_name %>. Tu tarjeta no vence.
+  <% else %>
+    <%= @sender_name %> añadió <%= @amount_label %> a tu tarjeta. Saldo disponible: <strong style="color:#0D2F32;"><%= @spendable_label %></strong>.
+  <% end %>
 </p>
 
 <!-- Amount -->
@@ -19,11 +32,14 @@
   <tr>
     <td align="center" style="padding:22px 0; background-color:#FDF1E1; border:1px solid #F1E2CB; border-radius:16px;">
       <div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:6px;">
-        Monto
+        <%= @first_load ? "Monto" : "Recarga" %>
       </div>
       <div style="font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:38px; font-weight:800; letter-spacing:-1px; color:#0D2F32;">
-        <%= @gift_card.currency %> <%= format("%.2f", @gift_card.amount / 100.0) %>
+        <%= @amount_label %>
       </div>
+      <% unless @first_load %>
+        <div style="font-size:13px; color:#2C3A43; margin-top:6px;">Saldo disponible: <%= @spendable_label %></div>
+      <% end %>
     </td>
   </tr>
 </table>
@@ -32,8 +48,11 @@
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">
   <tr>
     <td style="padding:16px 18px; background-color:#FFFFFF; border:1px solid #F1E2CB; border-radius:12px; font-size:15px; line-height:1.6; color:#2C3A43;">
-      <strong style="color:#0D2F32;">De:</strong> <%= @sender.name %><br>
-      <strong style="color:#0D2F32;">Email:</strong> <%= @sender.email %>
+      <strong style="color:#0D2F32;">De:</strong> <%= @sender&.name.presence || @sender_name %><br>
+      <strong style="color:#0D2F32;">Comercio:</strong> <%= @merchant_name %>
+      <% if @load.note.present? %>
+        <br><em>“<%= @load.note %>”</em>
+      <% end %>
     </td>
   </tr>
 </table>
@@ -54,7 +73,7 @@
     <td align="center" bgcolor="#FCA50F" style="border-radius:999px;">
       <a href="<%= @claim_url %>" class="pyl-btn"
          style="display:inline-block; padding:15px 38px; font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:16px; font-weight:700; color:#3A1E00; text-decoration:none; border-radius:999px;">
-        Reclamar mi tarjeta
+        <%= @first_load ? "Reclamar mi tarjeta" : "Ver mi tarjeta" %>
       </a>
     </td>
   </tr>
@@ -65,20 +84,15 @@
   Cómo canjear
 </div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 4px 0;">
+  <% [
+    "Abre Papayal y entra a Mis tarjetas.",
+    "Selecciona tu tarjeta de #{@merchant_name}.",
+    "Genera el QR o código de canje dentro de la app.",
+    "Muéstralo al cajero de #{@merchant_name}."
+  ].each_with_index do |step, i| %>
   <tr>
-    <td width="34" valign="top" style="padding:8px 0; font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:16px; font-weight:800; color:#E08A00;">1</td>
-    <td style="padding:8px 0; font-size:15px; line-height:1.55; color:#2C3A43;">Abre Papayal e ingresa a tu billetera.</td>
+    <td width="34" valign="top" style="padding:8px 0; font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:16px; font-weight:800; color:#E08A00;"><%= i + 1 %></td>
+    <td style="padding:8px 0; font-size:15px; line-height:1.55; color:#2C3A43;"><%= step %></td>
   </tr>
-  <tr>
-    <td width="34" valign="top" style="padding:8px 0; font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:16px; font-weight:800; color:#E08A00;">2</td>
-    <td style="padding:8px 0; font-size:15px; line-height:1.55; color:#2C3A43;">Selecciona esta tarjeta de regalo.</td>
-  </tr>
-  <tr>
-    <td width="34" valign="top" style="padding:8px 0; font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:16px; font-weight:800; color:#E08A00;">3</td>
-    <td style="padding:8px 0; font-size:15px; line-height:1.55; color:#2C3A43;">Genera el QR o código de canje dentro de la app.</td>
-  </tr>
-  <tr>
-    <td width="34" valign="top" style="padding:8px 0; font-family:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:16px; font-weight:800; color:#E08A00;">4</td>
-    <td style="padding:8px 0; font-size:15px; line-height:1.55; color:#2C3A43;">Muéstralo al cajero del comercio participante.</td>
-  </tr>
+  <% end %>
 </table>

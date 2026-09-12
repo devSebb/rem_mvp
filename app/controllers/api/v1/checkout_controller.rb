@@ -47,8 +47,10 @@ module Api
         merchant_id = params.require(:merchant_id).to_s.strip
         amount_cents = params.require(:amount_cents).to_i
         currency = params.require(:currency).to_s.upcase
-        recipient_params = params.require(:recipient).permit(:name, :email, :phone, :note)
+        recipient_params = params.require(:recipient).permit(:name, :email, :phone, :note, :self)
         draft_id = params[:draft_id].to_s.strip.presence
+        # §8.3: `recipient.self: true` reloads the buyer's own card.
+        self_load = ActiveModel::Type::Boolean.new.cast(recipient_params[:self]) == true
 
         # Validate merchant
         unless merchant_id.match?(/\A\d+\z/)
@@ -81,7 +83,7 @@ module Api
         return unless validate_amount!(amount_cents)
 
         # Validate recipient
-        if recipient_params[:phone].blank? && recipient_params[:email].blank?
+        if !self_load && recipient_params[:phone].blank? && recipient_params[:email].blank?
           return render_error(
             code: "invalid_recipient",
             message: "Recipient phone or email is required",
@@ -90,13 +92,18 @@ module Api
         end
 
         # §4.1 caps (D7). The prospective recipient is resolved exactly as the
-        # webhook will (phone → email) but never created here; recipient- and
-        # card-level caps are re-checked at fulfilment.
-        prospective_recipient = Loads::Fulfill.find_recipient(
-          "recipient_phone" => recipient_params[:phone], "recipient_email" => recipient_params[:email]
-        )
+        # webhook will (self → buyer; else phone → email) but never created
+        # here; recipient- and card-level caps are re-checked at fulfilment.
+        prospective_recipient =
+          if self_load
+            current_user
+          else
+            Loads::Fulfill.find_recipient(
+              "recipient_phone" => recipient_params[:phone], "recipient_email" => recipient_params[:email]
+            )
+          end
         begin
-          Loads::CapChecker.check!(
+          cap_result = Loads::CapChecker.check!(
             buyer: current_user, recipient: prospective_recipient, merchant: merchant, amount_cents: amount_cents
           )
         rescue Loads::CapChecker::CapExceeded => e
@@ -107,6 +114,26 @@ module Api
             details: e.details
           )
         end
+
+        # What the webhook will resolve the recipient to, so Loads::Fulfill
+        # needs no second lookup for self-loads (§5.2).
+        recipient_metadata =
+          if self_load
+            {
+              recipient_user_id: current_user.id.to_s,
+              recipient_email: current_user.placeholder_email? ? '' : current_user.email.to_s,
+              recipient_phone: current_user.phone.to_s,
+              recipient_name: current_user.full_name.presence || current_user.name.to_s,
+              recipient_note: ''
+            }
+          else
+            {
+              recipient_email: recipient_params[:email] || '',
+              recipient_phone: recipient_params[:phone] || '',
+              recipient_name: recipient_params[:name] || 'Gift Card Recipient',
+              recipient_note: recipient_params[:note] || ''
+            }
+          end
 
         # Server-side price breakdown: the buyer is charged subtotal + fee.
         # The gift card's face value stays the subtotal (webhook reads the
@@ -145,16 +172,12 @@ module Api
               payment_method_options: {
                 card: { request_three_d_secure: "automatic" }
               },
-              metadata: {
+              metadata: recipient_metadata.merge(
                 sender_id: current_user.id.to_s,
-                recipient_email: recipient_params[:email] || '',
-                recipient_phone: recipient_params[:phone] || '',
-                recipient_name: recipient_params[:name] || 'Gift Card Recipient',
-                recipient_note: recipient_params[:note] || '',
                 merchant_id: merchant.id.to_s,
                 subtotal_cents: quote.subtotal_cents.to_s,
                 fee_cents: quote.fee_cents.to_s
-              }
+              )
             },
             { idempotency_key: idempotency_key }
           )
@@ -167,10 +190,18 @@ module Api
             "stripe_request_id=#{stripe_request_id || 'N/A'}"
           )
 
+          # §8.3 `target`: the card this payment will land on (nil when the
+          # recipient has no card at this merchant yet) and the projected balance.
           render_success(data: {
             client_secret: payment_intent.client_secret,
             payment_intent_id: payment_intent.id,
-            quote: quote_payload(quote)
+            quote: quote_payload(quote),
+            target: {
+              self: self_load,
+              existing_card_id: cap_result.card&.id,
+              current_balance_cents: cap_result.current_balance_cents,
+              projected_balance_cents: cap_result.projected_balance_cents
+            }
           })
         rescue Stripe::StripeError => e
           log_stripe_error(e)
@@ -208,14 +239,16 @@ module Api
         false
       end
 
+      # Coarse sanity check; the real per-load range (§4.1) is enforced by
+      # Loads::CapChecker (`checkout.load_amount_out_of_range`).
       def validate_amount!(amount_cents)
         message =
           if amount_cents <= 0
             "Amount must be greater than 0"
           elsif amount_cents < 100
             "Amount must be at least $1.00"
-          elsif amount_cents > GiftCard::MAX_AMOUNT_CENTS
-            "El monto máximo por tarjeta de regalo es $#{GiftCard::MAX_AMOUNT_CENTS / 100.0} USD"
+          elsif amount_cents > GiftCardLoad::MAX_LOAD_CENTS
+            "El monto máximo por recarga es $#{GiftCardLoad::MAX_LOAD_CENTS / 100.0} USD"
           end
 
         return true if message.nil?
@@ -267,7 +300,7 @@ module Api
         else
           # Time bucket: 10 minutes (600 seconds)
           time_bucket = Time.now.to_i / 600
-          recipient_identifier = recipient_params[:email].presence || recipient_params[:phone].presence || ''
+          recipient_identifier = recipient_params[:email].presence || recipient_params[:phone].presence || (recipient_params[:self].present? ? "self:#{user_id}" : '')
           recipient_name = recipient_params[:name].presence || ''
 
           raw_key = [

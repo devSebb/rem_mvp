@@ -1,8 +1,9 @@
 module GiftCards
-  # Sender-triggered re-delivery of a gift card notification ("the recipient
+  # Sender-triggered re-delivery of a LOAD's notification ("the recipient
   # never got the WhatsApp"). Wraps Messaging::Notifier#resend_delivery in
-  # per-card throttles so the button can't be used to spam the recipient:
-  # one resend per COOLDOWN, at most DAILY_LIMIT per rolling day.
+  # throttles keyed on the CARD (the recipient is who gets spammed, and one
+  # card has one recipient): one resend per COOLDOWN, at most DAILY_LIMIT
+  # per rolling day.
   class ResendDelivery
     COOLDOWN = 60.seconds
     DAILY_LIMIT = 3
@@ -20,8 +21,8 @@ module GiftCards
       new(...).call
     end
 
-    def initialize(gift_card:)
-      @gift_card = gift_card
+    def initialize(load:)
+      @load = load
     end
 
     def call
@@ -31,13 +32,13 @@ module GiftCards
       Rails.cache.write(cooldown_key, Time.current.to_i, expires_in: COOLDOWN)
       Rails.cache.increment(daily_key, 1, expires_in: 24.hours)
 
-      ResendNotificationJob.perform_later(gift_card.id)
+      LoadResendNotificationJob.perform_later(load.id)
       true
     end
 
     private
 
-    attr_reader :gift_card
+    attr_reader :load
 
     def enforce_cooldown!
       started_at = Rails.cache.read(cooldown_key)
@@ -53,11 +54,11 @@ module GiftCards
     end
 
     def cooldown_key
-      "gift_cards:resend:cooldown:#{gift_card.id}"
+      "gift_cards:resend:cooldown:#{load.gift_card_id}"
     end
 
     def daily_key
-      "gift_cards:resend:daily:#{gift_card.id}"
+      "gift_cards:resend:daily:#{load.gift_card_id}"
     end
   end
 end

@@ -26,7 +26,7 @@
     <p class="text-[10px] text-[#2C3A43]/60">
       <%= link_to "#{stats[:active_cards]} activas", admin_merchant_path(merchant, cards: "active", anchor: "tarjetas"), class: "hover:underline" %>
       ·
-      <%= link_to "#{stats[:redeemed_cards]} canjeadas", admin_merchant_path(merchant, cards: "redeemed", anchor: "tarjetas"), class: "hover:underline" %>
+      <%= link_to "#{stats[:zero_balance_cards]} sin saldo", admin_merchant_path(merchant, cards: "zero_balance", anchor: "tarjetas"), class: "hover:underline" %>
     </p>
   </td>
   <td class="px-4 py-3 text-right font-medium text-[#0D2F32]">

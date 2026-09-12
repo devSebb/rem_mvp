@@ -1,67 +1,74 @@
 module Messaging
+  # Recipient-facing delivery for ONE load (RELOADABLE_CARD_PLAN.md §5.9,
+  # copy §4.4). Three templates:
+  #   first load on the card → "recibiste una tarjeta de regalo digital…"
+  #   reload                 → "{Sender} añadió $X a tu tarjeta…" + spendable
+  #   self-load              → push only ("Recarga confirmada")
+  # Delivery flags (sent_via_*) live on the load so a Sidekiq retry after a
+  # partial failure never double-sends and a reload always gets its own
+  # notification.
   class Notifier
     include Rails.application.routes.url_helpers
 
-    def initialize(gift_card)
-      @gift_card = gift_card
-      @recipient = gift_card.recipient
-      @sender = gift_card.sender
+    def initialize(load)
+      @load = load
+      @gift_card = load.gift_card
+      @recipient = @gift_card&.recipient
+      @sender = load.sender
     end
 
     def send_all_notifications
       results = {}
 
-      # Channels whose delivery flag is already set are skipped so Sidekiq
-      # retries after a partial failure don't double-send.
+      if self_load?
+        results[:push] = send_push unless @load.sent_via_push?
+        update_delivery_flags(results)
+        return results
+      end
 
       # Phone channel: respects user preference; WhatsApp first with SMS fallback by default.
-      if @recipient&.phone.present? && !@gift_card.sent_via_whatsapp? && !@gift_card.sent_via_sms?
+      if @recipient&.phone.present? && !@load.sent_via_whatsapp? && !@load.sent_via_sms?
         phone_result = send_phone_channel
         results[phone_result[:via]] = phone_result if phone_result[:via]
       end
 
-      # Send Email only if recipient has a real address.
-      # Pending recipients with placeholder emails (claim+<hash>@papayal.app)
-      # haven't signed up yet — skip email, the SMS/WhatsApp path delivers.
-      if @recipient&.email.present? && !@recipient.placeholder_email? && !@gift_card.sent_via_email?
+      # Email only for a real address: pending recipients carry a
+      # placeholder (claim+<hash>@papayal.app) until they sign up.
+      if @recipient&.email.present? && !@recipient.placeholder_email? && !@load.sent_via_email?
         results[:email] = send_email
       end
 
-      # Send push notification if recipient has active push tokens
-      results[:push] = send_push unless @gift_card.sent_via_push?
+      results[:push] = send_push unless @load.sent_via_push?
 
-      # Update delivery flags
       update_delivery_flags(results)
-
       results
     end
 
     # Sender-triggered re-delivery: same channels as send_all_notifications
     # but ignoring the sent_via_* first-delivery guards. Flags are still
-    # updated on success so a failed first delivery repaired by a resend is
-    # recorded. Throttled upstream in GiftCards::ResendDelivery.
+    # updated on success. Throttled upstream in GiftCards::ResendDelivery.
     def resend_delivery
       results = {}
 
-      if @recipient&.phone.present?
-        phone_result = send_phone_channel
-        results[phone_result[:via]] = phone_result if phone_result[:via]
-      end
+      unless self_load?
+        if @recipient&.phone.present?
+          phone_result = send_phone_channel
+          results[phone_result[:via]] = phone_result if phone_result[:via]
+        end
 
-      if @recipient&.email.present? && !@recipient.placeholder_email?
-        results[:email] = send_email
+        if @recipient&.email.present? && !@recipient.placeholder_email?
+          results[:email] = send_email
+        end
       end
 
       results[:push] = send_push
 
       update_delivery_flags(results)
-
       results
     end
 
     # Sends via the user's preferred phone channel. If preference is :whatsapp
     # (default) and WhatsApp delivery fails, automatically falls back to SMS.
-    # Returns a hash with :via (:whatsapp or :sms) plus the underlying result.
     def send_phone_channel
       if @recipient.preferred_channel == "sms"
         return send_sms.merge(via: :sms)
@@ -83,17 +90,14 @@ module Messaging
       return twilio_disabled_response(:whatsapp, 'Twilio client unavailable') unless client
 
       from_number = Messaging::TwilioConfig.whatsapp_number
-      unless from_number.present?
-        return twilio_disabled_response(:whatsapp, 'TWILIO_WHATSAPP_NUMBER missing')
-      end
+      return twilio_disabled_response(:whatsapp, 'TWILIO_WHATSAPP_NUMBER missing') unless from_number.present?
 
       begin
         message = client.messages.create(
           from: "whatsapp:#{from_number}",
           to: "whatsapp:#{@recipient.phone}",
-          body: whatsapp_message
+          body: phone_message
         )
-
         { success: true, sid: message.sid }
       rescue Twilio::REST::RestError => e
         Rails.logger.error "WhatsApp delivery failed: #{e.message}"
@@ -109,17 +113,10 @@ module Messaging
       return twilio_disabled_response(:sms, 'Twilio client unavailable') unless client
 
       from_number = Messaging::TwilioConfig.from_number
-      unless from_number.present?
-        return twilio_disabled_response(:sms, 'TWILIO_PHONE_NUMBER missing')
-      end
+      return twilio_disabled_response(:sms, 'TWILIO_PHONE_NUMBER missing') unless from_number.present?
 
       begin
-        message = client.messages.create(
-          from: from_number,
-          to: @recipient.phone,
-          body: sms_message
-        )
-
+        message = client.messages.create(from: from_number, to: @recipient.phone, body: phone_message)
         { success: true, sid: message.sid }
       rescue Twilio::REST::RestError => e
         Rails.logger.error "SMS delivery failed: #{e.message}"
@@ -130,15 +127,7 @@ module Messaging
     def send_push
       return { success: false, error: "No recipient" } unless @recipient
 
-      amount_label = "#{@gift_card.currency} #{"%.2f" % (@gift_card.amount / 100.0)}"
-      merchant_name = @gift_card.merchant&.store_name || "Papayal"
-
-      Messaging::PushSender.new.send_to_user(
-        @recipient,
-        title: "#{merchant_name} — #{amount_label}",
-        body: "#{@sender&.name || "Alguien"} te envi\u00F3 una tarjeta de regalo Papayal",
-        data: { type: "gift_card_received", gift_card_id: @gift_card.id.to_s }
-      )
+      Messaging::PushSender.new.send_to_user(@recipient, **push_payload)
     rescue => e
       Rails.logger.error "[Push] Failed: #{e.class} - #{e.message}"
       { success: false, error: e.message }
@@ -148,19 +137,14 @@ module Messaging
       return { success: false, error: 'No email address' } unless @recipient&.email.present?
 
       begin
-        # Try deliver_later first, fallback to deliver_now if Sidekiq not available
-        mail = GiftCardMailer.deliver_gift_card(@gift_card)
-
+        mail = GiftCardMailer.deliver_gift_card(@load)
         begin
           mail.deliver_later
           Rails.logger.info "📧 Email queued for delivery to #{@recipient.email}"
         rescue NoMethodError, Redis::CannotConnectError => e
-          # Sidekiq not available or Redis not running - use sync
           Rails.logger.warn "⚠️ Sidekiq not available for email (#{e.class}), sending immediately"
           mail.deliver_now
-          Rails.logger.info "📧 Email sent immediately to #{@recipient.email}"
         end
-
         { success: true }
       rescue => e
         Rails.logger.error "❌ Email delivery failed to #{@recipient.email}: #{e.class} - #{e.message}"
@@ -169,44 +153,72 @@ module Messaging
       end
     end
 
+    # ── Template selection (§5.9) ───────────────────────────────────────
+    def first_load?
+      @first_load = @gift_card.loads.in_scope.fifo.first&.id == @load.id if @first_load.nil?
+      @first_load
+    end
+
+    def self_load?
+      @load.sender_id.present? && @recipient.present? && @load.sender_id == @recipient.id
+    end
+
+    # §4.4 "Notifications (server templates)"
+    def push_payload
+      merchant = merchant_label
+      data = { gift_card_id: @gift_card.id.to_s, load_id: @load.id.to_s }
+      if self_load?
+        { title: "Recarga confirmada", body: "#{amount_label} en tu tarjeta de #{merchant}.",
+          data: data.merge(type: "gift_card_topped_up") }
+      elsif first_load?
+        { title: "🎁 Tarjeta de regalo de #{merchant}", body: "#{sender_label} te envió #{amount_label} para usar en #{merchant}.",
+          data: data.merge(type: "gift_card_received") }
+      else
+        { title: "Recarga en tu tarjeta de #{merchant}", body: "#{sender_label} añadió #{amount_label}. Saldo disponible: #{spendable_label}.",
+          data: data.merge(type: "gift_card_topped_up") }
+      end
+    end
+
+    # WhatsApp and SMS share one body. Delivery messages carry the claim
+    # link, never a redemption code: merchants only accept the short-lived
+    # in-app token, and the claim itself is OTP-verified at signup.
+    def phone_message
+      greeting = recipient_first_name ? "¡Hola #{recipient_first_name}!" : "¡Hola!"
+      if first_load?
+        "#{greeting} #{sender_label} te envió una tarjeta de regalo digital de #{merchant_label} por #{amount_label} en Papayal. " \
+          "Descarga la app y reclámala con este número: #{claim_url}"
+      else
+        msg = "#{greeting} #{sender_label} añadió #{amount_label} a tu tarjeta de #{merchant_label} en Papayal. Saldo disponible: #{spendable_label}."
+        # A recipient who never claimed their account still needs the doorway.
+        msg += " Reclámala aquí: #{claim_url}" if @recipient&.pending?
+        msg
+      end
+    end
+
     private
 
-    # Delivery messages carry the claim link, never a redemption code:
-    # merchants only accept the short-lived in-app QR token, so a code in a
-    # message can't be redeemed — and anything shareable must stay a doorway
-    # (the claim itself is OTP-verified at signup).
-    def whatsapp_message
-      <<~MESSAGE
-        🎁 ¡Recibiste una tarjeta de regalo Papayal!
-
-        💰 Monto: #{amount_label}
-        👤 De: #{@sender.name}
-        🏪 Canjéala en: #{merchant_label}
-
-        👉 Reclámala aquí: #{claim_url}
-
-        Descarga la app, crea tu cuenta con este número y tu tarjeta te estará esperando. Sin fecha de vencimiento. 🎉
-      MESSAGE
-    end
-
-    def sms_message
-      <<~MESSAGE
-        🎁 Recibiste #{amount_label} en Papayal, de #{@sender.name}.
-        Reclámala aquí: #{claim_url}
-        Sin vencimiento.
-      MESSAGE
-    end
-
     def claim_url
-      @claim_url ||= GiftCards::ClaimLink.url_for(@gift_card)
+      @claim_url ||= GiftCards::ClaimLink.url_for(@load)
     end
 
     def amount_label
-      "#{@gift_card.currency} #{format("%.2f", @gift_card.amount / 100.0)}"
+      Messaging::Money.format(@load.amount_cents)
+    end
+
+    def spendable_label
+      Messaging::Money.format(@gift_card.reload.spendable_cents)
     end
 
     def merchant_label
-      @gift_card.merchant&.store_name || "comercios aliados"
+      @gift_card.merchant&.store_name || "Papayal"
+    end
+
+    def sender_label
+      @sender&.first_name.presence || @sender&.name.presence || "Alguien"
+    end
+
+    def recipient_first_name
+      @recipient&.first_name.presence || @recipient&.name.presence
     end
 
     def update_delivery_flags(results)
@@ -216,7 +228,7 @@ module Messaging
       updates[:sent_via_email] = true if results[:email]&.dig(:success)
       updates[:sent_via_push] = true if results[:push]&.dig(:success)
 
-      @gift_card.update!(updates) if updates.any?
+      @load.update_columns(updates.merge(updated_at: Time.current)) if updates.any?
     end
 
     def twilio_disabled_response(channel, reason = 'Twilio not configured')
