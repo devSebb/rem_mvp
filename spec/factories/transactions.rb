@@ -4,7 +4,8 @@ FactoryBot.define do
     amount { 1 }
     txn_type { 1 }
     status { 1 }
-    processor_ref { "MyString" }
-    metadata { "" }
+    sequence(:processor_ref) { |n| "txn_ref_#{n}" }
+    currency { "USD" }
+    metadata { {} }
   end
 end

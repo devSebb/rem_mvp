@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_28_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_12_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -42,11 +42,54 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_28_120000) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "gift_card_loads", force: :cascade do |t|
+    t.bigint "gift_card_id", null: false
+    t.bigint "sender_id"
+    t.integer "source", default: 0, null: false
+    t.string "payment_intent_id"
+    t.string "checkout_session_id"
+    t.integer "amount_cents", null: false
+    t.integer "remaining_cents", null: false
+    t.integer "refunded_cents", default: 0, null: false
+    t.integer "written_off_cents", default: 0, null: false
+    t.integer "fee_cents", default: 0
+    t.string "currency", default: "USD", null: false
+    t.text "note"
+    t.integer "risk_score"
+    t.string "risk_level"
+    t.datetime "held_until"
+    t.bigint "hold_released_by_id"
+    t.datetime "disputed_at"
+    t.string "dispute_id"
+    t.string "dispute_outcome"
+    t.integer "status", default: 0, null: false
+    t.boolean "sent_via_whatsapp", default: false, null: false
+    t.boolean "sent_via_sms", default: false, null: false
+    t.boolean "sent_via_email", default: false, null: false
+    t.boolean "sent_via_push", default: false, null: false
+    t.string "link_token_digest"
+    t.datetime "link_token_expires_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["checkout_session_id"], name: "index_gift_card_loads_on_checkout_session_id", unique: true, where: "(checkout_session_id IS NOT NULL)"
+    t.index ["dispute_id"], name: "index_gift_card_loads_on_dispute_id", where: "(dispute_id IS NOT NULL)"
+    t.index ["disputed_at"], name: "index_gift_card_loads_on_disputed_at", where: "(disputed_at IS NOT NULL)"
+    t.index ["gift_card_id", "created_at"], name: "index_gift_card_loads_on_gift_card_id_and_created_at"
+    t.index ["held_until"], name: "index_gift_card_loads_on_held_until", where: "(held_until IS NOT NULL)"
+    t.index ["link_token_digest"], name: "index_gift_card_loads_on_link_token_digest", unique: true, where: "(link_token_digest IS NOT NULL)"
+    t.index ["payment_intent_id"], name: "index_gift_card_loads_on_payment_intent_id", unique: true, where: "(payment_intent_id IS NOT NULL)"
+    t.index ["sender_id", "created_at"], name: "index_gift_card_loads_on_sender_id_and_created_at"
+    t.index ["status"], name: "index_gift_card_loads_on_status"
+    t.check_constraint "amount_cents > 0", name: "gift_card_loads_amount_positive"
+    t.check_constraint "refunded_cents >= 0 AND written_off_cents >= 0", name: "gift_card_loads_refunded_written_off_non_negative"
+    t.check_constraint "remaining_cents >= 0 AND remaining_cents <= amount_cents", name: "gift_card_loads_remaining_within_amount"
+  end
+
   create_table "gift_cards", force: :cascade do |t|
-    t.bigint "sender_id", null: false
+    t.bigint "sender_id"
     t.bigint "recipient_id", null: false
     t.bigint "merchant_id"
-    t.integer "amount", null: false
+    t.integer "amount"
     t.string "currency", default: "USD", null: false
     t.string "code_digest", null: false
     t.integer "status", default: 0, null: false
@@ -73,6 +116,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_28_120000) do
     t.integer "risk_score"
     t.string "risk_level"
     t.datetime "disputed_at"
+    t.integer "total_loaded_cents", default: 0, null: false
+    t.datetime "frozen_at"
+    t.text "frozen_reason"
+    t.bigint "merged_into_id"
+    t.integer "loads_count", default: 0, null: false
+    t.datetime "last_loaded_at"
     t.index ["checkout_session_id"], name: "index_gift_cards_on_checkout_session_id", unique: true
     t.index ["code_digest"], name: "index_gift_cards_on_code_digest", unique: true
     t.index ["code_lookup_hash"], name: "index_gift_cards_on_code_lookup_hash", unique: true, where: "(code_lookup_hash IS NOT NULL)"
@@ -82,6 +131,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_28_120000) do
     t.index ["last_owner_activity_at"], name: "index_gift_cards_on_last_owner_activity_at"
     t.index ["link_token_digest"], name: "index_gift_cards_on_link_token_digest", unique: true
     t.index ["merchant_id"], name: "index_gift_cards_on_merchant_id"
+    t.index ["merged_into_id"], name: "index_gift_cards_on_merged_into_id", where: "(merged_into_id IS NOT NULL)"
     t.index ["otp_digest"], name: "index_gift_cards_on_otp_digest", unique: true
     t.index ["payment_intent_id"], name: "index_gift_cards_on_payment_intent_id", unique: true, where: "(payment_intent_id IS NOT NULL)"
     t.index ["recipient_id", "updated_at", "id"], name: "index_gift_cards_on_recipient_updated_id"
@@ -90,6 +140,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_28_120000) do
     t.index ["sender_id", "updated_at", "id"], name: "index_gift_cards_on_sender_updated_id"
     t.index ["sender_id"], name: "index_gift_cards_on_sender_id"
     t.index ["status"], name: "index_gift_cards_on_status"
+    t.check_constraint "remaining_balance >= 0", name: "gift_cards_remaining_balance_non_negative"
+    t.check_constraint "total_loaded_cents >= COALESCE(remaining_balance, 0)", name: "gift_cards_total_loaded_covers_remaining"
   end
 
   create_table "merchants", force: :cascade do |t|
@@ -109,7 +161,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_28_120000) do
     t.boolean "partner_redemption", default: false, null: false
     t.string "redemption_partner_label"
     t.string "coverage_text"
+    t.bigint "redemption_group_id"
     t.index ["public_key"], name: "index_merchants_on_public_key", unique: true
+    t.index ["redemption_group_id"], name: "index_merchants_on_redemption_group_id"
     t.index ["secret_key_digest"], name: "index_merchants_on_secret_key_digest", unique: true
     t.index ["store_name"], name: "index_merchants_on_store_name"
     t.index ["user_id"], name: "index_merchants_on_user_id"
@@ -146,6 +200,15 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_28_120000) do
     t.bigint "updated_by_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "max_load_cents", default: 20000, null: false
+    t.integer "max_loads_per_card_per_day", default: 2, null: false
+    t.integer "max_daily_load_per_card_cents", default: 40000, null: false
+    t.integer "max_card_balance_cents", default: 50000, null: false
+    t.integer "max_daily_load_per_buyer_cents", default: 60000, null: false
+    t.integer "max_daily_loads_per_buyer", default: 3, null: false
+    t.integer "max_30d_load_per_recipient_cents", default: 100000, null: false
+    t.integer "max_30d_load_per_buyer_cents", default: 200000, null: false
+    t.integer "buyer_refund_window_hours", default: 72, null: false
     t.index ["updated_by_id"], name: "index_platform_settings_on_updated_by_id"
   end
 
@@ -159,6 +222,25 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_28_120000) do
     t.index ["token"], name: "index_push_tokens_on_token", unique: true
     t.index ["user_id", "active"], name: "index_push_tokens_on_user_id_and_active"
     t.index ["user_id"], name: "index_push_tokens_on_user_id"
+  end
+
+  create_table "redemption_allocations", force: :cascade do |t|
+    t.bigint "transaction_id", null: false
+    t.bigint "gift_card_load_id", null: false
+    t.integer "amount_cents", null: false
+    t.integer "direction", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["gift_card_load_id"], name: "index_redemption_allocations_on_gift_card_load_id"
+    t.index ["transaction_id", "gift_card_load_id"], name: "index_redemption_allocations_on_txn_and_load", unique: true
+    t.check_constraint "amount_cents > 0", name: "redemption_allocations_amount_positive"
+  end
+
+  create_table "redemption_groups", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_redemption_groups_on_name", unique: true
   end
 
   create_table "redemption_tokens", force: :cascade do |t|
@@ -213,11 +295,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_28_120000) do
     t.string "decline_reason"
     t.string "merchant_reference"
     t.bigint "reversal_of_transaction_id"
+    t.bigint "gift_card_load_id"
     t.index ["gift_card_id"], name: "index_transactions_on_gift_card_id"
+    t.index ["gift_card_load_id"], name: "index_transactions_on_gift_card_load_id"
     t.index ["merchant_id", "idempotency_key"], name: "index_transactions_on_merchant_id_and_idempotency_key", unique: true, where: "(idempotency_key IS NOT NULL)"
     t.index ["merchant_id", "txn_type", "status", "created_at"], name: "index_transactions_on_merchant_txn_status_created"
     t.index ["merchant_id"], name: "index_transactions_on_merchant_id"
     t.index ["metadata"], name: "index_transactions_on_metadata", using: :gin
+    t.index ["processor_ref"], name: "index_transactions_on_processor_ref", unique: true, where: "(processor_ref IS NOT NULL)"
     t.index ["redemption_token_id"], name: "index_transactions_on_redemption_token_id"
     t.index ["reversal_of_transaction_id"], name: "index_transactions_on_reversal_of_txn_id", unique: true, where: "(reversal_of_transaction_id IS NOT NULL)"
     t.index ["status"], name: "index_transactions_on_status"
@@ -268,6 +353,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_28_120000) do
     t.string "email_otp_digest"
     t.datetime "email_otp_sent_at"
     t.integer "email_otp_attempts", default: 0, null: false
+    t.integer "dispute_open_count", default: 0, null: false
+    t.integer "dispute_lost_count", default: 0, null: false
+    t.datetime "purchases_blocked_at"
     t.index ["claimed_at"], name: "index_users_on_claimed_at"
     t.index ["deleted_at"], name: "index_users_on_deleted_at", where: "(deleted_at IS NOT NULL)"
     t.index ["email"], name: "index_users_on_email", unique: true
@@ -279,14 +367,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_28_120000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "gift_card_loads", "gift_cards"
+  add_foreign_key "gift_card_loads", "users", column: "hold_released_by_id"
+  add_foreign_key "gift_card_loads", "users", column: "sender_id"
+  add_foreign_key "gift_cards", "gift_cards", column: "merged_into_id"
   add_foreign_key "gift_cards", "merchants"
   add_foreign_key "gift_cards", "users", column: "recipient_id"
   add_foreign_key "gift_cards", "users", column: "sender_id"
+  add_foreign_key "merchants", "redemption_groups"
   add_foreign_key "merchants", "users"
   add_foreign_key "platform_settings", "users", column: "updated_by_id"
   add_foreign_key "push_tokens", "users"
+  add_foreign_key "redemption_allocations", "gift_card_loads"
+  add_foreign_key "redemption_allocations", "transactions"
   add_foreign_key "redemption_tokens", "gift_cards"
   add_foreign_key "settlements", "merchants"
+  add_foreign_key "transactions", "gift_card_loads"
   add_foreign_key "transactions", "gift_cards"
   add_foreign_key "transactions", "merchants"
   add_foreign_key "transactions", "redemption_tokens"

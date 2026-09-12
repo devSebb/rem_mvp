@@ -4,8 +4,16 @@ class GiftCard < ApplicationRecord
   belongs_to :sender, class_name: "User"
   belongs_to :recipient, class_name: "User"
   belongs_to :merchant
+  # Phase 2 merge: a card absorbed into the survivor for its (recipient,
+  # merchant) pair. Such rows are excluded from the unique pair index.
+  belongs_to :merged_into, class_name: "GiftCard", optional: true
   has_many :transactions, dependent: :destroy
   has_many :redemption_tokens, dependent: :destroy
+  # One row per payment credited onto this card (RELOADABLE_CARD_PLAN.md §3.2).
+  # Oldest first = FIFO order for redemptions. Loads are only ever mutated
+  # inside this card's `with_lock` (§6).
+  has_many :loads, -> { fifo }, class_name: "GiftCardLoad", dependent: :destroy, inverse_of: :gift_card
+  has_many :redemption_allocations, through: :loads
   class RedemptionError < StandardError
     attr_reader :reason
 
@@ -19,8 +27,13 @@ class GiftCard < ApplicationRecord
   # Raw code is stored encrypted in encrypted_raw_code column
   # We handle encryption/decryption manually for compatibility
 
-  # Enums
-  enum status: { active: 0, redeemed: 1, expired: 2, canceled: 3 }
+  # Enums. `redeemed` and `expired` are legacy values (D3): the Phase 1
+  # backfill remapped existing rows to `active` and Phase 3 code never writes
+  # them again. Status 4 is the plan's `frozen` (admin-only manual fraud
+  # action); the enum key is `frozen_by_admin` because Rails refuses to
+  # generate `frozen?` (it collides with Object#frozen?). The Phase 3
+  # serializer may still expose it to clients as "frozen".
+  enum status: { active: 0, redeemed: 1, expired: 2, canceled: 3, frozen_by_admin: 4 }
 
   # Constants
   MAX_AMOUNT_CENTS = 20_000 # $200.00 USD
@@ -274,6 +287,26 @@ class GiftCard < ApplicationRecord
     canceled? ? 0 : remaining_balance.to_i
   end
 
+  # ── Ledger invariants (RELOADABLE_CARD_PLAN.md §7) ──────────────────
+  # Per-card drift report; empty array means every invariant holds. The
+  # full check (all cards, aggregate report) is Ledger::Verifier / the
+  # `ledger:verify` rake task; specs call `verify_ledger!` after every money
+  # mutation.
+  def ledger_drift
+    Ledger::Verifier.card_drift(self)
+  end
+
+  def ledger_balanced?
+    ledger_drift.empty?
+  end
+
+  def verify_ledger!
+    drift = ledger_drift
+    raise Ledger::Verifier::DriftError, "gift card #{id}: #{drift.join('; ')}" if drift.any?
+
+    true
+  end
+
   # NOTE: redemption reversals go through Refunds::Issue (writes the
   # reversal_of_transaction_id marker every money aggregate nets against).
   # A legacy GiftCard#refund! that wrote unmarked reversal rows was removed
@@ -384,6 +417,10 @@ class GiftCard < ApplicationRecord
     end
 
     self.remaining_balance = amount if amount.present? && remaining_balance == 0
+    # Legacy creation path (webhook / admin / seeds) still funds the card via
+    # `amount`. Mirror it so the DB CHECK `total_loaded_cents >= remaining_balance`
+    # holds until Phase 3's Loads::Fulfill maintains the counter itself.
+    self.total_loaded_cents = amount if amount.present? && total_loaded_cents.to_i.zero?
   end
 
   def self.normalize_code_for_lookup(code)

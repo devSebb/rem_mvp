@@ -25,6 +25,9 @@ class User < ApplicationRecord
   has_one :merchant, dependent: :destroy
   has_many :sent_gift_cards, class_name: 'GiftCard', foreign_key: 'sender_id', dependent: :nullify
   has_many :received_gift_cards, class_name: 'GiftCard', foreign_key: 'recipient_id', dependent: :nullify
+  # Loads this user paid for (RELOADABLE_CARD_PLAN.md D1: the buyer owns a
+  # load, the recipient owns the card).
+  has_many :sent_loads, class_name: 'GiftCardLoad', foreign_key: 'sender_id', dependent: :nullify
   has_many :push_tokens, dependent: :destroy
   has_one_attached :avatar
 
@@ -104,6 +107,12 @@ class User < ApplicationRecord
 
   def deleted?
     deleted_at.present?
+  end
+
+  # D4 / I13: a buyer with an open chargeback, or one an admin has blocked,
+  # may not create new loads anywhere. Enforced by Loads::CapChecker (Phase 3).
+  def purchases_blocked?
+    purchases_blocked_at.present? || dispute_open_count.to_i.positive?
   end
 
   # A user has verified their email once they've confirmed the emailed code

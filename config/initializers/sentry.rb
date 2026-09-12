@@ -7,6 +7,13 @@ if ENV["SENTRY_DSN"].present?
   Sentry.init do |config|
     config.dsn = ENV["SENTRY_DSN"]
     config.environment = Rails.env
+
+    # Sentry auto-detects the release from SENTRY_RELEASE, KAMAL_VERSION, git,
+    # REVISION or Heroku metadata — Render is in none of those, and its runtime
+    # has no usable .git, so without this the release is nil: no regression
+    # detection and no way to tell which deploy introduced an error. Render
+    # injects RENDER_GIT_COMMIT at both build and run time.
+    config.release = ENV["RENDER_GIT_COMMIT"]
     config.breadcrumbs_logger = [:active_support_logger, :http_logger]
 
     # Fintech app: never send PII. With send_default_pii = false the SDK does

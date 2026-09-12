@@ -8,6 +8,9 @@ class Merchant < ApplicationRecord
   attr_reader :generated_secret_key
 
   belongs_to :user
+  # D6: merchants in the same group may redeem each other's cards; a merchant
+  # with no group redeems only its own. Seeded ("Farmaenlace") in Phase 2.
+  belongs_to :redemption_group, optional: true
   has_many :gift_cards, dependent: :nullify
   has_many :transactions, through: :gift_cards
   has_many :settlements, dependent: :destroy

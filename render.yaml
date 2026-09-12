@@ -45,6 +45,10 @@ services:
         sync: false
       - key: APP_HOST
         sync: false
+      # Error tracking. Set in the Render dashboard; the Sentry initializer is
+      # fully dormant while this is unset.
+      - key: SENTRY_DSN
+        sync: false
       # Optional: tune concurrency and observability (defaults in puma/database apply if unset)
       - key: RAILS_MAX_THREADS
         sync: false
@@ -97,6 +101,9 @@ services:
       - key: DEFAULT_FROM_EMAIL
         sync: false
       - key: APP_HOST
+        sync: false
+      # Error tracking. sentry-sidekiq reports failed jobs through the same DSN.
+      - key: SENTRY_DSN
         sync: false
 
   - type: redis

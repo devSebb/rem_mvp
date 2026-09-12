@@ -3,6 +3,11 @@ class Transaction < ApplicationRecord
   belongs_to :merchant, optional: true
   belongs_to :user, optional: true
   belongs_to :redemption_token, optional: true
+  # Set on purchase / issuance / Type B refund / dispute write-off rows
+  # (RELOADABLE_CARD_PLAN.md §3.5). Redemptions and Type A reversals leave it
+  # NULL and link to loads through redemption_allocations instead.
+  belongs_to :gift_card_load, optional: true
+  has_many :redemption_allocations, foreign_key: :transaction_id, inverse_of: :ledger_transaction, dependent: :destroy
 
   # Enums
   enum txn_type: { purchase: 0, redemption: 1, refund: 2, adjustment: 3, issuance: 4 }
@@ -29,6 +34,10 @@ class Transaction < ApplicationRecord
   # so the merchant is owed that much less. Stripe buyer refunds (Type B)
   # have no reversal_of_transaction_id and must never reduce merchant money.
   scope :reversals, -> { refunds.where.not(reversal_of_transaction_id: nil) }
+  # Stripe buyer refunds (Type B): money back to the payer of a load.
+  scope :stripe_refunds, -> { refunds.where(reversal_of_transaction_id: nil) }
+  # Dispute-lost write-offs (adjustment rows keyed `dispute_<id>`).
+  scope :dispute_write_offs, -> { where(txn_type: :adjustment).where("processor_ref LIKE 'dispute\\_%'") }
 
   # ── Central netting API ─────────────────────────────────────────────
   # Every surface that shows or pays out merchant redemption money must go
