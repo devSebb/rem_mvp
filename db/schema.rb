@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_12_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_12_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -88,7 +88,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_120000) do
   create_table "gift_cards", force: :cascade do |t|
     t.bigint "sender_id"
     t.bigint "recipient_id", null: false
-    t.bigint "merchant_id"
+    t.bigint "merchant_id", null: false
     t.integer "amount"
     t.string "currency", default: "USD", null: false
     t.string "code_digest", null: false
@@ -122,7 +122,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_120000) do
     t.bigint "merged_into_id"
     t.integer "loads_count", default: 0, null: false
     t.datetime "last_loaded_at"
-    t.index ["checkout_session_id"], name: "index_gift_cards_on_checkout_session_id", unique: true
+    t.index ["checkout_session_id"], name: "index_gift_cards_on_checkout_session_id", where: "(checkout_session_id IS NOT NULL)"
     t.index ["code_digest"], name: "index_gift_cards_on_code_digest", unique: true
     t.index ["code_lookup_hash"], name: "index_gift_cards_on_code_lookup_hash", unique: true, where: "(code_lookup_hash IS NOT NULL)"
     t.index ["disputed_at"], name: "index_gift_cards_on_disputed_at", where: "(disputed_at IS NOT NULL)"
@@ -133,7 +133,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_120000) do
     t.index ["merchant_id"], name: "index_gift_cards_on_merchant_id"
     t.index ["merged_into_id"], name: "index_gift_cards_on_merged_into_id", where: "(merged_into_id IS NOT NULL)"
     t.index ["otp_digest"], name: "index_gift_cards_on_otp_digest", unique: true
-    t.index ["payment_intent_id"], name: "index_gift_cards_on_payment_intent_id", unique: true, where: "(payment_intent_id IS NOT NULL)"
+    t.index ["payment_intent_id"], name: "index_gift_cards_on_payment_intent_id", where: "(payment_intent_id IS NOT NULL)"
+    t.index ["recipient_id", "merchant_id"], name: "index_gift_cards_on_recipient_merchant_unique", unique: true, where: "(merged_into_id IS NULL)"
     t.index ["recipient_id", "updated_at", "id"], name: "index_gift_cards_on_recipient_updated_id"
     t.index ["recipient_id"], name: "index_gift_cards_on_recipient_id"
     t.index ["sender_id", "status", "created_at"], name: "index_gift_cards_on_sender_status_created"
