@@ -9,14 +9,7 @@ RSpec.describe "Merchant::Transactions", type: :request do
     create(:gift_card, sender: buyer, recipient: buyer, merchant: merchant, amount: 500)
   end
 
-  let!(:redemption) do
-    txn = gift_card.transactions.create!(
-      amount: 500, txn_type: :redemption, status: :succeeded, currency: "USD",
-      processor_ref: "ui_redemption_#{SecureRandom.hex(4)}", merchant: merchant, user: merchant_user
-    )
-    gift_card.update!(remaining_balance: 0, status: :redeemed, redeemed_at: Time.current)
-    txn
-  end
+  let!(:redemption) { redeem_card!(gift_card, 500, merchant: merchant, actor: merchant_user) }
 
   before { sign_in merchant_user }
 

@@ -34,13 +34,9 @@ Rails.application.routes.draw do
   get "reset", to: "app_links#reset", as: :reset_link
 
   # Web purchase flow removed — purchases are done exclusively through the
-  # mobile app. Web wallet (index/show) and transfers remain available.
-  resources :gift_cards, only: [:index, :show] do
-    resources :transfers, only: [:new, :create] do
-      get :confirm, on: :collection
-      post :process_transfer, on: :collection
-    end
-  end
+  # mobile app. Web wallet (index/show) is read-only; transfers were removed
+  # (RELOADABLE_CARD_PLAN.md D9).
+  resources :gift_cards, only: [:index, :show]
 
   namespace :api do
     namespace :v1 do

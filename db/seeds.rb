@@ -71,17 +71,14 @@ def seed_card!(marker:, recipient:, merchant:, first_sender:, first_amount_cents
     return existing
   end
 
-  begin
-    card = GiftCard.new(
-      sender: first_sender, recipient: recipient, merchant: merchant,
-      amount: first_amount_cents, currency: "USD", checkout_session_id: marker
-    )
-    card.generate_code!
-    # set_defaults mirrored amount into remaining_balance/total_loaded_cents;
-    # start empty — seed_load! adds the money load by load.
-    card.update_columns(remaining_balance: 0, total_loaded_cents: 0, amount: 0)
-    card
-  end
+  # Created empty (amount 0, so the legacy issuance bridge stays quiet);
+  # seed_load! adds the money load by load, exactly like Loads::Fulfill.
+  card = GiftCard.new(
+    sender: first_sender, recipient: recipient, merchant: merchant,
+    amount: 0, remaining_balance: 0, currency: "USD", checkout_session_id: marker
+  )
+  card.generate_code!
+  card
 end
 
 # A load plus its issuance ledger row, credited onto the card (§3.2, §6.7).

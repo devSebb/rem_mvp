@@ -60,23 +60,10 @@ class Merchant::RedemptionsController < ApplicationController
       redirect_to new_merchant_redemption_path and return
     end
     
-    # Generate idempotency token for this redemption
-    @idempotency_token = RedemptionIdempotencyService.generate_token
-    
-    # Pre-store the token so it exists when the form is submitted
-    # We'll store it with placeholder values that will be updated in redeem action
-    begin
-      RedemptionIdempotencyService.store_token(
-        @idempotency_token, 
-        gift_card_id, 
-        @gift_card.remaining_balance, # Default to full balance, will be updated
-        current_user.merchant.id
-      )
-      Rails.logger.info "✅ Stored idempotency token for confirmation: #{@idempotency_token}"
-    rescue => e
-      Rails.logger.warn "⚠️ Failed to pre-store idempotency token: #{e.message}"
-      # Continue anyway - validation will be more lenient in development
-    end
+    # One-shot idempotency key for the confirm form. A double submit replays
+    # the same (merchant, key) and Redemptions::AuthorizeAndCapture returns
+    # the original result instead of capturing twice.
+    @idempotency_token = SecureRandom.uuid
   rescue ActiveRecord::RecordNotFound
     flash[:alert] = 'Gift card not found.'
     redirect_to new_merchant_redemption_path
@@ -126,11 +113,6 @@ class Merchant::RedemptionsController < ApplicationController
 
     if result[:approved]
       @gift_card = GiftCard.find(result[:gift_card_id])
-      begin
-        RedemptionIdempotencyService.consume_token(idempotency_token)
-      rescue => e
-        Rails.logger.warn "⚠️ Failed to consume idempotency token after dynamic redemption: #{e.message}"
-      end
 
       notify_recipient_of_redemption(@gift_card, result[:amount_cents])
 

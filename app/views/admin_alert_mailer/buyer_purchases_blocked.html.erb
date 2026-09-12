@@ -1,0 +1,21 @@
+<% content_for :preview_title, "Buyer ##{@user.id} blocked" %>
+<% content_for :preheader do %>Buyer #<%= @user.id %> lost <%= @user.dispute_lost_count %> disputes and can no longer purchase.<% end %>
+
+<div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:14px;">
+  Internal alert · Dispute
+</div>
+
+<h1 style="margin:0 0 16px 0; font-size:24px; line-height:1.2; font-weight:800; letter-spacing:-0.6px; color:#0D2F32;">
+  🚫 Buyer blocked after repeated lost disputes
+</h1>
+
+<p style="margin:0 0 20px 0; font-size:15px; line-height:1.6; color:#2C3A43;">
+  This buyer lost a second chargeback. New loads from this account are refused at checkout
+  and at fulfilment until an admin clears the block.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse; background:#FFFFFF; border:1px solid #F1E2CB; border-radius:12px; margin:0 0 24px 0;">
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">User:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;">#<%= @user.id %> — <%= @user.email %></td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Lost disputes:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;"><%= @user.dispute_lost_count %></td></tr>
+  <tr><td style="padding:10px 16px; font-size:14px; color:#0D2F32; font-weight:700;">Latest dispute:</td><td style="padding:10px 16px; font-size:14px; color:#2C3A43; font-family:'Courier New',Courier,monospace;"><%= @dispute_id %></td></tr>
+</table>

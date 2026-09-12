@@ -54,7 +54,7 @@ RSpec.describe "Admin::Merchants", type: :request do
     it "shows stats, gift cards, transactions and settlements" do
       merchant = create(:merchant)
       gift_card = create(:gift_card, merchant: merchant, amount: 7500)
-      gift_card.partial_redeem!(redemption_amount: 2500, merchant: merchant, actor: merchant.user)
+      redeem_card!(gift_card, 2500, merchant: merchant, actor: merchant.user)
       create(:settlement, merchant: merchant, amount: 2500)
 
       get admin_merchant_path(merchant)
@@ -70,7 +70,8 @@ RSpec.describe "Admin::Merchants", type: :request do
       merchant = create(:merchant)
       active_card = create(:gift_card, merchant: merchant, status: :active)
       redeemed_card = create(:gift_card, merchant: merchant)
-      redeemed_card.redeem!(merchant: merchant, actor: merchant.user)
+      redeem_card!(redeemed_card, redeemed_card.remaining_balance, merchant: merchant, actor: merchant.user)
+      redeemed_card.update_columns(status: GiftCard.statuses[:redeemed]) # legacy filter value; never written by app code (D3)
 
       get admin_merchant_path(merchant, cards: "redeemed")
 

@@ -29,6 +29,15 @@ namespace :ledger do
     end
   end
 
+  desc "Nightly reconcile (§4.6): sync stale load statuses, verify, alert on drift. Wire to a Render cron job."
+  task reconcile: :environment do
+    summary = Ledger::ReconcileJob.perform_now
+    puts "🔎 ledger:reconcile — #{summary[:cards_checked]} cards, drift #{summary[:drift_count]}, " \
+         "warnings #{summary[:warning_count]}, statuses synced #{summary[:statuses_synced]}"
+    summary[:drift].each { |line| puts "   ❌ #{line}" }
+    exit 1 if summary[:drift_count].positive?
+  end
+
   desc "Create the single legacy load (+ allocations, txn links) for any gift card that has none. Idempotent."
   task backfill_missing_loads: :environment do
     missing = GiftCard.where(merged_into_id: nil).where.missing(:loads).count

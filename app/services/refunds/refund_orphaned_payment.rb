@@ -25,8 +25,8 @@ module Refunds
     end
 
     def call
-      if GiftCard.exists?(payment_intent_id: @payment_intent.id)
-        raise GiftCardExists, "Gift card exists for payment intent #{@payment_intent.id}; refusing to refund"
+      if GiftCardLoad.exists?(payment_intent_id: @payment_intent.id)
+        raise GiftCardExists, "A load exists for payment intent #{@payment_intent.id}; refusing to refund"
       end
 
       refund = create_stripe_refund

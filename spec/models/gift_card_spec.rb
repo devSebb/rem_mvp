@@ -2,10 +2,9 @@ require 'rails_helper'
 
 RSpec.describe GiftCard, type: :model do
   describe "validations" do
-    it "requires a sender" do
+    it "no longer requires a sender (the buyer belongs to each load, §3.1)" do
       gift_card = FactoryBot.build(:gift_card, sender: nil)
-      expect(gift_card).not_to be_valid
-      expect(gift_card.errors[:sender]).to be_present
+      expect(gift_card).to be_valid
     end
 
     it "requires a recipient" do
@@ -21,14 +20,12 @@ RSpec.describe GiftCard, type: :model do
         expect(gift_card.amount).to eq(GiftCard::MAX_AMOUNT_CENTS)
       end
 
-      it "rejects amount greater than MAX_AMOUNT_CENTS" do
-        # Create a valid gift card first, then test updating with invalid amount
-        # This avoids the code_digest uniqueness check issue with build
+      it "no longer caps the card total (the per-load cap is GiftCardLoad::MAX_LOAD_CENTS)" do
         gift_card = FactoryBot.create(:gift_card, amount: GiftCard::MAX_AMOUNT_CENTS)
         gift_card.amount = GiftCard::MAX_AMOUNT_CENTS + 1
-        
-        expect(gift_card).not_to be_valid
-        expect(gift_card.errors[:amount]).to be_present
+
+        expect(gift_card).to be_valid
+        expect(FactoryBot.build(:gift_card, amount: -1)).not_to be_valid
       end
 
       it "allows amount less than MAX_AMOUNT_CENTS" do

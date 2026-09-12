@@ -5,8 +5,9 @@ RSpec.describe "Merchant::Redemptions", type: :request do
   include Devise::Test::IntegrationHelpers
 
   let(:merchant_user) { create(:user, role: :merchant) }
-  let!(:merchant) { create(:merchant, user: merchant_user) }
-  let(:other_merchant) { create(:merchant) }
+  let(:group) { create(:redemption_group, name: "Farmaenlace") }
+  let!(:merchant) { create(:merchant, user: merchant_user, redemption_group: group) }
+  let(:other_merchant) { create(:merchant, redemption_group: group) } # same group → allowed (D6)
   let(:recipient) { create(:user) }
   let(:sender) { create(:user) }
   let!(:gift_card) do

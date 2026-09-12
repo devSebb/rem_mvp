@@ -74,6 +74,58 @@ class AdminAlertMailer < ApplicationMailer
     )
   end
 
+  # A Stripe refund (Dashboard or admin) exceeded what was still unredeemed
+  # on the load — the excess is money already paid to a merchant (§5.7).
+  def over_refund(gift_card_id, load_id, refund_id, over_refund_cents, currency)
+    @gift_card = GiftCard.find(gift_card_id)
+    @load_id = load_id
+    @refund_id = refund_id
+    @amount_formatted = format("$%.2f %s", over_refund_cents / 100.0, currency)
+
+    mail(
+      to: admin_recipient,
+      subject: "[ALERT] Over-refund #{@amount_formatted} on gift card ##{@gift_card.id} (load ##{load_id})"
+    )
+  end
+
+  # A merchant reversal could not put all the cents back on the load it
+  # debited (the load was refunded/written off since); an admin_adjustment
+  # load was created for the shortfall (§5.5) — the only path that creates
+  # money out of order.
+  def reversal_shortfall(gift_card_id, reversal_transaction_id, shortfall_cents)
+    @gift_card = GiftCard.find(gift_card_id)
+    @reversal_transaction_id = reversal_transaction_id
+    @amount_formatted = format("$%.2f %s", shortfall_cents / 100.0, @gift_card.currency)
+
+    mail(
+      to: admin_recipient,
+      subject: "[ALERT] Reversal shortfall #{@amount_formatted} on gift card ##{@gift_card.id}"
+    )
+  end
+
+  # A buyer lost a second chargeback and was blocked from purchasing (§5.8).
+  def buyer_purchases_blocked(user_id, stripe_dispute_id)
+    @user = User.find(user_id)
+    @dispute_id = stripe_dispute_id
+
+    mail(
+      to: admin_recipient,
+      subject: "[DISPUTE] Buyer ##{@user.id} blocked after #{@user.dispute_lost_count} lost disputes"
+    )
+  end
+
+  # Nightly Ledger::ReconcileJob found drift (§4.6). `summary` is the hash
+  # the job stores (primitives only, deliver_later-safe).
+  def ledger_drift(summary)
+    @summary = summary
+    @drift_lines = Array(summary[:drift] || summary["drift"])
+
+    mail(
+      to: admin_recipient,
+      subject: "[ALERT] Ledger drift: #{summary[:drift_count] || summary['drift_count']} issue(s) on #{summary[:cards_checked] || summary['cards_checked']} cards"
+    )
+  end
+
   private
 
   def admin_recipient

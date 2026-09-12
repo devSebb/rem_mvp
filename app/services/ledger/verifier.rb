@@ -150,9 +150,13 @@ module Ledger
           drift << "#{label} Σ purchase+issuance txns #{funded} != amount_cents #{load.amount_cents}"
         end
 
-        refunded = load_txns.select { |t| t.refund? && t.reversal_of_transaction_id.nil? }.sum(&:amount)
+        # Over-refunds (Dashboard refund larger than the load's unredeemed part)
+        # keep the excess on the ledger row (metadata.over_refund_cents), not
+        # on the load, so compare against what was actually debited.
+        refunded = load_txns.select { |t| t.refund? && t.reversal_of_transaction_id.nil? }
+                            .sum { |t| t.metadata["debited_cents"].nil? ? t.amount : t.metadata["debited_cents"].to_i }
         if refunded != load.refunded_cents
-          drift << "#{label} Σ Stripe refund txns #{refunded} != refunded_cents #{load.refunded_cents}"
+          drift << "#{label} Σ Stripe refund txns #{refunded} (debited) != refunded_cents #{load.refunded_cents}"
         end
 
         written_off = load_txns.select { |t| t.adjustment? && t.processor_ref.to_s.start_with?("dispute_") }.sum(&:amount)
@@ -168,7 +172,8 @@ module Ledger
       # I2 over the loads gives exactly this form.
       redeemed = succeeded.select(&:redemption?).sum(&:amount)
       reversed = succeeded.select { |t| t.refund? && t.reversal_of_transaction_id.present? }.sum(&:amount)
-      stripe_refunded = succeeded.select { |t| t.refund? && t.reversal_of_transaction_id.nil? }.sum(&:amount)
+      stripe_refunded = succeeded.select { |t| t.refund? && t.reversal_of_transaction_id.nil? }
+                                 .sum { |t| t.metadata["debited_cents"].nil? ? t.amount : t.metadata["debited_cents"].to_i }
       written_off = succeeded.select { |t| t.adjustment? && t.processor_ref.to_s.start_with?("dispute_") }.sum(&:amount)
       lhs = redeemed - reversed + stripe_refunded + written_off
       rhs = card.total_loaded_cents.to_i - card.remaining_balance.to_i
@@ -194,7 +199,12 @@ module Ledger
       end
       succeeded.select { |t| t.refund? && t.reversal_of_transaction_id.present? }.each do |t|
         allocated = (by_txn[t.id] || []).select(&:credit?).sum(&:amount_cents)
-        drift << "I5 reversal txn #{t.id} amount #{t.amount} but credit allocations #{allocated}" if allocated != t.amount
+        # A reversal that could not put every cent back on its loads funded the
+        # difference through an admin_adjustment load (§5.5) — recorded on the row.
+        shortfall = t.metadata["shortfall_cents"].to_i
+        if allocated + shortfall != t.amount
+          drift << "I5 reversal txn #{t.id} amount #{t.amount} but credit allocations #{allocated} (+ shortfall #{shortfall})"
+        end
       end
       alloc_rows.each do |a|
         t = txn_by_id[a.transaction_id]

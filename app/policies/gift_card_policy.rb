@@ -42,10 +42,7 @@ class GiftCardPolicy < ApplicationPolicy
     user.present? && (record.sender == user || user.admin?)
   end
 
-  # Only recipients can transfer their gift cards
-  def transfer?
-    user.present? && record.recipient == user && record.active?
-  end
+  # transfer? removed (D9): balance never moves between users.
 
   # Admin-only: review held cards + release a hold early. Held-card
   # management is a fraud-team function, not for merchants.

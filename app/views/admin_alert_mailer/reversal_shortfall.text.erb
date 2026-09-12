@@ -1,0 +1,11 @@
+[ALERT] Reversal shortfall — Gift card #<%= @gift_card.id %>
+======================================================
+
+Gift card ID:            #<%= @gift_card.id %> (<%= @gift_card.merchant&.store_name %>)
+Reversal transaction ID: #<%= @reversal_transaction_id %>
+Shortfall:               <%= @amount_formatted %>
+
+A merchant reversed a redemption, but the load(s) it originally debited had
+been refunded or written off in the meantime, so the cents could not go
+back where they came from. An admin_adjustment load was created on the
+card for the shortfall. Review the card's loads in the admin panel.

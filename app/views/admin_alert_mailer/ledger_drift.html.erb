@@ -1,0 +1,26 @@
+<% content_for :preview_title, "Ledger drift detected" %>
+<% content_for :preheader do %><%= @summary[:drift_count] || @summary["drift_count"] %> ledger invariant(s) broken on the nightly reconcile.<% end %>
+
+<div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:14px;">
+  Internal alert · Ledger
+</div>
+
+<h1 style="margin:0 0 16px 0; font-size:24px; line-height:1.2; font-weight:800; letter-spacing:-0.6px; color:#0D2F32;">
+  ⚠️ Ledger drift detected
+</h1>
+
+<p style="margin:0 0 20px 0; font-size:15px; line-height:1.6; color:#2C3A43;">
+  The nightly reconcile found gift cards whose loads, allocations and ledger rows do not add up.
+  Run <code>bin/rake ledger:verify VERBOSE=1</code> for the full report and do not touch money by
+  hand until the cause is understood.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse; background:#FFFFFF; border:1px solid #F1E2CB; border-radius:12px; margin:0 0 24px 0;">
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Cards checked:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;"><%= @summary[:cards_checked] || @summary["cards_checked"] %></td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Drift:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;"><%= @summary[:drift_count] || @summary["drift_count"] %></td></tr>
+  <tr><td style="padding:10px 16px; font-size:14px; color:#0D2F32; font-weight:700;">Duplicate pairs:</td><td style="padding:10px 16px; font-size:14px; color:#2C3A43;"><%= @summary[:duplicate_pairs] || @summary["duplicate_pairs"] %></td></tr>
+</table>
+
+<ul style="margin:0 0 20px 0; padding-left:20px; font-size:13px; line-height:1.6; color:#2C3A43; font-family:'Courier New',Courier,monospace;">
+  <% @drift_lines.each do |line| %><li><%= line %></li><% end %>
+</ul>

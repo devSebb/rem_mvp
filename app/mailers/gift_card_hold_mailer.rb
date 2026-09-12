@@ -11,7 +11,7 @@ class GiftCardHoldMailer < ApplicationMailer
                        @gift_card.recipient&.email.presence ||
                        "tu destinatario"
     @amount_formatted = format("$%.2f %s", @gift_card.amount / 100.0, @gift_card.currency)
-    @unlock_time = @gift_card.held_until
+    @unlock_time = @gift_card.balances[:held_until] # earliest hold among the card's held loads (D5)
     @support_email = ENV['DEFAULT_FROM_EMAIL'].presence || 'hola@papayal.app'
 
     # Skip placeholder-email pending users — they signed up via gift card

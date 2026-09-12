@@ -1,0 +1,14 @@
+[ALERT] Over-refund — Gift card #<%= @gift_card.id %>
+======================================================
+
+Gift card ID:        #<%= @gift_card.id %> (<%= @gift_card.merchant&.store_name %>)
+Load ID:             #<%= @load_id %>
+Stripe refund ID:    <%= @refund_id %>
+Excess refunded:     <%= @amount_formatted %>
+
+A Stripe refund exceeded what was still unredeemed on this load. The excess
+is money that a merchant already received for redemptions — Papayal has
+paid it out twice. The load's remaining balance was floored at zero and
+the full refund is recorded on the ledger (metadata.over_refund_cents).
+
+View in Stripe: https://dashboard.stripe.com/refunds/<%= @refund_id %>

@@ -29,14 +29,21 @@ class Admin::HoldsController < Admin::BaseController
       redirect_back fallback_location: admin_holds_path and return
     end
 
-    # Setting held_until to "now - 1 second" is cleaner than nulling it —
-    # the column still tells us "this card WAS held" for audit, but the
-    # predicate (held_until > Time.current) flips to false.
-    @gift_card.update!(held_until: Time.current - 1.second)
+    # Holds are per load (D5). Setting held_until to "now - 1 second" keeps
+    # the audit trail ("this load WAS held") while the predicate flips to
+    # false. Releases every held load on the card; the per-load release UI
+    # arrives with the admin panel work (§9).
+    released_ids = []
+    @gift_card.with_lock do
+      @gift_card.loads.currently_held.each do |load|
+        load.update!(held_until: Time.current - 1.second, hold_released_by: current_user)
+        released_ids << load.id
+      end
+    end
 
     Rails.logger.warn(
       "[HoldRelease] admin_user_id=#{current_user.id} gift_card_id=#{@gift_card.id} " \
-      "reason=#{reason.inspect} risk_score=#{@gift_card.risk_score}"
+      "loads=#{released_ids.inspect} reason=#{reason.inspect}"
     )
 
     flash[:notice] = "Bloqueo liberado para tarjeta ##{@gift_card.id}."

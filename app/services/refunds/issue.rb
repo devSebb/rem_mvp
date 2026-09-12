@@ -1,6 +1,11 @@
 require "securerandom"
 
 module Refunds
+  # Type A reversal (§5.5): a merchant undoes one of its own redemptions.
+  # No money moves at Stripe; the cents go back onto exactly the loads the
+  # redemption debited (Loads::Allocator.credit_reversal!). Full amount,
+  # once per redemption (DB index on reversal_of_transaction_id). Card
+  # status is untouched (D3): a reversal never "reactivates" anything.
   class Issue
     class ValidationError < StandardError; end
 
@@ -19,10 +24,8 @@ module Refunds
     def call
       validate_request!
 
-      if idempotency_key.present?
-        if (existing = existing_transaction)
-          return build_payload(existing)
-        end
+      if idempotency_key.present? && (existing = existing_transaction)
+        return build_payload(existing)
       end
 
       redemption = locate_redemption!
@@ -34,23 +37,22 @@ module Refunds
         gift_card.with_lock do
           gift_card.reload
 
-          if already_refunded?(redemption)
-            raise ValidationError, "Redemption already refunded"
-          end
-
-          new_balance = gift_card.remaining_balance.to_i + redemption.amount.to_i
-          if new_balance > gift_card.amount.to_i
-            raise ValidationError, "Refund would exceed original gift card amount"
-          end
+          raise ValidationError, "Redemption already refunded" if already_refunded?(redemption)
 
           refund_txn = create_refund_transaction!(gift_card:, redemption:)
-
-          gift_card.update!(remaining_balance: new_balance)
-          if gift_card.redeemed? && gift_card.remaining_balance.positive?
-            gift_card.update!(status: :active, redeemed_at: nil)
+          # A concurrent/idempotent replay returned the existing row: nothing
+          # more to move.
+          if refund_txn.redemption_allocations.exists?
+            return build_payload(refund_txn, original_transaction: redemption)
           end
 
-          build_payload(refund_txn, original_transaction: redemption, remaining_balance_override: new_balance)
+          credits = Loads::Allocator.credit_reversal!(card: gift_card, reversal: refund_txn, redemption: redemption)
+          shortfalls = credits.select(&:shortfall_load)
+          if shortfalls.any? # the allocator recorded shortfall_cents on the row; this is the only out-of-order money path
+            AdminAlertMailer.reversal_shortfall(gift_card.id, refund_txn.id, shortfalls.sum { |c| c.shortfall_load.amount_cents }).deliver_later
+          end
+
+          build_payload(refund_txn, original_transaction: redemption, balances: gift_card.balances)
         end
       end
     end
@@ -67,10 +69,7 @@ module Refunds
     def locate_redemption!
       txn = Transaction.includes(:gift_card).find_by(id: redemption_transaction_id, merchant_id: merchant.id)
       raise ActiveRecord::RecordNotFound unless txn
-
-      unless txn.redemption? && txn.succeeded?
-        raise ValidationError, "Transaction is not a successful redemption"
-      end
+      raise ValidationError, "Transaction is not a successful redemption" unless txn.redemption? && txn.succeeded?
 
       txn
     end
@@ -107,9 +106,6 @@ module Refunds
         }.compact
       )
     rescue ActiveRecord::RecordNotUnique
-      # Either the idempotency key or the reversal unique index tripped —
-      # both mean this refund (or another for the same redemption) already
-      # exists. Return it when it's ours; reject otherwise.
       txn = Transaction.find_by(merchant_id: merchant.id, idempotency_key: idempotency_key) if idempotency_key
       txn ||= Transaction.reversals.find_by(reversal_of_transaction_id: redemption.id)
       return txn if txn&.refund?
@@ -117,11 +113,9 @@ module Refunds
       raise ValidationError, "idempotency_key already used"
     end
 
-    def build_payload(refund_txn, original_transaction: nil, remaining_balance_override: nil)
+    def build_payload(refund_txn, original_transaction: nil, balances: nil)
       gift_card = refund_txn.gift_card
-      remaining_balance = remaining_balance_override
-      remaining_balance ||= gift_card&.reload&.remaining_balance
-
+      balances ||= gift_card&.reload&.balances || { spendable_cents: 0, remaining_balance: 0 }
       original_id = original_transaction&.id || refund_txn.metadata["refund_of_transaction_id"]
 
       {
@@ -131,11 +125,10 @@ module Refunds
         original_transaction_id: original_id&.to_i,
         gift_card_id: gift_card&.id,
         amount_cents: refund_txn.amount,
-        remaining_balance_cents: remaining_balance,
+        remaining_balance_cents: balances[:remaining_balance],
+        spendable_cents: balances[:spendable_cents],
         currency: refund_txn.currency || gift_card&.currency || "USD"
       }
     end
   end
 end
-
-

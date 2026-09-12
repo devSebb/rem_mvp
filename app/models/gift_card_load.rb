@@ -63,6 +63,14 @@ class GiftCardLoad < ApplicationRecord
             .where("disputed_at IS NULL OR dispute_outcome IS NOT NULL")
   }
 
+  # The one place a Stripe PaymentIntent resolves to money (§5.2 idempotency,
+  # §5.7 refunds, §5.8 disputes, §5.3 polling). Never look PIs up on cards.
+  def self.for_payment_intent(payment_intent_id)
+    return nil if payment_intent_id.blank?
+
+    find_by(payment_intent_id: payment_intent_id)
+  end
+
   # ── Predicates ──────────────────────────────────────────────────────
   def held?
     held_until.present? && held_until > Time.current

@@ -35,7 +35,7 @@ RSpec.describe "Api::V1 Me::GiftCards sharing", type: :request do
     end
 
     it "rejects inactive cards" do
-      gift_card.update!(status: :redeemed, remaining_balance: 0)
+      gift_card.update!(status: :canceled)
 
       post "/api/v1/me/gift_cards/#{gift_card.id}/share_link",
            headers: auth_headers(access_token_for(sender))

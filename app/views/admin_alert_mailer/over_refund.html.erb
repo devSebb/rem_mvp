@@ -1,0 +1,24 @@
+<% content_for :preview_title, "Over-refund — gift card ##{@gift_card.id}" %>
+<% content_for :preheader do %>A Stripe refund of <%= @amount_formatted %> exceeded the unredeemed part of load #<%= @load_id %>.<% end %>
+
+<div style="font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#E08A00; margin-bottom:14px;">
+  Internal alert · Refund
+</div>
+
+<h1 style="margin:0 0 16px 0; font-size:24px; line-height:1.2; font-weight:800; letter-spacing:-0.6px; color:#0D2F32;">
+  ⚠️ Refund exceeded the load's unredeemed balance
+</h1>
+
+<p style="margin:0 0 20px 0; font-size:15px; line-height:1.6; color:#2C3A43;">
+  A Stripe refund returned more to the buyer than was still unredeemed on this load.
+  The excess is money a merchant already received for redemptions, so Papayal has paid it
+  out twice. The load was floored at zero and the full refund is on the ledger
+  (<code>metadata.over_refund_cents</code>).
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse; background:#FFFFFF; border:1px solid #F1E2CB; border-radius:12px; margin:0 0 24px 0;">
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Gift card:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;">#<%= @gift_card.id %> (<%= @gift_card.merchant&.store_name %>)</td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Load:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43;">#<%= @load_id %></td></tr>
+  <tr><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#0D2F32; font-weight:700;">Stripe refund ID:</td><td style="padding:10px 16px; border-bottom:1px solid #F1E2CB; font-size:14px; color:#2C3A43; font-family:'Courier New',Courier,monospace;"><%= @refund_id %></td></tr>
+  <tr><td style="padding:10px 16px; font-size:14px; color:#0D2F32; font-weight:700;">Excess refunded:</td><td style="padding:10px 16px; font-size:14px; color:#2C3A43;"><%= @amount_formatted %></td></tr>
+</table>

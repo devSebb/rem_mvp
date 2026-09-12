@@ -1,0 +1,15 @@
+[DISPUTE] Buyer #<%= @user.id %> blocked from purchasing
+======================================================
+
+User ID:              #<%= @user.id %>
+Email:                <%= @user.email %>
+Lost disputes:        <%= @user.dispute_lost_count %>
+Latest dispute ID:    <%= @dispute_id %>
+Blocked at:           <%= @user.purchases_blocked_at&.iso8601 %>
+
+This buyer lost a second chargeback. New loads from this account are
+refused at checkout and at fulfilment (checkout.buyer_dispute_open) until
+an admin clears purchases_blocked_at. Terms allow suspension for repeated
+chargebacks.
+
+View in Stripe: https://dashboard.stripe.com/disputes/<%= @dispute_id %>

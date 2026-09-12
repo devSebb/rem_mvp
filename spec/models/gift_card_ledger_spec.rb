@@ -18,7 +18,7 @@ RSpec.describe GiftCard, "reloadable-card Phase 1", type: :model do
 
   describe "associations" do
     it "exposes loads FIFO and allocations through them" do
-      card = create(:gift_card)
+      card = create(:gift_card, amount: 0)
       newer = create(:gift_card_load, gift_card: card, created_at: 1.hour.ago)
       older = create(:gift_card_load, gift_card: card, created_at: 2.hours.ago)
       alloc = create(:redemption_allocation, gift_card_load: older, amount_cents: 100)
@@ -58,17 +58,14 @@ RSpec.describe GiftCard, "reloadable-card Phase 1", type: :model do
 
   describe "#verify_ledger!" do
     it "passes on a card whose loads and ledger agree" do
-      card = create(:gift_card, amount: 5000)
-      create(:gift_card_load, gift_card: card, amount_cents: 5000)
-      card.update_columns(total_loaded_cents: 5000)
+      card = create(:gift_card, amount: 5000) # the legacy bridge creates the matching load
       expect(card.verify_ledger!).to be(true)
       expect(card).to be_ledger_balanced
     end
 
     it "raises with the drift lines otherwise" do
       card = create(:gift_card, amount: 5000)
-      create(:gift_card_load, gift_card: card, amount_cents: 5000)
-      card.update_columns(total_loaded_cents: 5000, remaining_balance: 4000)
+      card.update_columns(remaining_balance: 4000)
       expect { card.verify_ledger! }.to raise_error(Ledger::Verifier::DriftError, /I1 remaining_balance 4000/)
     end
   end

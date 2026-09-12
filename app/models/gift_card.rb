@@ -1,7 +1,9 @@
 require "digest"
 
 class GiftCard < ApplicationRecord
-  belongs_to :sender, class_name: "User"
+  # Deprecated (§3.1): set to the FIRST load's sender when the card is
+  # created and never updated. The serializer's `sender` is the latest load's.
+  belongs_to :sender, class_name: "User", optional: true
   belongs_to :recipient, class_name: "User"
   belongs_to :merchant
   # Phase 2 merge: a card absorbed into the survivor for its (recipient,
@@ -45,14 +47,19 @@ class GiftCard < ApplicationRecord
   RISK_HOLD_THRESHOLD = 65
   RISK_HOLD_DURATION = 24.hours
 
-  # Scopes
-  scope :currently_held, -> { where("held_until IS NOT NULL AND held_until > ?", Time.current) }
-  scope :disputed, -> { where.not(disputed_at: nil) }
+  # Scopes. Holds and disputes live on loads from Phase 3 on (§3.4); the
+  # card-level columns are deprecated and no longer read.
+  scope :currently_held, -> { where(id: GiftCardLoad.in_scope.currently_held.select(:gift_card_id)) }
+  scope :disputed, -> { where(id: GiftCardLoad.in_scope.dispute_open.select(:gift_card_id)) }
+  scope :not_merged, -> { where(merged_into_id: nil) }
+  scope :active_or_frozen, -> { where(status: [statuses[:active], statuses[:frozen_by_admin]]) }
 
-  # Validations
-  validates :sender, presence: true
+  # Validations. `sender` and `amount` are deprecated card columns (§3.1):
+  # the buyer and the face value belong to each load. `amount` stays
+  # mirrored to total_loaded_cents for old admin views; the per-load cap is
+  # GiftCardLoad::MAX_LOAD_CENTS.
   validates :recipient, presence: true
-  validates :amount, presence: true, numericality: { greater_than: 0, less_than_or_equal_to: MAX_AMOUNT_CENTS }
+  validates :amount, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :remaining_balance, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :currency, presence: true
   validates :code_digest, presence: true, uniqueness: true
@@ -64,6 +71,7 @@ class GiftCard < ApplicationRecord
   # Callbacks
   before_validation :set_defaults, on: :create
   after_create :record_issuance_transaction_unless_stripe!
+  after_create :seed_legacy_load!
 
   # Class methods
   def self.find_active_by_code(code)
@@ -120,6 +128,18 @@ class GiftCard < ApplicationRecord
   end
   private_class_method :fingerprint_for_code
 
+  # One card per (recipient, merchant) (D1, I12). Insert-or-find under the
+  # unique pair index: never check-then-insert (§6.3). Canceled cards are
+  # returned too — the caller decides (a canceled card refuses loads until
+  # an admin reactivates it, §5.2). Merge shells are never returned.
+  def self.find_or_create_for!(recipient:, merchant:, first_sender: nil)
+    existing = not_merged.find_by(recipient_id: recipient.id, merchant_id: merchant.id)
+    return existing if existing
+
+    create!(recipient: recipient, merchant: merchant, sender: first_sender, amount: 0, remaining_balance: 0, currency: "USD")
+  rescue ActiveRecord::RecordNotUnique
+    not_merged.find_by!(recipient_id: recipient.id, merchant_id: merchant.id)
+  end
 
   # Instance methods
   def generate_code!
@@ -137,120 +157,60 @@ class GiftCard < ApplicationRecord
     end
   end
 
-  def redeem!(merchant:, actor:)
-    partial_redeem!(redemption_amount: remaining_balance, merchant: merchant, actor: actor)
+  # ── Balances (§3.4, single source of truth) ─────────────────────────
+  # remaining_balance = Σ remaining_cents over non-canceled loads (cached
+  # column, kept in step under the card lock); held/disputed are computed
+  # from the loads' timestamps; spendable is what a redemption may draw.
+  # NEVER gate money on `load.status` — it is a cached label (§10.2c).
+  def balances
+  now = Time.current
+  remaining = 0
+  held = 0
+  disputed = 0
+  earliest_hold = nil
+
+  loads.each do |load|
+    next if load.status_canceled?
+
+    cents = load.remaining_cents.to_i
+    remaining += cents
+    if load.disputed_at.present? && load.dispute_outcome.nil?
+      disputed += cents
+    elsif load.held_until.present? && load.held_until > now
+      held += cents
+      earliest_hold = load.held_until if earliest_hold.nil? || load.held_until < earliest_hold
+    end
   end
 
-  # Security hold predicates. A held card has held_until set in the future;
-  # once that time passes the predicate flips automatically (no callback
-  # needed — checked at read time).
+  {
+    remaining_balance: remaining,
+    held_cents: held,
+    disputed_cents: disputed,
+    spendable_cents: active? ? remaining - held - disputed : 0,
+    held_until: (earliest_hold if held.positive?)
+  }
+end
+
+  def spendable_cents
+  balances[:spendable_cents]
+end
+
+  # Hold / dispute predicates now answer "does any load on this card carry
+  # a hold / an open dispute?". The deprecated card columns are ignored.
   def held?
-    held_until.present? && held_until > Time.current
-  end
+  balances[:held_cents].positive?
+end
 
   def hold_remaining_seconds
-    return 0 unless held?
-    (held_until - Time.current).to_i
-  end
+  until_at = balances[:held_until]
+  return 0 unless until_at
+
+  [(until_at - Time.current).to_i, 0].max
+end
 
   def disputed?
-    disputed_at.present?
-  end
-
-  def redeem_amount!(amount_cents)
-    cents = amount_cents.to_i
-    raise RedemptionError.new(:invalid_amount) if cents <= 0
-
-    with_lock do
-      reload
-
-      raise RedemptionError.new(:gift_card_inactive) unless active? && !expired?
-      raise RedemptionError.new(:insufficient_balance) if cents > remaining_balance
-
-      new_balance = remaining_balance - cents
-      updates = { remaining_balance: new_balance }
-      if new_balance.zero?
-        updates[:status] = :redeemed
-        updates[:redeemed_at] = Time.current
-      end
-
-      update!(updates)
-      new_balance
-    end
-  end
-
-  def partial_redeem!(redemption_amount:, merchant:, actor:)
-    Rails.logger.info "🔄 partial_redeem! called - Amount: #{redemption_amount}, Merchant: #{merchant&.id}, Actor: #{actor&.id}"
-
-    if merchant.nil?
-      Rails.logger.error "❌ Merchant is nil"
-      return false
-    end
-
-    if actor.nil?
-      Rails.logger.error "❌ Actor is nil"
-      return false
-    end
-
-    transaction do
-      # Pessimistic locking to prevent race conditions
-      lock!
-      reload # Get latest balance from database
-
-      Rails.logger.info "   Current balance: #{remaining_balance}, Status: #{status}"
-
-      unless can_partial_redeem?(redemption_amount)
-        Rails.logger.error "❌ Cannot partial redeem - can_partial_redeem? returned false"
-        return false
-      end
-
-      # Create redemption transaction
-      txn = transactions.create!(
-        amount: redemption_amount,
-        txn_type: :redemption,
-        status: :succeeded,
-        processor_ref: "ui_redemption_#{SecureRandom.uuid}",
-        merchant: merchant,
-        user: actor,
-        currency: currency,
-        metadata: {
-          actor_id: actor.id,
-          actor_type: actor.class.name,
-          merchant_id: merchant.id,
-          redeemed_at: Time.current.iso8601
-        }
-      )
-
-      Rails.logger.info "   ✅ Created transaction #{txn.id}"
-
-      # Update remaining balance
-      new_balance = remaining_balance - redemption_amount
-      update!(
-        remaining_balance: new_balance
-      )
-
-      # Track owner activity for redemption
-      touch_owner_activity!
-
-      Rails.logger.info "   ✅ Updated balance: #{new_balance}"
-
-      # Mark as fully redeemed if balance is zero
-      if new_balance == 0
-        update!(
-          status: :redeemed,
-          redeemed_at: Time.current
-        )
-        Rails.logger.info "   ✅ Marked as fully redeemed"
-      end
-    end
-
-    Rails.logger.info "✅ partial_redeem! completed successfully"
-    true
-  rescue => e
-    Rails.logger.error "💥 Error in partial_redeem!: #{e.class} - #{e.message}"
-    Rails.logger.error e.backtrace.join("\n")
-    raise
-  end
+  balances[:disputed_cents].positive?
+end
 
   # Gift cards never expire (no-expiration policy)
   def expired?
@@ -267,25 +227,21 @@ class GiftCard < ApplicationRecord
   end
 
   def can_be_redeemed?
-    active? && !expired? && remaining_balance > 0
-  end
-
-  def can_partial_redeem?(redemption_amount)
-    active? && !expired? && remaining_balance >= redemption_amount && redemption_amount > 0
-  end
+  active? && spendable_cents.positive?
+end
 
   def total_redemptions
-    transactions.successful.redemptions.sum(:amount)
-  end
+  transactions.successful.redemptions.sum(:amount)
+end
 
-  # Max amount refundable to the buyer at Stripe (Type B refund): the value
-  # not yet consumed by redemptions nor already returned by prior Stripe
-  # refunds. Both of those flows decrement remaining_balance under the row
-  # lock, so the live balance IS the cap — refunding beyond it would return
-  # money the platform already owes (or paid) to the redeeming merchant.
+  # Max amount refundable to buyers at Stripe across all loads (Type B):
+  # the sum of each load's unredeemed, not-yet-refunded part. Refunds are
+  # issued per load (Refunds::IssueStripeRefund); this is for admin views.
   def refundable_to_buyer_cents
-    canceled? ? 0 : remaining_balance.to_i
-  end
+  return 0 if canceled?
+
+  loads.sum(&:refundable_cents)
+end
 
   # ── Ledger invariants (RELOADABLE_CARD_PLAN.md §7) ──────────────────
   # Per-card drift report; empty array means every invariant holds. The
@@ -312,48 +268,7 @@ class GiftCard < ApplicationRecord
   # A legacy GiftCard#refund! that wrote unmarked reversal rows was removed
   # 2026-07-19 — do not reintroduce reversal writes outside Refunds::Issue.
 
-  def transfer_to!(new_recipient:, actor:)
-    transaction do
-      lock!
-      reload
-
-      # Validations
-      return false unless active? && remaining_balance > 0
-      return false unless new_recipient.is_a?(User)
-      return false if new_recipient == recipient
-
-      old_recipient = recipient
-
-      # Create transfer transaction
-      transactions.create!(
-        amount: 0, # No money movement, just ownership change
-        txn_type: :adjustment,
-        status: :succeeded,
-        processor_ref: "transfer_#{SecureRandom.uuid}",
-        merchant: merchant,
-        user: actor,
-        currency: currency,
-        metadata: {
-          action: "transfer",
-          from_user_id: old_recipient.id,
-          to_user_id: new_recipient.id,
-          actor_id: actor.id,
-          transferred_at: Time.current.iso8601
-        }
-      )
-
-      # Update recipient
-      update!(recipient: new_recipient)
-
-      # Track owner activity for transfer
-      touch_owner_activity!
-
-      # Send notification to new recipient
-      send_notifications!
-    end
-
-    true
-  end
+  # removed (D9): transfers — balance never moves between users.
 
   # Trigger notification delivery
   def send_notifications!
@@ -452,4 +367,31 @@ class GiftCard < ApplicationRecord
     Rails.logger.error "💥 Failed to record issuance transaction for gift card #{id}: #{e.class} - #{e.message}"
     # Don't block gift card creation if ledger write fails; log and move on.
   end
+
+  # Legacy issuance path (admin console, seeds, specs): a card created with
+  # a face value `amount` and no loads gets exactly one load for it, linked
+  # to the issuance ledger row, so every creation path is ledger-consistent
+  # (I1–I3). Phase 3 code (Loads::Fulfill) creates cards with amount 0 and
+  # adds loads explicitly, so this never fires for Stripe purchases.
+  def seed_legacy_load!
+  return if amount.to_i <= 0
+  return if loads.exists?
+
+  load = loads.create!(
+    sender: sender,
+    source: (payment_intent_id.present? || checkout_session_id.present?) ? :stripe : :issuance,
+    payment_intent_id: payment_intent_id,
+    checkout_session_id: checkout_session_id,
+    amount_cents: amount,
+    remaining_cents: remaining_balance.to_i.clamp(0, amount),
+    currency: currency,
+    note: note,
+    risk_score: risk_score,
+    risk_level: risk_level,
+    held_until: held_until,
+    disputed_at: disputed_at
+  )
+  transactions.where(txn_type: [:issuance, :purchase], gift_card_load_id: nil).update_all(gift_card_load_id: load.id)
+  update_columns(last_loaded_at: load.created_at)
+end
 end

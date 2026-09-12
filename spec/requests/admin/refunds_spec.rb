@@ -23,13 +23,13 @@ RSpec.describe "Admin::Refunds", type: :request do
       before { sign_in create(:user, role: :admin) }
 
       it "rejects refunds above the refundable (unredeemed) balance" do
-        gift_card.update!(remaining_balance: 1_000) # $190 already redeemed
+        redeem_card!(gift_card, 19_000, merchant: gift_card.merchant) # $190 already redeemed
 
         expect(Stripe::Refund).not_to receive(:create)
         post admin_gift_card_refunds_path(gift_card),
              params: { refund_amount: "200.00", reason: "full refund attempt" }
 
-        expect(response).to redirect_to(new_admin_gift_card_refund_path(gift_card))
+        expect(response.location).to start_with("http://www.example.com#{new_admin_gift_card_refund_path(gift_card)}")
         expect(flash[:alert]).to include("excede")
       end
 
@@ -37,7 +37,7 @@ RSpec.describe "Admin::Refunds", type: :request do
         refund = OpenStruct.new(id: "re_req_ok", amount: 1_000, currency: "usd")
         expect(Stripe::Refund).to receive(:create).and_return(refund)
 
-        gift_card.update!(remaining_balance: 1_000)
+        redeem_card!(gift_card, 19_000, merchant: gift_card.merchant)
         post admin_gift_card_refunds_path(gift_card),
              params: { refund_amount: "10.00", reason: "customer request" }
 

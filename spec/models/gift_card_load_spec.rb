@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe GiftCardLoad, type: :model do
-  let(:card) { create(:gift_card, amount: 5000) }
+  let(:card) { create(:gift_card, amount: 0) }
 
   describe "validations" do
     it "is valid with the factory defaults" do

@@ -26,9 +26,8 @@ RSpec.describe GiftCards::MergeDuplicates do
   # by `redeemer` with its allocation. Mirrors what the Phase 1 backfill
   # leaves behind.
   def legacy_card(created_at:, amount:, sender:, redeemed: 0, status: :active, pi: nil)
-    card = create(:gift_card, recipient: recipient, merchant: issuer, sender: sender, amount: amount,
+    card = create(:gift_card, recipient: recipient, merchant: issuer, sender: sender, amount: 0,
                   created_at: created_at, status: status, checkout_session_id: nil, payment_intent_id: pi)
-    card.transactions.destroy_all # drop the legacy issuance row; we write our own below
     load = create(:gift_card_load, gift_card: card, sender: sender, amount_cents: amount,
                   remaining_cents: amount - redeemed, payment_intent_id: pi, created_at: created_at)
     Transaction.create!(gift_card: card, gift_card_load: load, merchant: issuer, user: sender, amount: amount,
@@ -38,7 +37,7 @@ RSpec.describe GiftCards::MergeDuplicates do
                                 status: :succeeded, currency: "USD", processor_ref: "red_#{card.id}")
       RedemptionAllocation.create!(ledger_transaction: txn, gift_card_load: load, amount_cents: redeemed, direction: :debit)
     end
-    card.update_columns(remaining_balance: amount - redeemed, total_loaded_cents: amount, last_loaded_at: created_at)
+    card.update_columns(remaining_balance: amount - redeemed, total_loaded_cents: amount, amount: amount, last_loaded_at: created_at)
     RedemptionToken.create!(gift_card: card, token_digest: "tok_#{card.id}", expires_at: 1.minute.from_now)
     card.reload
   end
@@ -184,7 +183,7 @@ RSpec.describe GiftCards::MergeDuplicates do
   describe "guards" do
     it "skips a group with a card that has no loads" do
       legacy_card(created_at: 2.days.ago, amount: 4000, sender: buyer_a)
-      create(:gift_card, recipient: recipient, merchant: issuer, created_at: 1.day.ago) # Phase 1 factory: no load
+      create(:gift_card, recipient: recipient, merchant: issuer, created_at: 1.day.ago, amount: 0) # empty card: no load
 
       result = described_class.call(dry_run: false, io: io)
       expect(result.skipped.first.skipped_reason).to include("backfill_missing_loads")

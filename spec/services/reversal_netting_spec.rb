@@ -12,14 +12,7 @@ RSpec.describe "Reversal netting", type: :request do
   let(:buyer) { create(:user) }
 
   def redeem!(gift_card, cents, at: Time.current)
-    txn = gift_card.transactions.create!(
-      amount: cents, txn_type: :redemption, status: :succeeded, currency: "USD",
-      processor_ref: "ui_redemption_#{SecureRandom.hex(6)}", merchant: merchant,
-      user: merchant_user, created_at: at
-    )
-    gift_card.update!(remaining_balance: gift_card.remaining_balance - cents)
-    gift_card.update!(status: :redeemed, redeemed_at: at) if gift_card.remaining_balance.zero?
-    txn
+    redeem_card!(gift_card, cents, merchant: merchant, actor: merchant_user, at: at)
   end
 
   def reverse!(redemption)

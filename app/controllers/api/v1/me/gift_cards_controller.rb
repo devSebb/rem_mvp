@@ -6,7 +6,7 @@ module Api
 
         def index
           gift_cards = policy_scope(GiftCard)
-            .includes(:sender, sender: { avatar_attachment: :blob }, merchant: { logo_attachment: :blob })
+            .includes(:sender, sender: { avatar_attachment: :blob }, merchant: { logo_attachment: :blob }, loads: { sender: { avatar_attachment: :blob } })
             .order(updated_at: :desc, id: :desc)
 
           # Track owner activity for balance check (batch update to avoid N+1)
@@ -27,14 +27,21 @@ module Api
         # Stripe payment intent id until the webhook creates the card, so a
         # 404 here means "not created yet" and is part of the contract. The
         # policy scope also turns other users' cards into 404s (no existence leak).
+        # Resolves the LOAD for the payment intent (§5.3) and answers with the
+        # card serialized at top level (old-app compat) plus `load` and its
+        # `top_up` alias. Visible to the load's buyer or the card's recipient.
         def by_payment_intent
-          gift_card = policy_scope(GiftCard)
-            .includes(:sender, sender: { avatar_attachment: :blob }, merchant: { logo_attachment: :blob })
-            .find_by!(payment_intent_id: params[:payment_intent_id])
+          load = GiftCardLoad.includes(:sender, gift_card: [:recipient, :loads, { merchant: { logo_attachment: :blob } }])
+                             .find_by!(payment_intent_id: params[:payment_intent_id])
+          gift_card = load.gift_card
+          raise ActiveRecord::RecordNotFound unless load.sender_id == current_user.id || gift_card.recipient_id == current_user.id
 
-          # Track owner activity for balance check
           gift_card.touch_owner_activity!
-          render_success(data: serialize_gift_card(gift_card))
+          serializer = GiftCardSerializer.new(gift_card, attachment_url: method(:attachment_url))
+          data = serializer.as_json
+          data[:load] = serializer.serialize_load(load)
+          data[:top_up] = data[:load]
+          render_success(data: data)
         end
 
         def redemption_token
@@ -126,50 +133,13 @@ module Api
 
         def set_gift_card
           @gift_card = policy_scope(GiftCard)
-            .includes(:sender, sender: { avatar_attachment: :blob }, merchant: { logo_attachment: :blob })
+            .includes(:sender, sender: { avatar_attachment: :blob }, merchant: { logo_attachment: :blob }, loads: { sender: { avatar_attachment: :blob } })
             .find(params[:id])
         end
 
+        # §8.1 shape, compat fields included (GiftCardSerializer).
         def serialize_gift_card(card)
-          merchant_logo_url = attachment_url(card.merchant&.logo)
-
-          {
-            id: card.id,
-            amount_cents: card.amount,
-            remaining_balance_cents: card.remaining_balance,
-            currency: card.currency,
-            status: card.status,
-            # expires_at removed - gift cards never expire
-            created_at: card.created_at&.iso8601,
-            updated_at: card.updated_at&.iso8601,
-            sender_id: card.sender_id,
-            recipient_id: card.recipient_id,
-            merchant_id: card.merchant_id,
-            merchant: card.merchant ? { id: card.merchant.id, store_name: card.merchant.store_name, logo_url: merchant_logo_url } : nil,
-            store_name: card.merchant&.store_name,
-            merchant_name: card.merchant&.store_name,
-            merchant_store_name: card.merchant&.store_name,
-            merchant_logo_url: merchant_logo_url,
-            note: card.note,
-            sender: serialize_sender(card.sender),
-            # Only expose held_until while it's still in the future. After
-            # expiration we leave it null so the mobile UI doesn't need to
-            # know about past holds.
-            held_until: card.held? ? card.held_until.iso8601 : nil
-          }
-        end
-
-        def serialize_sender(sender)
-          return nil unless sender
-
-          {
-            id: sender.id,
-            name: sender.first_name,
-            last_name: sender.last_name,
-            full_name: sender.full_name.presence,
-            email: sender.email,
-            avatar_url: attachment_url(sender.avatar)
-          }
+          GiftCardSerializer.call(card, attachment_url: method(:attachment_url))
         end
       end
     end

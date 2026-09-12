@@ -89,13 +89,22 @@ module Api
           )
         end
 
-        # Check purchase limit
-        limit_check = GiftCardPurchaseLimiter.can_purchase?(user: current_user)
-        unless limit_check[:allowed]
+        # §4.1 caps (D7). The prospective recipient is resolved exactly as the
+        # webhook will (phone → email) but never created here; recipient- and
+        # card-level caps are re-checked at fulfilment.
+        prospective_recipient = Loads::Fulfill.find_recipient(
+          "recipient_phone" => recipient_params[:phone], "recipient_email" => recipient_params[:email]
+        )
+        begin
+          Loads::CapChecker.check!(
+            buyer: current_user, recipient: prospective_recipient, merchant: merchant, amount_cents: amount_cents
+          )
+        rescue Loads::CapChecker::CapExceeded => e
           return render_error(
-            code: "purchase_limit_exceeded",
-            message: "Has alcanzado el límite de #{limit_check[:limit]} tarjetas de regalo en las últimas 24 horas. Por favor intenta de nuevo mañana.",
-            status: :unprocessable_entity
+            code: e.error_code,
+            message: cap_message(e),
+            status: :unprocessable_entity,
+            details: e.details
           )
         end
 
@@ -213,6 +222,28 @@ module Api
 
         render_error(code: "invalid_amount", message: message, status: :unprocessable_entity)
         false
+      end
+
+      # Spanish copy per §4.1 cap; the app shows the room from `details`.
+      def cap_message(error)
+        d = error.details
+        room = d[:room_cents] ? format("$%.2f", d[:room_cents] / 100.0) : nil
+        case error.code
+        when :load_amount_out_of_range
+          "El monto por recarga debe estar entre $#{d[:min_cents] / 100.0} y $#{d[:max_cents] / 100.0} USD."
+        when :buyer_dispute_open
+          "Tienes una disputa de pago abierta. No puedes hacer recargas hasta que se resuelva."
+        when :card_daily_count_limit, :buyer_daily_count_limit
+          "Alcanzaste el máximo de #{d[:limit]} recargas en 24 horas. Intenta de nuevo mañana."
+        when :card_daily_load_limit, :buyer_daily_limit
+          "Hoy puedes recargar hasta #{room} más. Intenta de nuevo mañana."
+        when :card_balance_limit
+          "Esta tarjeta puede tener un saldo máximo de $#{d[:limit_cents] / 100.0}. Puedes recargar hasta #{room}."
+        when :recipient_monthly_limit, :buyer_monthly_limit
+          "Alcanzaste el límite de 30 días. Puedes recargar hasta #{room} más."
+        else
+          "No es posible completar esta recarga por ahora."
+        end
       end
 
       def quote_payload(quote)

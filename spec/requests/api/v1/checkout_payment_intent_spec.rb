@@ -370,21 +370,33 @@ RSpec.describe "POST /api/v1/checkout/payment_intent", type: :request do
     end
   end
 
-  describe "purchase limit" do
+  describe "load caps (§4.1)" do
     before do
-      # Create 5 gift cards in the last 24 hours
-      5.times do
-        create(:gift_card, sender: user, merchant: merchant, created_at: 1.hour.ago)
+      # 3 Stripe loads by this buyer in the last 24 hours = launch daily count cap
+      3.times do
+        card = create(:gift_card, recipient: create(:user), merchant: merchant, amount: 0)
+        stripe_load!(card, 2_000, sender: user, at: 1.hour.ago)
       end
     end
 
-    it "returns 422 when user has reached 24h purchase limit" do
+    it "returns 422 checkout.buyer_daily_count_limit with the cap details" do
       post "/api/v1/checkout/payment_intent",
            params: valid_params.to_json,
            headers: auth_headers(access_token)
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(parsed_error["code"]).to eq("purchase_limit_exceeded")
+      expect(parsed_error["code"]).to eq("checkout.buyer_daily_count_limit")
+      expect(parsed_error["details"]).to include("limit" => 3, "used" => 3)
+    end
+
+    it "returns 422 checkout.buyer_dispute_open for a buyer with an open chargeback" do
+      user.update!(dispute_open_count: 1)
+      post "/api/v1/checkout/payment_intent",
+           params: valid_params.to_json,
+           headers: auth_headers(access_token)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(parsed_error["code"]).to eq("checkout.buyer_dispute_open")
     end
   end
 

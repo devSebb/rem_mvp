@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe Ledger::Verifier do
   let(:merchant) { create(:merchant) }
-  let(:card) { create(:gift_card, merchant: merchant, amount: 5000) }
+  let(:card) { create(:gift_card, merchant: merchant, amount: 0) }
 
   # A consistent card: one load, one redemption fully allocated.
   def consistent_card!
@@ -31,15 +31,14 @@ RSpec.describe Ledger::Verifier do
     # pair index (WHERE merged_into_id IS NULL) lets them share the survivor's pair.
     it "accepts a canceled, empty shell pointing at a real survivor" do
       consistent_card!
-      shell = create(:gift_card, merchant: merchant, recipient: card.recipient, merged_into: card)
+      shell = create(:gift_card, merchant: merchant, recipient: card.recipient, merged_into: card, amount: 0)
       shell.update_columns(status: GiftCard.statuses[:canceled], remaining_balance: 0, total_loaded_cents: 0, loads_count: 0)
       expect(described_class.card_report(shell.reload).drift).to be_empty
     end
 
     it "flags a shell that still owns loads, money, or is not canceled" do
       consistent_card!
-      shell = create(:gift_card, merchant: merchant, recipient: card.recipient, amount: 1000, merged_into: card)
-      create(:gift_card_load, gift_card: shell, amount_cents: 1000)
+      shell = create(:gift_card, merchant: merchant, recipient: card.recipient, amount: 1000, merged_into: card) # bridge gives it one load
       drift = described_class.card_drift(shell.reload)
       expect(drift).to include(a_string_matching(/still has 1 load/), a_string_matching(/expected canceled/),
                                a_string_matching(/remaining_balance 1000/))
@@ -47,9 +46,9 @@ RSpec.describe Ledger::Verifier do
 
     it "flags a shell chained to another shell" do
       consistent_card!
-      first = create(:gift_card, merchant: merchant, recipient: card.recipient, merged_into: card)
+      first = create(:gift_card, merchant: merchant, recipient: card.recipient, merged_into: card, amount: 0)
       first.update_columns(status: GiftCard.statuses[:canceled], remaining_balance: 0, total_loaded_cents: 0)
-      second = create(:gift_card, merchant: merchant, recipient: card.recipient, merged_into: first)
+      second = create(:gift_card, merchant: merchant, recipient: card.recipient, merged_into: first, amount: 0)
       second.update_columns(status: GiftCard.statuses[:canceled], remaining_balance: 0, total_loaded_cents: 0)
       expect(described_class.card_drift(second.reload)).to include(a_string_matching(/another merged shell/))
     end
@@ -136,7 +135,7 @@ RSpec.describe Ledger::Verifier do
     load.update_columns(refunded_cents: 500, remaining_cents: 2500)
     card.update_columns(remaining_balance: 2500)
     drift = described_class.card_drift(card.reload)
-    expect(drift).to include(a_string_matching(/Σ Stripe refund txns 0 != refunded_cents 500/))
+    expect(drift).to include(a_string_matching(/Σ Stripe refund txns 0 \(debited\) != refunded_cents 500/))
   end
 
   it "flags a funded load whose purchase row disagrees with amount_cents" do
@@ -163,7 +162,7 @@ RSpec.describe Ledger::Verifier do
       ActiveRecord::Base.connection.remove_index(:gift_cards, name: "index_gift_cards_on_recipient_merchant_unique")
       consistent_card!
       recipient = card.recipient
-      create(:gift_card, recipient: recipient, merchant: merchant) # duplicate pair, no loads
+      create(:gift_card, recipient: recipient, merchant: merchant, amount: 0) # duplicate pair, no loads
 
       result = described_class.call
       expect(result.cards_checked).to eq(2)

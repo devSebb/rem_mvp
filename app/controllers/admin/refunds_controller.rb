@@ -1,14 +1,16 @@
 class Admin::RefundsController < Admin::BaseController
   before_action :set_gift_card, only: [:new, :create]
 
+  # Type B refunds are per LOAD (§5.7): the form lists the card's loads with
+  # what each can still return to its buyer. `gift_card_load_id` selects one;
+  # when absent the latest refundable load is used (old form compat).
   def new
     authorize @gift_card, :stripe_refund?
 
-    # Buyer refund cap: only value that hasn't been redeemed at a merchant
-    # or already refunded to the buyer. Redemption-side reversals (Type A)
-    # go through a separate merchant-facing endpoint, not this controller.
     @total_redeemed = @gift_card.total_redemptions
-    @max_refund_amount = @gift_card.refundable_to_buyer_cents
+    @loads = @gift_card.loads.reject(&:status_canceled?)
+    @selected_load = selected_load
+    @max_refund_amount = @selected_load&.refundable_cents.to_i
   end
 
   def create
@@ -16,55 +18,55 @@ class Admin::RefundsController < Admin::BaseController
 
     refund_amount = params[:refund_amount]&.to_f&.*(100)&.to_i # Convert to cents
     reason = params[:reason]&.strip
+    load = selected_load
+
+    if load.nil?
+      flash[:alert] = "Esta tarjeta no tiene recargas reembolsables."
+      redirect_to admin_gift_card_path(@gift_card) and return
+    end
 
     if refund_amount.nil? || refund_amount <= 0
       flash[:alert] = "Ingresa un monto de reembolso válido."
-      redirect_to new_admin_gift_card_refund_path(@gift_card) and return
+      redirect_to new_admin_gift_card_refund_path(@gift_card, gift_card_load_id: load.id) and return
     end
 
     # Friendly pre-check; Refunds::IssueStripeRefund re-validates under the
-    # row lock, which is the authoritative enforcement.
-    max_refund = @gift_card.refundable_to_buyer_cents
-    if refund_amount > max_refund
-      flash[:alert] = "El monto excede lo reembolsable (#{format_amount(max_refund, @gift_card.currency)})."
-      redirect_to new_admin_gift_card_refund_path(@gift_card) and return
+    # card lock, which is the authoritative enforcement.
+    if refund_amount > load.refundable_cents
+      flash[:alert] = "El monto excede lo reembolsable de esta recarga (#{format_amount(load.refundable_cents, @gift_card.currency)})."
+      redirect_to new_admin_gift_card_refund_path(@gift_card, gift_card_load_id: load.id) and return
     end
 
     if reason.blank?
       flash[:alert] = "Indica el motivo del reembolso."
-      redirect_to new_admin_gift_card_refund_path(@gift_card) and return
+      redirect_to new_admin_gift_card_refund_path(@gift_card, gift_card_load_id: load.id) and return
     end
 
-    # Issue the refund at Stripe. Internal balance reconciliation runs
-    # asynchronously via the charge.refunded webhook (single code path,
-    # see Refunds::IssueStripeRefund).
     begin
-      refund = Refunds::IssueStripeRefund.call(
-        gift_card: @gift_card,
-        amount_cents: refund_amount,
-        reason: reason,
-        actor: current_user
-      )
+      refund = Refunds::IssueStripeRefund.call(load: load, amount_cents: refund_amount, reason: reason, actor: current_user)
 
-      flash[:notice] = "Reembolso Stripe #{refund.id} emitido por #{format_amount(refund_amount, @gift_card.currency)}. " \
-                       "El saldo interno se actualiza cuando llegue el webhook de Stripe."
+      flash[:notice] = "Reembolso Stripe #{refund.id} emitido por #{format_amount(refund_amount, @gift_card.currency)} " \
+                       "sobre la recarga ##{load.id}. El saldo interno se actualiza cuando llegue el webhook de Stripe."
       redirect_to admin_gift_card_path(@gift_card)
     rescue Refunds::IssueStripeRefund::MissingPaymentIntent
-      flash[:alert] = "Esta tarjeta no se creó vía Stripe — no hay pago que reembolsar."
-      redirect_to new_admin_gift_card_refund_path(@gift_card)
+      flash[:alert] = "Esta recarga no se creó vía Stripe — no hay pago que reembolsar."
+      redirect_to new_admin_gift_card_refund_path(@gift_card, gift_card_load_id: load.id)
     rescue Refunds::IssueStripeRefund::AlreadyFullyRefunded
-      flash[:alert] = "Esta tarjeta ya está cancelada o totalmente reembolsada."
+      flash[:alert] = "Esta recarga ya está totalmente reembolsada o cancelada."
+      redirect_to admin_gift_card_path(@gift_card)
+    rescue Refunds::IssueStripeRefund::LoadDisputed
+      flash[:alert] = "Esta recarga tiene una disputa abierta; Stripe no permite reembolsarla."
       redirect_to admin_gift_card_path(@gift_card)
     rescue Refunds::IssueStripeRefund::InvalidAmount
       flash[:alert] = "Monto de reembolso inválido."
-      redirect_to new_admin_gift_card_refund_path(@gift_card)
+      redirect_to new_admin_gift_card_refund_path(@gift_card, gift_card_load_id: load.id)
     rescue Refunds::IssueStripeRefund::ExceedsRefundableBalance
       flash[:alert] = "El monto excede el saldo reembolsable (el valor ya canjeado no se devuelve al comprador)."
-      redirect_to new_admin_gift_card_refund_path(@gift_card)
+      redirect_to new_admin_gift_card_refund_path(@gift_card, gift_card_load_id: load.id)
     rescue Stripe::StripeError => e
-      Rails.logger.error "[AdminRefund] Stripe error for gift_card=#{@gift_card.id}: #{e.class} #{e.message}"
+      Rails.logger.error "[AdminRefund] Stripe error for gift_card=#{@gift_card.id} load=#{load.id}: #{e.class} #{e.message}"
       flash[:alert] = "Stripe rechazó el reembolso: #{e.message}"
-      redirect_to new_admin_gift_card_refund_path(@gift_card)
+      redirect_to new_admin_gift_card_refund_path(@gift_card, gift_card_load_id: load.id)
     end
   end
 
@@ -75,6 +77,16 @@ class Admin::RefundsController < Admin::BaseController
 
   def set_gift_card
     @gift_card = GiftCard.find(params[:gift_card_id])
+  end
+
+  def selected_load
+    loads = @gift_card.loads.reject(&:status_canceled?)
+    if params[:gift_card_load_id].present?
+      loads.find { |l| l.id == params[:gift_card_load_id].to_i }
+    else
+      loads.select { |l| l.payment_intent_id.present? && l.refundable_cents.positive? }.max_by(&:created_at) ||
+        loads.select { |l| l.payment_intent_id.present? }.max_by(&:created_at)
+    end
   end
 
   def format_amount(amount_cents, currency)

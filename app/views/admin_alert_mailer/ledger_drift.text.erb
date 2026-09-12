@@ -1,0 +1,13 @@
+[ALERT] Ledger drift detected
+======================================================
+
+Ran at:           <%= @summary[:ran_at] || @summary["ran_at"] %>
+Cards checked:    <%= @summary[:cards_checked] || @summary["cards_checked"] %>
+Drift:            <%= @summary[:drift_count] || @summary["drift_count"] %>
+Warnings:         <%= @summary[:warning_count] || @summary["warning_count"] %>
+Duplicate pairs:  <%= @summary[:duplicate_pairs] || @summary["duplicate_pairs"] %>
+
+<% @drift_lines.each do |line| %>- <%= line %>
+<% end %>
+Run `bin/rake ledger:verify VERBOSE=1` for the full report. Do not touch
+money by hand until the cause is understood (RELOADABLE_CARD_PLAN.md §7).

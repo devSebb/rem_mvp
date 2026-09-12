@@ -3,8 +3,9 @@ require "rails_helper"
 RSpec.describe "Api::V1::Redemptions", type: :request do
   let(:merchant_secret) { "sec_test_key_123" }
   let(:other_merchant_secret) { "sec_other_key_456" }
-  let(:merchant) { create_merchant(secret: merchant_secret) }
-  let(:other_merchant) { create_merchant(secret: other_merchant_secret) }
+  let(:group) { RedemptionGroup.create!(name: "Farmaenlace") }
+  let(:merchant) { create_merchant(secret: merchant_secret).tap { |m| m.update!(redemption_group: group) } }
+  let(:other_merchant) { create_merchant(secret: other_merchant_secret).tap { |m| m.update!(redemption_group: group) } }
   let(:gift_card) { create_gift_card(merchant: merchant) }
   let(:raw_token) { issue_token_for(gift_card) }
 
@@ -13,7 +14,7 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
       allow(Messaging::RedemptionPusher).to receive(:call)
     end
 
-    it "allows redemption by a different merchant and records the redeemer" do
+    it "allows redemption by a merchant in the same redemption group and records the redeemer (D6)" do
       other_merchant # ensure created
       token_value = raw_token # force gift card + issuance txn creation before the expect block
       expect(Messaging::RedemptionPusher).to receive(:call).with(
@@ -49,7 +50,7 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
 
     it "returns held_until when a held card is declined" do
       held_until = 2.hours.from_now
-      gift_card.update!(held_until: held_until)
+      gift_card.loads.each { |load| load.update!(held_until: held_until) } # holds are per load (D5)
 
       post "/api/v1/redemptions",
            params: {
@@ -64,6 +65,20 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
       expect(body["approved"]).to be(false)
       expect(body["decline_reason"]).to eq("card_held_security_review")
       expect(body["held_until"]).to be_present
+    end
+
+    it "declines merchant_mismatch (403) for a merchant outside the issuer's group" do
+      outsider_secret = "sec_outsider_789"
+      create_merchant(secret: outsider_secret)
+
+      post "/api/v1/redemptions",
+           params: { token: raw_token, amount_cents: 500, idempotency_key: SecureRandom.uuid }.to_json,
+           headers: auth_headers(outsider_secret)
+
+      expect(response).to have_http_status(:forbidden)
+      body = JSON.parse(response.body)
+      expect(body["decline_reason"]).to eq("merchant_mismatch")
+      expect(gift_card.reload.remaining_balance).to eq(10_000)
     end
 
     it "returns response contract: approved, transaction_id, gift_card_id, remaining_balance_cents, currency" do

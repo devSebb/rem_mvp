@@ -9,8 +9,14 @@ RSpec.describe Ledger::LegacyLoadBackfill do
   let(:buyer) { create(:user) }
   let(:recipient) { create(:user) }
 
+  # Pre-Phase-1 shape: the card carries the money and has NO loads. The
+  # model's legacy issuance bridge creates one on create, so strip it again.
   def legacy_card(**attrs)
-    create(:gift_card, { sender: buyer, recipient: recipient, merchant: merchant, checkout_session_id: nil }.merge(attrs))
+    card = create(:gift_card, { sender: buyer, recipient: recipient, merchant: merchant, checkout_session_id: nil }.merge(attrs))
+    Transaction.where(gift_card_id: card.id).update_all(gift_card_load_id: nil)
+    GiftCardLoad.where(gift_card_id: card.id).delete_all
+    card.update_columns(loads_count: 0, last_loaded_at: nil, total_loaded_cents: card.amount.to_i)
+    card.reload
   end
 
   def txn(card, type, amount, ref, **attrs)
@@ -190,7 +196,7 @@ RSpec.describe Ledger::LegacyLoadBackfill do
   describe "Phase 2 merge shells" do
     it "never creates a load for an absorbed card" do
       survivor = legacy_card(amount: 1000, payment_intent_id: "pi_legacy_9")
-      shell = create(:gift_card, recipient: recipient, merchant: merchant, merged_into: survivor, checkout_session_id: nil)
+      shell = create(:gift_card, recipient: recipient, merchant: merchant, merged_into: survivor, checkout_session_id: nil, amount: 0)
       shell.update_columns(status: GiftCard.statuses[:canceled], remaining_balance: 0, total_loaded_cents: 0)
       shell.transactions.destroy_all
 
@@ -203,7 +209,7 @@ RSpec.describe Ledger::LegacyLoadBackfill do
 
   describe "cards created after the migration" do
     it "only touches cards that have no loads yet" do
-      untouched = create(:gift_card)
+      untouched = create(:gift_card, amount: 0)
       existing = create(:gift_card_load, gift_card: untouched, amount_cents: 700)
       legacy = legacy_card(amount: 1000, payment_intent_id: "pi_legacy_8")
 

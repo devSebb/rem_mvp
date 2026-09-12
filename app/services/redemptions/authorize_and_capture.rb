@@ -1,5 +1,21 @@
 require "securerandom"
 
+# Merchant redemption of a card via a 90 s bearer token (§5.4).
+#
+# Interface, lock order (token → card → loads) and idempotency semantics
+# are unchanged from the pre-reloadable version: `(merchant_id,
+# idempotency_key)` is replayed verbatim, declines included; `token.used_at`
+# is set only on success.
+#
+# Declines, in check order:
+#   invalid_token, expired_token, token_used, merchant_mismatch (D6),
+#   gift_card_inactive (canceled/legacy), card_frozen (admin),
+#   card_held_security_review (only held funds remain), card_disputed (only
+#   disputed funds remain), insufficient_balance (amount > spendable).
+#
+# Capture draws the amount FIFO across the card's spendable loads through
+# Loads::Allocator and records one allocation per load touched. Card status
+# is never flipped to `redeemed` (D3).
 module Redemptions
   class AuthorizeAndCapture
     class ValidationError < StandardError; end
@@ -40,61 +56,62 @@ module Redemptions
       token.with_lock do
         gift_card = token.gift_card
         return decline!("invalid_token") unless gift_card
-
-        unless gift_card&.merchant_id
-          return decline_without_transaction!("merchant_missing", gift_card: gift_card)
-        end
-
-        set_transaction_merchant
-
-        return decline!("expired_token", token: token, gift_card: gift_card) if token_expired?(token)
-        return decline!("token_used", token: token, gift_card: gift_card) if token.used_at.present?
-        return decline!("gift_card_inactive", token: token, gift_card: gift_card) unless gift_card&.active? && !gift_card.expired?
-        return decline!("card_held_security_review", token: token, gift_card: gift_card) if gift_card.held?
-        return decline!("card_disputed", token: token, gift_card: gift_card) if gift_card.disputed?
+        return decline_without_transaction!("merchant_missing", gift_card: gift_card) unless gift_card.merchant_id
 
         if (existing = existing_transaction)
           return build_payload(existing)
         end
 
-        process_with_gift_card(token, gift_card)
-      end
-    end
+        return decline!("expired_token", token: token, gift_card: gift_card) if token_expired?(token)
+        return decline!("token_used", token: token, gift_card: gift_card) if token.used_at.present?
 
-    def process_with_gift_card(token, gift_card)
-      gift_card.with_lock do
-        begin
-          new_balance = gift_card.redeem_amount!(amount_cents)
-        rescue GiftCard::RedemptionError => e
-          reason = e.reason == :insufficient_balance ? "insufficient_balance" : "gift_card_inactive"
-          return decline!(reason, token: token, gift_card: gift_card)
+        unless Merchants::CanRedeem.call(redeemer: merchant, issuer: gift_card.merchant)
+          return decline!("merchant_mismatch", token: token, gift_card: gift_card)
         end
 
-        txn = create_transaction!(
-          gift_card: gift_card,
-          redemption_token: token,
-          status: :succeeded,
-          decline_reason: nil
-        )
-        token.update!(used_at: Time.current)
+        gift_card.with_lock do
+          gift_card.reload
+          balances = gift_card.balances
 
-        build_payload(txn, remaining_balance_override: new_balance)
+          return decline!("card_frozen", token: token, gift_card: gift_card) if gift_card.frozen_by_admin?
+          return decline!("gift_card_inactive", token: token, gift_card: gift_card) unless gift_card.active?
+
+          if balances[:spendable_cents].zero?
+            if balances[:held_cents].positive?
+              return decline!("card_held_security_review", token: token, gift_card: gift_card, balances: balances)
+            elsif balances[:disputed_cents].positive?
+              return decline!("card_disputed", token: token, gift_card: gift_card, balances: balances)
+            end
+          end
+
+          if amount_cents > balances[:spendable_cents]
+            return decline!("insufficient_balance", token: token, gift_card: gift_card, balances: balances)
+          end
+
+          capture!(token, gift_card)
+        end
       end
     end
 
-    def decline!(reason, token: nil, gift_card: nil)
-      txn = create_transaction!(
-        gift_card: gift_card,
-        redemption_token: token,
-        status: :failed,
-        decline_reason: reason
-      )
+    def capture!(token, gift_card)
+      txn = create_transaction!(gift_card: gift_card, redemption_token: token, status: :succeeded, decline_reason: nil)
 
-      build_payload(txn)
+      begin
+        Loads::Allocator.debit!(card: gift_card, amount_cents: amount_cents, transaction: txn)
+      rescue Loads::Allocator::InsufficientSpendable
+        # Cannot happen after the check above (same lock), kept as a belt.
+        raise ActiveRecord::Rollback
+      end
+
+      token.update!(used_at: Time.current)
+      gift_card.touch_owner_activity!
+
+      build_payload(txn, balances: gift_card.balances)
     end
 
-    def set_transaction_merchant
-      @transaction_merchant_id = merchant&.id
+    def decline!(reason, token: nil, gift_card: nil, balances: nil)
+      txn = create_transaction!(gift_card: gift_card, redemption_token: token, status: :failed, decline_reason: reason)
+      build_payload(txn, balances: balances)
     end
 
     def decline_without_transaction!(reason, gift_card:)
@@ -106,7 +123,9 @@ module Redemptions
         transaction_id: nil,
         gift_card_id: gift_card&.id,
         amount_cents: amount_cents,
-        remaining_balance_cents: gift_card&.remaining_balance,
+        remaining_balance_cents: 0,
+        total_balance_cents: gift_card&.remaining_balance.to_i,
+        spendable_cents: 0,
         currency: gift_card&.currency || "USD"
       }
     end
@@ -120,8 +139,7 @@ module Redemptions
     end
 
     def locate_token
-      digest = RedemptionToken.digest(raw_token)
-      RedemptionToken.find_by(token_digest: digest)
+      RedemptionToken.find_by(token_digest: RedemptionToken.digest(raw_token))
     end
 
     def token_expired?(token)
@@ -134,10 +152,12 @@ module Redemptions
       raise ValidationError, "idempotency_key is required" if idempotency_key.blank?
     end
 
-    def build_payload(txn, remaining_balance_override: nil)
+    # `remaining_balance_cents` keeps its name for API clients and now means
+    # "what this card can spend right now" (§8.4); the total incl. held and
+    # disputed funds is `total_balance_cents`.
+    def build_payload(txn, balances: nil)
       gift_card = txn.gift_card
-      remaining_balance = remaining_balance_override
-      remaining_balance ||= gift_card&.reload&.remaining_balance
+      balances ||= gift_card&.reload&.balances || { spendable_cents: 0, remaining_balance: 0, held_cents: 0, disputed_cents: 0, held_until: nil }
 
       payload = {
         transaction: txn,
@@ -147,14 +167,19 @@ module Redemptions
         transaction_id: txn.id,
         gift_card_id: gift_card&.id,
         amount_cents: txn.amount,
-        remaining_balance_cents: remaining_balance,
+        remaining_balance_cents: balances[:spendable_cents],
+        spendable_cents: balances[:spendable_cents],
+        total_balance_cents: balances[:remaining_balance],
         currency: txn.currency || gift_card&.currency || "USD"
       }
 
-      # Include unlock time so merchant POS can show "ready at X" on
-      # held cards instead of a generic decline.
-      if txn.decline_reason == "card_held_security_review" && gift_card&.held_until
-        payload[:held_until] = gift_card.held_until.iso8601
+      case txn.decline_reason
+      when "card_held_security_review"
+        payload[:held_until] = balances[:held_until]&.iso8601 if balances[:held_until]
+        payload[:held_cents] = balances[:held_cents]
+      when "card_disputed", "insufficient_balance"
+        payload[:held_cents] = balances[:held_cents]
+        payload[:disputed_cents] = balances[:disputed_cents]
       end
 
       payload
@@ -176,6 +201,7 @@ module Redemptions
         decline_reason: decline_reason,
         metadata: {
           merchant_id: txn_merchant_id,
+          issuer_merchant_id: gift_card&.merchant_id,
           merchant_reference: merchant_reference
         }.compact
       )
@@ -184,4 +210,3 @@ module Redemptions
     end
   end
 end
-
