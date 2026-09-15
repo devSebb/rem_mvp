@@ -52,7 +52,8 @@ module Ledger
           CREATE TEMP TABLE legacy_backfill_cards ON COMMIT DROP AS
           SELECT gc.id
           FROM gift_cards gc
-          WHERE NOT EXISTS (SELECT 1 FROM gift_card_loads l WHERE l.gift_card_id = gc.id)
+          WHERE gc.merged_into_id IS NULL  -- Phase 2 merge shells own no money
+            AND NOT EXISTS (SELECT 1 FROM gift_card_loads l WHERE l.gift_card_id = gc.id)
         SQL
 
         cards = connection.select_value("SELECT COUNT(*) FROM legacy_backfill_cards").to_i

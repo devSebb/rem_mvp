@@ -283,7 +283,7 @@ RSpec.describe "Mobile API", type: :request do
 
     it "returns ordered gift cards with sender/recipient and merchant info" do
       merchant = create(:merchant)
-      older = create(:gift_card, recipient: user, sender: user, merchant: merchant)
+      older = create(:gift_card, recipient: user, sender: user, merchant: create(:merchant)) # one card per (recipient, merchant) since Phase 2
       newer = create(:gift_card, recipient: user, sender: user, merchant: merchant)
       older.update_columns(created_at: 3.days.ago, updated_at: 2.days.ago)
       newer.update_columns(updated_at: 1.hour.ago)

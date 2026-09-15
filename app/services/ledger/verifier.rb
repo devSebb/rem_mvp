@@ -70,6 +70,19 @@ module Ledger
       info = []
 
       loads = GiftCardLoad.where(gift_card_id: card.id).fifo.to_a
+
+      # Phase 2 merge shells: absorbed cards keep their row for audit but own
+      # no money. They must be canceled, empty and point at a real survivor.
+      if card.merged_into_id.present?
+        drift << "merged shell still has #{loads.size} load(s)" if loads.any?
+        drift << "merged shell is `#{card.status}`, expected canceled" unless card.canceled?
+        drift << "merged shell has remaining_balance #{card.remaining_balance.to_i}" unless card.remaining_balance.to_i.zero?
+        survivor = GiftCard.find_by(id: card.merged_into_id)
+        drift << "merged_into #{card.merged_into_id} does not exist" if survivor.nil?
+        drift << "merged_into points at another merged shell" if survivor&.merged_into_id.present?
+        return CardReport.new(card_id: card.id, status: card.status, drift: drift, warnings: warnings, info: info)
+      end
+
       if loads.empty?
         drift << "no loads (run `rake ledger:backfill_missing_loads`)"
         return CardReport.new(card_id: card.id, status: card.status, drift: drift, warnings: warnings, info: info)
@@ -148,15 +161,19 @@ module Ledger
         end
       end
 
-      # I3 — card-level ledger equation.
+      # I3 — card-level ledger equation: everything that left the card
+      # (net redemptions, Stripe refunds, dispute write-offs) equals loaded
+      # minus remaining. NB: the plan's §7 wording subtracts refunds and
+      # write-offs; they are outflows like redemptions, so they ADD — summing
+      # I2 over the loads gives exactly this form.
       redeemed = succeeded.select(&:redemption?).sum(&:amount)
       reversed = succeeded.select { |t| t.refund? && t.reversal_of_transaction_id.present? }.sum(&:amount)
       stripe_refunded = succeeded.select { |t| t.refund? && t.reversal_of_transaction_id.nil? }.sum(&:amount)
       written_off = succeeded.select { |t| t.adjustment? && t.processor_ref.to_s.start_with?("dispute_") }.sum(&:amount)
-      lhs = redeemed - reversed - stripe_refunded - written_off
+      lhs = redeemed - reversed + stripe_refunded + written_off
       rhs = card.total_loaded_cents.to_i - card.remaining_balance.to_i
       if lhs != rhs
-        msg = "I3 redemptions #{redeemed} − reversals #{reversed} − stripe refunds #{stripe_refunded} − " \
+        msg = "I3 redemptions #{redeemed} − reversals #{reversed} + stripe refunds #{stripe_refunded} + " \
               "write-offs #{written_off} = #{lhs} != total_loaded #{card.total_loaded_cents.to_i} − remaining #{card.remaining_balance.to_i} = #{rhs}"
         if card.canceled?
           warnings << "legacy canceled card: #{msg}"

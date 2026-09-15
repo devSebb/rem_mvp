@@ -153,6 +153,21 @@ namespace :gift_cards do
     puts "   Coverage: #{pct}%"
   end
 
+  desc "Phase 2: fold duplicate (recipient, merchant) cards into one survivor. DRY_RUN=1 prints the plan and writes nothing."
+  task merge_duplicates: :environment do
+    dry_run = ENV["DRY_RUN"].to_s == "1"
+    result = GiftCards::MergeDuplicates.call(dry_run: dry_run)
+
+    if dry_run
+      puts "\n🧪 DRY RUN complete. Re-run without DRY_RUN=1 to apply, then: bin/rake ledger:verify"
+    elsif result.skipped.any?
+      puts "\n💥 #{result.skipped.size} group(s) skipped — the Phase 2 unique index will refuse to build until they are resolved"
+      exit 1
+    else
+      puts "\n✅ Merge complete. Now run: bin/rake ledger:verify"
+    end
+  end
+
   namespace :merchantless do
     desc "Report gift cards that have no merchant assigned"
     task report: :environment do
@@ -166,6 +181,24 @@ namespace :gift_cards do
           puts "   - ID #{id}: balance=#{balance}, status=#{status}"
         end
       end
+    end
+
+    desc "Assign a merchant to every gift card without one (Phase 2 needs merchant_id NOT NULL). MERCHANT_ID=n required; DRY-RUN unless CONFIRM=yes"
+    task assign: :environment do
+      merchant = Merchant.find_by(id: ENV["MERCHANT_ID"])
+      abort("MERCHANT_ID=<id> is required and must exist") unless merchant
+
+      dry_run = ENV["CONFIRM"].to_s.downcase != "yes"
+      scope = GiftCard.where(merchant_id: nil)
+      puts(dry_run ? "🧪 DRY-RUN (no changes). Re-run with CONFIRM=yes to apply." : "⚠️  LIVE RUN")
+      puts "   #{scope.count} merchantless card(s) → merchant #{merchant.id} (#{merchant.store_name})"
+      scope.order(:id).pluck(:id, :status, :remaining_balance, :recipient_id).each do |id, status, bal, recipient_id|
+        puts "   - ##{id} #{status} balance=#{bal} recipient=#{recipient_id}"
+      end
+      next if dry_run || scope.none?
+
+      updated = scope.update_all(merchant_id: merchant.id, updated_at: Time.current)
+      puts "✅ Assigned #{updated} card(s) to #{merchant.store_name}. Their loads keep their own history; run ledger:verify."
     end
 
     desc "Cancel gift cards that have no merchant assigned (expiration removed - gift cards never expire)"

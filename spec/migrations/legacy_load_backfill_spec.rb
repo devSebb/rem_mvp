@@ -187,6 +187,20 @@ RSpec.describe Ledger::LegacyLoadBackfill do
     end
   end
 
+  describe "Phase 2 merge shells" do
+    it "never creates a load for an absorbed card" do
+      survivor = legacy_card(amount: 1000, payment_intent_id: "pi_legacy_9")
+      shell = create(:gift_card, recipient: recipient, merchant: merchant, merged_into: survivor, checkout_session_id: nil)
+      shell.update_columns(status: GiftCard.statuses[:canceled], remaining_balance: 0, total_loaded_cents: 0)
+      shell.transactions.destroy_all
+
+      result = run!
+      expect(result[:cards]).to eq(1)
+      expect(shell.loads.count).to eq(0)
+      expect(Ledger::Verifier.card_drift(shell.reload)).to be_empty
+    end
+  end
+
   describe "cards created after the migration" do
     it "only touches cards that have no loads yet" do
       untouched = create(:gift_card)

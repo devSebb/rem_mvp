@@ -43,6 +43,11 @@ class GiftCardLoad < ApplicationRecord
   validate :remaining_within_amount
 
   before_validation :set_defaults, on: :create
+  # `status` is derived from the money columns and timestamps on every save,
+  # so callers only ever change cents / held_until / disputed_at / outcome.
+  # `canceled` is the one sticky value (see #derived_status). Time-based
+  # flips (a hold expiring) still need #sync_status!.
+  before_validation :derive_status
 
   # ── Scopes ──────────────────────────────────────────────────────────
   scope :fifo, -> { order(:created_at, :id) }
@@ -139,7 +144,12 @@ class GiftCardLoad < ApplicationRecord
     self.refunded_cents ||= 0
     self.written_off_cents ||= 0
     self.fee_cents ||= 0
-    self.status = derived_status if status.nil? || status_available?
+  end
+
+  def derive_status
+    return if remaining_cents.nil? || amount_cents.nil?
+
+    self.status = derived_status
   end
 
   def remaining_within_amount

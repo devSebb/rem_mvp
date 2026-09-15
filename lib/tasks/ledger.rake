@@ -31,7 +31,7 @@ namespace :ledger do
 
   desc "Create the single legacy load (+ allocations, txn links) for any gift card that has none. Idempotent."
   task backfill_missing_loads: :environment do
-    missing = GiftCard.where.missing(:loads).count
+    missing = GiftCard.where(merged_into_id: nil).where.missing(:loads).count
     puts "🔄 #{missing} gift card(s) without loads"
     next if missing.zero?
 

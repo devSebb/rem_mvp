@@ -26,6 +26,35 @@ RSpec.describe Ledger::Verifier do
     expect(described_class.card_drift(card)).to include(a_string_matching(/no loads/))
   end
 
+  describe "Phase 2 merge shells" do
+    # Shells are created with merged_into set so the Phase 2 partial unique
+    # pair index (WHERE merged_into_id IS NULL) lets them share the survivor's pair.
+    it "accepts a canceled, empty shell pointing at a real survivor" do
+      consistent_card!
+      shell = create(:gift_card, merchant: merchant, recipient: card.recipient, merged_into: card)
+      shell.update_columns(status: GiftCard.statuses[:canceled], remaining_balance: 0, total_loaded_cents: 0, loads_count: 0)
+      expect(described_class.card_report(shell.reload).drift).to be_empty
+    end
+
+    it "flags a shell that still owns loads, money, or is not canceled" do
+      consistent_card!
+      shell = create(:gift_card, merchant: merchant, recipient: card.recipient, amount: 1000, merged_into: card)
+      create(:gift_card_load, gift_card: shell, amount_cents: 1000)
+      drift = described_class.card_drift(shell.reload)
+      expect(drift).to include(a_string_matching(/still has 1 load/), a_string_matching(/expected canceled/),
+                               a_string_matching(/remaining_balance 1000/))
+    end
+
+    it "flags a shell chained to another shell" do
+      consistent_card!
+      first = create(:gift_card, merchant: merchant, recipient: card.recipient, merged_into: card)
+      first.update_columns(status: GiftCard.statuses[:canceled], remaining_balance: 0, total_loaded_cents: 0)
+      second = create(:gift_card, merchant: merchant, recipient: card.recipient, merged_into: first)
+      second.update_columns(status: GiftCard.statuses[:canceled], remaining_balance: 0, total_loaded_cents: 0)
+      expect(described_class.card_drift(second.reload)).to include(a_string_matching(/another merged shell/))
+    end
+  end
+
   it "flags I1 when the cached balance disagrees with the loads" do
     consistent_card!
     card.update_columns(remaining_balance: 2999)
@@ -54,6 +83,20 @@ RSpec.describe Ledger::Verifier do
     load.update_columns(remaining_cents: 2900)
     card.update_columns(remaining_balance: 2900, total_loaded_cents: 5100)
     expect(described_class.card_drift(card.reload)).to include(a_string_matching(/I3 /))
+  end
+
+  it "holds I3 on an active card with a Stripe refund and a dispute write-off (outflows add up)" do
+    load, = consistent_card!
+    Transaction.create!(gift_card: card, gift_card_load: load, merchant: merchant, amount: 500, txn_type: :refund,
+                        status: :succeeded, processor_ref: "re_1", currency: "USD", metadata: { stripe_refund_id: "re_1" })
+    Transaction.create!(gift_card: card, gift_card_load: load, merchant: merchant, amount: 700, txn_type: :adjustment,
+                        status: :succeeded, processor_ref: "dispute_dp_9", currency: "USD", metadata: { stripe_dispute_id: "dp_9" })
+    load.update_columns(remaining_cents: 1800, refunded_cents: 500, written_off_cents: 700) # 3000 − 500 − 700
+    card.update_columns(remaining_balance: 1800)
+
+    report = described_class.card_report(card.reload)
+    expect(report.drift).to be_empty
+    expect(report.warnings).to be_empty
   end
 
   it "flags I5 when a redemption is not fully allocated" do
@@ -115,6 +158,9 @@ RSpec.describe Ledger::Verifier do
 
   describe ".call" do
     it "aggregates over all cards and counts duplicate pairs" do
+      # A duplicate pair is only possible without the Phase 2 unique index;
+      # drop it inside this example's transaction (PostgreSQL DDL rolls back).
+      ActiveRecord::Base.connection.remove_index(:gift_cards, name: "index_gift_cards_on_recipient_merchant_unique")
       consistent_card!
       recipient = card.recipient
       create(:gift_card, recipient: recipient, merchant: merchant) # duplicate pair, no loads

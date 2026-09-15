@@ -81,7 +81,7 @@ RSpec.describe "Reversal netting", type: :request do
 
     it "pays net of reversals made before the payout" do
       redeem!(gift_card, 1_000)
-      second_card = create(:gift_card, sender: buyer, recipient: buyer, merchant: merchant, amount: 500)
+      second_card = create(:gift_card, sender: buyer, recipient: create(:user), merchant: merchant, amount: 500)
       reversed = redeem!(second_card, 500)
       reverse!(reversed)
 
@@ -102,7 +102,7 @@ RSpec.describe "Reversal netting", type: :request do
 
       # Card is drained; reverse the paid-out redemption, then a new $300 redemption arrives
       reverse!(first)
-      second_card = create(:gift_card, sender: buyer, recipient: buyer, merchant: merchant, amount: 300)
+      second_card = create(:gift_card, sender: buyer, recipient: create(:user), merchant: merchant, amount: 300)
       redeem!(second_card, 300)
 
       expect(merchant.unsettled_net_redeemed_cents).to eq(-700)
@@ -133,7 +133,7 @@ RSpec.describe "Reversal netting", type: :request do
       travel_to(5.days.ago) { post admin_payouts_path(merchant_id: merchant.id) }
       sign_in merchant_user
 
-      second_card = create(:gift_card, sender: buyer, recipient: buyer, merchant: merchant, amount: 500)
+      second_card = create(:gift_card, sender: buyer, recipient: create(:user), merchant: merchant, amount: 500)
       newer = redeem!(second_card, 500)
       reverse!(newer)
 

@@ -11,7 +11,9 @@ class Merchant < ApplicationRecord
   # D6: merchants in the same group may redeem each other's cards; a merchant
   # with no group redeems only its own. Seeded ("Farmaenlace") in Phase 2.
   belongs_to :redemption_group, optional: true
-  has_many :gift_cards, dependent: :nullify
+  # merchant_id is NOT NULL from Phase 2 on; a merchant with cards cannot be
+  # deleted (admin_delete_blockers already refuses this in the UI).
+  has_many :gift_cards, dependent: :restrict_with_error
   has_many :transactions, through: :gift_cards
   has_many :settlements, dependent: :destroy
   has_one_attached :logo

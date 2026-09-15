@@ -72,7 +72,7 @@ RSpec.describe GiftCard, type: :model do
 
     it "does not raise if record is invalid" do
       gift_card = FactoryBot.create(:gift_card)
-      gift_card.update_column(:merchant_id, nil) # Make invalid
+      gift_card.update_column(:amount, 0) # Make invalid (merchant_id is NOT NULL since Phase 2)
 
       expect { gift_card.touch_owner_activity! }.not_to raise_error
     end
