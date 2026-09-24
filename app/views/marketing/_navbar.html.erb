@@ -1,115 +1,47 @@
-<header class="marketing-nav-wrap">
-  <nav class="marketing-nav" aria-label="Primary">
-    <div class="mx-auto flex w-full max-w-7xl items-center justify-between gap-6 px-5 py-4 sm:px-6 lg:px-8">
-      <%= link_to root_path, class: "flex items-center gap-3", aria: { label: "Go to Papayal homepage" } do %>
-        <picture>
-          <source type="image/webp" srcset="/optimized/papayal-logo-128.webp">
-          <img src="/Papayal-logoV2Tag.png" alt="Papayal" width="128" height="128" decoding="async" class="h-9 w-9" />
-        </picture>
-        <span class="marketing-logo-text text-2xl font-black tracking-tight text-[#14343A]">Papayal</span>
+<header class="marketing-nav-wrap landing-header" data-action="keydown.esc->marketing#escapeMenu">
+  <nav aria-label="Navegación principal" data-locale-attrs="aria-label" data-locale-aria-label-es="Navegación principal" data-locale-aria-label-en="Primary navigation">
+    <div class="landing-container landing-nav-row">
+      <%= link_to root_path, class: "landing-brand", aria: { label: "Inicio de Papayal" }, data: { locale_attrs: "aria-label", locale_aria_label_es: "Inicio de Papayal", locale_aria_label_en: "Papayal home" } do %>
+        <img src="/optimized/papayal-logo-128.webp" width="36" height="36" alt="" decoding="async">
+        <span>Papayal</span>
       <% end %>
-
-      <button
-        type="button"
-        class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#14343A]/15 bg-white/85 text-[#14343A] md:hidden"
-        aria-controls="marketing-mobile-menu"
-        aria-expanded="false"
-        data-marketing-target="menuButton"
-        data-action="click->marketing#toggleMenu">
-        <span class="sr-only"><%= localized_text es: "Abrir menú", en: "Open menu" %></span>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 7h16M4 12h16M4 17h16" />
-        </svg>
-      </button>
-
-      <div class="hidden items-center gap-1 md:flex">
-        <%= link_to root_path, class: "marketing-nav-link #{current_page?(root_path) ? "is-active" : ""}" do %>
-          <%= localized_text es: "Inicio", en: "Home" %>
-        <% end %>
-        <%= link_to about_path, class: "marketing-nav-link #{current_page?(about_path) ? "is-active" : ""}" do %>
-          <%= localized_text es: "Sobre Nosotros", en: "About" %>
-        <% end %>
-        <%= link_to root_path(anchor: "como-funciona"), class: "marketing-nav-link", data: { action: "click->marketing#handleAnchorClick" } do %>
-          <%= localized_text es: "Cómo funciona", en: "How it works" %>
-        <% end %>
-        <%= link_to root_path(anchor: "beneficios"), class: "marketing-nav-link", data: { action: "click->marketing#handleAnchorClick" } do %>
-          <%= localized_text es: "Beneficios", en: "Benefits" %>
-        <% end %>
-        <%= link_to contact_path, class: "marketing-nav-link #{current_page?(contact_path) ? "is-active" : ""}" do %>
-          <%= localized_text es: "Contacto", en: "Contact" %>
+      <div class="landing-desktop-nav">
+        <% [["como-funciona", "Cómo funciona", "How it works"], ["mercado", "Comercios", "Businesses"], ["preguntas", "Preguntas", "FAQs"]].each do |anchor, es, en| %>
+          <%= link_to root_path(anchor: anchor), class: "landing-nav-link", data: { action: "click->marketing#handleAnchorClick" } do %><%= localized_text es: es, en: en %><% end %>
         <% end %>
       </div>
-
-      <div class="hidden items-center gap-2 md:flex">
-        <%= render "shared/language_toggle" %>
+      <div class="landing-nav-actions">
+        <div class="landing-desktop-nav"><%= render "shared/language_toggle" %></div>
         <% if user_signed_in? %>
-          <% if current_user.merchant? %>
-            <%= link_to merchant_root_path, class: "marketing-signup-btn" do %>
-              <%= localized_text es: "Portal Comercio", en: "Merchant Portal" %>
-            <% end %>
-          <% elsif current_user.admin? %>
-            <%= link_to admin_root_path, class: "marketing-signup-btn" do %>
-              <%= localized_text es: "Panel Admin", en: "Admin Panel" %>
-            <% end %>
-          <% end %>
-          <%= button_to destroy_user_session_path, method: :delete, class: "marketing-login-btn", form: { class: "contents" } do %>
-            <%= localized_text es: "Cerrar Sesión", en: "Sign Out" %>
-          <% end %>
+          <div class="landing-desktop-nav"><%= render "marketing/session_actions" %></div>
         <% else %>
-          <%= link_to new_user_session_path, class: "marketing-login-btn" do %>
-            <%= localized_text es: "Iniciar Sesión", en: "Sign In" %>
-          <% end %>
-          <%= link_to new_user_registration_path, class: "marketing-signup-btn" do %>
-            <%= localized_text es: "Registrarse", en: "Sign Up" %>
+          <%= link_to root_path(anchor: "descargar"), class: "landing-button landing-header-download", data: { action: "click->marketing#handleAnchorClick" } do %>
+            <%= localized_text es: "Descargar", en: "Download" %>
           <% end %>
         <% end %>
+        <button type="button" class="landing-menu-toggle" aria-controls="marketing-mobile-menu" aria-expanded="false"
+          data-marketing-target="menuButton" data-action="click->marketing#toggleMenu">
+          <span class="landing-menu-open sr-only"><%= localized_text es: "Abrir menú", en: "Open menu" %></span>
+          <span class="landing-menu-close sr-only"><%= localized_text es: "Cerrar menú", en: "Close menu" %></span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <path class="landing-menu-lines" d="M4 7h16M4 12h16M4 17h16" />
+            <path class="landing-menu-cross" d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
       </div>
     </div>
-
-    <div id="marketing-mobile-menu" class="hidden border-t border-[#14343A]/10 bg-white/95 md:hidden" data-marketing-target="mobileMenu">
-      <div class="mx-auto flex w-full max-w-7xl flex-col gap-1 px-5 py-4 sm:px-6">
-        <div class="mb-2 flex justify-start">
-          <%= render "shared/language_toggle" %>
-        </div>
-        <%= link_to root_path, class: "marketing-mobile-link", data: { action: "click->marketing#closeMenu" } do %>
-          <%= localized_text es: "Inicio", en: "Home" %>
+    <div id="marketing-mobile-menu" class="hidden landing-mobile-menu" data-marketing-target="mobileMenu">
+      <div class="landing-container">
+        <%= render "shared/language_toggle" %>
+        <% [["como-funciona", "Cómo funciona", "How it works"], ["mercado", "Comercios", "Businesses"], ["preguntas", "Preguntas", "FAQs"]].each do |anchor, es, en| %>
+          <%= link_to root_path(anchor: anchor), class: "landing-nav-link", data: { action: "click->marketing#handleAnchorClick" } do %><%= localized_text es: es, en: en %><% end %>
         <% end %>
-        <%= link_to about_path, class: "marketing-mobile-link", data: { action: "click->marketing#closeMenu" } do %>
-          <%= localized_text es: "Sobre Nosotros", en: "About" %>
-        <% end %>
-        <%= link_to root_path(anchor: "como-funciona"), class: "marketing-mobile-link", data: { action: "click->marketing#handleAnchorClick click->marketing#closeMenu" } do %>
-          <%= localized_text es: "Cómo funciona", en: "How it works" %>
-        <% end %>
-        <%= link_to root_path(anchor: "beneficios"), class: "marketing-mobile-link", data: { action: "click->marketing#handleAnchorClick click->marketing#closeMenu" } do %>
-          <%= localized_text es: "Beneficios", en: "Benefits" %>
-        <% end %>
-        <%= link_to contact_path, class: "marketing-mobile-link", data: { action: "click->marketing#closeMenu" } do %>
-          <%= localized_text es: "Contacto", en: "Contact" %>
-        <% end %>
+        <%= link_to about_path, class: "landing-nav-link", data: { action: "click->marketing#closeMenu" } do %><%= localized_text es: "Sobre Papayal", en: "About Papayal" %><% end %>
+        <%= link_to contact_path, class: "landing-nav-link", data: { action: "click->marketing#closeMenu" } do %><%= localized_text es: "Contacto", en: "Contact" %><% end %>
         <% if user_signed_in? %>
-          <div class="mt-3 grid gap-2 <%= current_user.merchant? || current_user.admin? ? "grid-cols-2" : "grid-cols-1" %>">
-            <% if current_user.merchant? %>
-              <%= link_to merchant_root_path, class: "marketing-signup-btn text-center" do %>
-                <%= localized_text es: "Portal Comercio", en: "Merchant Portal" %>
-              <% end %>
-            <% elsif current_user.admin? %>
-              <%= link_to admin_root_path, class: "marketing-signup-btn text-center" do %>
-                <%= localized_text es: "Panel Admin", en: "Admin Panel" %>
-              <% end %>
-            <% end %>
-            <%= button_to destroy_user_session_path, method: :delete, class: "marketing-login-btn w-full text-center", form: { class: "contents" } do %>
-              <%= localized_text es: "Cerrar Sesión", en: "Sign Out" %>
-            <% end %>
-          </div>
+          <%= render "marketing/session_actions" %>
         <% else %>
-          <div class="mt-3 grid grid-cols-2 gap-2">
-            <%= link_to new_user_session_path, class: "marketing-login-btn text-center" do %>
-              <%= localized_text es: "Iniciar Sesión", en: "Sign In" %>
-            <% end %>
-            <%= link_to new_user_registration_path, class: "marketing-signup-btn text-center" do %>
-              <%= localized_text es: "Registrarse", en: "Sign Up" %>
-            <% end %>
-          </div>
+          <%= link_to new_user_session_path, class: "landing-nav-link landing-merchant-access" do %><%= localized_text es: "Acceso para comercios", en: "Merchant access" %><% end %>
         <% end %>
       </div>
     </div>

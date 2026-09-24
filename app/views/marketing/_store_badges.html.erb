@@ -1,0 +1,22 @@
+<div class="landing-store-badges">
+  <% if (url = marketing_store_url(:ios)) %>
+    <%= link_to url, class: "landing-store-badge landing-store-badge-apple", data: marketing_store_link_data(:ios) do %>
+      <%= locale_tag :es do %>
+        <img src="/marketing/app-store-es.svg" alt="Descargar Papayal en App Store" width="120" height="40" />
+      <% end %>
+      <%= locale_tag :en do %>
+        <img src="/marketing/app-store-en.svg" alt="Download Papayal on the App Store" width="120" height="40" />
+      <% end %>
+    <% end %>
+  <% end %>
+  <% if (url = marketing_store_url(:android)) %>
+    <%= link_to url, class: "landing-store-badge landing-store-badge-google", data: marketing_store_link_data(:android) do %>
+      <%= locale_tag :es do %>
+        <img src="/marketing/google-play-es.png" alt="Descargar Papayal en Google Play" width="646" height="250" />
+      <% end %>
+      <%= locale_tag :en do %>
+        <img src="/marketing/google-play-en.png" alt="Download Papayal on Google Play" width="646" height="250" />
+      <% end %>
+    <% end %>
+  <% end %>
+</div>

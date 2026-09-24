@@ -7,6 +7,8 @@ class MarketingController < ApplicationController
       redirect_to signed_in_landing_path
       return
     end
+
+    @marketing_merchants = Merchant.active.includes(logo_attachment: :blob).order(:store_name).limit(24).to_a
   end
 
   def about

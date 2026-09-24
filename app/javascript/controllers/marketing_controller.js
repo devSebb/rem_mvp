@@ -4,21 +4,23 @@ export default class extends Controller {
   static targets = [
     "mobileMenu",
     "menuButton",
-    "newsletterStatus",
     "contactStatus",
     "contactError",
-    "heroParallaxItem",
     "countup"
   ]
 
   connect() {
     this.setupRevealObserver()
     this.setupCountObserver()
+    this.desktopQuery = window.matchMedia("(min-width: 1200px)")
+    this.onViewportChange = () => this.closeMenu()
+    this.desktopQuery.addEventListener("change", this.onViewportChange)
   }
 
   disconnect() {
     if (this.revealObserver) this.revealObserver.disconnect()
     if (this.countObserver) this.countObserver.disconnect()
+    this.desktopQuery?.removeEventListener("change", this.onViewportChange)
   }
 
   toggleMenu() {
@@ -36,31 +38,31 @@ export default class extends Controller {
     this.menuButtonTarget.setAttribute("aria-expanded", "false")
   }
 
+  escapeMenu(event) {
+    if (!this.hasMenuButtonTarget || this.menuButtonTarget.getAttribute("aria-expanded") !== "true") return
+
+    event.preventDefault()
+    this.closeMenu()
+    this.menuButtonTarget.focus()
+  }
+
   handleAnchorClick(event) {
-    const href = event.currentTarget.getAttribute("href")
-    if (!href || !href.includes("#")) return
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+    const url = new URL(event.currentTarget.href, window.location.href)
+    this.closeMenu()
+    if (url.origin !== window.location.origin || url.pathname !== window.location.pathname || !url.hash) return
 
-    const [path, hash] = href.split("#")
-    const currentPath = window.location.pathname
-    const normalizedPath = path && path.length > 0 ? path : currentPath
-
-    if (normalizedPath !== currentPath || !hash) return
-
-    const target = document.getElementById(hash)
+    const target = document.getElementById(decodeURIComponent(url.hash.slice(1)))
     if (!target) return
 
     event.preventDefault()
-    const offset = 94
-    const top = target.getBoundingClientRect().top + window.scrollY - offset
-    window.scrollTo({ top, behavior: "smooth" })
-  }
-
-  handleNewsletterSubmit(event) {
-    event.preventDefault()
-    if (!this.hasNewsletterStatusTarget) return
-
-    this.newsletterStatusTarget.classList.remove("hidden")
-    event.target.reset()
+    const headerHeight = document.querySelector(".marketing-nav-wrap")?.getBoundingClientRect().height || 80
+    const top = target.getBoundingClientRect().top + window.scrollY - headerHeight - 16
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    // Transfer keyboard focus out of the now-closed menu without a second scroll.
+    target.focus({ preventScroll: true })
+    window.scrollTo({ top, behavior: reducedMotion ? "instant" : "smooth" })
+    window.history.replaceState({}, "", `${window.location.pathname}${window.location.search}${url.hash}`)
   }
 
   handleContactSubmit(event) {
@@ -99,28 +101,6 @@ export default class extends Controller {
       .finally(() => {
         if (submitButton) submitButton.disabled = false
       })
-  }
-
-  handleHeroParallax(event) {
-    if (!this.hasHeroParallaxItemTarget) return
-
-    const card = event.currentTarget
-    const rect = card.getBoundingClientRect()
-    const x = (event.clientX - rect.left) / rect.width - 0.5
-    const y = (event.clientY - rect.top) / rect.height - 0.5
-
-    this.heroParallaxTargets.forEach((element) => {
-      const speed = Number(element.dataset.speed || 6)
-      const moveX = x * speed
-      const moveY = y * speed
-      element.style.transform = `translate3d(${moveX}px, ${moveY}px, 0)`
-    })
-  }
-
-  resetHeroParallax() {
-    this.heroParallaxTargets.forEach((element) => {
-      element.style.transform = "translate3d(0, 0, 0)"
-    })
   }
 
   setupRevealObserver() {

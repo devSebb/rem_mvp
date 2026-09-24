@@ -1,283 +1,213 @@
-<% set_locale_titles es: "Papayal | Tarjetas digitales para ayudar a Ecuador", en: "Papayal | Digital gift cards for Ecuador" %>
-<% content_for :meta_description, "Papayal ofrece tarjetas digitales prepagadas para compras en comercios afiliados en Ecuador." %>
+<% set_locale_titles es: "Papayal | Tarjetas de regalo para Ecuador", en: "Papayal | Gift cards for Ecuador" %>
+<% content_for :meta_description, "Envía una tarjeta de regalo digital a tu familia en Ecuador. Consulta comercios participantes y descarga Papayal para iPhone o Android." %>
+<% content_for :meta_description_en, "Send a digital gift card to your family in Ecuador. Explore participating businesses and download Papayal for iPhone or Android." %>
 <% content_for :head do %>
-  <link
-    rel="preload"
-    as="image"
-    href="/optimized/hero-card-group-960.webp"
-    imagesrcset="/optimized/hero-card-group-960.webp 960w, /optimized/hero-card-group-1600.webp 1600w"
-    imagesizes="(min-width: 1024px) 48vw, 92vw"
-    type="image/webp">
+  <link rel="preload" as="image" href="/optimized/mockup-2-480.webp?v=2" type="image/webp">
 <% end %>
 
-<section class="marketing-hero overflow-hidden">
-  <div class="marketing-hero-grid"></div>
-  <div class="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-10 px-5 pb-14 pt-12 sm:px-6 md:pt-16 lg:grid-cols-12 lg:gap-12 lg:px-8 lg:pb-20">
-    <div class="relative z-10 lg:col-span-6">
-      <p class="marketing-pill" data-reveal>
-        <%= localized_text es: "Ayuda directa, canje local", en: "Prepaid cards, local redemption" %>
-      </p>
-
-      <%= locale_tag :es, tag: :h1, class: "marketing-hero-title", data: { reveal: true } do %>
-        Tarjetas digitales para ayudar a tu familia en Ecuador.
-      <% end %>
-      <%= locale_tag :en, tag: :h1, class: "marketing-hero-title", data: { reveal: true } do %>
-        Digital gift cards for everyday purchases in Ecuador.
-      <% end %>
-
-      <p class="marketing-hero-copy" data-reveal>
-        <%= localized_text es: "Compra una tarjeta Papayal en USD y envíala a quien quieras. La persona la canjea en comercios afiliados para medicinas, alimentos, servicios y productos esenciales.", en: "Buy a Papayal digital gift card in USD and send it to someone in Ecuador. Recipients redeem it with approved partner merchants for practical everyday needs." %>
-      </p>
-
-      <div class="mt-8 flex flex-col gap-3 sm:flex-row" data-reveal>
-        <%= link_to new_user_registration_path, class: "marketing-signup-btn h-13 px-7 text-base" do %>
-          <%= localized_text es: "Crear cuenta", en: "Create account" %>
-        <% end %>
-        <%= link_to root_path(anchor: "como-funciona"), class: "marketing-secondary-btn h-13 px-7 text-base", data: { action: "click->marketing#handleAnchorClick" } do %>
-          <%= localized_text es: "Cómo funciona", en: "How it works" %>
+<div class="landing-page">
+  <section class="landing-hero" aria-labelledby="landing-title">
+    <div class="landing-container landing-hero-grid">
+      <div class="landing-hero-copy">
+        <h1 id="landing-title"><%= localized_text es: "Envía una tarjeta de regalo a tu familia en Ecuador.", en: "Send a gift card to your family in Ecuador." %></h1>
+        <p class="landing-lead"><%= localized_text es: "Compra desde la app una tarjeta digital en dólares para alguien especial en Ecuador.", en: "Buy a digital gift card in US dollars for someone you care about in Ecuador, right from the app." %></p>
+        <div id="descargar" class="landing-download" tabindex="-1">
+          <% if marketing_store_url(:ios) && marketing_store_url(:android) %>
+            <p class="landing-availability"><%= localized_text es: "Disponible para iPhone y Android.", en: "Available for iPhone and Android." %></p>
+          <% end %>
+          <%= render "marketing/store_badges" %>
+        </div>
+        <%= link_to root_path(anchor: "como-funciona"), class: "landing-text-link", data: { action: "click->marketing#handleAnchorClick" } do %>
+          <%= localized_text es: "Cómo funciona", en: "How it works" %> <span aria-hidden="true">↓</span>
         <% end %>
       </div>
-
-      <div class="marketing-trust-row" data-reveal>
-        <% [
-          ["Pago en USD", "USD checkout"],
-          ["Comercios afiliados", "Partner merchants"],
-          ["Tarjetas prepagadas", "Prepaid gift cards"]
-        ].each do |es_label, en_label| %>
-          <span><%= localized_text es: es_label, en: en_label %></span>
-        <% end %>
-      </div>
-    </div>
-
-    <div class="relative lg:col-span-6" data-action="mousemove->marketing#handleHeroParallax mouseleave->marketing#resetHeroParallax">
-      <div class="marketing-hero-visual" data-reveal>
+      <div class="landing-hero-art">
         <picture>
-          <source
-            type="image/webp"
-            srcset="/optimized/hero-card-group-960.webp 960w, /optimized/hero-card-group-1600.webp 1600w"
-            sizes="(min-width: 1024px) 48vw, 92vw">
-          <img
-            src="/landing/Hero_card_group.png"
-            alt="Tarjetas digitales Papayal"
-            width="2278"
-            height="2550"
-            fetchpriority="high"
-            decoding="async"
-            class="hero-card-image"
-            data-marketing-target="heroParallaxItem"
-            data-speed="5" />
+          <source type="image/webp" srcset="/optimized/mockup-2-480.webp?v=2">
+          <img src="/mockups/Mockup_2.png" width="1521" height="2421" fetchpriority="high" decoding="async"
+            alt="Ejemplo de tarjetas y saldo en la app Papayal"
+            data-locale-attrs="alt" data-locale-alt-es="Ejemplo de tarjetas y saldo en la app Papayal" data-locale-alt-en="Example gift cards and balance in the Papayal app">
         </picture>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="marketing-category-strip" aria-labelledby="availability-heading">
-  <div class="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8" data-reveal>
-    <p id="availability-heading" class="marketing-section-eyebrow text-center">
-      <%= localized_text es: "Pensado para compras esenciales", en: "Designed for essential purchases" %>
-    </p>
-    <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-      <% [
-        ["Farmacias", "Pharmacies", "M9 3h6v4h4v6h-4v4H9v-4H5V7h4V3z"],
-        ["Alimentos", "Groceries", "M4 7h16l-2 12H6L4 7zm3-4h10l1 4H6l1-4z"],
-        ["Servicios", "Services", "M13 2 5 14h6l-1 8 9-13h-6l0-7z"],
-        ["Hogar", "Home", "M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9z"],
-        ["Recargas", "Top-ups", "M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm3 17h2"]
-      ].each do |es_label, en_label, path| %>
-        <div class="marketing-category-card">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="<%= path %>" />
-          </svg>
-          <span><%= localized_text es: es_label, en: en_label %></span>
+  <section id="mercado" class="landing-merchants landing-section" aria-labelledby="merchants-title" tabindex="-1">
+    <div class="landing-container">
+      <div class="landing-section-intro">
+        <h2 id="merchants-title"><%= localized_text es: "Elige un comercio para los tuyos.", en: "Choose a business for your family." %></h2>
+        <p><%= localized_text es: "Revisa dónde se acepta cada tarjeta antes de comprar.", en: "Check where each gift card is accepted before you buy." %></p>
+      </div>
+    </div>
+    <% if @marketing_merchants.any? %>
+      <%# Each half of the track repeats the catalog so it is wider than the viewport; the track slides by exactly one half for a seamless loop. %>
+      <% marquee_items = @marketing_merchants * (12.0 / @marketing_merchants.size).ceil %>
+      <div class="landing-marquee">
+        <div class="landing-marquee-track">
+          <% 2.times do |copy| %>
+            <%= tag.ul class: "landing-marquee-list", data: { merchant_preview: copy.zero? || nil }, aria: { hidden: copy.positive? || nil } do %>
+              <% marquee_items.each_with_index do |merchant, index| %>
+                <%= tag.li class: "landing-marquee-item", aria: { hidden: (copy.zero? && index >= @marketing_merchants.size) || nil } do %>
+                  <% if merchant.logo.attached? %>
+                    <%= image_tag url_for(merchant.logo), alt: merchant.store_name, height: 48, loading: "lazy", decoding: "async", class: "landing-marquee-logo" %>
+                  <% else %>
+                    <span class="landing-marquee-name"><%= merchant.store_name %></span>
+                  <% end %>
+                <% end %>
+              <% end %>
+            <% end %>
+          <% end %>
         </div>
-      <% end %>
-    </div>
-  </div>
-</section>
-
-<section id="como-funciona" class="marketing-section py-20 sm:py-24">
-  <div class="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8">
-    <div class="marketing-section-heading">
-      <p class="marketing-section-eyebrow" data-reveal><%= localized_text es: "Cómo funciona", en: "How it works" %></p>
-      <h2 class="marketing-section-title" data-reveal>
-        <%= localized_text es: "Un flujo simple para enviar ayuda útil.", en: "A simple flow for practical support." %>
-      </h2>
-      <p class="marketing-section-copy" data-reveal>
-        <%= localized_text es: "Papayal convierte la intención de ayudar en una tarjeta clara, rastreable y canjeable en comercios afiliados.", en: "Papayal turns support into a clear, trackable gift card redeemable with approved partner merchants." %>
-      </p>
-    </div>
-
-    <div class="mt-12 grid gap-4 lg:grid-cols-3">
-      <% [
-        ["01", "Elige el comercio", "Choose a merchant", "Selecciona una categoría o comercio afiliado según lo que tu familia necesita.", "Select a category or partner merchant based on what the recipient needs."],
-        ["02", "Compra la tarjeta", "Buy the card", "Paga en USD con un proceso directo y recibe la confirmación de la tarjeta.", "Pay in USD through a straightforward checkout and receive card confirmation."],
-        ["03", "Canje local", "Redeem locally", "La persona canjea la tarjeta en Ecuador para compras aprobadas en ese comercio.", "The recipient redeems the card in Ecuador for approved purchases at that merchant."]
-      ].each do |number, es_title, en_title, es_body, en_body| %>
-        <article class="marketing-step-card" data-reveal>
-          <span class="marketing-step-number"><%= number %></span>
-          <h3 class="marketing-card-title"><%= localized_text es: es_title, en: en_title %></h3>
-          <p class="marketing-card-copy"><%= localized_text es: es_body, en: en_body %></p>
-        </article>
-      <% end %>
-    </div>
-  </div>
-</section>
-
-<section class="marketing-product-section py-20 sm:py-24">
-  <div class="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-10 px-5 sm:px-6 lg:grid-cols-12 lg:px-8">
-    <div class="lg:col-span-5">
-      <p class="marketing-section-eyebrow" data-reveal><%= localized_text es: "Producto", en: "Product" %></p>
-      <h2 class="marketing-section-title text-white" data-reveal>
-        <%= localized_text es: "La experiencia se siente como una app moderna, no como un trámite.", en: "A modern app experience, not a complicated transfer flow." %>
-      </h2>
-      <p class="mt-4 text-base leading-7 text-white/72 sm:text-lg" data-reveal>
-        <%= localized_text es: "El usuario ve sus tarjetas, saldos, actividad y comercios en una interfaz clara. La landing debe hacer lo mismo: explicar rápido, mostrar el producto real y reducir dudas.", en: "Users see cards, balances, activity, and merchants in a clear interface. The public page should do the same: explain quickly, show the real product, and reduce uncertainty." %>
-      </p>
-      <div class="mt-8 grid gap-3 sm:grid-cols-2" data-reveal>
-        <% [
-          ["Saldo y actividad visible", "Visible balance and activity"],
-          ["Canje con código seguro", "Secure redemption code"],
-          ["Comercios organizados", "Organized merchants"],
-          ["Historial en un lugar", "History in one place"]
-        ].each do |es_label, en_label| %>
-          <div class="marketing-dark-point"><%= localized_text es: es_label, en: en_label %></div>
+      </div>
+    <% end %>
+    <div class="landing-container">
+      <% if @marketing_merchants.any? %>
+        <% @marketing_merchants.filter_map(&:effective_coverage_text).uniq.each do |coverage| %>
+          <p class="landing-merchant-note" lang="es"><%= coverage %></p>
         <% end %>
-      </div>
-    </div>
-
-    <div class="lg:col-span-7">
-      <div class="marketing-phone-showcase" data-reveal>
-        <article class="marketing-mockup-card marketing-mockup-card-wide">
-          <div>
-            <p class="marketing-mockup-kicker"><%= localized_text es: "Inicio", en: "Home" %></p>
-            <h3 class="marketing-mockup-title"><%= localized_text es: "Comprar una tarjeta", en: "Buy a gift card" %></h3>
-          </div>
-          <div class="marketing-mockup-frame">
-            <picture>
-              <source type="image/webp" srcset="/optimized/mockup-1-840.webp">
-              <img src="/mockups/Mockup_1.png" alt="Pantallas de inicio y compra de Papayal" width="2930" height="3045" loading="lazy" decoding="async" class="marketing-mockup-image" />
-            </picture>
-          </div>
-        </article>
-
-        <article class="marketing-mockup-card">
-          <div>
-            <p class="marketing-mockup-kicker"><%= localized_text es: "Mis tarjetas", en: "My cards" %></p>
-            <h3 class="marketing-mockup-title"><%= localized_text es: "Ver tarjetas y saldos", en: "View cards and balances" %></h3>
-          </div>
-          <div class="marketing-mockup-frame">
-            <picture>
-              <source type="image/webp" srcset="/optimized/mockup-2-480.webp?v=2">
-              <img src="/mockups/Mockup_2.png" alt="Mis tarjetas en Papayal con saldos" width="1521" height="2421" loading="lazy" decoding="async" class="marketing-mockup-image" />
-            </picture>
-          </div>
-        </article>
-
-        <article class="marketing-mockup-card">
-          <div>
-            <p class="marketing-mockup-kicker"><%= localized_text es: "Canje", en: "Redemption" %></p>
-            <h3 class="marketing-mockup-title"><%= localized_text es: "Código claro y seguro", en: "Clear secure code" %></h3>
-          </div>
-          <div class="marketing-mockup-frame">
-            <picture>
-              <source type="image/webp" srcset="/optimized/mockup-3-840.webp">
-              <img src="/mockups/Mockup_3.png" alt="Código de canje Papayal" width="1125" height="2292" loading="lazy" decoding="async" class="marketing-mockup-image" />
-            </picture>
-          </div>
-        </article>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="beneficios" class="marketing-section py-20 sm:py-24">
-  <div class="mx-auto grid w-full max-w-7xl grid-cols-1 gap-12 px-5 sm:px-6 lg:grid-cols-12 lg:px-8">
-    <div class="lg:col-span-5">
-      <p class="marketing-section-eyebrow" data-reveal><%= localized_text es: "Por qué Papayal", en: "Why Papayal" %></p>
-      <h2 class="marketing-section-title" data-reveal>
-        <%= localized_text es: "Más control que enviar dinero sin contexto.", en: "More control than sending money without context." %>
-      </h2>
-      <p class="marketing-section-copy text-left" data-reveal>
-        <%= localized_text es: "Papayal está enfocado en tarjetas prepagadas para compras concretas. Eso hace que el mensaje sea simple: eliges dónde se puede usar y la persona recibe una opción útil.", en: "Papayal focuses on prepaid cards for specific purchases. The message stays simple: choose where it can be used and the recipient gets a practical option." %>
-      </p>
-    </div>
-
-    <div class="grid gap-4 sm:grid-cols-2 lg:col-span-7">
-      <% [
-        ["Claridad", "Clarity", "La tarjeta, el comercio y el saldo se entienden sin explicación larga.", "The card, merchant, and balance are easy to understand without a long explanation."],
-        ["Uso local", "Local use", "El canje ocurre en Ecuador con comercios afiliados y categorías prácticas.", "Redemption happens in Ecuador with partner merchants and practical categories."],
-        ["Menos fricción", "Less friction", "El flujo está diseñado para registrarse, comprar y enviar sin pasos innecesarios.", "The flow is designed for account creation, purchase, and sending without unnecessary steps."],
-        ["Confianza", "Trust", "Lenguaje directo, alcance claro y enlaces legales visibles para tomar decisiones informadas.", "Direct language, clear scope, and visible legal links help people make informed decisions."]
-      ].each do |es_title, en_title, es_body, en_body| %>
-        <article class="marketing-benefit-card" data-reveal>
-          <h3 class="marketing-card-title"><%= localized_text es: es_title, en: en_title %></h3>
-          <p class="marketing-card-copy"><%= localized_text es: es_body, en: en_body %></p>
-        </article>
+      <% else %>
+        <p class="landing-merchant-empty" data-copy-auxiliary><%= localized_text es: "Consulta los comercios disponibles en la app.", en: "Check the app for available businesses." %></p>
+      <% end %>
+      <%= link_to root_path(anchor: "descargar"), class: "landing-text-link", data: { action: "click->marketing#handleAnchorClick" } do %>
+        <%= localized_text es: "Ver opciones en la app", en: "Explore options in the app" %> <span aria-hidden="true">↗</span>
       <% end %>
     </div>
-  </div>
-</section>
+  </section>
 
-<section id="mercado" class="marketing-market py-20 sm:py-24">
-  <div class="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8">
-    <div class="marketing-section-heading">
-      <p class="marketing-section-eyebrow" data-reveal><%= localized_text es: "Comercios afiliados", en: "Partner merchants" %></p>
-      <h2 class="marketing-section-title" data-reveal>
-        <%= localized_text es: "Tarjetas para necesidades reales.", en: "Gift cards for real needs." %>
-      </h2>
-      <p class="marketing-section-copy" data-reveal>
-        <%= localized_text es: "Papayal puede organizar tarjetas por categorías como salud, alimentos, hogar, servicios y recargas.", en: "Papayal can organize cards by categories such as health, groceries, home, services, and top-ups." %>
-      </p>
+  <section id="como-funciona" class="landing-section landing-process" aria-labelledby="steps-title" tabindex="-1">
+    <div class="landing-container">
+      <h2 id="steps-title"><%= localized_text es: "Así funciona", en: "How it works" %></h2>
+      <ol class="landing-steps">
+        <li>
+          <div class="landing-step-head" aria-hidden="true">
+            <span class="landing-step-icon">
+              <svg viewBox="0 0 32 32" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5.5 15.5V27h21V15.5"/>
+                <path d="M3 27h26"/>
+                <path d="M6 5h20l3.5 7.5h-27z"/>
+                <path d="M11.5 5 10 12.5M16 5v7.5M20.5 5l1.5 7.5"/>
+                <path d="M2.5 12.5a3.375 3.375 0 0 0 6.75 0a3.375 3.375 0 0 0 6.75 0a3.375 3.375 0 0 0 6.75 0a3.375 3.375 0 0 0 6.75 0"/>
+                <path class="landing-step-accent" d="M13 27v-6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v6"/>
+              </svg>
+            </span>
+            <span class="landing-step-number">01</span>
+          </div>
+          <h3><%= localized_text es: "Elige el comercio", en: "Choose a business" %></h3>
+          <p><%= localized_text es: "Busca una opción que le sirva a tu familia.", en: "Find an option that works for your family." %></p>
+        </li>
+        <li>
+          <div class="landing-step-head" aria-hidden="true">
+            <span class="landing-step-icon">
+              <svg viewBox="0 0 32 32" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2.5" y="13" width="19" height="13.5" rx="2.5"/>
+                <path d="M9.5 13v13.5M2.5 19h19"/>
+                <path d="M9.5 19c-1.5-3.2-5.8-3.8-5.8-1.4 0 1.6 3.6 1.4 5.8 1.4zm0 0c1.5-3.2 5.8-3.8 5.8-1.4 0 1.6-3.6 1.4-5.8 1.4z"/>
+                <path class="landing-step-accent" d="M29.5 2.5 19.5 7l4 1.8 1.8 4z"/>
+                <path class="landing-step-accent" d="m23.5 8.8 6-6.3"/>
+                <path class="landing-step-accent" d="M13 10.5c1.2-1.4 2.6-2.3 4-2.8" stroke-dasharray="0.1 2.6"/>
+              </svg>
+            </span>
+            <span class="landing-step-number">02</span>
+          </div>
+          <h3><%= localized_text es: "Compra y envía", en: "Buy and send" %></h3>
+          <p><%= localized_text es: "Elige el monto, añade su correo y paga en dólares.", en: "Choose an amount, add their email, and pay in US dollars." %></p>
+        </li>
+        <li>
+          <div class="landing-step-head" aria-hidden="true">
+            <span class="landing-step-icon">
+              <svg viewBox="0 0 32 32" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="7.5" y="2.5" width="17" height="27" rx="3.5"/>
+                <path d="M14.5 26h3"/>
+                <g class="landing-step-accent">
+                  <rect x="11" y="8.5" width="4.25" height="4.25" rx=".75"/>
+                  <rect x="16.75" y="8.5" width="4.25" height="4.25" rx=".75"/>
+                  <rect x="11" y="14.25" width="4.25" height="4.25" rx=".75"/>
+                  <path d="M17 14.5v.01M20.75 14.5v.01M18.9 16.4v.01M17 18.25v.01M20.75 18.25v.01"/>
+                </g>
+              </svg>
+            </span>
+            <span class="landing-step-number">03</span>
+          </div>
+          <h3><%= localized_text es: "Tu familiar la usa", en: "Your family uses it" %></h3>
+          <p><%= localized_text es: "Abre la tarjeta en la app y sigue sus instrucciones de canje.", en: "They open the gift card in the app and follow its redemption instructions." %></p>
+        </li>
+      </ol>
     </div>
+  </section>
 
-    <div class="marketing-card-showcase" data-reveal>
-      <picture>
-        <source type="image/webp" srcset="/optimized/landing-card-group-1280.webp">
-        <img src="/icons/Landing_card_group.png" alt="Categorías de tarjetas Papayal" width="1448" height="854" loading="lazy" decoding="async" class="mx-auto w-full max-w-5xl" />
-      </picture>
-    </div>
-  </div>
-</section>
-
-<section class="marketing-section py-20 sm:py-24">
-  <div class="mx-auto grid w-full max-w-7xl grid-cols-1 gap-10 px-5 sm:px-6 lg:grid-cols-12 lg:px-8">
-    <div class="lg:col-span-4">
-      <p class="marketing-section-eyebrow" data-reveal><%= localized_text es: "Preguntas", en: "Questions" %></p>
-      <h2 class="marketing-section-title" data-reveal>
-        <%= localized_text es: "Lo importante, sin letra pequeña.", en: "The important details, plainly stated." %>
-      </h2>
-    </div>
-    <div class="space-y-3 lg:col-span-8">
-      <% [
-        ["¿Papayal es una transferencia de dinero?", "Is Papayal a money transfer?", "No. Papayal ofrece tarjetas digitales prepagadas para usar en comercios afiliados.", "No. Papayal offers prepaid digital gift cards for use with approved partner merchants."],
-        ["¿Dónde se puede usar una tarjeta?", "Where can a card be used?", "En el comercio afiliado o categoría indicada para esa tarjeta, según sus reglas de canje.", "With the partner merchant or category assigned to that card, based on its redemption rules."],
-        ["¿Qué compra el usuario?", "What does the user buy?", "Una tarjeta digital prepagada en USD para compras aprobadas en Ecuador.", "A prepaid digital gift card in USD for approved purchases in Ecuador."]
-      ].each do |es_q, en_q, es_a, en_a| %>
-        <article class="marketing-faq-card" data-reveal>
-          <h3 class="text-lg font-black text-[#14343A]"><%= localized_text es: es_q, en: en_q %></h3>
-          <p class="mt-2 text-[#58656A]"><%= localized_text es: es_a, en: en_a %></p>
-        </article>
-      <% end %>
-    </div>
-  </div>
-</section>
-
-<section class="px-5 pb-20 sm:px-6 lg:px-8">
-  <div class="mx-auto w-full max-w-7xl">
-    <div class="marketing-final-cta" data-reveal>
-      <div>
-        <p class="marketing-section-eyebrow text-[#F4B126]"><%= localized_text es: "Empieza con claridad", en: "Start with clarity" %></p>
-        <h2 class="mt-3 text-3xl font-black leading-tight text-white sm:text-5xl">
-          <%= localized_text es: "Envía una tarjeta útil a Ecuador.", en: "Send a useful gift card to Ecuador." %>
-        </h2>
-        <p class="mt-4 max-w-2xl text-base leading-7 text-white/72">
-          <%= localized_text es: "Crea tu cuenta y compra tarjetas digitales para comercios afiliados.", en: "Create your account and purchase digital cards for partner merchants." %>
-        </p>
+  <section id="beneficios" class="landing-product landing-section" aria-labelledby="product-title" tabindex="-1">
+    <div class="landing-container landing-product-grid">
+      <div class="landing-product-copy">
+        <h2 id="product-title"><%= localized_text es: "Tus tarjetas, a mano.", en: "Your gift cards, close at hand." %></h2>
+        <p><%= localized_text es: "Consulta el saldo disponible y los movimientos de tus tarjetas desde la app.", en: "Check your gift cards’ available balances and activity in the app." %></p>
       </div>
-      <%= link_to new_user_registration_path, class: "marketing-signup-btn h-13 px-7 text-base" do %>
-        <%= localized_text es: "Crear cuenta", en: "Create account" %>
-      <% end %>
+      <figure>
+        <picture>
+          <source type="image/webp" srcset="/optimized/mockup-1-840.webp">
+          <img src="/mockups/Mockup_1.png" width="2930" height="3045" loading="lazy" decoding="async"
+            alt="Pantallas de inicio de la app Papayal"
+            data-locale-attrs="alt" data-locale-alt-es="Pantallas de inicio de la app Papayal" data-locale-alt-en="Papayal app welcome and home screens">
+        </picture>
+        <figcaption><%= localized_text es: "Vista de ejemplo de la app.", en: "Example app view." %></figcaption>
+      </figure>
     </div>
-  </div>
-</section>
+  </section>
+
+  <section id="preguntas" class="landing-section" aria-labelledby="faq-title" tabindex="-1">
+    <div class="landing-container landing-faq-grid">
+      <h2 id="faq-title"><%= localized_text es: "Antes de enviar tu primera tarjeta", en: "Before you send your first gift card" %></h2>
+      <div class="landing-faq-list">
+        <details class="landing-faq">
+          <summary><%= localized_text es: "¿Dónde se puede usar?", en: "Where can it be used?" %><span class="landing-faq-icon" aria-hidden="true"></span></summary>
+          <p class="landing-faq-answer"><%= localized_text es: "En los lugares indicados para esa tarjeta. Revisa las instrucciones del comercio en la app.", en: "At the locations listed for that gift card. Check the business’s instructions in the app." %></p>
+        </details>
+        <details class="landing-faq">
+          <summary><%= localized_text es: "¿Mi familiar necesita la app?", en: "Does my family member need the app?" %><span class="landing-faq-icon" aria-hidden="true"></span></summary>
+          <p class="landing-faq-answer"><%= localized_text es: "Sí. Recibe un correo y accede a su tarjeta en la app para mostrar el código de canje.", en: "Yes. They receive an email and access their gift card in the app to show the redemption code." %></p>
+        </details>
+        <details class="landing-faq">
+          <summary><%= localized_text es: "¿Puedo volver a enviarle saldo?", en: "Can I add more balance?" %><span class="landing-faq-icon" aria-hidden="true"></span></summary>
+          <p class="landing-faq-answer"><%= localized_text es: "Sí. Si ya tiene una tarjeta de ese comercio, tu aporte se suma a su saldo.", en: "Yes. If they already have a gift card for that business, your purchase adds to its balance." %></p>
+        </details>
+        <details class="landing-faq">
+          <summary><%= localized_text es: "¿Cuánto cuesta?", en: "How much does it cost?" %><span class="landing-faq-icon" aria-hidden="true"></span></summary>
+          <p class="landing-faq-answer"><%= localized_text es: "Consulta en la app el monto de la tarjeta, los cargos aplicables y el total de tu compra.", en: "Check the app for the gift card amount, applicable fees, and your purchase total." %></p>
+        </details>
+        <details class="landing-faq">
+          <summary><%= localized_text es: "¿Se puede retirar en efectivo?", en: "Can it be withdrawn as cash?" %><span class="landing-faq-icon" aria-hidden="true"></span></summary>
+          <p class="landing-faq-answer"><%= localized_text es: "No. El saldo se usa para compras según las condiciones de la tarjeta.", en: "No. The balance is for purchases under the gift card’s terms." %></p>
+        </details>
+        <details class="landing-faq">
+          <summary><%= localized_text es: "¿Necesitas ayuda?", en: "Need help?" %><span class="landing-faq-icon" aria-hidden="true"></span></summary>
+          <div class="landing-faq-answer">
+            <%= locale_tag :es, tag: :p do %>Escríbenos a <a href="mailto:hola@papayal.app">hola@papayal.app</a>. Consulta también los <%= link_to "términos de las tarjetas", legal_tarjetas_regalo_path %> y la <%= link_to "política de pagos y reembolsos", legal_pagos_reembolsos_path %>.<% end %>
+            <%= locale_tag :en, tag: :p do %>Email <a href="mailto:hola@papayal.app">hola@papayal.app</a>. You can also read the <%= link_to "gift card terms", legal_tarjetas_regalo_path %> and the <%= link_to "payment and refund policy", legal_pagos_reembolsos_path %>.<% end %>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-closing-section" aria-labelledby="closing-title">
+    <div class="landing-container">
+      <div class="landing-closing">
+        <div class="landing-closing-copy">
+          <h2 id="closing-title"><%= localized_text es: "Un detalle que ayuda, incluso a la distancia.", en: "A thoughtful way to help, even from afar." %></h2>
+          <p><%= localized_text es: "Descarga Papayal y elige una tarjeta para alguien especial.", en: "Download Papayal and choose a gift card for someone you care about." %></p>
+          <div class="landing-closing-links">
+            <% if (url = marketing_store_url(:ios)) %>
+              <%= link_to url, class: "landing-button", data: marketing_store_link_data(:ios) do %><%= localized_text es: "Descargar para iPhone", en: "Download for iPhone" %><% end %>
+            <% end %>
+            <% if (url = marketing_store_url(:android)) %>
+              <%= link_to url, class: "landing-button landing-button-outline", data: marketing_store_link_data(:android) do %><%= localized_text es: "Descargar para Android", en: "Download for Android" %><% end %>
+            <% end %>
+          </div>
+        </div>
+        <a class="landing-download-qr" href="https://papayal.app/#descargar" data-copy-auxiliary>
+          <img src="/marketing/download-qr.svg" alt="" width="144" height="144" loading="lazy">
+          <span><%= localized_text es: "Escanea para descargar la app.", en: "Scan to download the app." %></span>
+        </a>
+      </div>
+    </div>
+  </section>
+</div>

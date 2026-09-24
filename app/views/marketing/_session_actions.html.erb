@@ -1,0 +1,16 @@
+<% if user_signed_in? %>
+  <div class="landing-session-actions">
+    <% if current_user.merchant? %>
+      <%= link_to merchant_root_path, class: "landing-button" do %>
+        <%= localized_text es: "Portal Comercio", en: "Merchant Portal" %>
+      <% end %>
+    <% elsif current_user.admin? %>
+      <%= link_to admin_root_path, class: "landing-button" do %>
+        <%= localized_text es: "Panel Admin", en: "Admin Panel" %>
+      <% end %>
+    <% end %>
+    <%= button_to destroy_user_session_path, method: :delete, class: "landing-nav-link" do %>
+      <%= localized_text es: "Cerrar Sesión", en: "Sign Out" %>
+    <% end %>
+  </div>
+<% end %>

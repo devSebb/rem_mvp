@@ -125,6 +125,6 @@ export default class extends Controller {
       .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
       .join("")
 
-    return `locale${normalizedAttribute}${locale.toUpperCase()}`
+    return `locale${normalizedAttribute}${locale.charAt(0).toUpperCase()}${locale.slice(1)}`
   }
 }

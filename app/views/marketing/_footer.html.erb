@@ -1,86 +1,33 @@
-<footer class="marketing-footer" id="contacto">
-  <div class="mx-auto w-full max-w-7xl px-5 py-14 sm:px-6 lg:px-8">
-    <div class="marketing-newsletter">
-      <div>
-        <p class="marketing-pill"><%= localized_text es: "Novedades", en: "Updates" %></p>
-        <h2 class="mt-3 text-2xl font-black text-white sm:text-3xl">
-          <%= localized_text es: "Recibe noticias de Papayal", en: "Receive Papayal updates" %>
-        </h2>
-        <p class="mt-2 max-w-2xl text-sm text-white/75 sm:text-base">
-          <%= localized_text es: "Actualizaciones de producto y anuncios sobre tarjetas digitales para comercios afiliados.", en: "Product updates and simple announcements about digital gift cards for partner merchants." %>
-        </p>
-      </div>
-      <form class="mt-6 flex flex-col gap-3 sm:flex-row" data-action="submit->marketing#handleNewsletterSubmit">
-        <label for="newsletter-email" class="sr-only"><%= localized_text es: "Correo electrónico", en: "Email address" %></label>
-        <input
-          id="newsletter-email"
-          type="email"
-          required
-          data-locale-attrs="placeholder"
-          data-locale-placeholder-es="Tu correo electrónico"
-          data-locale-placeholder-en="Your email address"
-          placeholder="Tu correo electrónico"
-          class="h-12 w-full rounded-xl border border-white/20 bg-white/10 px-4 text-white placeholder:text-white/50 focus:border-[#F4B126] focus:outline-none focus:ring-2 focus:ring-[#F4B126]/35" />
-        <button type="submit" class="marketing-signup-btn h-12 whitespace-nowrap px-6">
-          <%= localized_text es: "Suscribir", en: "Subscribe" %>
-        </button>
-      </form>
-      <p class="mt-2 hidden text-sm text-emerald-200" data-marketing-target="newsletterStatus">
-        <%= localized_text es: "Gracias por suscribirte. Pronto recibirás novedades.", en: "Thanks for subscribing. We will share updates soon." %>
-      </p>
-    </div>
-
-    <div class="mt-12 grid gap-10 md:grid-cols-4">
-      <div class="md:col-span-1">
-        <%= link_to root_path, class: "inline-flex items-center gap-3" do %>
-          <picture>
-            <source type="image/webp" srcset="/optimized/papayal-logo-128.webp">
-            <img src="/Papayal-logoV2Tag.png" alt="Papayal" width="128" height="128" loading="lazy" decoding="async" class="h-10 w-10" />
-          </picture>
-          <span class="text-xl font-black text-white">Papayal</span>
+<footer class="landing-footer" id="contacto">
+  <div class="landing-container">
+    <div class="landing-footer-grid">
+      <div class="landing-footer-brand">
+        <%= link_to root_path, class: "landing-brand" do %>
+          <img src="/optimized/papayal-logo-128.webp" width="36" height="36" alt="" loading="lazy" decoding="async">
+          <span>Papayal</span>
         <% end %>
-        <p class="mt-4 text-sm text-white/70">
-          <%= localized_text es: "Conectando familias a traves de tarjetas de regalo digitales para apoyo real en Ecuador.", en: "Prepaid digital gift cards for purchases with partner merchants in Ecuador. Based in the United States." %>
-        </p>
-        <a href="https://www.instagram.com/papayalapp/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="mt-5 inline-flex text-white/60 transition-colors hover:text-[#F4B126]">
-          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-          </svg>
-        </a>
+        <p><%= localized_text es: "Tarjetas de regalo digitales para usar en comercios participantes en Ecuador.", en: "Digital gift cards for use at participating businesses in Ecuador." %></p>
+        <p><%= localized_text es: "¿Tienes preguntas? Escríbenos.", en: "Have questions? Get in touch." %></p>
+        <a href="mailto:hola@papayal.app">hola@papayal.app</a>
       </div>
-
-      <div>
-        <h3 class="text-sm font-bold uppercase tracking-[0.2em] text-[#F4B126]"><%= localized_text es: "Producto", en: "Product" %></h3>
-        <ul class="mt-4 space-y-2 text-sm text-white/75">
-          <li><%= link_to root_path(anchor: "como-funciona"), class: "hover:text-white transition-colors" do %><%= localized_text es: "Cómo funciona", en: "How it works" %><% end %></li>
-          <li><%= link_to root_path(anchor: "beneficios"), class: "hover:text-white transition-colors" do %><%= localized_text es: "Beneficios", en: "Benefits" %><% end %></li>
-          <li><%= link_to root_path(anchor: "mercado"), class: "hover:text-white transition-colors" do %><%= localized_text es: "Nuestro Mercado", en: "Partner Merchants" %><% end %></li>
-        </ul>
-      </div>
-
-      <div>
-        <h3 class="text-sm font-bold uppercase tracking-[0.2em] text-[#F4B126]"><%= localized_text es: "Compañía", en: "Company" %></h3>
-        <ul class="mt-4 space-y-2 text-sm text-white/75">
-          <li><%= link_to about_path, class: "hover:text-white transition-colors" do %><%= localized_text es: "Sobre Nosotros", en: "About" %><% end %></li>
-          <li><%= link_to contact_path, class: "hover:text-white transition-colors" do %><%= localized_text es: "Contacto", en: "Contact" %><% end %></li>
-          <li><a href="mailto:hola@papayal.app" class="hover:text-white transition-colors">hola@papayal.app</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <h3 class="text-sm font-bold uppercase tracking-[0.2em] text-[#F4B126]"><%= localized_text es: "Legal", en: "Legal" %></h3>
-        <ul class="mt-4 space-y-2 text-sm text-white/75">
-          <li><%= link_to legal_terminos_path, class: "hover:text-white transition-colors" do %><%= localized_text es: "Terminos de Servicio", en: "Terms of Service" %><% end %></li>
-          <li><%= link_to legal_privacidad_path, class: "hover:text-white transition-colors" do %><%= localized_text es: "Privacidad", en: "Privacy Policy" %><% end %></li>
-          <li><%= link_to legal_path, class: "hover:text-white transition-colors" do %><%= localized_text es: "Cookies", en: "Legal Hub" %><% end %></li>
-        </ul>
-      </div>
+      <nav aria-label="Papayal">
+        <%= link_to about_path do %><%= localized_text es: "Sobre Papayal", en: "About Papayal" %><% end %>
+        <%= link_to contact_path do %><%= localized_text es: "Contacto", en: "Contact" %><% end %>
+        <%= link_to new_user_session_path do %><%= localized_text es: "Acceso para comercios", en: "Merchant access" %><% end %>
+        <a href="https://www.instagram.com/papayalapp/" target="_blank" rel="noopener noreferrer">Instagram</a>
+      </nav>
+      <nav aria-label="Información legal" data-locale-attrs="aria-label" data-locale-aria-label-es="Información legal" data-locale-aria-label-en="Legal information">
+        <% [[legal_terminos_path, "Términos de servicio", "Terms of service"], [legal_privacidad_path, "Privacidad", "Privacy"], [legal_tarjetas_regalo_path, "Términos de las tarjetas", "Gift card terms"], [legal_pagos_reembolsos_path, "Pagos y reembolsos", "Payments and refunds"], [legal_path, "Información legal", "Legal information"]].each do |path, es, en| %>
+          <%= link_to path do %><%= localized_text es: es, en: en %><% end %>
+        <% end %>
+      </nav>
     </div>
-
-    <div class="mt-10 border-t border-white/10 pt-6 text-xs text-white/55">
-      <%= localized_text es: "© #{Time.current.year} Papayal. Todos los derechos reservados.", en: "© #{Time.current.year} Papayal. All rights reserved." %>
+    <div class="landing-footer-bottom">
+      <p><%= localized_text es: "© #{Time.current.year} Papayal. Todos los derechos reservados.", en: "© #{Time.current.year} Papayal. All rights reserved." %></p>
+      <div class="landing-footer-stores">
+        <% if (url = marketing_store_url(:ios)) %><%= link_to "App Store", url, data: marketing_store_link_data(:ios) %><% end %>
+        <% if (url = marketing_store_url(:android)) %><%= link_to "Google Play", url, data: marketing_store_link_data(:android) %><% end %>
+      </div>
     </div>
   </div>
 </footer>
