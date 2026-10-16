@@ -296,6 +296,9 @@
   z-index: 10;
 }
 .pui .pui-ctabar--stack { gap: calc(var(--spacing) * 0.75); }
+/* With the tab bar showing, the CTA bar sits on top of it (the tab bar owns the home-indicator inset).
+   Landing fix: brand/ui pinned both to bottom: 0, so the tab bar covered the buttons. */
+.pui .pui-ctabar--over-tabs { bottom: 110px; padding-bottom: var(--spacing); }
 
 /* ---------------------------------------------------------------- Screen.tsx (scrollable) */
 .pui .pui-screen-inner { padding: calc(var(--spacing) * 2); }

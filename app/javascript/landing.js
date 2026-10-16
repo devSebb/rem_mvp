@@ -334,8 +334,9 @@ function start() {
   // ------------------------------------------------------------ the rest ------------------
   function buildReveals() {
     gsap.from(".merchants .section-intro > *", { y: 30, opacity: 0, stagger: 0.08, duration: 0.8, ease: "power3.out", scrollTrigger: { trigger: ".merchants", start: "top 75%" } })
+    // A short rise and fade, left to right; clearProps hands the cards back to their CSS hover.
     gsap.from(".cat", {
-      y: 70, scale: 0.85, opacity: 0, rotation: (i) => (i % 2 ? 7 : -7), stagger: 0.08, duration: 0.95, ease: "back.out(1.6)",
+      y: 28, opacity: 0, stagger: 0.07, duration: 0.8, ease: "power3.out", clearProps: "transform,opacity",
       scrollTrigger: { trigger: "[data-cats]", start: "top 85%" }
     })
     gsap.from(".faq h2, .faq details", { y: 30, opacity: 0, stagger: 0.06, duration: 0.7, ease: "power3.out", scrollTrigger: { trigger: ".faq", start: "top 75%" } })

@@ -512,7 +512,7 @@
     return shell(
       "gift-card",
       `<div class="pui-body">${navbar(merchantName(m))}${scroller(103, content, scroll)}
-       <div class="v pui-ctabar pui-ctabar--stack" data-ui="cta-bar">${button({ label: "Canjear en tienda", ui: "cta-canjear" })}${button({ label: "Recargar", variant: "ghost", ui: "cta-recargar" })}</div>
+       <div class="v pui-ctabar pui-ctabar--stack${tabBarVisible ? " pui-ctabar--over-tabs" : ""}" data-ui="cta-bar">${button({ label: "Canjear en tienda", ui: "cta-canjear" })}${button({ label: "Recargar", variant: "ghost", ui: "cta-recargar" })}</div>
        ${tabBarVisible ? tabBar({ focused: "wallet" }) : ""}</div>`
     );
   }
