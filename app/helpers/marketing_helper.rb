@@ -24,6 +24,16 @@ module MarketingHelper
     nil
   end
 
+  # Landing logo tiles size logos by area, not height: height ∝ 1/√aspect, so wide wordmarks
+  # and compact marks carry the same visual weight. Returns a % of the tile height; falls back
+  # to a 2:1 logo while the blob has not been analyzed yet.
+  def marketing_logo_height(logo)
+    meta = logo.blob.metadata
+    width, height = meta["width"].to_f, meta["height"].to_f
+    aspect = width.positive? && height.positive? ? width / height : 2.0
+    [66, 82 / Math.sqrt(aspect)].min.round(1)
+  end
+
   def marketing_store_link_data(platform)
     {
       locale_attrs: "href",

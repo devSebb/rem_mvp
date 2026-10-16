@@ -11,12 +11,25 @@ RSpec.describe "Public marketing landing", type: :request do
     expect(response).to have_http_status(:ok)
     expect(page.css("h1").size).to eq(1)
     expect(page.css("#preguntas details").size).to eq(6)
-    expect(page.css('.landing-store-badge[href="https://apps.apple.com/us/app/papayal/id6759072681"]').size).to eq(1)
+    # Store badges in the hero and again in the closing download card.
+    expect(page.css('.landing-store-badge[href="https://apps.apple.com/us/app/papayal/id6759072681"]').size).to eq(2)
     google = page.at_css(".landing-store-badge-google")
     expect(google["href"]).to eq("https://play.google.com/store/apps/details?id=com.papayal.app&hl=es")
     expect(google["data-locale-href-en"]).to end_with("&hl=en")
     expect(page.css('a[href="/users/sign_up"]')).to be_empty
-    expect(page.css(".landing-page [data-reveal]")).to be_empty
+    expect(page.css("[data-landing] [data-reveal]")).to be_empty
+  end
+
+  it "loads the scroll story only on the landing, with its own header" do
+    get root_path
+
+    expect(page.css("[data-landing]").size).to eq(1)
+    expect(page.css('script[src*="landing"]').size).to eq(1)
+    expect(page.css('link[rel="stylesheet"][href*="landing"]').size).to eq(1)
+    expect(page.at_css('meta[name="turbo-visit-control"]')["content"]).to eq("reload")
+    nav_targets = page.css("header[data-nav] a[href^='#']").map { |link| link["href"].delete_prefix("#") }
+    expect(nav_targets).to include("como-funciona", "comercios", "preguntas", "descargar")
+    nav_targets.each { |anchor| expect(page.at_css("##{anchor}")).to be_present }
   end
 
   it "previews active merchants with redemption restrictions without opening web checkout" do
@@ -26,11 +39,11 @@ RSpec.describe "Public marketing landing", type: :request do
 
     get root_path
 
-    section = page.at_css("#mercado")
+    section = page.at_css("#comercios")
     preview = section.at_css("[data-merchant-preview]")
     expect(preview.text).to include("Active Partner", "Second Partner")
     expect(section.text).not_to include("Private Suspended", "merchant@example.com", "US12345")
-    expect(section.css(".landing-marquee a")).to be_empty
+    expect(section.css(".marquee a")).to be_empty
     # A shared restriction is stated once, not per logo.
     notes = section.css(".landing-merchant-note").map(&:text)
     expect(notes).to eq(["Para canjear esta tarjeta, paga en Medicity o Farmacias Económicas."])
@@ -42,7 +55,10 @@ RSpec.describe "Public marketing landing", type: :request do
 
     get root_path
 
-    expect(page.at_css("[data-merchant-preview] img.landing-marquee-logo")["alt"]).to eq("Logo Store")
+    logo = page.at_css("[data-merchant-preview] .logo-tile img")
+    expect(logo["alt"]).to eq("Logo Store")
+    # Unanalyzed blobs fall back to a 2:1 logo when sizing by area.
+    expect(logo["style"]).to eq("height: 58.0%")
   end
 
   it "loops a hidden duplicate so screen readers hear each merchant once" do
@@ -51,7 +67,7 @@ RSpec.describe "Public marketing landing", type: :request do
 
     readable = page.css("[data-merchant-preview] > li:not([aria-hidden])")
     expect(readable.size).to eq(3)
-    expect(page.css('.landing-marquee-list[aria-hidden="true"]').size).to eq(1)
+    expect(page.css('.marquee-list[aria-hidden="true"]').size).to eq(1)
   end
 
   it "shows an honest empty catalog message" do
@@ -67,7 +83,6 @@ RSpec.describe "Public marketing landing", type: :request do
     get root_path
 
     expect(page.css('a[href*="apps.apple.com"]')).to be_empty
-    expect(page.css(".landing-store-badge-google").size).to eq(1)
-    expect(page.css(".landing-availability")).to be_empty
+    expect(page.css(".landing-store-badge-google").size).to eq(2)
   end
 end

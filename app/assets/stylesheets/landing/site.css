@@ -1,0 +1,359 @@
+/* Public landing (marketing/landing.html.erb). Loaded only on that page, after application.css.
+   These rules are unlayered, so they win over Tailwind's layers: keep every selector scoped to
+   .lp (the landing nav + content) so the shared footer keeps its own styles.
+   The phone screens use landing/tokens.css + landing/ui.css (the app's own look, under .pui). */
+
+:root {
+  --teal: #0D2F32;
+  --teal-2: #14403F;
+  --teal-3: #082023;
+  --orange: #FCA50F;
+  --orange-2: #FFB838;
+  --orange-deep: #E98A00;
+  --cream: #FDF1E1;
+  --cream-2: #FFF8EE;
+  --white: #FFFFFF;
+  --ink: #0D2F32;
+  --ink-2: rgba(13, 47, 50, 0.74);
+  --ink-3: rgba(13, 47, 50, 0.5);
+  --on-dark: #FDF1E1;
+  --on-dark-2: rgba(253, 241, 225, 0.72);
+  --on-dark-3: rgba(253, 241, 225, 0.36);
+
+  --nav-h: 64px;
+  --gutter: clamp(16px, 4vw, 40px);
+  --maxw: 1240px;
+  --radius: 18px;
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: var(--nav-h); }
+.marketing-body { background: var(--cream); color: var(--ink); overflow-x: clip; }
+.lp { font: 500 16px/1.6 "Raleway", system-ui, sans-serif; -webkit-font-smoothing: antialiased; color: var(--ink); }
+.lp *, .lp *::before, .lp *::after { box-sizing: border-box; }
+.lp img, .lp svg { display: block; }
+.lp a { color: inherit; }
+.lp button { font: inherit; color: inherit; }
+/* application.css colors and fonts every heading globally; here they follow their section. */
+.lp :is(h1, h2, h3, p) { margin: 0; }
+.lp :is(h1, h2, h3) { color: inherit; font-family: inherit; }
+
+.lp .wrap { width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter); }
+.lp .display { font-weight: 900; letter-spacing: -0.035em; line-height: 0.98; text-wrap: balance; }
+.lp .eyebrow { font-size: 13px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--orange-deep); }
+.lp .lead { font-size: clamp(16px, 0.9rem + 0.35vw, 19px); line-height: 1.6; color: var(--ink-2); max-width: 46ch; }
+.lp :focus-visible { outline: 3px solid var(--orange); outline-offset: 4px; border-radius: 6px; }
+
+.lp .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 12px 22px; border-radius: 999px; border: 0;
+  background: var(--orange); color: var(--teal); font-weight: 800; font-size: 15px; text-decoration: none; white-space: nowrap;
+  box-shadow: 0 8px 20px -8px rgba(233, 138, 0, 0.6);
+  transition: transform 0.35s var(--spring), background-color 0.2s;
+}
+.lp .btn:hover { background: var(--orange-2); transform: translateY(-2px); }
+.lp .btn-sm { min-height: 40px; padding: 8px 16px; font-size: 14px; }
+.lp .text-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 800; font-size: 15px; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; text-decoration-color: var(--orange); }
+
+/* Store badges (marketing/_store_badges): black artwork, same height, Google's trimmed of its padding. */
+.lp .landing-store-badges { --badge-h: clamp(44px, 34px + 3vw, 52px); display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0; }
+.lp .landing-store-badge { display: inline-flex; min-height: 0; padding: 0; border-radius: calc(var(--badge-h) * 0.2); transition: transform 0.35s var(--spring), box-shadow 0.35s; }
+.lp .landing-store-badge:hover { transform: translateY(-3px); box-shadow: 0 12px 24px -12px rgba(13, 47, 50, 0.45); }
+.lp .landing-store-badge img { height: var(--badge-h); width: auto; }
+
+/* ------------------------------------------------------------------ nav ------------- */
+.lp.nav { position: fixed; inset: 0 0 auto; z-index: 60; height: var(--nav-h); display: flex; align-items: center; transition: background-color 0.35s, box-shadow 0.35s, color 0.35s; }
+.lp.nav.is-scrolled { background: rgba(253, 241, 225, 0.8); -webkit-backdrop-filter: saturate(1.5) blur(16px); backdrop-filter: saturate(1.5) blur(16px); box-shadow: 0 1px 0 rgba(13, 47, 50, 0.08); }
+.lp.nav.is-dark { color: var(--on-dark); background: rgba(13, 47, 50, 0.72); box-shadow: 0 1px 0 rgba(253, 241, 225, 0.08); }
+.lp .nav-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lp .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 900; font-size: 22px; letter-spacing: -0.03em; text-decoration: none; min-height: 44px; }
+.lp .brand-logo { width: 30px; height: 30px; color: var(--orange); }
+.lp .nav-links { display: none; gap: 4px; }
+.lp .nav-links a { padding: 10px 14px; border-radius: 999px; font-weight: 700; font-size: 14px; text-decoration: none; transition: background-color 0.2s; }
+.lp .nav-links a:hover { background: rgba(13, 47, 50, 0.07); }
+.lp.nav.is-dark .nav-links a:hover { background: rgba(253, 241, 225, 0.1); }
+.lp .nav-actions { display: flex; align-items: center; gap: 8px; }
+/* shared/_language_toggle, restyled as the prototype's pill. */
+.lp .locale-toggle { display: inline-flex; padding: 3px; border-radius: 999px; border: 1px solid rgba(127, 127, 127, 0.3); background: transparent; box-shadow: none; }
+.lp .locale-toggle-btn { height: auto; min-width: 0; min-height: 30px; border: 0; background: none; padding: 4px 9px; border-radius: 999px; font-size: 12px; font-weight: 800; color: inherit; cursor: pointer; opacity: 0.6; box-shadow: none; }
+.lp .locale-toggle-btn.is-active { background: var(--teal); color: var(--cream); opacity: 1; }
+.lp.nav.is-dark .locale-toggle-btn.is-active { background: var(--cream); color: var(--teal); }
+@media (max-width: 379px) { .lp .brand span { display: none; } }
+@media (min-width: 900px) { .lp .nav-links { display: flex; } .lp .nav-row { gap: 16px; } }
+
+/* ------------------------------------------------------------------ hero ------------ */
+.lp .hero {
+  position: relative; overflow: clip;
+  padding-top: calc(var(--nav-h) + clamp(20px, 4vw, 48px));
+  padding-bottom: clamp(40px, 6vw, 96px);
+  background:
+    radial-gradient(55% 60% at 80% 48%, rgba(252, 165, 15, 0.32) 0%, rgba(252, 165, 15, 0) 70%),
+    radial-gradient(50% 50% at 0% 0%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 70%),
+    linear-gradient(180deg, var(--cream-2) 0%, var(--cream) 100%);
+}
+.lp .hero-grid { display: grid; gap: clamp(24px, 4vw, 48px); align-items: center; }
+.lp .hero-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; position: relative; z-index: 2; min-width: 0; }
+.lp .hero-title { font-size: clamp(2.5rem, 1.3rem + 4.6vw, 5.4rem); }
+.lp .hero-title .hl { white-space: nowrap; }
+.lp .hero-title .line { display: block; overflow: clip; padding-bottom: 0.08em; margin-bottom: -0.08em; }
+.lp .hero-title .line > span { display: inline-block; }
+.lp .hl {
+  display: inline; padding: 0 0.1em; margin: 0 -0.04em;
+  background: linear-gradient(var(--orange), var(--orange)) no-repeat 0 82% / 100% 78%;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
+.lp .hero-copy .landing-store-badges { margin-top: 4px; }
+
+.lp .hero-art { --card-w: clamp(260px, 80vw, 480px); position: relative; display: grid; place-items: center; padding-block: 8px 4px; }
+.lp .hero-stack { position: relative; z-index: 2; width: var(--card-w); display: flex; flex-direction: column; gap: clamp(34px, 3vw, 36px); }
+.lp .hero-card-wrap { position: relative; }
+.lp .hero-glow { position: absolute; inset: 6% 2%; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0)); }
+.lp .hero-card { position: relative; z-index: 2; display: block; border: 0; padding: 0; background: none; cursor: pointer; perspective: 1600px; -webkit-tap-highlight-color: transparent; border-radius: 6%; }
+.lp .hero-hint { margin-top: -8px; text-align: center; font-size: 13px; font-weight: 700; color: var(--ink-3); }
+@media (hover: hover) and (pointer: fine) { .lp .hero-hint { display: none; } }
+
+.lp .shock { position: absolute; left: 50%; top: 50%; width: 140%; aspect-ratio: 1; transform: translate(-50%, -50%); pointer-events: none; overflow: visible; z-index: 1; }
+.lp .shock circle { fill: none; stroke: var(--orange); stroke-width: 0; opacity: 0; }
+
+.lp .notif {
+  position: absolute; z-index: 3; display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px 12px 12px; border-radius: 18px; max-width: min(360px, 88%);
+  background: rgba(255, 255, 255, 0.86); -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: 0 18px 40px -14px rgba(13, 47, 50, 0.35), 0 0 0 1px rgba(13, 47, 50, 0.05);
+}
+/* The card tilts −5°: its top-left and bottom-right corners are the low ones, so the
+   notification sits off the top-left and the pill off the bottom-right, clear of both. */
+.lp .hero-art .notif { position: relative; align-self: flex-start; margin-left: -4%; max-width: 88%; }
+.lp .notif-icon { flex: none; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; background: var(--cream); }
+.lp .notif-icon svg { width: 26px; height: 26px; color: var(--orange); }
+.lp .notif-text { display: flex; flex-direction: column; line-height: 1.25; }
+.lp .notif-text small { font-size: 12px; font-weight: 700; color: var(--ink-3); }
+.lp .notif-text strong { font-size: 14px; font-weight: 800; color: var(--ink); }
+
+.lp .pill { position: relative; z-index: 3; align-self: flex-end; margin-right: 2%; padding: 8px 18px; border-radius: 999px; background: var(--orange); color: var(--teal); font-weight: 800; font-size: 16px; box-shadow: 0 14px 30px -12px rgba(233, 138, 0, 0.7); }
+
+@media (min-width: 1024px) {
+  .lp .hero { min-height: 100svh; display: flex; align-items: center; }
+  .lp .hero > .wrap { width: 100%; }
+  .lp .hero-grid { grid-template-columns: 1.08fr 0.92fr; }
+  .lp .hero-art .notif { margin-left: -10%; }
+}
+
+/* ------------------------------------------------------------------ gift card --------
+   brand/card.html ported verbatim, scoped under .gc (1em = 1 % of the card width). */
+.lp .gc-tilt { display: block; transform-style: preserve-3d; }
+.lp .gc {
+  --papayal-orange: #FCA50F; --surface-orange: #FFA306; --surface-amber: #F3AF40; --surface-sand: #E0BD80; --surface-mist: #D8D6D0;
+  --ink-front: #EDEBE6; --ink-bright: #FFFCF3; --edge-light: rgba(255, 226, 170, 0.95);
+  --edge-light-back: rgba(253, 241, 225, 0.22); --back-tone: rgba(253, 241, 225, 0.07);
+  position: relative; display: block; font-size: calc(var(--card-w) / 100); width: 100em; aspect-ratio: 1.586 / 1;
+  transform-style: preserve-3d; font-family: "Raleway", sans-serif; text-align: left;
+}
+.lp .gc-shadow { position: absolute; left: 8%; right: 8%; top: 22%; bottom: -6%; border-radius: 30px; background: rgba(13, 47, 50, 0.42); filter: blur(28px); transform: translateY(8%); }
+.lp .gc .card-front, .lp .gc .card-back { position: absolute; inset: 0; border-radius: 5.5em; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.lp .gc .card-back { transform: rotateY(180deg); }
+.lp .gc .card-edge { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; box-shadow: inset 0.28em -0.28em 0.18em -0.08em var(--edge-light), inset 0.1em -0.1em 0 0 rgba(255, 244, 222, 0.55); }
+.lp .gc .card-back .card-edge { box-shadow: inset 0.22em -0.22em 0.16em -0.08em var(--edge-light-back), inset 0.08em -0.08em 0 0 rgba(253, 241, 225, 0.14); }
+.lp .gc .card-front {
+  background:
+    radial-gradient(42% 55% at 100% 100%, rgba(216, 218, 218, 0.9) 0%, rgba(216, 218, 218, 0) 100%),
+    linear-gradient(118deg, var(--surface-orange) 0%, var(--surface-orange) 30%, var(--surface-amber) 56%, var(--surface-sand) 80%, var(--surface-mist) 100%);
+  color: var(--ink-front);
+}
+.lp .gc .card-sheen { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(38% 46% at 58% 42%, rgba(255, 236, 190, 0.14) 0%, rgba(255, 236, 190, 0) 100%), radial-gradient(22% 30% at 96% 98%, rgba(236, 240, 244, 0.35) 0%, rgba(236, 240, 244, 0) 100%), linear-gradient(160deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 40%); }
+.lp .gc .card-sweep { position: absolute; inset: -20% -60%; pointer-events: none; background: linear-gradient(105deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0) 62%); mix-blend-mode: soft-light; transform: translateX(-70%); }
+.lp .gc .card-wordmark { position: absolute; left: 6.78%; top: 10.05%; font: 900 11.57em/1 "Raleway", sans-serif; letter-spacing: -0.005em; white-space: nowrap; }
+.lp .gc .card-emblem { position: absolute; left: 86.8%; top: 19.1%; width: 11.48em; height: 11.48em; transform: translate(-50%, -50%); filter: drop-shadow(0 0 0.9em rgba(255, 244, 222, 0.85)) drop-shadow(0 0 2.8em rgba(255, 236, 200, 0.6)); }
+.lp .gc .card-emblem svg, .lp .gc .card-back-logo svg { width: 100%; height: 100%; overflow: visible; }
+.lp .gc .card-number { position: absolute; left: 6.47%; bottom: 21.9%; font: 500 5.72em/1 "Raleway", sans-serif; font-feature-settings: "lnum" 1; white-space: nowrap; color: var(--ink-bright); }
+.lp .gc .card-number-group { display: inline-block; }
+.lp .gc .card-number-group + .card-number-group { margin-left: 0.55em; }
+.lp .gc .card-number-group > span { display: inline-block; width: 0.66em; text-align: center; }
+.lp .gc .card-label { position: absolute; left: 7.3%; bottom: 10.07%; font: 700 4.04em/1 "Raleway", sans-serif; letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap; color: var(--ink-bright); }
+.lp .gc .card-back { background: var(--teal); color: var(--cream); font-weight: 700; }
+.lp .gc .card-back-pattern { position: absolute; inset: 0; width: 100%; height: 100%; }
+.lp .gc .card-back-pattern use { fill: none; stroke: var(--back-tone); }
+.lp .gc .card-back-title { position: absolute; left: 6.8%; top: 10.6%; font-size: 2.3em; line-height: 1; letter-spacing: 0.16em; text-transform: uppercase; white-space: nowrap; }
+.lp .gc .card-back-logo { position: absolute; right: 6.8%; top: 6.4%; width: 7em; height: 7em; color: var(--papayal-orange); }
+.lp .gc .card-back-cats { position: absolute; left: 0; right: 0; top: 25.5%; display: flex; justify-content: center; gap: 5em; }
+.lp .gc .card-back-cat { width: 21em; display: flex; flex-direction: column; align-items: center; gap: 1.5em; }
+.lp .gc .card-back-icon { width: 8.4em; height: 8.4em; overflow: visible; }
+.lp .gc .card-back-icon path { fill: none; stroke: var(--cream); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.lp .gc .card-back-icon-pill path { stroke-width: 1.136; }
+.lp .gc .card-back-cat-label { font-size: 2.6em; line-height: 1; letter-spacing: 0.01em; white-space: nowrap; }
+.lp .gc .card-back-code { position: absolute; left: 0; right: 0; top: 56.6%; width: max-content; margin: 0 auto; padding: 1.9em 4em; border-radius: 2.4em; background: rgba(253, 241, 225, 0.1); display: flex; flex-direction: column; align-items: center; gap: 1.3em; }
+.lp .gc .card-back-code-label { font-size: 2.1em; line-height: 1; letter-spacing: 0.04em; opacity: 0.7; }
+.lp .gc .card-back-code-value { font-size: 4em; font-weight: 500; line-height: 1; letter-spacing: 0.12em; margin-right: -0.12em; font-feature-settings: "lnum" 1; white-space: nowrap; }
+.lp .gc .card-back-redeem { position: absolute; left: 0; right: 0; bottom: 10.4%; font-size: 2.3em; line-height: 1; letter-spacing: 0.03em; text-align: center; white-space: nowrap; opacity: 0.7; }
+
+/* ------------------------------------------------------------------ phone -----------
+   Device art (brand/ui/device, unaltered: never tilted or put in perspective) with the
+   app screens behind its transparent screen. */
+.lp .phone { position: relative; height: 100%; aspect-ratio: 1470 / 3000; max-width: 100%; }
+.lp .phone-screen {
+  position: absolute; left: 5.102%; top: 2.2%; width: 89.796%; height: 95.6%;
+  display: flex; justify-content: center; overflow: hidden; background: var(--cream);
+  -webkit-mask: url(/marketing/landing/device/screen-mask.png) 0 0 / 100% 100% no-repeat; mask: url(/marketing/landing/device/screen-mask.png) 0 0 / 100% 100% no-repeat;
+}
+.lp .phone-stack { position: relative; flex: none; width: 393px; height: 852px; zoom: var(--ui-scale, 1); }
+.lp .phone-stack .pui-screen { position: absolute; inset: 0; zoom: 1; }
+.lp .phone-bezel { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.lp .tap { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: rgba(13, 47, 50, 0.16); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), 0 6px 16px rgba(13, 47, 50, 0.25); pointer-events: none; z-index: 80; opacity: 0; }
+
+/* ------------------------------------------------------------------ pinned stories -- */
+.lp .story { position: relative; }
+.lp .stage { position: relative; height: 100vh; height: 100svh; overflow: hidden; display: flex; }
+.lp .story-send .stage, .lp .trip, .lp .story-receive .stage {
+  background:
+    radial-gradient(40% 50% at 72% 52%, rgba(253, 241, 225, 0.08) 0%, rgba(253, 241, 225, 0) 70%),
+    radial-gradient(60% 60% at 100% 100%, rgba(252, 165, 15, 0.12) 0%, rgba(252, 165, 15, 0) 65%),
+    var(--teal);
+  color: var(--on-dark);
+}
+.lp .stage-grid { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 14px; padding-top: calc(var(--nav-h) + 14px); padding-bottom: 16px; }
+.lp .stage-copy { position: relative; z-index: 3; }
+.lp .stage-title { font-size: clamp(2.1rem, 1.4rem + 3.2vw, 4.4rem); margin-top: 6px; }
+.lp .story-send .eyebrow, .lp .story-receive .eyebrow { color: var(--orange); }
+.lp .stage-phone { position: relative; flex: 1 1 0; min-height: 0; display: flex; justify-content: center; }
+.lp .studio-glow { position: absolute; left: 50%; top: 50%; width: 120%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(closest-side, rgba(253, 241, 225, 0.12), rgba(253, 241, 225, 0)); pointer-events: none; }
+.lp .stage-phone .phone { position: relative; z-index: 2; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.35)); }
+.lp .stage-phone .shock { width: 170%; }
+
+.lp .steps { list-style: none; margin: 0; padding: 0; position: relative; }
+.lp .step { display: flex; gap: 14px; }
+.lp .step-num { flex: none; font-weight: 900; font-size: 14px; letter-spacing: 0.06em; color: var(--orange); padding-top: 4px; min-width: 24px; }
+.lp .step h3 { font-size: clamp(18px, 1rem + 0.6vw, 24px); font-weight: 800; letter-spacing: -0.015em; line-height: 1.2; }
+.lp .step p { margin-top: 4px; font-size: 15px; line-height: 1.5; color: var(--on-dark-2); max-width: 36ch; }
+
+/* Small screens: one caption at a time above the phone. */
+@media (max-width: 899px) {
+  .lp .stage-grid { width: 100%; }
+  .lp .stage-title { font-size: clamp(1.9rem, 1.2rem + 3vw, 2.6rem); }
+  .lp .steps { height: 96px; margin-top: 12px; }
+  .lp .step { position: absolute; inset: 0 0 auto; }
+  .lp .step + .step { opacity: 0; visibility: hidden; }
+  .lp .stage-phone .notif-phone { top: 6%; }
+}
+/* Large screens: copy left, phone right; every step listed, the active one lit. */
+@media (min-width: 900px) {
+  .lp .stage-grid { flex-direction: row; align-items: center; justify-content: space-between; gap: 48px; padding-top: calc(var(--nav-h) + 24px); padding-bottom: 32px; }
+  .lp .stage-grid.is-reversed { flex-direction: row-reverse; }
+  .lp .stage-copy { flex: 1 1 0; max-width: 520px; }
+  .lp .stage-phone { flex: 0 0 auto; height: min(80svh, 800px); align-self: center; width: min(42vw, 520px); }
+  .lp .steps { margin-top: 32px; display: grid; gap: 22px; padding-left: 22px; }
+  .lp .steps::before { content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 2px; border-radius: 2px; background: var(--on-dark-3); }
+  .lp .steps::after { content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 2px; border-radius: 2px; background: var(--orange); transform-origin: top; transform: scaleY(var(--fill, 0)); }
+  .lp .step { opacity: 0.32; }
+  .lp .step:first-child { opacity: 1; }
+}
+
+/* receive: teal stage, cream iris opens with the thick orange ring at its edge */
+.lp .iris { position: absolute; inset: 0; z-index: 1; clip-path: circle(0px at 50% 50%);
+  background:
+    radial-gradient(45% 55% at 30% 55%, rgba(252, 165, 15, 0.22) 0%, rgba(252, 165, 15, 0) 70%),
+    radial-gradient(60% 60% at 100% 0%, #FFFFFF 0%, rgba(255, 255, 255, 0) 70%),
+    var(--cream); }
+.lp .iris-ring { position: absolute; left: 50%; top: 50%; z-index: 1; width: 0; height: 0; border-radius: 50%; border: solid var(--orange); border-width: 0; transform: translate(-50%, -50%); pointer-events: none; }
+.lp .story-receive .stage-grid { color: var(--ink); }
+.lp .story-receive .step p { color: var(--ink-2); }
+.lp .story-receive .eyebrow { color: var(--orange-deep); }
+.lp .story-receive .steps::before { background: rgba(13, 47, 50, 0.16); }
+.lp .story-receive .studio-glow { background: radial-gradient(closest-side, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0)); }
+.lp .story-receive .stage-phone .phone { filter: drop-shadow(0 30px 40px rgba(13, 47, 50, 0.28)); }
+.lp .notif-phone { left: 50%; top: 9%; width: max-content; max-width: 92%; }
+
+/* ------------------------------------------------------------------ trip ------------ */
+.lp .trip { text-align: center; margin-top: -1px; }
+.lp .trip-stage { height: 100vh; height: 100svh; display: flex; align-items: center; }
+.lp .trip-board { font-weight: 900; letter-spacing: -0.035em; line-height: 1.26; font-size: clamp(2.8rem, 1.2rem + 7.5vw, 7.6rem); }
+.lp .reel { height: 1.26em; overflow: hidden; color: var(--on-dark); }
+.lp .reel-track { display: flex; flex-direction: column; }
+/* Rows are taller than Raleway's content box (1.174em) so descenders and accents never bleed into the next row. */
+.lp .reel-track > span { display: block; height: 1.26em; white-space: nowrap; }
+.lp .reel-to { margin-top: -0.1em; color: var(--orange); }
+.lp .reel-to .reel-track > span { display: flex; justify-content: center; align-items: center; gap: 0.16em; }
+.lp .trip-arrow { width: 0.62em; height: 0.42em; flex: none; margin-top: 0.06em; fill: none; stroke: currentColor; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+.lp .trip-title { margin-top: clamp(28px, 5vw, 56px); font-size: clamp(1.6rem, 1rem + 2.6vw, 3rem); color: var(--on-dark-2); }
+
+/* ------------------------------------------------------------------ merchants ------- */
+.lp .merchants { background: linear-gradient(180deg, var(--white) 0%, var(--cream-2) 100%); padding-block: clamp(72px, 10vw, 140px) clamp(56px, 8vw, 110px); overflow: clip; }
+.lp .section-intro { display: grid; gap: 16px; max-width: 720px; }
+.lp .section-intro h2 { font-size: clamp(2.3rem, 1.4rem + 3.6vw, 4.6rem); }
+.lp .cats { list-style: none; margin: clamp(36px, 5vw, 64px) 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(14px, 2.4vw, 28px); }
+.lp .cat { width: calc((100% - 2 * clamp(14px, 2.4vw, 28px)) / 3); max-width: 200px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.lp .cat-mark { display: block; width: 100%; aspect-ratio: 1; border-radius: 10.4%; box-shadow: 0 18px 36px -18px rgba(13, 47, 50, 0.35), 0 0 0 1px rgba(13, 47, 50, 0.05); transition: transform 0.45s var(--spring), box-shadow 0.3s; }
+.lp .cat-mark .pui-mark { width: 100%; height: 100%; }
+.lp .cat:hover .cat-mark { transform: translateY(-8px) rotate(-3deg); box-shadow: 0 26px 40px -18px rgba(233, 138, 0, 0.55), 0 0 0 2px var(--orange); }
+.lp .cat-label { font-weight: 800; font-size: clamp(15px, 0.8rem + 0.4vw, 18px); }
+@media (min-width: 760px) { .lp .cat { width: calc((100% - 4 * clamp(14px, 2.4vw, 28px)) / 5); } }
+
+.lp .marquee-head { margin-top: clamp(48px, 7vw, 88px); }
+.lp .marquee-label { font-size: 13px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); text-align: center; }
+.lp .marquee { overflow: hidden; margin-top: 20px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+.lp .marquee-track { display: flex; width: max-content; animation: lp-marquee 50s linear infinite; }
+.lp .marquee:hover .marquee-track { animation-play-state: paused; }
+.lp .marquee-list { display: flex; gap: 16px; padding: 14px 8px 22px; margin: 0; list-style: none; }
+.lp .logo-tile { flex: none; width: clamp(150px, 12vw + 96px, 190px); aspect-ratio: 2 / 1; display: grid; place-items: center; border-radius: 20px; background: var(--white); box-shadow: 0 1px 0 rgba(13, 47, 50, 0.05), 0 14px 30px -20px rgba(13, 47, 50, 0.35); transition: transform 0.45s var(--spring), box-shadow 0.3s; }
+.lp .logo-tile:hover { transform: translateY(-5px); box-shadow: 0 0 0 2px var(--orange), 0 20px 34px -18px rgba(233, 138, 0, 0.55); }
+.lp .logo-tile img { width: auto; max-width: 74%; max-height: 64%; object-fit: contain; }
+.lp .logo-name { padding-inline: 12px; font-weight: 900; font-size: 17px; letter-spacing: -0.02em; text-align: center; line-height: 1.15; }
+@keyframes lp-marquee { to { transform: translateX(-50%); } }
+.lp .merchant-notes { margin-top: 12px; display: grid; gap: 4px; justify-items: center; text-align: center; }
+.lp .merchant-notes p { font-size: 14px; color: var(--ink-2); max-width: 60ch; }
+.lp .merchant-empty { margin-top: 24px; text-align: center; color: var(--ink-2); }
+
+/* ------------------------------------------------------------------ faq ------------- */
+.lp .faq { background: var(--cream-2); padding-block: clamp(56px, 8vw, 120px); }
+.lp .faq-grid { display: grid; gap: 32px; }
+.lp .faq h2 { font-size: clamp(2rem, 1.3rem + 2.6vw, 3.4rem); max-width: 14ch; }
+.lp .faq-list { display: grid; gap: 10px; }
+.lp .faq details { background: var(--white); border-radius: var(--radius); box-shadow: 0 1px 0 rgba(13, 47, 50, 0.06), 0 10px 28px -20px rgba(13, 47, 50, 0.3); transition: box-shadow 0.3s; }
+.lp .faq details[open] { box-shadow: 0 0 0 2px var(--orange), 0 16px 36px -22px rgba(233, 138, 0, 0.6); }
+.lp .faq summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 22px; font-weight: 800; font-size: 17px; line-height: 1.4; }
+.lp .faq summary::-webkit-details-marker { display: none; }
+.lp .faq-icon { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--cream); position: relative; transition: transform 0.4s var(--spring), background-color 0.2s; }
+.lp .faq-icon::before, .lp .faq-icon::after { content: ""; position: absolute; left: 50%; top: 50%; width: 12px; height: 2px; margin: -1px 0 0 -6px; border-radius: 2px; background: var(--teal); }
+.lp .faq-icon::after { transform: rotate(90deg); }
+.lp .faq details[open] .faq-icon { transform: rotate(45deg); background: var(--orange); }
+.lp .faq-a { padding: 0 22px 20px; color: var(--ink-2); }
+.lp .faq-a a { font-weight: 700; color: var(--ink); text-decoration: underline; text-decoration-color: var(--orange); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+@media (min-width: 900px) { .lp .faq-grid { grid-template-columns: 0.9fr 1.1fr; gap: 64px; align-items: start; } }
+
+/* ------------------------------------------------------------------ end card -------- */
+.lp .end {
+  position: relative; overflow: clip; text-align: center;
+  padding-block: clamp(80px, 12vw, 160px);
+  background:
+    radial-gradient(70% 55% at 50% 115%, rgba(252, 165, 15, 0.5) 0%, rgba(252, 165, 15, 0) 70%),
+    linear-gradient(180deg, var(--cream-2) 0%, var(--cream) 100%);
+}
+.lp .end-inner { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.lp .end-logo { position: relative; width: clamp(120px, 22vw, 200px); aspect-ratio: 1; margin-bottom: 12px; }
+.lp .end-mark { position: relative; z-index: 2; width: 100%; height: 100%; color: var(--orange); filter: drop-shadow(0 18px 30px rgba(233, 138, 0, 0.35)); }
+.lp .end-logo .shock { width: 320%; }
+.lp .end h2 { font-size: clamp(2.5rem, 1.4rem + 4.8vw, 5.6rem); max-width: 12ch; }
+.lp .end .lead { margin-inline: auto; }
+.lp .end-actions { display: flex; flex-direction: column; align-items: center; gap: 22px; margin-top: 8px; }
+.lp .end .landing-store-badges { justify-content: center; }
+.lp .end-qr { display: none; align-items: center; gap: 14px; padding: 10px 18px 10px 10px; border-radius: 18px; background: var(--white); font-weight: 700; font-size: 14px; max-width: 280px; text-align: left; box-shadow: 0 12px 30px -18px rgba(13, 47, 50, 0.4); }
+@media (min-width: 900px) and (hover: hover) { .lp .end-qr { display: inline-flex; } }
+
+/* ------------------------------------------------------------------ reduced motion -- */
+.lp .static-steps { display: grid; gap: 40px; margin-top: 32px; }
+.lp .static-step { display: grid; justify-items: center; gap: 16px; text-align: center; }
+.lp .static-step .phone { height: min(560px, 70svh); }
+@media (min-width: 900px) { .lp .static-steps { grid-template-columns: repeat(4, 1fr); } .lp .static-step .phone { height: 420px; } }
+.lp .is-static .stage { height: auto; display: block; }
+.lp .is-static .stage-copy { max-width: none; }
+.lp .static-step h3 { font-size: 20px; font-weight: 800; }
+.lp .static-step p { margin-top: 4px; opacity: 0.75; }
+.lp .is-static .stage-grid { display: block; padding-block: calc(var(--nav-h) + 40px) 64px; }
+.lp .is-static .stage-phone, .lp .is-static .steps, .lp .is-static .iris-ring { display: none; }
+.lp .is-static .iris { clip-path: none; }
+@media (prefers-reduced-motion: reduce) {
+  .lp .marquee { -webkit-mask-image: none; mask-image: none; }
+  .lp .marquee-track { animation: none; width: auto; justify-content: center; }
+  .lp .marquee-list { flex-wrap: wrap; justify-content: center; }
+  .lp .marquee-list[aria-hidden], .lp .logo-tile[aria-hidden] { display: none; }
+}

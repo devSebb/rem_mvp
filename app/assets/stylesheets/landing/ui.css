@@ -1,0 +1,446 @@
+/*
+ * papayal-mobile components as CSS. Every rule cites its source StyleSheet; values come from
+ * tokens.css. Layout mirrors React Native's Yoga defaults: every view is a flex column with
+ * flex-shrink 0 and border-box sizing.
+ *
+ * Text fonts, faithfully: React 19 ignores Text.defaultProps, so the app's global default
+ * (BootGate.tsx: Raleway 400 / theme.colors.text) never applies. Text whose style sets no
+ * fontFamily renders in the iOS system font (SF Pro) and, with no color, in black.
+ * Those are marked `.sys` / `.ink` below.
+ */
+
+/* ---------------------------------------------------------------- base ------------------ */
+.pui {
+  font-family: var(--ios-font);          /* RN iOS default when fontFamily is unset */
+  font-size: var(--fs-14);               /* RN default fontSize */
+  font-weight: 400;
+  line-height: var(--lh-natural);
+  color: var(--ios-ink);                 /* RN default Text color: black */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+  box-sizing: border-box;
+}
+.pui .v { display: flex; flex-direction: column; position: relative; flex-shrink: 0; box-sizing: border-box; min-width: 0; }
+.pui .r { flex-direction: row; }
+.pui .t { display: block; flex-shrink: 0; margin: 0; white-space: pre-wrap; box-sizing: border-box; }
+.pui .nowrap { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.pui .ral { font-family: var(--font-family); }
+.pui .sys { font-family: var(--ios-font); }
+.pui img { display: block; }
+
+/* Feather glyph in the icon font's line box (height 1.117 × size, glyph 1:1 at the top) */
+.pui .pui-icon { display: block; position: relative; flex-shrink: 0; width: var(--s); height: calc(var(--s) * var(--icon-line)); }
+.pui .pui-icon > svg { position: absolute; left: 0; top: calc(var(--s) * var(--icon-top)); width: var(--s); height: var(--s); }
+
+/* ---------------------------------------------------------------- screen shell ----------- */
+.pui-screen {
+  zoom: var(--ui-scale);
+  width: 393px;
+  height: 852px;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-background);
+}
+.pui .pui-body { position: absolute; inset: 0; }
+.pui .pui-scroll { position: absolute; left: 0; right: 0; bottom: 0; overflow: hidden; }
+.pui .pui-scroll-content { width: 100%; }
+
+/* iOS status bar (neutral, 9:41) — system chrome, not app code */
+.pui .pui-statusbar { position: absolute; top: 0; left: 0; right: 0; height: 54px; z-index: 50; pointer-events: none; color: var(--ios-ink); }
+.pui .pui-statusbar-time { position: absolute; left: 0; width: 131px; top: 17px; text-align: center; font: 600 17px/22px var(--ios-font); letter-spacing: -0.4px; }
+.pui .pui-statusbar-icons { position: absolute; right: 26px; top: 21px; display: flex; flex-direction: row; align-items: center; gap: 6px; }
+.pui .pui-statusbar-icons svg { display: block; }
+.pui .pui-home-indicator { position: absolute; left: 50%; bottom: 8px; width: 134px; height: 5px; margin-left: -67px; border-radius: 100px; background: var(--ios-ink); z-index: 50; }
+
+/* Native-stack header (Wallet stack): 44 pt UINavigationBar under the status bar */
+.pui .pui-navbar { position: absolute; top: 59px; left: 0; right: 0; height: 44px; background: var(--color-background); border-bottom: var(--hairline) solid var(--ios-nav-hairline); flex-direction: row; align-items: center; justify-content: center; z-index: 5; }
+.pui .pui-navbar-title { font: var(--font-semiBold) 17px var(--font-family); color: var(--color-text); }
+.pui .pui-navbar-left { position: absolute; left: 16px; top: 2px; }
+
+/* ---------------------------------------------------------------- Card.tsx -------------- */
+.pui .pui-card {
+  background: var(--color-card);
+  border-radius: var(--radius-18);
+  padding: calc(var(--spacing) * 2);
+  box-shadow: var(--shadow-card);
+  border: var(--hairline) solid var(--color-border);
+}
+
+/* ---------------------------------------------------------------- ListRow.tsx ----------- */
+.pui .pui-group { background: var(--color-card); border-radius: var(--radius-18); border: var(--hairline) solid var(--color-border); box-shadow: var(--shadow-card); }
+.pui .pui-group-clip { border-radius: var(--radius-18); overflow: hidden; }
+.pui .pui-row { align-items: center; gap: var(--spacing); min-height: 56px; padding: calc(var(--spacing) * 1.25); background: var(--color-card); }
+.pui .pui-row.is-pressed { background: var(--hc-pressed-row); }
+.pui .pui-row.is-disabled { opacity: 0.55; }
+.pui .pui-row-icon { width: 34px; height: 34px; border-radius: var(--radius-10); align-items: center; justify-content: center; background: var(--color-background); border: var(--hairline) solid var(--color-border); color: var(--color-text); }
+.pui .pui-row-icon.is-accent { background: var(--hc-orange-tint-3); border-color: var(--hc-orange-chip-border); color: var(--color-primary); }
+.pui .pui-row-icon.is-danger { background: var(--hc-danger-chip-bg); border-color: var(--hc-danger-chip-border); color: var(--color-danger); }
+.pui .pui-row-text { flex: 1 1 0; gap: 2px; }
+.pui .pui-row-title { font: var(--font-bold) var(--fs-16) var(--font-family); color: var(--color-text); }
+.pui .pui-row-title.is-danger { color: var(--color-danger); }
+.pui .pui-row-subtitle { color: var(--color-muted); font-size: var(--typography-small); line-height: 18px; } /* .sys */
+.pui .pui-row-chevron { color: var(--color-muted); }
+.pui .pui-row-divider { height: var(--hairline); background: var(--color-border); margin-left: calc(var(--spacing) * 6.5); }
+
+/* ---------------------------------------------------------------- Button.tsx ------------ */
+.pui .pui-btn {
+  padding: calc(var(--spacing) * 1.2) calc(var(--spacing) * 2);
+  border-radius: var(--radius-md);
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  gap: calc(var(--spacing) * 0.25);
+  box-shadow: var(--shadow-button);
+}
+.pui .pui-btn--primary { background: var(--color-primary); }
+.pui .pui-btn--secondary { background: var(--color-secondary); }
+.pui .pui-btn--danger { background: var(--color-danger); }
+.pui .pui-btn--ghost { background: transparent; border: var(--hairline) solid var(--color-border); box-shadow: none; }
+.pui .pui-btn.is-pressed { opacity: 0.9; }
+.pui .pui-btn.is-disabled { opacity: 0.5; }
+.pui .pui-btn-label {
+  font: var(--font-bold) var(--typography-body) var(--font-family);
+  letter-spacing: 0.1px;
+  text-align: center;
+  flex-shrink: 1;
+  color: var(--color-secondary);
+}
+.pui .pui-btn--secondary .pui-btn-label, .pui .pui-btn--danger .pui-btn-label { color: var(--hc-white); }
+/* checkout / success overrides (PurchaseSuccessScreen, DeliveryProfileScreen styles) */
+.pui .pui-btn--tall { padding-top: calc(var(--spacing) * 1.4); padding-bottom: calc(var(--spacing) * 1.4); border-radius: var(--radius-18); }
+.pui .pui-btn--outline { padding-top: calc(var(--spacing) * 1.2); padding-bottom: calc(var(--spacing) * 1.2); border-radius: var(--radius-18); border: 1px solid var(--color-secondary); }
+/* ActivityIndicator (iOS, small 20 pt) */
+.pui .pui-spinner { width: 20px; height: 20px; display: block; }
+
+/* ---------------------------------------------------------------- BackButton.tsx -------- */
+.pui .pui-back { min-width: 40px; height: 40px; border-radius: 20px; flex-direction: row; align-items: center; justify-content: center; gap: calc(var(--spacing) * 0.5); align-self: flex-start; background: transparent; }
+.pui .pui-back.is-pressed { background: var(--hc-teal-08); }
+.pui .pui-back { color: var(--color-text); }
+
+/* ---------------------------------------------------------------- TopNavBar.tsx --------- */
+.pui .pui-topnav { flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: calc(var(--spacing) * 1.5); padding-top: 59px; }
+.pui .pui-topnav-btn { padding: var(--spacing); border-radius: var(--radius-md); color: var(--color-text); }
+.pui .pui-topnav-logo { width: 36px; height: 36px; object-fit: contain; }
+
+/* ---------------------------------------------------------------- HomeScreen.tsx -------- */
+.pui .pui-home-header { padding: calc(var(--spacing) * 2) 20px calc(var(--spacing) * 2); }
+.pui .pui-home-title { font: var(--font-bold) var(--fs-28) var(--font-family); color: var(--color-text); }
+.pui .pui-home-subtitle { color: var(--color-muted); }                               /* .sys */
+.pui .pui-home-footer { padding: calc(var(--spacing) * 2) 20px 0; }
+.pui .pui-home-card { margin-top: calc(var(--spacing) * 1.5); }
+.pui .pui-home-section-title { font: var(--font-semiBold) var(--typography-subheading) var(--font-family); color: var(--color-text); margin-bottom: var(--spacing); }
+.pui .pui-home-userinfo { gap: calc(var(--spacing) * 0.5); }
+.pui .pui-home-name { font: var(--font-semiBold) var(--typography-subheading) var(--font-family); color: var(--color-text); }
+.pui .pui-home-muted { color: var(--color-muted); }                                  /* .sys */
+.pui .pui-home-button { margin-top: var(--spacing); }
+.pui .pui-home-list-end { height: calc(var(--spacing) * 18); }
+
+/* HomeHeroCard.tsx */
+.pui .pui-hero { gap: calc(var(--spacing) * 2); margin-bottom: var(--spacing); }
+.pui .pui-hero-title { font: var(--font-extraBold) var(--fs-28) / 36px var(--font-family); color: var(--color-text); }
+.pui .pui-hero-sub { gap: calc(var(--spacing) * 0.4); }
+.pui .pui-hero-subtitle { font: var(--font-bold) var(--fs-20) var(--font-family); color: var(--color-text); }
+.pui .pui-hero-action-row { flex-direction: row; align-items: center; justify-content: space-between; gap: calc(var(--spacing) * 0.75); }
+.pui .pui-hero-image-wrap { flex: 1 1 0; align-items: center; justify-content: center; margin-top: calc(var(--spacing) * 1.5); margin-bottom: calc(var(--spacing) * -5); }
+.pui .pui-hero-image { width: 220px; height: 180px; object-fit: contain; }
+.pui .pui-flow { gap: var(--spacing); }
+.pui .pui-flow-title { font: var(--font-bold) var(--typography-subheading) var(--font-family); color: var(--color-text); }
+.pui .pui-flow-steps { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.pui .pui-flow-step { align-items: center; gap: calc(var(--spacing) * 0.5); flex-grow: 1; min-width: 90px; color: var(--color-secondary); }
+.pui .pui-flow-arrow { color: var(--color-navbarMuted); }
+.pui .pui-flow-label { color: var(--color-text); text-align: center; font-size: var(--typography-small); } /* .sys */
+.pui .pui-hero-cta { margin-top: var(--spacing); }
+
+/* Merchant shelves (HomeScreen MerchantShelf) */
+.pui .pui-shelf { width: 100%; }
+.pui .pui-shelf + .pui-shelf { margin-top: calc(var(--spacing) * 3); }
+.pui .pui-shelf-header { flex-direction: row; align-items: center; gap: calc(var(--spacing) * 0.75); margin-bottom: calc(var(--spacing) * 1.5); padding: 0 20px; color: var(--color-primary); }
+.pui .pui-shelf-title { font: var(--font-extraBold) var(--fs-16) var(--font-family); color: var(--color-secondary); }
+.pui .pui-shelf-row { flex-direction: row; gap: 14px; padding: 0 20px calc(var(--spacing) * 0.75); }
+
+/* ---------------------------------------------------------------- MerchantGridCard.tsx -- */
+.pui .pui-tile { align-self: flex-start; transform-origin: 50% 50%; }
+.pui .pui-tile.is-pressed { transform: scale(0.97); }
+.pui .pui-tile-card {
+  background: var(--color-card);
+  border-radius: var(--radius-18);
+  border: 1px solid var(--color-cardBorder);
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--spacing) * 2);
+  box-shadow: var(--shadow-sm);
+}
+.pui .pui-tile-logo-area { width: 100%; height: 100%; align-items: center; justify-content: center; }
+/* Category mark in a logo slot (Image resizeMode "contain" geometry) */
+.pui .pui-mark { display: block; width: 100%; height: 100%; }
+.pui .pui-mark-tile { fill: var(--mark-tile); }
+.pui .pui-mark-ico { fill: none; stroke: var(--mark-ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.pui .pui-logo-image { width: 100%; height: 100%; }
+.pui .pui-monogram { align-items: center; justify-content: center; background: var(--color-secondary); }
+.pui .pui-monogram-initial { font-family: var(--font-family); font-weight: var(--font-black); color: var(--hc-white); }
+.pui .pui-tile-monogram { width: 56px; height: 56px; border-radius: var(--radius-14); }
+.pui .pui-tile-monogram .pui-monogram-initial { font-size: 26px; }
+.pui .pui-tile-labels { margin-top: 10px; padding-left: 2px; }
+.pui .pui-tile-name { font: var(--font-extraBold) var(--typography-small) / 18px var(--font-family); color: var(--color-secondary); }
+.pui .pui-tile-category { font: var(--font-semiBold) var(--fs-11) / 14px var(--font-family); color: var(--color-captionMuted); margin-top: 1px; }
+
+/* ---------------------------------------------------------------- AnimatedTabBar.tsx ---- */
+.pui .pui-tabbar { position: absolute; left: 0; right: 0; bottom: 0; align-items: center; background: var(--color-background); z-index: 20; }
+.pui .pui-tabbar-rail {
+  width: 393px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  background: var(--color-card);
+  border-top-left-radius: var(--radius-22);
+  border-top-right-radius: var(--radius-22);
+  padding: calc(var(--spacing) * 0.75) calc(var(--spacing) * 0.5) 50px; /* bottom = max(inset 34, 8) + spacing(2) */
+  box-shadow: var(--shadow-tab-rail);
+}
+.pui .pui-tab-indicator { position: absolute; top: 6px; left: calc(var(--spacing) * 0.5); height: 55px; width: 120.333px; background: var(--color-background); border-radius: var(--radius-18); box-shadow: var(--shadow-tab-indicator); }
+.pui .pui-tab { width: 128.333px; border-radius: var(--radius-lg); align-items: center; justify-content: center; padding: calc(var(--spacing) * 0.1) 0; min-height: 54px; }
+.pui .pui-tab .pui-icon { color: var(--color-navbarMuted); opacity: 0.5; transform: scale(0.94); }
+.pui .pui-tab-label { font: var(--font-bold) var(--fs-12) var(--font-family); letter-spacing: 0.15px; color: var(--color-navbarMuted); opacity: 0.7; white-space: nowrap; }
+.pui .pui-tab.is-focused .pui-icon { color: var(--color-secondary); opacity: 1; transform: scale(1.2); }
+.pui .pui-tab.is-focused .pui-tab-label { color: var(--color-primary); opacity: 1; }
+
+/* ---------------------------------------------------------------- AppHeader.tsx --------- */
+.pui .pui-appheader { gap: calc(var(--spacing) * 0.5); padding: var(--spacing) calc(var(--spacing) * 2) calc(var(--spacing) * 0.5); }
+.pui .pui-appheader-top { flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: calc(var(--spacing) * 0.5); }
+
+/* ---------------------------------------------------------------- MerchantGiftCardHero -- */
+.pui .pui-giftcard {
+  width: 90%;
+  align-self: center;
+  aspect-ratio: 1.86;
+  border-radius: var(--radius-xl);
+  background: var(--color-card);
+  border: var(--hairline) solid var(--color-subtleTealBorder);
+  padding: calc(var(--spacing) * 2);
+  justify-content: space-between;
+  box-shadow: var(--shadow-md);
+}
+.pui .pui-giftcard.is-held { border: 1px solid var(--hc-amber-55); }
+.pui .pui-giftcard-top { flex-direction: row; align-items: flex-start; justify-content: space-between; }
+.pui .pui-giftcard-logo-area { width: 58%; height: 40px; align-items: flex-start; justify-content: center; }
+.pui .pui-giftcard-logo-area.is-auto { height: auto; min-height: 40px; }   /* merchantLogoAreaAuto */
+.pui .pui-giftcard-logo-img { width: 54px; height: 54px; }                /* bandedLogoHeight(1) = 54 */
+.pui .pui-giftcard-monogram { width: 40px; height: 40px; border-radius: var(--radius-md); }
+.pui .pui-giftcard-monogram .pui-monogram-initial { font-size: var(--fs-20); color: var(--color-card); }
+.pui .pui-giftcard-ring { width: 30px; height: 30px; object-fit: contain; }
+.pui .pui-giftcard-contactless { position: absolute; right: calc(var(--spacing) * 2.25); top: 50%; transform: translateY(-11px); color: var(--color-mutedTeal42); }
+.pui .pui-giftcard-contactless svg { display: block; width: 28px; height: 22px; }
+.pui .pui-giftcard-bottom { gap: calc(var(--spacing) * 1.1); }
+.pui .pui-giftcard-number { font: var(--font-bold) var(--fs-18) var(--font-family); letter-spacing: 2px; color: var(--color-secondary); }
+.pui .pui-giftcard-balance-row { flex-direction: row; align-items: baseline; gap: calc(var(--spacing) * 0.75); }
+.pui .pui-giftcard-balance-label { font: var(--font-bold) var(--fs-11) var(--font-family); letter-spacing: 1.1px; text-transform: uppercase; color: var(--color-mutedTeal55); }
+.pui .pui-giftcard-balance-value { font: var(--font-extraBold) var(--fs-24) var(--font-family); letter-spacing: 0.5px; color: var(--color-secondary); }
+.pui .pui-giftcard-meta { flex-direction: row; align-items: flex-end; justify-content: space-between; gap: var(--spacing); }
+.pui .pui-giftcard-caption { flex-shrink: 1; font: var(--font-bold) var(--fs-11) var(--font-family); letter-spacing: 1.2px; color: var(--color-mutedTeal55); }
+.pui .pui-giftcard-valid { align-items: flex-end; }
+.pui .pui-giftcard-valid-label { font: var(--font-bold) var(--fs-8) var(--font-family); letter-spacing: 0.7px; color: var(--color-mutedTeal55); }
+.pui .pui-giftcard-valid-date { font: var(--font-bold) var(--fs-12) var(--font-family); color: var(--color-secondary); margin-top: 1px; }
+
+/* ---------------------------------------------------------------- merchantProfileUi.tsx - */
+.pui .pui-mp-header { padding: var(--spacing) calc(var(--spacing) * 2) calc(var(--spacing) * 0.5); gap: calc(var(--spacing) * 0.5); }
+.pui .pui-mp-hero-band { padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 2) calc(var(--spacing) * 1.75); background: var(--color-background); }
+.pui .pui-mp-title-block { padding: calc(var(--spacing) * 2) calc(var(--spacing) * 2) 0; gap: calc(var(--spacing) * 0.35); }
+.pui .pui-mp-store { font: var(--font-black) var(--fs-28) / 34px var(--font-family); color: var(--color-secondary); }
+.pui .pui-mp-category { font: var(--font-semiBold) var(--fs-15) / 21px var(--font-family); color: var(--color-captionMuted); }
+.pui .pui-mp-brandline { font: var(--font-bold) var(--fs-17) / 23px var(--font-family); color: var(--color-text); margin-top: var(--spacing); }
+.pui .pui-mp-section { padding: calc(var(--spacing) * 2.5) calc(var(--spacing) * 2) 0; }
+.pui .pui-mp-section-title { font: var(--font-extraBold) var(--fs-18) var(--font-family); color: var(--color-secondary); margin-bottom: calc(var(--spacing) * 1.25); }
+.pui .pui-mp-amount-row { flex-direction: row; flex-wrap: wrap; gap: var(--spacing); }
+.pui .pui-chip {
+  min-height: 42px;
+  min-width: 66px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-21);
+  border: 1px solid var(--color-cardBorder);
+  background: var(--color-background);
+  padding: 0 calc(var(--spacing) * 1.6);
+}
+.pui .pui-chip.is-selected { background: var(--color-primary); border-color: var(--color-primary); }
+.pui .pui-chip-label { font: var(--font-extraBold) var(--fs-16) var(--font-family); color: var(--color-secondary); }
+.pui .pui-mp-steps {
+  margin: calc(var(--spacing) * 2.5) calc(var(--spacing) * 2) 0;
+  border-radius: var(--radius-18);
+  background: var(--hc-white-68);
+  border: var(--hairline) solid var(--color-cardBorder);
+  padding: calc(var(--spacing) * 1.25);
+  gap: var(--spacing);
+}
+.pui .pui-mp-step { flex-direction: row; align-items: center; gap: var(--spacing); min-height: 48px; }
+.pui .pui-mp-step-icon { width: 34px; height: 34px; border-radius: 17px; align-items: center; justify-content: center; background: var(--hc-orange-tint); color: var(--color-secondary); }
+.pui .pui-mp-step-title { flex: 0.95 1 0; font: var(--font-extraBold) var(--fs-14) / 18px var(--font-family); color: var(--color-secondary); }
+.pui .pui-mp-step-text { flex: 1.1 1 0; font: var(--font-medium) var(--fs-13) / 18px var(--font-family); color: var(--color-captionMuted); }
+.pui .pui-mp-trust { flex-direction: row; flex-wrap: wrap; gap: calc(var(--spacing) * 0.75); padding: calc(var(--spacing) * 2) calc(var(--spacing) * 2) 0; }
+.pui .pui-mp-pill { flex-direction: row; align-items: center; gap: calc(var(--spacing) * 0.45); border-radius: var(--radius-pill); background: var(--hc-white); border: var(--hairline) solid var(--color-cardBorder); padding: calc(var(--spacing) * 0.75) calc(var(--spacing) * 1.1); color: var(--color-secondary); }
+.pui .pui-mp-pill-label { font: var(--font-bold) var(--fs-13) var(--font-family); color: var(--color-secondary); }
+.pui .pui-mp-coverage { padding: calc(var(--spacing) * 2.5) calc(var(--spacing) * 2) 0; }
+.pui .pui-mp-coverage-row { flex-direction: row; align-items: center; gap: var(--spacing); padding: calc(var(--spacing) * 1.25) 0; border-top: var(--hairline) solid var(--color-cardBorder); border-bottom: var(--hairline) solid var(--color-cardBorder); }
+.pui .pui-mp-coverage-icon { width: 36px; height: 36px; border-radius: 18px; align-items: center; justify-content: center; background: var(--hc-orange-tint); color: var(--color-primary); }
+.pui .pui-mp-coverage-text { flex: 1 1 0; font: var(--font-semiBold) var(--fs-15) / 21px var(--font-family); color: var(--color-text); }
+
+/* Sticky CTA bar (merchantProfileUi ctaBar, GiftCardScreen ctaBar) */
+.pui .pui-ctabar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--color-card);
+  border-top: var(--hairline) solid var(--color-cardBorder);
+  padding: var(--spacing) calc(var(--spacing) * 2) calc(34px + var(--spacing));
+  box-shadow: var(--shadow-cta-bar);
+  z-index: 10;
+}
+.pui .pui-ctabar--stack { gap: calc(var(--spacing) * 0.75); }
+
+/* ---------------------------------------------------------------- Screen.tsx (scrollable) */
+.pui .pui-screen-inner { padding: calc(var(--spacing) * 2); }
+.pui .pui-screen-center { flex: 1 1 0; justify-content: center; align-items: center; }
+
+/* ---------------------------------------------------------------- CheckoutHeader.tsx ---- */
+.pui .pui-ch { margin-bottom: calc(var(--spacing) * 1.5); }
+.pui .pui-ch-top { flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: var(--spacing); }
+.pui .pui-ch-stepcount { font: var(--font-semiBold) var(--typography-small) var(--font-family); color: var(--color-muted); }
+.pui .pui-ch-title { font: var(--font-extraBold) var(--fs-26) var(--font-family); color: var(--color-text); }
+.pui .pui-ch-subtitle { color: var(--color-muted); margin-top: calc(var(--spacing) * 0.5); line-height: 20px; } /* .sys */
+.pui .pui-ch-progress { flex-direction: row; gap: calc(var(--spacing) * 0.75); margin-top: calc(var(--spacing) * 1.5); }
+.pui .pui-ch-step { flex: 1 1 0; min-width: 0; gap: calc(var(--spacing) * 0.45); }
+.pui .pui-ch-dot { height: 5px; border-radius: 99px; background: var(--color-border); align-items: center; justify-content: center; color: var(--hc-white); }
+.pui .pui-ch-dot.is-active { background: var(--color-primary); }
+.pui .pui-ch-dot.is-complete { height: 16px; background: var(--color-secondary); }
+.pui .pui-ch-label { font: var(--font-semiBold) var(--fs-11) var(--font-family); color: var(--color-muted); text-align: center; }
+.pui .pui-ch-label.is-on { color: var(--color-secondary); }
+.pui .pui-ch-summary { flex-direction: row; flex-wrap: wrap; gap: calc(var(--spacing) * 0.75); margin-top: calc(var(--spacing) * 1.25); padding: var(--spacing); border-radius: var(--radius-md); background: var(--hc-orange-tint-2); border: var(--hairline) solid var(--hc-orange-42); }
+.pui .pui-ch-summary-item { min-width: 30%; flex: 1 1 0; gap: 2px; }
+.pui .pui-ch-summary-label { font: var(--font-semiBold) var(--fs-11) var(--font-family); color: var(--color-muted); }
+.pui .pui-ch-summary-value { font: var(--font-bold) var(--typography-small) var(--font-family); color: var(--color-text); }
+
+/* ---------------------------------------------------------------- DeliveryProfileScreen - */
+.pui .pui-dp-card { gap: calc(var(--spacing) * 2); margin-bottom: calc(var(--spacing) * 1.5); }
+.pui .pui-dp-form { gap: calc(var(--spacing) * 2); }
+.pui .pui-dp-contacts { flex-direction: row; align-items: center; gap: var(--spacing); padding: calc(var(--spacing) * 1.25); border-radius: var(--radius-md); border: var(--hairline) solid var(--color-border); background: var(--color-background); color: var(--color-muted); }
+.pui .pui-dp-contacts.is-pressed { opacity: 0.85; }
+.pui .pui-dp-contacts-icon { width: 32px; height: 32px; border-radius: 16px; align-items: center; justify-content: center; background: var(--hc-orange-tint); border: var(--hairline) solid var(--hc-orange-45); color: var(--color-secondary); }
+.pui .pui-dp-contacts-text { flex: 1 1 0; font: var(--font-semiBold) var(--fs-17) var(--font-family); color: var(--color-text); }
+.pui .pui-dp-helper { color: var(--color-muted); font-size: var(--typography-small); } /* .sys */
+
+/* TextField.tsx / PhoneInput.tsx (filled; no focus style in TextField) */
+.pui .pui-field { width: 100%; }
+.pui .pui-field-label { font: var(--font-regular) var(--typography-small) var(--font-family); color: var(--color-muted); margin-bottom: calc(var(--spacing) * 0.5); }
+.pui .pui-field-input { width: 100%; border-radius: var(--radius-md); border: 1px solid var(--color-border); padding: calc(var(--spacing) * 1.25) calc(var(--spacing) * 1.5); background: var(--color-card); font: var(--font-light) var(--typography-body) var(--font-family); color: var(--color-text); }
+.pui .pui-field-input.is-multiline { min-height: 96px; }
+.pui .pui-field-placeholder { color: var(--color-lightText); }   /* placeholderTextColor */
+/* iOS chrome (not app code): the text caret, and the push-transition dim layer. */
+.pui .pui-caret { display: inline-block; width: 2px; height: 1.17em; margin: 0 1px 0 0; vertical-align: -0.24em; border-radius: 1px; background: var(--ios-caret); }
+.pui .pui-caret.is-lead { margin: 0 1px 0 -1px; }
+.pui-push-dim { position: absolute; inset: 0; background: var(--ios-push-dim); opacity: 0; pointer-events: none; z-index: 100; }
+.pui .pui-field-input.is-error, .pui .pui-phone-box.is-error { border-color: var(--color-danger); }
+.pui .pui-field-error { color: var(--color-danger); margin-top: calc(var(--spacing) * 0.5); font: var(--font-regular) var(--typography-small) var(--font-family); }
+.pui .pui-phone-box { flex-direction: row; align-items: center; width: 100%; border-radius: var(--radius-md); border: 1px solid var(--color-border); background: var(--color-card); min-height: 48px; }
+.pui .pui-phone-box.is-focused { border-color: var(--color-primary); }
+.pui .pui-phone-chip { padding: calc(var(--spacing) * 0.75) var(--spacing); flex-direction: row; align-items: center; gap: calc(var(--spacing) * 0.5); color: var(--color-muted); }
+.pui .pui-phone-flag { font-size: var(--fs-20); font-family: "Apple Color Emoji", var(--ios-font); }
+.pui .pui-phone-code { font: var(--font-semiBold) var(--typography-body) var(--font-family); color: var(--color-text); }
+.pui .pui-phone-divider { width: 1px; height: 24px; background: var(--color-border); margin: 0 calc(var(--spacing) * 0.5); }
+.pui .pui-phone-input { flex: 1 1 0; padding: calc(var(--spacing) * 1.25) calc(var(--spacing) * 1.5); font: var(--font-light) var(--typography-body) var(--font-family); color: var(--color-text); }
+
+/* ---------------------------------------------------------------- Banner.tsx ------------ */
+.pui .pui-banner { flex-direction: row; align-items: flex-start; gap: var(--spacing); padding: calc(var(--spacing) * 1.5); border-radius: var(--radius-md); border: 1px solid var(--hc-orange-55); background: var(--hc-orange-tint); color: var(--color-primary); }
+.pui .pui-banner .pui-icon { margin-top: 1px; }
+.pui .pui-banner-body { flex: 1 1 0; gap: calc(var(--spacing) * 0.4); }
+.pui .pui-banner-title { font: var(--font-bold) 15px var(--font-family); color: var(--color-secondary); }
+.pui .pui-banner-message { font-size: var(--typography-small); line-height: 19px; color: var(--color-text); } /* .sys */
+
+/* ---------------------------------------------------------------- PurchaseSuccessScreen - */
+.pui .pui-ps-nav { width: 100%; flex-direction: row; align-items: center; justify-content: flex-end; margin-bottom: var(--spacing); }
+.pui .pui-ps-close { width: 36px; height: 36px; border-radius: 18px; align-items: center; justify-content: center; color: var(--color-text); }
+.pui .pui-ps-card { width: 100%; gap: calc(var(--spacing) * 1.2); align-items: center; }
+.pui .pui-success-disc { width: 72px; height: 72px; border-radius: 36px; background: var(--color-success); align-items: center; justify-content: center; box-shadow: var(--shadow-success); color: var(--hc-white); }
+.pui .pui-ps-title { font: var(--font-extraBold) var(--fs-28) var(--font-family); color: var(--color-text); }
+.pui .pui-ps-subtitle { text-align: center; color: var(--color-muted); line-height: 20px; } /* .sys */
+.pui .pui-ps-summary { width: 100%; gap: calc(var(--spacing) * 0.5); align-items: center; margin-top: calc(var(--spacing) * 0.5); }
+.pui .pui-ps-merchant { font: var(--font-bold) var(--typography-subheading) var(--font-family); color: var(--color-text); }
+.pui .pui-ps-amount { font: var(--font-extraBold) var(--fs-22) var(--font-family); color: var(--color-text); }
+.pui .pui-ps-balance { color: var(--color-muted); } /* .sys */
+.pui .pui-ps-actions { width: 100%; gap: var(--spacing); margin-top: var(--spacing); }
+
+/* ---------------------------------------------------------------- ClaimLandingScreen ---- */
+.pui .pui-cl-card { align-items: center; padding-top: calc(var(--spacing) * 3); padding-bottom: calc(var(--spacing) * 3); gap: calc(var(--spacing) * 1.5); }
+.pui .pui-cl-badge { width: 72px; height: 72px; border-radius: 36px; align-items: center; justify-content: center; background: var(--hc-orange-tint); border: var(--hairline) solid var(--hc-orange-45); }
+.pui .pui-cl-emoji { font-size: 34px; font-family: "Apple Color Emoji", var(--ios-font); }
+.pui .pui-cl-title { font: var(--font-bold) var(--typography-heading) var(--font-family); color: var(--color-text); text-align: center; }
+.pui .pui-cl-merchant-row { flex-direction: row; align-items: center; gap: var(--spacing); }
+.pui .pui-cl-logo { width: 36px; height: 36px; border-radius: 18px; overflow: hidden; background: var(--color-card); border: var(--hairline) solid var(--color-border); align-items: center; justify-content: center; }
+.pui .pui-cl-logo img, .pui .pui-cl-logo .pui-mark { width: 100%; height: 100%; object-fit: contain; }
+.pui .pui-cl-merchant { font: var(--font-semiBold) var(--typography-body) var(--font-family); color: var(--color-text); }
+.pui .pui-cl-amount { font: var(--font-black) var(--fs-44) var(--font-family); color: var(--color-secondary); }
+.pui .pui-note-box { align-self: stretch; background: var(--color-background); border-radius: var(--radius-sm); padding: calc(var(--spacing) * 1.5); }
+.pui .pui-cl-note { font: italic var(--font-regular) var(--typography-body) / 24px var(--font-family); color: var(--color-text); text-align: center; }
+.pui .pui-cl-banner { align-self: stretch; }
+.pui .pui-cl-actions { align-self: stretch; gap: var(--spacing); margin-top: calc(var(--spacing) * 0.5); }
+
+/* ---------------------------------------------------------------- GiftCardScreen -------- */
+.pui .pui-gc-content { padding-top: calc(var(--spacing) * 1.5); }
+.pui .pui-gc-headblock { padding: 0 calc(var(--spacing) * 2) calc(var(--spacing) * 2); gap: calc(var(--spacing) * 0.35); }
+.pui .pui-gc-total-label { font: var(--font-semiBold) var(--fs-16) var(--font-family); color: var(--color-captionMuted); }
+.pui .pui-gc-total-value { font: var(--font-extraBold) var(--fs-34) var(--font-family); color: var(--color-secondary); letter-spacing: -0.6px; }
+.pui .pui-gc-strips { margin: calc(var(--spacing) * 2) calc(var(--spacing) * 2) 0; gap: var(--spacing); }
+.pui .pui-gc-section { margin: calc(var(--spacing) * 2.5) calc(var(--spacing) * 2) 0; gap: var(--spacing); }
+.pui .pui-gc-section-title { font: var(--font-bold) var(--typography-subheading) var(--font-family); color: var(--color-text); }
+.pui .pui-gc-section-body { background: var(--color-card); border-radius: var(--radius-18); border: var(--hairline) solid var(--color-cardBorder); padding: calc(var(--spacing) * 1.5); gap: calc(var(--spacing) * 1.5); box-shadow: var(--shadow-sm); }
+.pui .pui-load { gap: calc(var(--spacing) * 0.75); }
+.pui .pui-load-top { flex-direction: row; align-items: center; gap: calc(var(--spacing) * 1.25); }
+.pui .pui-avatar { overflow: hidden; align-items: center; justify-content: center; background: var(--color-secondary); border: var(--hairline) solid var(--hc-teal-20); }
+.pui .pui-avatar-initials { font-family: var(--font-family); font-weight: var(--font-bold); color: var(--color-background); letter-spacing: 1px; }
+.pui .pui-load-text { flex: 1 1 0; min-width: 0; }
+.pui .pui-load-who { font: var(--font-semiBold) var(--typography-body) var(--font-family); color: var(--color-text); }
+.pui .pui-load-meta { color: var(--color-muted); font-size: var(--typography-small); margin-top: 2px; } /* .sys */
+.pui .pui-load-amount-col { align-items: flex-end; gap: calc(var(--spacing) * 0.35); }
+.pui .pui-load-amount { font: var(--font-extraBold) calc(var(--typography-body) + 2px) var(--font-family); color: var(--color-text); }
+.pui .pui-load-note { font: italic var(--font-regular) var(--fs-14) / 22px var(--font-family); color: var(--color-text); background: var(--color-background); border-radius: var(--radius-sm); padding: calc(var(--spacing) * 1.25); }
+
+/* ---------------------------------------------------------------- RedemptionTokenScreen - */
+.pui .pui-rt-title { font: var(--font-bold) var(--typography-subheading) var(--font-family); margin-bottom: calc(var(--spacing) * 0.25); } /* no color in source → .ink */
+.pui .pui-rt-subtitle { font: var(--font-semiBold) var(--fs-14) var(--font-family); color: var(--color-muted); margin-bottom: var(--spacing); }
+.pui .pui-rt-token-container { align-items: center; gap: calc(var(--spacing) * 1.25); }
+.pui .pui-rt-code-area { align-self: stretch; align-items: center; gap: calc(var(--spacing) * 1.25); }
+.pui .pui-rt-well { padding: var(--spacing); background: var(--color-card); border-radius: var(--radius-md); border: var(--hairline) solid var(--color-border); overflow: hidden; }
+.pui .pui-rt-qr { width: 180px; height: 180px; }
+.pui .pui-rt-barcode { width: 310px; height: 90px; }
+.pui .pui-rt-token { font: var(--font-bold) var(--fs-22) var(--font-family); letter-spacing: 1.1px; color: var(--color-text); }
+.pui .pui-rt-muted { color: var(--color-muted); } /* .sys */
+.pui .pui-rt-countdown { font: var(--font-semiBold) var(--fs-14) var(--font-family); color: var(--color-secondary); }
+.pui .pui-rt-button { margin-top: calc(var(--spacing) * 2); }
+.pui .pui-rt-overlay { position: absolute; inset: 0; align-items: center; justify-content: center; gap: var(--spacing); background: var(--hc-white-93); border-radius: var(--radius-md); z-index: 1; color: var(--color-success); }
+.pui .pui-rt-celebrate { font: var(--font-bold) var(--typography-subheading) var(--font-family); color: var(--color-success); }
+.pui .pui-rt-finished { align-items: center; gap: var(--spacing); }
+.pui .pui-rt-finished-icon { margin-bottom: calc(var(--spacing) * 0.5); color: var(--color-success); }
+.pui .pui-rt-finished-title { font: var(--font-bold) var(--typography-subheading) var(--font-family); color: var(--color-text); }
+.pui .pui-rt-finished-sub { color: var(--color-muted); text-align: center; line-height: 21px; } /* .sys */
+.pui .pui-rt-finished-button { align-self: stretch; margin-top: var(--spacing); }
+
+/* ---------------------------------------------------------------- DeviceFrame --------- */
+/* The standard film device (device/SOURCE.md): iPhone 18 Pro Max, Black. Sizes in device px
+   (1470 × 3000); scale the whole .pui-device with a transform. The 393 × 852 UI fills the
+   screen rect (x 75, y 66, 1320 × 2868) and is masked to the screen's real corner shape. */
+.pui-device { position: relative; width: 1470px; height: 3000px; transform-origin: 0 0; }
+.pui-device-screen {
+  position: absolute;
+  left: 75px;
+  top: 66px;
+  width: 1320px;
+  height: 2868px;
+  overflow: hidden;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  background: var(--color-background);
+}
+.pui-device-ui { position: absolute; left: 0; top: 0; width: 393px; height: 852px; transform-origin: 0 0; transform: translateX(-1.458px) scale(3.36620); }
+.pui-device-bezel { position: absolute; left: 0; top: 0; width: 1470px; height: 3000px; display: block; pointer-events: none; }
+/* Status bar around the measured Dynamic Island (x 154.9–238.4 pt, centre y ~29 pt). */
+.pui-device .pui-statusbar-time { left: 0; width: 154.9px; top: 18px; }
+.pui-device .pui-statusbar-icons { right: 40.8px; top: 22.5px; }

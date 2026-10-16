@@ -1,0 +1,18 @@
+<%# The landing's own header: fixed over the hero, cream once scrolled, teal over the dark story sections (landing.js). %>
+<header class="lp nav" data-nav>
+  <div class="wrap nav-row">
+    <a class="brand" href="#top" aria-label="Papayal, inicio" data-locale-attrs="aria-label" data-locale-aria-label-es="Papayal, inicio" data-locale-aria-label-en="Papayal, home">
+      <svg class="brand-logo" aria-hidden="true"><use href="#logo"/></svg>
+      <span>Papayal</span>
+    </a>
+    <nav class="nav-links" aria-label="Principal" data-locale-attrs="aria-label" data-locale-aria-label-es="Principal" data-locale-aria-label-en="Primary">
+      <a href="#como-funciona"><%= localized_text es: "Cómo funciona", en: "How it works" %></a>
+      <a href="#comercios"><%= localized_text es: "Comercios", en: "Businesses" %></a>
+      <a href="#preguntas"><%= localized_text es: "Preguntas", en: "FAQs" %></a>
+    </nav>
+    <div class="nav-actions">
+      <%= render "shared/language_toggle" %>
+      <a class="btn btn-sm" href="#descargar"><%= localized_text es: "Descargar", en: "Download" %></a>
+    </div>
+  </div>
+</header>

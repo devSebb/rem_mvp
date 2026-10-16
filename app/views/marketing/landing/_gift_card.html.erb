@@ -1,0 +1,35 @@
+<%# The hero gift card (brand/card.html): tap flips it, a fine pointer tilts it (landing.js). Card art stays in Spanish, like the app. %>
+<div class="hero-card-wrap">
+  <svg class="shock" data-shock viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="10"/></svg>
+  <button class="hero-card" type="button" data-hero-card aria-pressed="false" aria-label="Girar la tarjeta de regalo" data-locale-attrs="aria-label" data-locale-aria-label-es="Girar la tarjeta de regalo" data-locale-aria-label-en="Flip the gift card">
+    <span class="gc-shadow" data-gc-shadow aria-hidden="true"></span>
+    <span class="gc-tilt" data-gc-tilt>
+      <span class="gc" data-gc>
+        <%# FRONT (brand/card.html, verbatim structure) %>
+        <span class="card-front">
+          <span class="card-sheen"></span>
+          <span class="card-sweep" data-sweep></span>
+          <span class="card-wordmark">Papayal</span>
+          <span class="card-emblem"><svg><use href="#logo"/></svg></span>
+          <span class="card-number"><span class="card-number-group"><span>1</span><span>2</span><span>3</span><span>4</span></span><span class="card-number-group"><span>5</span><span>6</span><span>7</span><span>8</span></span><span class="card-number-group"><span>9</span><span>0</span><span>0</span><span>9</span></span><span class="card-number-group"><span>8</span><span>7</span><span>6</span><span>5</span></span></span>
+          <span class="card-label">Tarjeta de regalo digital</span>
+          <span class="card-edge"></span>
+        </span>
+        <%# BACK %>
+        <span class="card-back">
+          <svg class="card-back-pattern" viewBox="0 0 1000 630.5" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g data-back-rings></g></svg>
+          <span class="card-back-title">Tarjeta de regalo digital</span>
+          <span class="card-back-logo"><svg><use href="#logo"/></svg></span>
+          <span class="card-back-cats">
+            <span class="card-back-cat"><svg class="card-back-icon card-back-icon-pill" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.32) rotate(-45) translate(-12 -12)"><path d="M8.5 7.5h7a4.5 4.5 0 0 1 0 9h-7a4.5 4.5 0 0 1 0-9z"/><path d="M12 7.5v9"/></g></svg><span class="card-back-cat-label">Farmacia</span></span>
+            <span class="card-back-cat"><svg class="card-back-icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span class="card-back-cat-label">Telefonía</span></span>
+            <span class="card-back-cat"><svg class="card-back-icon" viewBox="0 0 24 24"><path d="M12 12.5c-2.7 0-5.5 3.1-5.5 5.6 0 1.5 1.1 2.4 2.5 2.4 1.3 0 1.9-.7 3-.7s1.7.7 3 .7c1.4 0 2.5-.9 2.5-2.4 0-2.5-2.8-5.6-5.5-5.6z"/><path d="M3.3 11a1.9 1.9 0 1 0 3.8 0 1.9 1.9 0 1 0-3.8 0z"/><path d="M7.1 6a2 2 0 1 0 4 0 2 2 0 1 0-4 0z"/><path d="M12.9 6a2 2 0 1 0 4 0 2 2 0 1 0-4 0z"/><path d="M16.9 11a1.9 1.9 0 1 0 3.8 0 1.9 1.9 0 1 0-3.8 0z"/></svg><span class="card-back-cat-label">Mascotas</span></span>
+          </span>
+          <span class="card-back-code"><span class="card-back-code-label">Código de canje</span><span class="card-back-code-value">PAPA-7K2M-Q9XT</span></span>
+          <span class="card-back-redeem">Canjéala desde la app Papayal</span>
+          <span class="card-edge"></span>
+        </span>
+      </span>
+    </span>
+  </button>
+</div>

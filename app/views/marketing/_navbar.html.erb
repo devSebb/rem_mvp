@@ -6,7 +6,7 @@
         <span>Papayal</span>
       <% end %>
       <div class="landing-desktop-nav">
-        <% [["como-funciona", "Cómo funciona", "How it works"], ["mercado", "Comercios", "Businesses"], ["preguntas", "Preguntas", "FAQs"]].each do |anchor, es, en| %>
+        <% [["como-funciona", "Cómo funciona", "How it works"], ["comercios", "Comercios", "Businesses"], ["preguntas", "Preguntas", "FAQs"]].each do |anchor, es, en| %>
           <%= link_to root_path(anchor: anchor), class: "landing-nav-link", data: { action: "click->marketing#handleAnchorClick" } do %><%= localized_text es: es, en: en %><% end %>
         <% end %>
       </div>
@@ -33,7 +33,7 @@
     <div id="marketing-mobile-menu" class="hidden landing-mobile-menu" data-marketing-target="mobileMenu">
       <div class="landing-container">
         <%= render "shared/language_toggle" %>
-        <% [["como-funciona", "Cómo funciona", "How it works"], ["mercado", "Comercios", "Businesses"], ["preguntas", "Preguntas", "FAQs"]].each do |anchor, es, en| %>
+        <% [["como-funciona", "Cómo funciona", "How it works"], ["comercios", "Comercios", "Businesses"], ["preguntas", "Preguntas", "FAQs"]].each do |anchor, es, en| %>
           <%= link_to root_path(anchor: anchor), class: "landing-nav-link", data: { action: "click->marketing#handleAnchorClick" } do %><%= localized_text es: es, en: en %><% end %>
         <% end %>
         <%= link_to about_path, class: "landing-nav-link", data: { action: "click->marketing#closeMenu" } do %><%= localized_text es: "Sobre Papayal", en: "About Papayal" %><% end %>

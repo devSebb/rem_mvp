@@ -37,7 +37,7 @@
       <%= localized_text es: "Saltar al contenido principal", en: "Skip to main content" %>
     </a>
 
-    <%= render "marketing/navbar" %>
+    <%= content_for?(:navbar) ? yield(:navbar) : render("marketing/navbar") %>
 
     <main id="main-content">
       <%= yield %>

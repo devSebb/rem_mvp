@@ -1,0 +1,161 @@
+/*
+ * Papayal app UI tokens, 1:1 with papayal-mobile/src/ui/theme.ts (see SOURCE for the commit),
+ * plus every hard-coded value the app's screens use, named here so nothing else in brand/ui
+ * carries a raw color.
+ *
+ * Units: 1 app point (pt) = 1 CSS px at --ui-scale: 1. A screen is 393 × 852.
+ * These colors are the APP's. Outside the phone, films use the CLAUDE.md palette only.
+ */
+.pui {
+  /* Screen scale. .pui-screen applies it with `zoom`, so layout, text and hairlines re-render
+     crisply at any size. Films set it per shot (e.g. 2.4 for a 943 px-wide screen). */
+
+  /* ---- theme.colors ------------------------------------------------------------------ */
+  --color-primary: #FCA50F;
+  --color-secondary: #0D2F32;
+  --color-background: #FDF1E1;
+  --color-lightText: #545353;
+  --color-card: #FFFFFF;
+  --color-cardBorder: #F1E2CB;
+  --color-text: #2C3A43;
+  --color-muted: #6A7780;
+  --color-captionMuted: #5E7D80;
+  --color-border: #D7DBD9;
+  --color-subtleTealBorder: rgba(13, 47, 50, 0.06);
+  --color-mutedTeal42: rgba(13, 47, 50, 0.42);
+  --color-mutedTeal55: rgba(13, 47, 50, 0.55);
+  --color-navbar: #0D2F32;
+  --color-navbarMuted: #6A848A;
+  --color-success: #39B66E;
+  --color-danger: #E15555;
+
+  /* ---- hard-coded colors (named by role; source file in the comment) ------------------ */
+  --hc-orange-tint: #FFF7E6;          /* merchantProfileUi step/coverage discs, Banner info, contacts icon, ClaimLanding badge, selected rows */
+  --hc-orange-tint-2: #FFF8EC;        /* StateViews empty badge, CheckoutHeader summary strip */
+  --hc-orange-tint-3: #FFF3DC;        /* ListRow accent chip */
+  --hc-orange-chip-border: #F5DCA9;   /* ListRow accent chip border */
+  --hc-orange-42: rgba(252, 165, 15, 0.42); /* CheckoutHeader summary border */
+  --hc-orange-45: rgba(252, 165, 15, 0.45); /* contacts icon, empty badge, ClaimLanding badge borders */
+  --hc-orange-55: rgba(252, 165, 15, 0.55); /* Banner info border, min/max badge */
+  --hc-cool-white: #F8FAFB;           /* merchant logo wells, hint card, interests idle */
+  --hc-white: #FFFFFF;                /* labels on teal/red buttons, monogram initials (written as "#FFFFFF"/"#fff" in source) */
+  --hc-white-55: rgba(255, 255, 255, 0.55); /* Welcome chips */
+  --hc-white-58: rgba(255, 255, 255, 0.58); /* AppHeader icon badge */
+  --hc-white-68: rgba(255, 255, 255, 0.68); /* skeletons, merchant-profile steps strip */
+  --hc-white-93: rgba(255, 255, 255, 0.93); /* redemption code overlay */
+  --hc-white-95: rgba(255, 255, 255, 0.95); /* payment processing overlay */
+  --hc-teal-06: rgba(13, 47, 50, 0.06);     /* Welcome explore pill pressed */
+  --hc-teal-08: rgba(13, 47, 50, 0.08);     /* BackButton pressed, skeleton + badge borders */
+  --hc-teal-20: rgba(13, 47, 50, 0.2);      /* Avatar fallback border, Welcome chip border */
+  --hc-amber-bg: #FEF3C7;             /* Banner warning, held/frozen pills */
+  --hc-amber-border: #F59E0B;
+  --hc-amber-text: #78350F;
+  --hc-amber-icon: #B45309;
+  --hc-amber-55: rgba(245, 158, 11, 0.55); /* held gift-card border */
+  --hc-error-bg: #FFEBEE;             /* StripePayment error card */
+  --hc-error-border: #EF5350;
+  --hc-error-text: #C62828;
+  --hc-ok-bg: #E6F4EC;                /* WalletList "Reclamada" pill */
+  --hc-ok-border: #CDE7D8;
+  --hc-danger-chip-bg: #FFF5F5;       /* ListRow danger chip */
+  --hc-danger-chip-border: #F4C7C7;
+  --hc-pressed-row: #F8F2E6;          /* ListRow / Profile pill pressed */
+  --hc-wallet-card-bg: #F5EEDC;       /* WalletList "Comercios" tile */
+  --hc-wallet-heading: #2D3E50;       /* WalletList summary ink */
+  --hc-scrim: rgba(0, 0, 0, 0.5);     /* Contact/Country picker scrim */
+  --hc-black: #000000;                /* tab indicator shadow; tab rail shadow ("#00000" in source is invalid → iOS default black) */
+
+  /* ---- category marks (film brand art, marks/*.svg) standing in for merchant logos ------- */
+  --mark-tile: #FDF1E1;               /* .u-tile in papayal-story categories.html */
+  --mark-ink: #0D2F32;                /* .u-ico stroke */
+
+  /* ---- iOS system chrome (not app code) ---------------------------------------------- */
+  --ios-ink: #000000;                 /* status bar glyphs + home indicator on a light screen */
+  --ios-nav-hairline: rgba(0, 0, 0, 0.3); /* native-stack header bottom hairline (UINavigationBar default shadow) */
+  /* Text caret. The app's TextField sets no cursorColor/selectionColor (checked in papayal-mobile),
+     so iOS draws it in the default tint: systemBlue. 2 pt wide, full line height. */
+  --ios-caret: #007AFF;
+  /* UINavigationController push (platform, approx.): the outgoing screen dims slightly, the
+     incoming screen casts a soft shadow from its left edge. See motion.js screenPush. */
+  --ios-push-dim: rgba(0, 0, 0, 0.1);
+  --ios-push-edge-shadow: -3px 0 20px rgba(0, 0, 0, 0.16);
+  --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif; /* iOS system font; renders need Apple's SF Pro installed (see README) */
+
+  /* ---- theme.spacing(n) = 8 × n ---------------------------------------------------------- */
+  --spacing: 8px;
+
+  /* ---- theme.radius + the radii the app actually hard-codes --------------------------- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-10: 10px;   /* ListRow icon chip */
+  --radius-14: 14px;   /* buy-flow chips, merchant rows, logo fallback tile (56), wallet tile, Welcome CTA */
+  --radius-18: 18px;   /* Card, ListGroup, MerchantGridCard, section bodies, steps strip, checkout CTAs, tab indicator */
+  --radius-21: 21px;   /* merchant-profile amount chips (pill at 42 h) */
+  --radius-22: 22px;   /* tab-bar rail top corners */
+  --radius-pill: 999px;
+
+  /* StyleSheet.hairlineWidth on a 3x iPhone = 1 device pixel = 1/3 pt */
+  --hairline: 0.3333px;
+
+  /* ---- typography ---------------------------------------------------------------------- */
+  --font-family: "Raleway", sans-serif;   /* static Raleway cuts, fonts.css */
+  /* theme.fonts.* → CSS weight (+ italic) */
+  --font-light: 300;
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semiBold: 600;
+  --font-bold: 700;          /* = theme.fonts.brand */
+  --font-extraBold: 800;
+  --font-black: 900;         /* = theme.fonts.brandBlack */
+  /* theme.typography */
+  --typography-heading: 24px;
+  --typography-subheading: 20px;
+  --typography-body: 18px;
+  --typography-small: 14px;
+  /* The size ladder the screens actually use (hard-coded fontSize values) */
+  --fs-8: 8px;
+  --fs-11: 11px;
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;    /* also RN's default Text size */
+  --fs-15: 15px;
+  --fs-16: 16px;
+  --fs-17: 17px;
+  --fs-18: 18px;
+  --fs-20: 20px;
+  --fs-22: 22px;
+  --fs-24: 24px;
+  --fs-26: 26px;
+  --fs-28: 28px;
+  --fs-34: 34px;
+  --fs-44: 44px;
+  --fs-64: 64px;
+  /* RN leaves lineHeight unset almost everywhere: the font's natural line height.
+     Raleway hhea: (940 + 234) / 1000 = 1.174, which CSS `normal` reproduces. */
+  --lh-natural: normal;
+  /* Feather icon font line box: (457 + 69 + 46) / 512 = 1.117 × size; glyph top at 9/512. */
+  --icon-line: 1.1172;
+  --icon-top: 0.0176;
+
+  /* ---- shadows ------------------------------------------------------------------------
+     iOS layer shadow → CSS box-shadow:
+       shadowOffset {width: x, height: y}  → x y
+       shadowRadius r                      → blur 2r   (CALayer radius ≈ half the CSS blur)
+       shadowOpacity o + shadowColor c     → rgba(c, o)
+     Android `elevation` is ignored (iOS only). Tune against a device capture if one differs. */
+  --shadow-sm: 0 8px 24px rgba(13, 47, 50, 0.10);          /* theme.shadow.sm  (8, .10, 12) */
+  --shadow-md: 0 12px 48px rgba(13, 47, 50, 0.10);         /* theme.shadow.md  (12, .10, 24) */
+  --shadow-card: 0 10px 28px rgba(13, 47, 50, 0.08);       /* Card / ListGroup (10, .08, 14) */
+  --shadow-button: 0 6px 12px rgba(13, 47, 50, 0.08);      /* Button base (6, .08, 6) */
+  --shadow-cta-bar: 0 -8px 28px rgba(13, 47, 50, 0.10);    /* sticky CTA bars (-8, .10, 14) */
+  --shadow-tab-rail: 0 8px 24px rgba(0, 0, 0, 0.08);       /* AnimatedTabBar rail (8, .08, 12) */
+  --shadow-tab-indicator: 0 6px 20px rgba(0, 0, 0, 0.06);  /* AnimatedTabBar indicator (6, .06, 10) */
+  --shadow-success: 0 10px 32px rgba(57, 182, 110, 0.25);  /* PurchaseSuccess check disc (10, .25, 16) */
+
+  /* ---- review gallery / sheets only (index.html, sheets/) — never used inside a screen -- */
+  --sheet-bg: #E9E4DC;
+  --sheet-ink: #2A2A2A;
+  --sheet-ink-muted: #5A5A5A;
+}

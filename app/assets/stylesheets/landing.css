@@ -1,0 +1,9 @@
+/*
+ * Public landing only (marketing/landing.html.erb). The phone screens' look comes from the
+ * app kit (landing/tokens.css + landing/ui.css, copied from papayal-motion/brand/ui and scoped
+ * under .pui); the page itself is landing/site.css.
+ *
+ *= require ./landing/tokens
+ *= require ./landing/ui
+ *= require ./landing/site
+ */
