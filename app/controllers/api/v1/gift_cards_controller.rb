@@ -58,7 +58,8 @@ module Api
       def ensure_merchant_can_redeem!
         return true if Merchants::CanRedeem.call(redeemer: current_merchant, issuer: gift_card.merchant)
 
-        render json: base_validation_payload.merge(valid: false, error: "merchant_mismatch"), status: :forbidden
+        # No card id or balances: this merchant may not act on the card.
+        render json: { valid: false, error: "merchant_mismatch" }, status: :forbidden
         false
       end
 

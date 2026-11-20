@@ -162,7 +162,10 @@ class GiftCard < ApplicationRecord
   # column, kept in step under the card lock); held/disputed are computed
   # from the loads' timestamps; spendable is what a redemption may draw.
   # NEVER gate money on `load.status` — it is a cached label (§10.2c).
-  def balances
+  # only_sender: restrict to the loads that user paid for (the sender view of
+  # a card that isn't theirs shows what's left of THEIR gift, never the
+  # recipient's whole balance).
+  def balances(only_sender: nil)
   now = Time.current
   remaining = 0
   held = 0
@@ -171,6 +174,7 @@ class GiftCard < ApplicationRecord
 
   loads.each do |load|
     next if load.status_canceled?
+    next if only_sender && load.sender_id != only_sender.id
 
     cents = load.remaining_cents.to_i
     remaining += cents

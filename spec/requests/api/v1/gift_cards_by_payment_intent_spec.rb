@@ -29,7 +29,9 @@ RSpec.describe "Api::V1 GiftCards by_payment_intent", type: :request do
       data = parsed_data
       expect(data["id"]).to eq(gift_card.id)
       expect(data["amount_cents"]).to eq(gift_card.amount)
-      expect(data["remaining_balance_cents"]).to eq(gift_card.reload.remaining_balance)
+      # The sender isn't the recipient: balances cover only their own loads.
+      expect(data["viewer_role"]).to eq("sender")
+      expect(data["remaining_balance_cents"]).to eq(gift_card.reload.balances(only_sender: sender)[:remaining_balance])
       expect(data["currency"]).to eq(gift_card.currency)
       expect(data["status"]).to eq("active")
       expect(data["created_at"]).to eq(gift_card.created_at.iso8601)

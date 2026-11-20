@@ -348,7 +348,7 @@ RSpec.describe "Mobile API", type: :request do
       expect(card["sender"]["name"]).to eq("Alice")
       expect(card["sender"]["last_name"]).to eq("Wonder")
       expect(card["sender"]["full_name"]).to eq("Alice Wonder")
-      expect(card["sender"]["email"]).to eq(sender.email)
+      expect(card["sender"]).not_to have_key("email") # buyers' emails are never exposed
     end
   end
 
@@ -406,7 +406,7 @@ RSpec.describe "Mobile API", type: :request do
       expect(card["sender"]["name"]).to eq("John")
       expect(card["sender"]["last_name"]).to eq("Doe")
       expect(card["sender"]["full_name"]).to eq("John Doe")
-      expect(card["sender"]["email"]).to eq("john.doe@example.com")
+      expect(card["sender"]).not_to have_key("email") # buyers' emails are never exposed
       expect(card["sender"]).to have_key("avatar_url")
     end
 

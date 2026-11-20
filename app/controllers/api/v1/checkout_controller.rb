@@ -109,12 +109,7 @@ module Api
             buyer: current_user, recipient: prospective_recipient, merchant: merchant, amount_cents: amount_cents
           )
         rescue Loads::CapChecker::CapExceeded => e
-          return render_error(
-            code: e.error_code,
-            message: cap_message(e),
-            status: :unprocessable_entity,
-            details: e.details
-          )
+          return render_cap_error(e, self_load: self_load)
         end
 
         # What the webhook will resolve the recipient to, so Loads::Fulfill
@@ -198,12 +193,7 @@ module Api
             client_secret: payment_intent.client_secret,
             payment_intent_id: payment_intent.id,
             quote: quote_payload(quote),
-            target: {
-              self: self_load,
-              existing_card_id: cap_result.card&.id,
-              current_balance_cents: cap_result.current_balance_cents,
-              projected_balance_cents: cap_result.projected_balance_cents
-            }
+            target: checkout_target(cap_result, self_load: self_load)
           })
         rescue Stripe::StripeError => e
           log_stripe_error(e)
@@ -257,6 +247,40 @@ module Api
 
         render_error(code: "invalid_amount", message: message, status: :unprocessable_entity)
         false
+      end
+
+      # §8.3 `target`. Card id and balances describe the RECIPIENT's card, so
+      # they're returned only for a self top-up. For a gift to someone else
+      # they'd let any buyer look up whether an email has a card at this
+      # merchant and its balance; nil makes the app skip the balance line.
+      def checkout_target(cap_result, self_load:)
+        return { self: false, existing_card_id: nil, current_balance_cents: nil, projected_balance_cents: nil } unless self_load
+
+        {
+          self: true,
+          existing_card_id: cap_result.card&.id,
+          current_balance_cents: cap_result.current_balance_cents,
+          projected_balance_cents: cap_result.projected_balance_cents
+        }
+      end
+
+      # Caps measured on the RECIPIENT (their card's balance/daily loads, or
+      # what they received in 30 days). For a gift to someone else, `used` and
+      # `room` would reveal the recipient's balance and activity, so those
+      # errors get a generic message and only the (public) limit.
+      RECIPIENT_SIDE_CAPS = %i[card_daily_load_limit card_daily_count_limit card_balance_limit recipient_monthly_limit].freeze
+
+      def render_cap_error(error, self_load:)
+        if !self_load && RECIPIENT_SIDE_CAPS.include?(error.code)
+          return render_error(
+            code: error.error_code,
+            message: "Esta tarjeta no puede recibir esta recarga en este momento. Prueba con un monto menor o inténtalo más tarde.",
+            status: :unprocessable_entity,
+            details: error.details.slice(:limit_cents, :limit)
+          )
+        end
+
+        render_error(code: error.error_code, message: cap_message(error), status: :unprocessable_entity, details: error.details)
       end
 
       # Spanish copy per §4.1 cap; the app shows the room from `details`.

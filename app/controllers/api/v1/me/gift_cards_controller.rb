@@ -39,7 +39,7 @@ module Api
           raise ActiveRecord::RecordNotFound unless load.sender_id == current_user.id || gift_card.recipient_id == current_user.id
 
           gift_card.touch_owner_activity!
-          serializer = GiftCardSerializer.new(gift_card, attachment_url: method(:attachment_url))
+          serializer = GiftCardSerializer.new(gift_card, attachment_url: method(:attachment_url), viewer: current_user)
           data = serializer.as_json
           data[:load] = serializer.serialize_load(load)
           data[:top_up] = data[:load]
@@ -129,9 +129,10 @@ module Api
             .find(params[:id])
         end
 
-        # §8.1 shape, compat fields included (GiftCardSerializer).
+        # §8.1 shape, compat fields included. Viewer-aware: a buyer who isn't
+        # the recipient gets the sender view (own loads only, no balances).
         def serialize_gift_card(card)
-          GiftCardSerializer.call(card, attachment_url: method(:attachment_url))
+          GiftCardSerializer.call(card, attachment_url: method(:attachment_url), viewer: current_user)
         end
       end
     end

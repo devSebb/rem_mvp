@@ -14,19 +14,36 @@ RSpec.describe "Api::V1 loads, sent list, activity and redemption token", type: 
   let!(:load_b) { stripe_load!(card, 2_000, sender: luis, at: 2.days.ago) }
 
   describe "GET /api/v1/me/gift_cards" do
-    it "lists the card for the recipient and for every buyer, with §8.1 fields" do
+    it "lists the card for the recipient and for every buyer; the recipient sees the full §8.1 card" do
       [recipient, ana, luis].each do |u|
         get "/api/v1/me/gift_cards", headers: auth_headers(access_token_for(u))
         expect(response).to have_http_status(:ok)
         expect(parsed_data.map { |c| c["id"] }).to eq([card.id])
       end
 
+      get "/api/v1/me/gift_cards", headers: auth_headers(access_token_for(recipient))
       c = parsed_data.first
       expect(c).to include("spendable_cents" => 5_000, "remaining_balance_cents" => 5_000, "amount_cents" => 5_000,
-                           "total_loaded_cents" => 5_000, "loads_count" => 2, "status" => "active")
+                           "total_loaded_cents" => 5_000, "loads_count" => 2, "status" => "active", "viewer_role" => "recipient")
       expect(c["sender_id"]).to eq(luis.id) # COMPAT: latest load's sender
       expect(c["loads"].map { |l| l["id"] }).to eq([load_b.id, load_a.id])
       expect(c["loads"].last).to include("note" => "Feliz cumple", "is_self" => false)
+    end
+
+    it "shows a buyer only their own loads and none of the recipient's balances or other buyers (privacy)" do
+      get "/api/v1/me/gift_cards", headers: auth_headers(access_token_for(luis))
+      c = parsed_data.first
+
+      # Luis's own $20 only; the card's real $50 balance stays private.
+      expect(c).to include("viewer_role" => "sender", "amount_cents" => 2_000, "total_loaded_cents" => 2_000, "loads_count" => 1,
+                           "spendable_cents" => 2_000, "remaining_balance_cents" => 2_000, "sender_id" => luis.id)
+      expect(c["loads"].map { |l| l["id"] }).to eq([load_b.id])
+      expect(response.body).not_to include("Feliz cumple") # ana's note
+      expect(response.body).not_to include(ana.email)
+
+      get "/api/v1/me/gift_cards/#{card.id}", headers: auth_headers(access_token_for(luis))
+      expect(parsed_data).to include("viewer_role" => "sender", "spendable_cents" => 2_000)
+      expect(parsed_data["loads"].map { |l| l["id"] }).to eq([load_b.id])
     end
 
     it "hides the card from strangers" do
@@ -72,7 +89,9 @@ RSpec.describe "Api::V1 loads, sent list, activity and redemption token", type: 
                              "refundable_cents" => 2_500, "claim_status" => "claimed")
       expect(row["recipient"]).to include("name" => "Rita", "masked_phone" => "+593•••3456", "registered" => true)
       expect(row["recipient"]).not_to have_key("phone")
-      expect(row["gift_card"]).to include("id" => card.id, "spendable_cents" => 4_500, "loads_count" => 2)
+      # The card is Rita's: Ana sees which card, not its balance or load count.
+      expect(row["gift_card"]).to include("id" => card.id, "spendable_cents" => nil, "remaining_balance_cents" => nil,
+                                          "loads_count" => nil)
       expect(row["gift_card"]["merchant"]).to include("store_name" => "Medicity")
     end
 
@@ -172,7 +191,7 @@ RSpec.describe "Api::V1 loads, sent list, activity and redemption token", type: 
       expect(parsed_data["id"]).to eq(card.id)
       expect(parsed_data["load"]).to include("id" => load_b.id, "amount_cents" => 2_000, "sender_id" => luis.id)
       expect(parsed_data["top_up"]).to eq(parsed_data["load"])
-      expect(parsed_data["loads_count"]).to eq(2)
+      expect(parsed_data["loads_count"]).to eq(1) # sender view: only luis's own load
 
       get "/api/v1/gift_cards/by_payment_intent/#{load_b.payment_intent_id}", headers: auth_headers(access_token_for(ana))
       expect(response).to have_http_status(:not_found) # ana did not pay load_b

@@ -79,6 +79,9 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
       body = JSON.parse(response.body)
       expect(body["decline_reason"]).to eq("merchant_mismatch")
       expect(gift_card.reload.remaining_balance).to eq(10_000)
+      # An outside merchant learns nothing about the card.
+      expect(body["gift_card_id"]).to be_nil
+      expect(body.values_at("remaining_balance_cents", "spendable_cents", "total_balance_cents")).to all(eq(0))
     end
 
     it "returns response contract: approved, transaction_id, gift_card_id, remaining_balance_cents, currency" do

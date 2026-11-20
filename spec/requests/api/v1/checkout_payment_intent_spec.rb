@@ -397,33 +397,41 @@ RSpec.describe "POST /api/v1/checkout/payment_intent", type: :request do
       )
     end
 
-    it "returns a null target card for a recipient with no card at this merchant yet" do
+    it "returns no card or balance in the target for a gift to someone else" do
       post "/api/v1/checkout/payment_intent", params: valid_params.to_json, headers: auth_headers(access_token)
 
       expect(response).to have_http_status(:ok)
       expect(parsed_data["target"]).to eq(
-        "self" => false, "existing_card_id" => nil, "current_balance_cents" => 0, "projected_balance_cents" => 2_500
+        "self" => false, "existing_card_id" => nil, "current_balance_cents" => nil, "projected_balance_cents" => nil
       )
     end
 
-    it "never resolves the recipient by phone (unverified numbers can't capture gifts)" do
-      squatter = create(:user, email: "squatter@example.com", phone: "+15551234567")
-      create(:gift_card, recipient: squatter, merchant: merchant, amount: 0)
-
-      post "/api/v1/checkout/payment_intent", params: valid_params.to_json, headers: auth_headers(access_token)
-
-      expect(response).to have_http_status(:ok)
-      expect(parsed_data["target"]).to include("existing_card_id" => nil, "current_balance_cents" => 0)
-    end
-
-    it "fills the target for a known recipient's existing card" do
+    it "does not reveal a known recipient's existing card or its balance (privacy)" do
       other = create(:user, email: "Recipient@Example.com")
       card = create(:gift_card, recipient: other, merchant: merchant, amount: 0)
       stripe_load!(card, 1_000, sender: create(:user), at: 2.days.ago)
 
       post "/api/v1/checkout/payment_intent", params: valid_params.to_json, headers: auth_headers(access_token)
 
-      expect(parsed_data["target"]).to include("existing_card_id" => card.id, "current_balance_cents" => 1_000, "projected_balance_cents" => 3_500)
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data["target"]).to eq(
+        "self" => false, "existing_card_id" => nil, "current_balance_cents" => nil, "projected_balance_cents" => nil
+      )
+    end
+
+    it "hides the recipient's usage and balance when a gift to someone else hits a card cap" do
+      other = create(:user, email: "Recipient@Example.com")
+      card = create(:gift_card, recipient: other, merchant: merchant, amount: 0)
+      3.times { |i| stripe_load!(card, 16_000, sender: create(:user), at: (i + 2).days.ago) } # $480 on their card
+
+      post "/api/v1/checkout/payment_intent",
+           params: valid_params.merge(amount_cents: 5_000).to_json,
+           headers: auth_headers(access_token)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(parsed_error["code"]).to eq("checkout.card_balance_limit")
+      expect(parsed_error["details"].keys).to contain_exactly("limit_cents")
+      expect(parsed_error["message"]).not_to include("$20.00")
     end
 
     it "returns checkout.card_balance_limit with room details when the reload would overflow the card" do

@@ -80,6 +80,8 @@ RSpec.describe "Api::V1::GiftCards", type: :request do
       body = JSON.parse(response.body)
       expect(body["valid"]).to eq(false)
       expect(body["error"]).to eq("merchant_mismatch")
+      # An outside merchant learns nothing about the card.
+      expect(body.keys).to contain_exactly("valid", "error")
     end
 
     it "allows validation by a merchant in the same redemption group" do

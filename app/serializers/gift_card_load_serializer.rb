@@ -50,20 +50,31 @@ class GiftCardLoadSerializer
     card&.recipient&.claimed_at.present? ? "claimed" : "pending_claim"
   end
 
+  # The :sent view is always read by the load's buyer. The card belongs to its
+  # recipient, so its balance and load totals are shown only when the buyer
+  # IS the recipient (a self top-up); otherwise they're nil (§8.2).
   def card_summary
     return nil unless card
 
-    balances = card.balances
-    {
+    summary = {
       id: card.id,
       status: card.public_status,
       merchant_id: card.merchant_id,
       merchant: card.merchant ? { id: card.merchant.id, store_name: card.merchant.store_name, logo_url: attachment_url.call(card.merchant.logo) } : nil,
+      spendable_cents: nil,
+      remaining_balance_cents: nil,
+      total_loaded_cents: nil,
+      loads_count: nil
+    }
+    return summary unless card.recipient_id == load.sender_id
+
+    balances = card.balances
+    summary.merge(
       spendable_cents: balances[:spendable_cents],
       remaining_balance_cents: balances[:remaining_balance],
       total_loaded_cents: card.total_loaded_cents.to_i,
       loads_count: card.loads_count.to_i
-    }
+    )
   end
 
   # The buyer sees who they sent to, never the full contact (§8.2).
@@ -88,7 +99,6 @@ class GiftCardLoadSerializer
       name: sender.first_name,
       last_name: sender.last_name,
       full_name: sender.full_name.presence,
-      email: sender.email,
       avatar_url: attachment_url.call(sender.avatar)
     }
   end

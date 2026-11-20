@@ -62,12 +62,14 @@ module Redemptions
           return build_payload(existing)
         end
 
-        return decline!("expired_token", token: token, gift_card: gift_card) if token_expired?(token)
-        return decline!("token_used", token: token, gift_card: gift_card) if token.used_at.present?
-
+        # Merchant authorization first, so a merchant outside the card's group
+        # gets only "merchant_mismatch" (no balances) even for a stale token.
         unless Merchants::CanRedeem.call(redeemer: merchant, issuer: gift_card.merchant)
           return decline!("merchant_mismatch", token: token, gift_card: gift_card)
         end
+
+        return decline!("expired_token", token: token, gift_card: gift_card) if token_expired?(token)
+        return decline!("token_used", token: token, gift_card: gift_card) if token.used_at.present?
 
         gift_card.with_lock do
           gift_card.reload
@@ -174,6 +176,13 @@ module Redemptions
         total_balance_cents: balances[:remaining_balance],
         currency: txn.currency || gift_card&.currency || "USD"
       }
+
+      # A merchant outside the card's redemption group learns nothing about it
+      # (it previously got the card id and balances with the decline).
+      if txn.decline_reason == "merchant_mismatch"
+        payload.merge!(gift_card_id: nil, remaining_balance_cents: 0, spendable_cents: 0, total_balance_cents: 0)
+        return payload
+      end
 
       case txn.decline_reason
       when "card_held_security_review"

@@ -113,7 +113,7 @@ RSpec.describe GiftCard, "balances and creation", type: :model do
       first = stripe_load!(card, 1_000, sender: buyer, at: 2.days.ago, note: "primera")
       latest = stripe_load!(card, 2_000, sender: recipient, at: 1.day.ago, note: "recarga propia", held_until: 1.hour.from_now)
 
-      json = described_class.call(card.reload, attachment_url: ->(_a) { nil })
+      json = described_class.call(card.reload, attachment_url: ->(_a) { nil }, viewer: recipient)
 
       expect(json).to include(
         id: card.id, amount_cents: 3_000, remaining_balance_cents: 3_000, spendable_cents: 1_000, held_cents: 2_000,
@@ -130,11 +130,30 @@ RSpec.describe GiftCard, "balances and creation", type: :model do
     it "exposes a frozen card as \"frozen\" and legacy statuses as active" do
       card = create(:gift_card, recipient: recipient, merchant: merchant, amount: 0)
       card.update_columns(status: GiftCard.statuses[:frozen_by_admin], frozen_at: Time.current, frozen_reason: "fraude")
-      json = described_class.call(card.reload, attachment_url: ->(_a) { nil })
+      json = described_class.call(card.reload, attachment_url: ->(_a) { nil }, viewer: recipient)
       expect(json).to include(status: "frozen", frozen_reason: "fraude", spendable_cents: 0)
 
       card.update_columns(status: GiftCard.statuses[:redeemed])
-      expect(described_class.call(card.reload, attachment_url: ->(_a) { nil })[:status]).to eq("active")
+      expect(described_class.call(card.reload, attachment_url: ->(_a) { nil }, viewer: recipient)[:status]).to eq("active")
+    end
+
+    it "gives a buyer who isn't the recipient only their own loads and no balances (sender view)" do
+      card = create(:gift_card, recipient: recipient, merchant: merchant, amount: 0)
+      mine = stripe_load!(card, 1_000, sender: buyer, at: 2.days.ago, note: "mi regalo")
+      stripe_load!(card, 7_000, sender: create(:user, first_name: "Otro"), at: 1.day.ago, note: "nota privada")
+      card.update_columns(status: GiftCard.statuses[:frozen_by_admin], frozen_reason: "fraude")
+
+      json = described_class.call(card.reload, attachment_url: ->(_a) { nil }, viewer: buyer)
+
+      # Balances cover only the buyer's own $10 load (the other buyer's $70 is
+      # invisible); the card is frozen, so nothing is spendable right now.
+      expect(json).to include(viewer_role: "sender", amount_cents: 1_000, total_loaded_cents: 1_000, loads_count: 1,
+                              remaining_balance_cents: 1_000, spendable_cents: 0, held_cents: 0, disputed_cents: 0,
+                              frozen_reason: nil, note: "mi regalo", recipient_id: recipient.id)
+      expect(json[:loads].map { |l| l[:id] }).to eq([mine.id])
+      expect(json.to_json).not_to include("nota privada")
+      expect(json.to_json).not_to include("Otro")
+      expect(json[:sender]).not_to have_key(:email)
     end
   end
 end
