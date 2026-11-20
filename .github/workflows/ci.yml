@@ -79,7 +79,10 @@ jobs:
 
     env:
       RAILS_ENV: test
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/rem_mvp_test
+      # config/boot.rb deliberately overrides DATABASE_URL in test (so a dev's
+      # global DATABASE_URL can never point tests at a real DB); it honors
+      # TEST_DATABASE_URL instead.
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/rem_mvp_test
       REDIS_URL: redis://localhost:6379/0
 
     steps:
