@@ -1,5 +1,7 @@
 class UserSession < ApplicationRecord
   belongs_to :user
+  # Set when refresh-token rotation retired this session (see Auth::RefreshTokens).
+  belongs_to :replaced_by, class_name: "UserSession", optional: true
 
   scope :active, -> { where(revoked_at: nil) }
 
