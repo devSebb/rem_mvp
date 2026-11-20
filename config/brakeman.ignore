@@ -1,0 +1,25 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Unmaintained Dependency",
+      "warning_code": 121,
+      "fingerprint": "d84924377155b41e094acae7404ec2e521629d86f97b0ff628e3d1b263f8101c",
+      "check_name": "EOLRails",
+      "message": "Support for Rails 7.2.2.2 ended on 2026-08-09",
+      "file": "Gemfile.lock",
+      "line": 266,
+      "link": "https://brakemanscanner.org/docs/warning_types/unmaintained_dependency/",
+      "code": null,
+      "render_path": null,
+      "location": null,
+      "user_input": null,
+      "confidence": "High",
+      "cwe_id": [
+        1104
+      ],
+      "note": "Known and tracked: upgrade to Rails 8 is planned work. Ignored so CI fails only on NEW findings. The fingerprint is tied to this exact Rails version, so it stops matching (and the warning returns) on any Rails version change; remove this entry when upgrading."
+    }
+  ],
+  "updated": "2026-11-20",
+  "brakeman_version": "8.1.0"
+}
