@@ -142,7 +142,7 @@ RSpec.describe "Mobile API", type: :request do
   end
 
   describe "POST /api/v1/auth/refresh" do
-    it "rotates the refresh token and invalidates the old one" do
+    it "rotates the refresh token and invalidates the old one (after the short rotation grace)" do
       tokens = login_and_get_tokens
 
       post "/api/v1/auth/refresh",
@@ -154,9 +154,13 @@ RSpec.describe "Mobile API", type: :request do
       expect(new_refresh).to be_present
       expect(new_refresh).not_to eq(tokens[:refresh_token])
 
-      post "/api/v1/auth/refresh",
-           params: { refresh_token: tokens[:refresh_token] }.to_json,
-           headers: json_headers
+      # Within Auth::RefreshTokens::ROTATION_GRACE a lost-response retry is
+      # accepted (see session_and_push_token_spec); after it, the old token is dead.
+      travel(Auth::RefreshTokens::ROTATION_GRACE + 1.second) do
+        post "/api/v1/auth/refresh",
+             params: { refresh_token: tokens[:refresh_token] }.to_json,
+             headers: json_headers
+      end
 
       expect(response).to have_http_status(:unauthorized)
       expect(parsed_error["code"]).to eq("auth.refresh_revoked")
