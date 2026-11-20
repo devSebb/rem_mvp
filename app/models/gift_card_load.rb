@@ -110,7 +110,7 @@ class GiftCardLoad < ApplicationRecord
   def refundable_cents
     return 0 if dispute_open? || status_canceled?
 
-    [remaining_cents, amount_cents - refunded_cents].min.clamp(0, amount_cents)
+    [ remaining_cents, amount_cents - refunded_cents ].min.clamp(0, amount_cents)
   end
 
   # ── Ledger helpers (I2) ─────────────────────────────────────────────

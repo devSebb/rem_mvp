@@ -1,7 +1,7 @@
 module MarketingHelper
   STORE_LINKS = {
-    ios: ["PAPAYAL_IOS_STORE_URL", "https://apps.apple.com/us/app/papayal/id6759072681", "apps.apple.com"],
-    android: ["PAPAYAL_ANDROID_STORE_URL", "https://play.google.com/store/apps/details?id=com.papayal.app&hl=es", "play.google.com"]
+    ios: [ "PAPAYAL_IOS_STORE_URL", "https://apps.apple.com/us/app/papayal/id6759072681", "apps.apple.com" ],
+    android: [ "PAPAYAL_ANDROID_STORE_URL", "https://play.google.com/store/apps/details?id=com.papayal.app&hl=es", "play.google.com" ]
   }.freeze
 
   # Independent of AppLinks.download_url, which also serves claim/reset flows.
@@ -31,7 +31,7 @@ module MarketingHelper
     meta = logo.blob.metadata
     width, height = meta["width"].to_f, meta["height"].to_f
     aspect = width.positive? && height.positive? ? width / height : 2.0
-    [66, 82 / Math.sqrt(aspect)].min.round(1)
+    [ 66, 82 / Math.sqrt(aspect) ].min.round(1)
   end
 
   def marketing_store_link_data(platform)

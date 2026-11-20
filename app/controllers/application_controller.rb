@@ -12,15 +12,15 @@ class ApplicationController < ActionController::Base
   private
 
   def configure_permitted_parameters
-    devise_parameter_sanitizer.permit(:sign_up, keys: [:first_name, :last_name, :email, :phone, :terms_accepted])
-    devise_parameter_sanitizer.permit(:account_update, keys: [:first_name, :last_name, :email, :phone, :avatar])
+    devise_parameter_sanitizer.permit(:sign_up, keys: [ :first_name, :last_name, :email, :phone, :terms_accepted ])
+    devise_parameter_sanitizer.permit(:account_update, keys: [ :first_name, :last_name, :email, :phone, :avatar ])
   end
 
   def user_not_authorized
     flash[:alert] = "You are not authorized to perform this action."
     redirect_to(request.referrer || home_path)
   end
-  
+
   def after_sign_in_path_for(resource)
     return merchant_root_path if resource.respond_to?(:merchant?) && resource.merchant?
     return admin_root_path if resource.respond_to?(:admin?) && resource.admin?

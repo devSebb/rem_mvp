@@ -2,21 +2,21 @@ Rails.application.configure do
   config.messaging = {
     # Twilio configuration
     twilio: {
-      account_sid: ENV['TWILIO_ACCOUNT_SID'],
-      auth_token: ENV['TWILIO_AUTH_TOKEN'],
-      from_number: ENV['TWILIO_PHONE_NUMBER'],
-      whatsapp_number: ENV['TWILIO_WHATSAPP_NUMBER']
+      account_sid: ENV["TWILIO_ACCOUNT_SID"],
+      auth_token: ENV["TWILIO_AUTH_TOKEN"],
+      from_number: ENV["TWILIO_PHONE_NUMBER"],
+      whatsapp_number: ENV["TWILIO_WHATSAPP_NUMBER"]
     },
-    
+
     # Email configuration
     email: {
-      from: ENV['DEFAULT_FROM_EMAIL'] || 'hola@papayal.app',
-      resend_api_key: ENV['RESEND_API_KEY']
+      from: ENV["DEFAULT_FROM_EMAIL"] || "hola@papayal.app",
+      resend_api_key: ENV["RESEND_API_KEY"]
     },
-    
+
     # App configuration
     app: {
-      host: ENV['APP_HOST'] || 'http://localhost:3000'
+      host: ENV["APP_HOST"] || "http://localhost:3000"
     }
   }
 end

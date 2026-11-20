@@ -435,7 +435,7 @@ RSpec.describe "Mobile API", type: :request do
 
   describe "GET /api/v1/merchants" do
     it "returns list of active merchants with categories" do
-      merchant = create(:merchant, categories: ["restaurantes", "entretenimiento"])
+      merchant = create(:merchant, categories: [ "restaurantes", "entretenimiento" ])
 
       get "/api/v1/merchants", headers: auth_headers(login_and_get_tokens[:access_token])
 
@@ -444,13 +444,13 @@ RSpec.describe "Mobile API", type: :request do
       merchant_data = parsed_data.find { |m| m["id"] == merchant.id }
       expect(merchant_data).to be_present
       expect(merchant_data["store_name"]).to eq(merchant.store_name)
-      expect(merchant_data["categories"]).to eq(["restaurantes", "entretenimiento"])
+      expect(merchant_data["categories"]).to eq([ "restaurantes", "entretenimiento" ])
     end
   end
 
   describe "GET /api/v1/merchants/:id" do
     it "returns merchant details with categories" do
-      merchant = create(:merchant, categories: ["restaurantes", "entretenimiento", "hogar"])
+      merchant = create(:merchant, categories: [ "restaurantes", "entretenimiento", "hogar" ])
 
       get "/api/v1/merchants/#{merchant.id}", headers: auth_headers(login_and_get_tokens[:access_token])
 
@@ -459,7 +459,7 @@ RSpec.describe "Mobile API", type: :request do
       expect(parsed_data["store_name"]).to eq(merchant.store_name)
       expect(parsed_data["name"]).to eq(merchant.name)
       expect(parsed_data["status"]).to eq("active")
-      expect(parsed_data["categories"]).to eq(["restaurantes", "entretenimiento", "hogar"])
+      expect(parsed_data["categories"]).to eq([ "restaurantes", "entretenimiento", "hogar" ])
       expect(parsed_data["address"]).to eq(merchant.address)
       expect(parsed_data["contact_email"]).to eq(merchant.contact_email)
       expect(parsed_data["logo_url"]).to be_nil
@@ -549,4 +549,3 @@ RSpec.describe "Mobile API", type: :request do
     json_headers.merge("Authorization" => "Bearer #{token}")
   end
 end
-

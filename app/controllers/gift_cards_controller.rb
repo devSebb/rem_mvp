@@ -1,7 +1,7 @@
 class GiftCardsController < ApplicationController
   include ConsumerWebGate
 
-  before_action :set_gift_card, only: [:show]
+  before_action :set_gift_card, only: [ :show ]
 
   # Web wallet view. Web purchase flow has been removed — purchases are done
   # exclusively through the mobile app. This view is read-only.

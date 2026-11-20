@@ -11,7 +11,7 @@ class WelcomeMailer < ApplicationMailer
   def welcome(user_id)
     @user = User.find(user_id)
     @first_name = @user.first_name.presence || "amigo"
-    @support_email = ENV['DEFAULT_FROM_EMAIL'].presence || 'hola@papayal.app'
+    @support_email = ENV["DEFAULT_FROM_EMAIL"].presence || "hola@papayal.app"
 
     return if @user.placeholder_email?
 

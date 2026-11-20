@@ -2,7 +2,7 @@ module Api
   module V1
     module Auth
       class RegistrationsController < Api::V1::BaseController
-        skip_before_action :authenticate_user_from_token!, only: [:create]
+        skip_before_action :authenticate_user_from_token!, only: [ :create ]
 
         def create
           missing_field_errors = required_signup_field_errors
@@ -37,7 +37,7 @@ module Api
           # "forgot password", which also proves the email. Reported as the
           # usual "already taken" so the app shows its normal message.
           if unverified_user && !unverified_user.valid_password?(signup_params[:password].to_s)
-            return render_signup_error(details: { email: ["has already been taken"] })
+            return render_signup_error(details: { email: [ "has already been taken" ] })
           end
 
           user = pending_user || unverified_user || User.new
@@ -245,7 +245,7 @@ module Api
           missing_fields = required_fields.select { |_field, value| value.blank? }.keys
           return if missing_fields.empty?
 
-          missing_fields.index_with { ["can't be blank"] }
+          missing_fields.index_with { [ "can't be blank" ] }
         end
 
         def extracted_first_name
@@ -284,4 +284,3 @@ module Api
     end
   end
 end
-

@@ -167,7 +167,7 @@ RSpec.describe StripeWebhooks do
     it "fetches refunds from the API when the payload does not embed them (API >= 2022-11-15)" do
       refund = build_refund
       charge = OpenStruct.new(id: refund.charge, payment_intent: load.payment_intent_id, refunds: nil)
-      allow(Stripe::Refund).to receive(:list).with(charge: charge.id).and_return(OpenStruct.new(data: [refund]))
+      allow(Stripe::Refund).to receive(:list).with(charge: charge.id).and_return(OpenStruct.new(data: [ refund ]))
 
       described_class.handle_charge_refunded(charge)
 
@@ -177,7 +177,7 @@ RSpec.describe StripeWebhooks do
 
     it "still consumes legacy payloads that embed the refunds list" do
       refund = build_refund
-      charge = OpenStruct.new(id: refund.charge, payment_intent: load.payment_intent_id, refunds: OpenStruct.new(data: [refund]))
+      charge = OpenStruct.new(id: refund.charge, payment_intent: load.payment_intent_id, refunds: OpenStruct.new(data: [ refund ]))
       expect(Stripe::Refund).not_to receive(:list)
 
       described_class.handle_charge_refunded(charge)

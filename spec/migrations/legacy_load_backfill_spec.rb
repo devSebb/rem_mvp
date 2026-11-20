@@ -65,8 +65,8 @@ RSpec.describe Ledger::LegacyLoadBackfill do
       run!
       load = card.loads.sole
       allocs = load.redemption_allocations.order(:id)
-      expect(allocs.map { |a| [a.transaction_id, a.direction, a.amount_cents] }).to contain_exactly(
-        [red1.id, "debit", 1000], [red2.id, "debit", 1500], [reversal.id, "credit", 1500]
+      expect(allocs.map { |a| [ a.transaction_id, a.direction, a.amount_cents ] }).to contain_exactly(
+        [ red1.id, "debit", 1000 ], [ red2.id, "debit", 1500 ], [ reversal.id, "credit", 1500 ]
       )
       expect(allocs.map(&:transaction_id)).not_to include(failed.id)
     end
@@ -75,7 +75,7 @@ RSpec.describe Ledger::LegacyLoadBackfill do
       run!
       load = card.loads.sole
       expect(purchase.reload.gift_card_load_id).to eq(load.id)
-      expect([red1, red2, reversal].map { |t| t.reload.gift_card_load_id }).to all(be_nil)
+      expect([ red1, red2, reversal ].map { |t| t.reload.gift_card_load_id }).to all(be_nil)
     end
 
     it "sets the card counters and satisfies every invariant" do

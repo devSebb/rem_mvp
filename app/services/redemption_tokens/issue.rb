@@ -77,7 +77,7 @@ module RedemptionTokens
     end
 
     def store_raw_token(token, raw_token, expires_at)
-      ttl = [(expires_at - Time.current).to_i, 1].max
+      ttl = [ (expires_at - Time.current).to_i, 1 ].max
       Rails.cache.write(cache_key(token), raw_token, expires_in: ttl)
     end
 
@@ -94,9 +94,3 @@ module RedemptionTokens
     end
   end
 end
-
-
-
-
-
-

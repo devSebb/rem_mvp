@@ -16,9 +16,9 @@ RSpec.describe GiftCardPolicy do
 
   it "scopes cards to the recipient and every buyer, ignoring the deprecated sender_id" do
     card.update_columns(sender_id: stranger.id) # deprecated column must not grant access
-    expect(GiftCardPolicy::Scope.new(recipient, GiftCard).resolve).to eq([card])
-    expect(GiftCardPolicy::Scope.new(first_buyer, GiftCard).resolve).to eq([card])
-    expect(GiftCardPolicy::Scope.new(second_buyer, GiftCard).resolve).to eq([card])
+    expect(GiftCardPolicy::Scope.new(recipient, GiftCard).resolve).to eq([ card ])
+    expect(GiftCardPolicy::Scope.new(first_buyer, GiftCard).resolve).to eq([ card ])
+    expect(GiftCardPolicy::Scope.new(second_buyer, GiftCard).resolve).to eq([ card ])
     expect(GiftCardPolicy::Scope.new(stranger, GiftCard).resolve).to be_empty
     expect(GiftCardPolicy::Scope.new(admin, GiftCard).resolve).to be_empty # wallet semantics
   end
@@ -44,7 +44,7 @@ RSpec.describe GiftCardPolicy do
       expect(GiftCardLoadPolicy.new(recipient, load).show?).to be(true)
       expect(GiftCardLoadPolicy.new(stranger, load).show?).to be(false)
       expect(GiftCardLoadPolicy.new(admin, load).release_hold?).to be(true)
-      expect(GiftCardLoadPolicy::Scope.new(first_buyer, GiftCardLoad).resolve).to eq([load])
+      expect(GiftCardLoadPolicy::Scope.new(first_buyer, GiftCardLoad).resolve).to eq([ load ])
       expect(GiftCardLoadPolicy::Scope.new(recipient, GiftCardLoad).resolve.count).to eq(2)
     end
   end

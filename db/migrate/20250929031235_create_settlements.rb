@@ -12,6 +12,6 @@ class CreateSettlements < ActiveRecord::Migration[7.2]
     end
 
     add_index :settlements, :payout_status
-    add_index :settlements, [:period_start, :period_end]
+    add_index :settlements, [ :period_start, :period_end ]
   end
 end

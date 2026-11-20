@@ -65,5 +65,4 @@ RSpec.describe SettlementService do
       expect(summary[:settlement_status]).to eq('settled')
     end
   end
-
 end

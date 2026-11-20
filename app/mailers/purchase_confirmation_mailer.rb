@@ -14,7 +14,7 @@ class PurchaseConfirmationMailer < ApplicationMailer
     @load = GiftCardLoad.find(gift_card_load_id)
     @gift_card = @load.gift_card
     @sender = @load.sender
-    @support_email = ENV['DEFAULT_FROM_EMAIL'].presence || 'hola@papayal.app'
+    @support_email = ENV["DEFAULT_FROM_EMAIL"].presence || "hola@papayal.app"
 
     # No real buyer email to send to (e.g. legacy/placeholder rows) — skip.
     return if @sender.nil? || @sender.email.blank? || @sender.placeholder_email?
@@ -27,9 +27,9 @@ class PurchaseConfirmationMailer < ApplicationMailer
 
     txn = @load.transactions.where(txn_type: :purchase).order(:created_at).last
     meta = txn&.metadata || {}
-    @subtotal_cents = (meta['subtotal_cents'] || @load.amount_cents).to_i
-    @fee_cents = (meta['fee_cents'] || @load.fee_cents).to_i
-    @total_cents = (meta['total_paid_cents'] || (@subtotal_cents + @fee_cents)).to_i
+    @subtotal_cents = (meta["subtotal_cents"] || @load.amount_cents).to_i
+    @fee_cents = (meta["fee_cents"] || @load.fee_cents).to_i
+    @total_cents = (meta["total_paid_cents"] || (@subtotal_cents + @fee_cents)).to_i
     @reference = @load.payment_intent_id.presence || txn&.processor_ref
 
     @recipient_label = recipient_label(@gift_card.recipient)

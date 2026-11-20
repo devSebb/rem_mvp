@@ -98,7 +98,7 @@ module Loads
 
       raise CapExceeded.new(:buyer_daily_limit,
                             limit_cents: settings.max_daily_load_per_buyer_cents, used_cents: used,
-                            room_cents: [room, 0].max, resets_at: resets_at(scope, DAY))
+                            room_cents: [ room, 0 ].max, resets_at: resets_at(scope, DAY))
     end
 
     def check_buyer_monthly!
@@ -109,7 +109,7 @@ module Loads
 
       raise CapExceeded.new(:buyer_monthly_limit,
                             limit_cents: settings.max_30d_load_per_buyer_cents, used_cents: used,
-                            room_cents: [room, 0].max, resets_at: resets_at(scope, MONTH))
+                            room_cents: [ room, 0 ].max, resets_at: resets_at(scope, MONTH))
     end
 
     def check_card_daily!(card)
@@ -127,7 +127,7 @@ module Loads
 
       raise CapExceeded.new(:card_daily_load_limit,
                             limit_cents: settings.max_daily_load_per_card_cents, used_cents: used,
-                            room_cents: [room, 0].max, resets_at: resets_at(scope, DAY))
+                            room_cents: [ room, 0 ].max, resets_at: resets_at(scope, DAY))
     end
 
     def check_card_balance!(card)
@@ -137,7 +137,7 @@ module Loads
 
       raise CapExceeded.new(:card_balance_limit,
                             limit_cents: settings.max_card_balance_cents, used_cents: balance,
-                            room_cents: [room, 0].max, resets_at: nil)
+                            room_cents: [ room, 0 ].max, resets_at: nil)
     end
 
     def check_recipient_monthly!
@@ -150,7 +150,7 @@ module Loads
 
       raise CapExceeded.new(:recipient_monthly_limit,
                             limit_cents: settings.max_30d_load_per_recipient_cents, used_cents: used,
-                            room_cents: [room, 0].max, resets_at: resets_at(scope, MONTH))
+                            room_cents: [ room, 0 ].max, resets_at: resets_at(scope, MONTH))
     end
 
     def stripe_loads

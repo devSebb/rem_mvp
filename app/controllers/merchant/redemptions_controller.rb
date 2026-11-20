@@ -12,7 +12,7 @@ class Merchant::RedemptionsController < ApplicationController
 
     if token_candidate.blank?
       Rails.logger.warn "❌ Empty dynamic token provided"
-      flash[:alert] = 'Please enter the dynamic code generated in the customer’s Papayal app.'
+      flash[:alert] = "Please enter the dynamic code generated in the customer’s Papayal app."
       redirect_to new_merchant_redemption_path and return
     end
 
@@ -27,7 +27,7 @@ class Merchant::RedemptionsController < ApplicationController
       end
 
       if @gift_card.frozen_by_admin?
-        flash[:alert] = 'Esta tarjeta está congelada por Papayal y no puede canjearse.'
+        flash[:alert] = "Esta tarjeta está congelada por Papayal y no puede canjearse."
         redirect_to new_merchant_redemption_path and return
       end
 
@@ -36,11 +36,11 @@ class Merchant::RedemptionsController < ApplicationController
         Rails.logger.warn "❌ Gift card #{@gift_card.id} cannot be redeemed - Status: #{@gift_card.status}, spendable: #{balances[:spendable_cents]} (held #{balances[:held_cents]}, disputed #{balances[:disputed_cents]})"
         flash[:alert] =
           if balances[:held_cents].positive?
-            'Esta tarjeta tiene su saldo en revisión de seguridad. Inténtalo más tarde.'
+            "Esta tarjeta tiene su saldo en revisión de seguridad. Inténtalo más tarde."
           elsif balances[:disputed_cents].positive?
-            'Esta tarjeta tiene su saldo en disputa y no puede canjearse por ahora.'
+            "Esta tarjeta tiene su saldo en disputa y no puede canjearse por ahora."
           else
-            'Esta tarjeta no tiene saldo disponible o está inactiva.'
+            "Esta tarjeta no tiene saldo disponible o está inactiva."
           end
         redirect_to new_merchant_redemption_path and return
       end
@@ -53,12 +53,12 @@ class Merchant::RedemptionsController < ApplicationController
       ) and return
     elsif redemption_token_for(token_candidate)
       # Token existed but is no longer active
-      flash[:alert] = 'This dynamic code is expired or already used. Please refresh the code from the customer.'
+      flash[:alert] = "This dynamic code is expired or already used. Please refresh the code from the customer."
       redirect_to new_merchant_redemption_path and return
     end
 
     Rails.logger.warn "❌ Dynamic token not found"
-    flash[:alert] = 'Dynamic code not found. Ask the customer to generate a new code from the app.'
+    flash[:alert] = "Dynamic code not found. Ask the customer to generate a new code from the app."
     redirect_to new_merchant_redemption_path
   end
 
@@ -74,7 +74,7 @@ class Merchant::RedemptionsController < ApplicationController
     @balances = @gift_card.balances
 
     unless @redemption_token && @redemption_token.gift_card_id == @gift_card.id
-      flash[:alert] = 'The dynamic code is invalid, expired, or does not match this gift card.'
+      flash[:alert] = "The dynamic code is invalid, expired, or does not match this gift card."
       redirect_to new_merchant_redemption_path and return
     end
 
@@ -83,13 +83,13 @@ class Merchant::RedemptionsController < ApplicationController
       flash[:alert] = "Esta tarjeta es de #{@issuing_merchant&.store_name} y no puede canjearse en tu comercio."
       redirect_to new_merchant_redemption_path and return
     end
-    
+
     # One-shot idempotency key for the confirm form. A double submit replays
     # the same (merchant, key) and Redemptions::AuthorizeAndCapture returns
     # the original result instead of capturing twice.
     @idempotency_token = SecureRandom.uuid
   rescue ActiveRecord::RecordNotFound
-    flash[:alert] = 'Gift card not found.'
+    flash[:alert] = "Gift card not found."
     redirect_to new_merchant_redemption_path
   end
 
@@ -98,22 +98,22 @@ class Merchant::RedemptionsController < ApplicationController
     redemption_amount = params[:redemption_amount]&.to_f&.*(100)&.to_i # Convert to cents
     idempotency_token = params[:idempotency_token]
     redemption_token_value = normalized_token(params[:redemption_token])
-    
+
     Rails.logger.info "💰 Processing redemption - Gift Card ID: #{gift_card_id}, Amount: #{redemption_amount}, Token: #{idempotency_token.present? ? 'present' : 'missing'}"
-    
+
     # Check merchant association
     unless current_user.merchant
       Rails.logger.error "❌ User #{current_user.id} has no merchant association"
-      flash[:alert] = 'Merchant account not found. Please contact support.'
+      flash[:alert] = "Merchant account not found. Please contact support."
       redirect_to merchant_root_path and return
     end
-    
+
     @gift_card = GiftCard.find(gift_card_id)
     Rails.logger.info "✅ Found gift card #{@gift_card.id} - Balance: #{@gift_card.remaining_balance}"
 
     if redemption_token_value.blank?
       Rails.logger.warn "❌ Dynamic token missing from redemption submit"
-      flash[:alert] = 'Dynamic code is required. Ask the customer to generate a fresh code from the app.'
+      flash[:alert] = "Dynamic code is required. Ask the customer to generate a fresh code from the app."
       redirect_to new_merchant_redemption_path and return
     end
 
@@ -153,7 +153,7 @@ class Merchant::RedemptionsController < ApplicationController
     end
   rescue ActiveRecord::RecordNotFound => e
     Rails.logger.error "❌ Gift card not found: #{e.message}"
-    flash[:alert] = 'Gift card not found.'
+    flash[:alert] = "Gift card not found."
     redirect_to new_merchant_redemption_path
   rescue => e
     Rails.logger.error "💥 Redemption error: #{e.class} - #{e.message}"
@@ -178,7 +178,7 @@ class Merchant::RedemptionsController < ApplicationController
     # Never derive it from the card: total_loaded - remaining also counts refunds.
     @redeemed_cents = params[:amount_cents].to_i if params[:amount_cents].present?
   rescue ActiveRecord::RecordNotFound
-    flash[:alert] = 'Gift card not found.'
+    flash[:alert] = "Gift card not found."
     redirect_to new_merchant_redemption_path
   end
 

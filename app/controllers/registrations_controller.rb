@@ -64,7 +64,7 @@ class RegistrationsController < Devise::RegistrationsController
       if avatar_file.present?
         # Attach the avatar first
         resource.avatar.attach(avatar_file)
-        
+
         # Manually validate only the avatar (check size and type)
         # We skip other validations since this is an avatar-only update
         avatar_valid = true
@@ -78,7 +78,7 @@ class RegistrationsController < Devise::RegistrationsController
             avatar_valid = false
           end
         end
-        
+
         if avatar_valid
           # Save without running validations on other fields
           # The avatar attachment will be persisted
@@ -91,7 +91,7 @@ class RegistrationsController < Devise::RegistrationsController
           resource.avatar.purge if resource.avatar.attached?
           flash[:alert] = resource.errors.full_messages.to_sentence
         end
-        
+
         # Force a full page reload to show the updated avatar
         # Use status: :see_other to ensure Turbo doesn't intercept and forces a GET request
         redirect_to edit_user_registration_path, status: :see_other
@@ -120,13 +120,13 @@ class RegistrationsController < Devise::RegistrationsController
   def update_resource(resource, params)
     # Handle avatar separately if present
     avatar_file = params.delete(:avatar)
-    
+
     # Determine if this update requires password verification
     # Password is required only for: changing password or changing email
     changing_password = params[:password].present?
     changing_email = params[:email].present? && params[:email] != resource.email
     requires_password = changing_password || changing_email
-    
+
     if requires_password
       # Sensitive changes require current password
       result = resource.update_with_password(params)
@@ -138,7 +138,7 @@ class RegistrationsController < Devise::RegistrationsController
       params.delete(:password_confirmation)
       result = resource.update(params)
     end
-    
+
     # Attach avatar if provided (after other updates)
     if avatar_file.present? && result
       resource.avatar.attach(avatar_file)
@@ -148,7 +148,7 @@ class RegistrationsController < Devise::RegistrationsController
         result = false
       end
     end
-    
+
     result
   end
 
@@ -177,4 +177,3 @@ class RegistrationsController < Devise::RegistrationsController
     end
   end
 end
-

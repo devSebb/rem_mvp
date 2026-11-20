@@ -29,10 +29,9 @@ class AddFirstAndLastNameToUsers < ActiveRecord::Migration[7.2]
   end
 
   def split_name(full_name)
-    return [nil, nil] if full_name.blank?
+    return [ nil, nil ] if full_name.blank?
 
     parts = full_name.to_s.strip.split(/\s+/, 2)
-    [parts.first, parts.second.to_s]
+    [ parts.first, parts.second.to_s ]
   end
 end
-

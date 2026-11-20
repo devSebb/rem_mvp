@@ -1,14 +1,14 @@
 Rails.application.routes.draw do
-  devise_for :users, controllers: { registrations: 'registrations' }
-  
+  devise_for :users, controllers: { registrations: "registrations" }
+
   root to: "marketing#landing"
   get "about", to: "marketing#about", as: :about
   get "contact", to: "marketing#contact", as: :contact
   post "contact", to: "marketing#submit_contact", as: :contact_submit
   get "proximamente", to: "marketing#proximamente", as: :proximamente
-  
+
   get "home", to: "home#index", as: :home
-  
+
   # Legal Hub routes
   get "legal", to: "legal#index", as: :legal
   get "legal/terminos", to: "legal#terminos", as: :legal_terminos
@@ -36,7 +36,7 @@ Rails.application.routes.draw do
   # Web purchase flow removed — purchases are done exclusively through the
   # mobile app. Web wallet (index/show) is read-only; transfers were removed
   # (RELOADABLE_CARD_PLAN.md D9).
-  resources :gift_cards, only: [:index, :show]
+  resources :gift_cards, only: [ :index, :show ]
 
   namespace :api do
     namespace :v1 do
@@ -48,7 +48,7 @@ Rails.application.routes.draw do
       get  "gift_cards/:token",   to: "gift_cards#show"
 
       # Kept path for backwards compatibility; now backed by Transaction records.
-      resources :redemptions, only: [:create, :show] do
+      resources :redemptions, only: [ :create, :show ] do
         post :refund, on: :member
       end
 
@@ -88,7 +88,7 @@ Rails.application.routes.draw do
       get "me/activity", to: "me/activity#index"
 
       namespace :me do
-        resources :gift_cards, only: [:index, :show] do
+        resources :gift_cards, only: [ :index, :show ] do
           post :redemption_token, on: :member
           # Card-level share/resend kept as compat shims for the store app:
           # they act on the latest load the caller paid onto the card (§5.9).
@@ -96,26 +96,26 @@ Rails.application.routes.draw do
           post :resend, on: :member
           # Per-load sharing: claim URL + prewritten message for the native
           # share sheet, and a throttled re-delivery of that load's notification.
-          resources :loads, only: [:index] do
+          resources :loads, only: [ :index ] do
             post :share_link, on: :member
             post :resend, on: :member
           end
         end
-        resource :push_tokens, only: [:create, :destroy]
+        resource :push_tokens, only: [ :create, :destroy ]
       end
 
       post "me/avatar", to: "me/avatars#create"
-      resources :merchants, only: [:index, :show]
+      resources :merchants, only: [ :index, :show ]
       post "merchants/:id/logo", to: "merchants#upload_logo"
 
       namespace :public do
-        resources :merchants, only: [:index, :show]
+        resources :merchants, only: [ :index, :show ]
       end
     end
   end
 
   # Public merchant profile (for regular users browsing)
-  resources :merchants, only: [:show]
+  resources :merchants, only: [ :show ]
 
   namespace :webhooks do
     post :stripe, to: "stripe#receive"
@@ -126,29 +126,29 @@ Rails.application.routes.draw do
 
   namespace :merchant do
     root to: "dashboard#index"
-    resources :redemptions, only: [:new, :create] do
+    resources :redemptions, only: [ :new, :create ] do
       get :confirm, on: :collection
       post :redeem, on: :collection
       get :success, on: :collection
     end
-    resources :gift_cards, only: [:show] do
+    resources :gift_cards, only: [ :show ] do
       post "transactions/:transaction_id/refund", to: "transactions#refund", as: :refund_transaction
     end
-    resources :settlements, only: [:index, :show]
-    resource :profile, only: [:show, :update]
+    resources :settlements, only: [ :index, :show ]
+    resource :profile, only: [ :show, :update ]
   end
 
   namespace :admin do
     root to: "dashboard#index"
-    resources :users, only: [:index, :show]
-    resources :merchants, only: [:index, :new, :create, :show, :edit, :update, :destroy] do
+    resources :users, only: [ :index, :show ]
+    resources :merchants, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
       member do
         patch :suspend
         patch :reactivate
         post :regenerate_secret
       end
     end
-    resources :gift_cards, only: [:index, :show] do
+    resources :gift_cards, only: [ :index, :show ] do
       member do
         patch :freeze
         patch :unfreeze
@@ -156,26 +156,26 @@ Rails.application.routes.draw do
       end
       # Type B refunds are per LOAD (§9): /admin/gift_cards/:id/loads/:load_id/refund
       resources :loads, only: [] do
-        resource :refund, only: [:new, :create], controller: "refunds"
+        resource :refund, only: [ :new, :create ], controller: "refunds"
       end
       # Card-level path kept for old links; defaults to the latest refundable load.
-      resources :refunds, only: [:new, :create], path: 'refund'
+      resources :refunds, only: [ :new, :create ], path: "refund"
     end
-    resources :transactions, only: [:index]
-    resources :payment_failures, only: [:index]
-    resources :payouts, only: [:index, :show, :create] do
+    resources :transactions, only: [ :index ]
+    resources :payment_failures, only: [ :index ]
+    resources :payouts, only: [ :index, :show, :create ] do
       member { post :mark_paid }
     end
     # Held LOADS; release is per load (§9).
-    resources :holds, only: [:index] do
+    resources :holds, only: [ :index ] do
       member { post :release }
     end
-    resource :platform_settings, only: [:show, :update]
+    resource :platform_settings, only: [ :show, :update ]
   end
 
   # Mount Sidekiq web interface at /sidekiq (admin only)
-  mount Sidekiq::Web => '/sidekiq', constraints: ->(request) { 
-    request.env['warden'].user&.admin? 
+  mount Sidekiq::Web => "/sidekiq", constraints: ->(request) {
+    request.env["warden"].user&.admin?
   }
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

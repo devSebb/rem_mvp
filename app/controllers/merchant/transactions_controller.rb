@@ -40,5 +40,3 @@ class Merchant::TransactionsController < ApplicationController
     redirect_to merchant_root_path
   end
 end
-
-

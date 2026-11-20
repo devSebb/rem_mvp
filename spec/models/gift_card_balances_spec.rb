@@ -122,7 +122,7 @@ RSpec.describe GiftCard, "balances and creation", type: :model do
       )
       expect(json[:held_until]).to eq(latest.held_until.iso8601)
       expect(json[:sender]).to include(id: recipient.id)
-      expect(json[:loads].map { |l| l[:id] }).to eq([latest.id, first.id])
+      expect(json[:loads].map { |l| l[:id] }).to eq([ latest.id, first.id ])
       expect(json[:loads].first).to include(amount_cents: 2_000, status: "held", is_self: true)
       expect(json[:loads].last).to include(amount_cents: 1_000, status: "available", is_self: false, note: "primera")
     end
@@ -150,7 +150,7 @@ RSpec.describe GiftCard, "balances and creation", type: :model do
       expect(json).to include(viewer_role: "sender", amount_cents: 1_000, total_loaded_cents: 1_000, loads_count: 1,
                               remaining_balance_cents: 1_000, spendable_cents: 0, held_cents: 0, disputed_cents: 0,
                               frozen_reason: nil, note: "mi regalo", recipient_id: recipient.id)
-      expect(json[:loads].map { |l| l[:id] }).to eq([mine.id])
+      expect(json[:loads].map { |l| l[:id] }).to eq([ mine.id ])
       expect(json.to_json).not_to include("nota privada")
       expect(json.to_json).not_to include("Otro")
       expect(json[:sender]).not_to have_key(:email)

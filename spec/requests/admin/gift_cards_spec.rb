@@ -225,7 +225,7 @@ RSpec.describe "Admin::GiftCards", type: :request do
       get gift_cards_path(format: :json)
 
       data = JSON.parse(response.body)
-      expect(data.map { |c| c["id"] }).to eq([mine.id])
+      expect(data.map { |c| c["id"] }).to eq([ mine.id ])
     end
   end
 end

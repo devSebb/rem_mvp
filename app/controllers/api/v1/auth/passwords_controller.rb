@@ -2,7 +2,7 @@ module Api
   module V1
     module Auth
       class PasswordsController < Api::V1::BaseController
-        skip_before_action :authenticate_user_from_token!, only: [:forgot_password, :reset_password]
+        skip_before_action :authenticate_user_from_token!, only: [ :forgot_password, :reset_password ]
 
         def forgot_password
           result = ::Auth::RequestPasswordReset.call(email: forgot_password_params[:email])
@@ -24,7 +24,7 @@ module Api
         def reset_password
           # Accept token from query params (for email links) or request body
           token = params[:token] || reset_password_params[:reset_token]
-          
+
           unless token.present?
             return render_error(
               code: "auth.missing_token",
@@ -32,7 +32,7 @@ module Api
               status: :unprocessable_entity
             )
           end
-          
+
           result = ::Auth::ResetPassword.call(
             reset_token: token,
             password: reset_password_params[:password],
@@ -84,4 +84,3 @@ module Api
     end
   end
 end
-

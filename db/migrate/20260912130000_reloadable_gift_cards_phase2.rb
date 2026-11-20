@@ -19,7 +19,7 @@ class ReloadableGiftCardsPhase2 < ActiveRecord::Migration[7.2]
     assert_no_duplicate_pairs!
     assert_no_merchantless_cards!
 
-    add_index :gift_cards, [:recipient_id, :merchant_id], unique: true,
+    add_index :gift_cards, [ :recipient_id, :merchant_id ], unique: true,
               where: "merged_into_id IS NULL", name: PAIR_INDEX
     change_column_null :gift_cards, :merchant_id, false
 

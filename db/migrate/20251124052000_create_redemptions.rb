@@ -13,7 +13,6 @@ class CreateRedemptions < ActiveRecord::Migration[7.2]
       t.timestamps
     end
 
-    add_index :redemptions, [:merchant_id, :idempotency_key], unique: true
+    add_index :redemptions, [ :merchant_id, :idempotency_key ], unique: true
   end
 end
-

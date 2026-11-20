@@ -12,8 +12,8 @@ module Api
         PER_PAGE = 20
         MAX_PER_PAGE = 100
 
-        before_action :set_gift_card, only: [:index, :share_link, :resend]
-        before_action :set_load, only: [:share_link, :resend]
+        before_action :set_gift_card, only: [ :index, :share_link, :resend ]
+        before_action :set_load, only: [ :share_link, :resend ]
 
         # The recipient sees every load on the card; a sender sees only the
         # loads they paid for.
@@ -36,7 +36,7 @@ module Api
 
           scope = GiftCardLoad.in_scope
                               .where(sender_id: current_user.id)
-                              .includes(:sender, gift_card: [:recipient, :loads, { merchant: { logo_attachment: :blob } }])
+                              .includes(:sender, gift_card: [ :recipient, :loads, { merchant: { logo_attachment: :blob } } ])
                               .order(created_at: :desc, id: :desc)
 
           render_page(scope, key: :loads, view: :sent, extra: { role: role })
@@ -63,7 +63,7 @@ module Api
         end
 
         def render_page(scope, key:, view:, extra: {})
-          page = [params[:page].to_i, 1].max
+          page = [ params[:page].to_i, 1 ].max
           per_page = params[:per_page].to_i
           per_page = PER_PAGE unless per_page.between?(1, MAX_PER_PAGE)
           total = scope.count

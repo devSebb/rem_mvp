@@ -13,7 +13,7 @@ class GiftCardHoldMailer < ApplicationMailer
                        "tu destinatario"
     @amount_formatted = Messaging::Money.format(@load.amount_cents, currency: @load.currency)
     @unlock_time = @load.held_until
-    @support_email = ENV['DEFAULT_FROM_EMAIL'].presence || 'hola@papayal.app'
+    @support_email = ENV["DEFAULT_FROM_EMAIL"].presence || "hola@papayal.app"
 
     # Skip placeholder-email pending users — nothing deliverable to send to.
     return if @buyer.nil? || @buyer.email.blank? || @buyer.placeholder_email?

@@ -4,7 +4,7 @@ module Api
       class GiftCardsController < Api::V1::BaseController
         include LoadSharing
 
-        before_action :set_gift_card, only: [:show, :redemption_token, :share_link, :resend]
+        before_action :set_gift_card, only: [ :show, :redemption_token, :share_link, :resend ]
 
         def index
           gift_cards = policy_scope(GiftCard)
@@ -33,7 +33,7 @@ module Api
         # alias. Visible to the load's buyer or the card's recipient; anyone
         # else gets the same 404 (no existence leak).
         def by_payment_intent
-          load = GiftCardLoad.includes(:sender, gift_card: [:recipient, :loads, { merchant: { logo_attachment: :blob } }])
+          load = GiftCardLoad.includes(:sender, gift_card: [ :recipient, :loads, { merchant: { logo_attachment: :blob } } ])
                              .find_by!(payment_intent_id: params[:payment_intent_id])
           gift_card = load.gift_card
           raise ActiveRecord::RecordNotFound unless load.sender_id == current_user.id || gift_card.recipient_id == current_user.id

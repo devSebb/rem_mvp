@@ -32,4 +32,3 @@ module Kyc
     attr_reader :user
   end
 end
-

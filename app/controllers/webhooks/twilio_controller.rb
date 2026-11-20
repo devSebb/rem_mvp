@@ -24,20 +24,20 @@ class Webhooks::TwilioController < ApplicationController
 
     unless Messaging::TwilioConfig.enabled?
       Rails.logger.error "[Twilio] Missing credentials; cannot verify webhook signature"
-      render json: { error: 'Twilio not configured' }, status: :service_unavailable and return
+      render json: { error: "Twilio not configured" }, status: :service_unavailable and return
     end
 
     validator = Twilio::Security::RequestValidator.new(
       Messaging::TwilioConfig.auth_token
     )
-    
-    signature = request.headers['HTTP_X_TWILIO_SIGNATURE']
+
+    signature = request.headers["HTTP_X_TWILIO_SIGNATURE"]
     url = request.original_url
     post_params = request.POST
-    
+
     unless signature.present? && validator.validate(url, post_params, signature)
       Rails.logger.warn "Invalid Twilio signature from IP: #{request.ip}"
-      render json: { error: 'Invalid signature' }, status: :forbidden
+      render json: { error: "Invalid signature" }, status: :forbidden
     end
   end
 end

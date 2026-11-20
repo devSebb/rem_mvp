@@ -13,4 +13,3 @@ class UserSession < ApplicationRecord
     revoked_at.present?
   end
 end
-

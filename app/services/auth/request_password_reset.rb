@@ -30,10 +30,10 @@ module Auth
       # Generate reset token using Devise's recoverable module
       # This method sets reset_password_token and reset_password_sent_at
       raw_token = user.send(:set_reset_password_token)
-      
+
       # Send email using our custom mailer
       PasswordResetMailer.reset_password_instructions(user, raw_token).deliver_later
-      
+
       Rails.logger.info("Password reset email sent to #{user.email}")
     rescue => e
       Rails.logger.error("Failed to send password reset email to #{user.email}: #{e.message}")
@@ -42,4 +42,3 @@ module Auth
     end
   end
 end
-

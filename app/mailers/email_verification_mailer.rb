@@ -8,7 +8,7 @@ class EmailVerificationMailer < ApplicationMailer
     @user = User.find(user_id)
     @otp = otp
     @first_name = @user.first_name.presence || "amigo"
-    @support_email = ENV['DEFAULT_FROM_EMAIL'].presence || 'hola@papayal.app'
+    @support_email = ENV["DEFAULT_FROM_EMAIL"].presence || "hola@papayal.app"
 
     return if @user.placeholder_email?
 

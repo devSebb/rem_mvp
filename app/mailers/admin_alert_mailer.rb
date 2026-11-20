@@ -140,6 +140,6 @@ class AdminAlertMailer < ApplicationMailer
   private
 
   def admin_recipient
-    ENV['ADMIN_ALERT_EMAIL'].presence || ENV['DEFAULT_FROM_EMAIL'].presence || 'hola@papayal.app'
+    ENV["ADMIN_ALERT_EMAIL"].presence || ENV["DEFAULT_FROM_EMAIL"].presence || "hola@papayal.app"
   end
 end

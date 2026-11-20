@@ -6,7 +6,7 @@ module Api
     # incl. held/disputed funds exposed as `total_balance_cents`.
     class GiftCardsController < MerchantBaseController
       before_action :set_token_context
-      before_action :ensure_merchant_can_redeem!, only: [:validate, :show]
+      before_action :ensure_merchant_can_redeem!, only: [ :validate, :show ]
 
       def validate
         return unless ensure_token_active!(include_validation_payload: true)

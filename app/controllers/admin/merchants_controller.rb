@@ -1,7 +1,7 @@
 require "securerandom"
 
 class Admin::MerchantsController < Admin::BaseController
-  before_action :set_merchant, only: [:show, :edit, :update, :suspend, :reactivate, :regenerate_secret, :destroy]
+  before_action :set_merchant, only: [ :show, :edit, :update, :suspend, :reactivate, :regenerate_secret, :destroy ]
 
   PER_PAGE = 24
   STATUS_FILTERS = %w[all active suspended].freeze
@@ -30,8 +30,8 @@ class Admin::MerchantsController < Admin::BaseController
     }
 
     @total_count = scope.count
-    @page = [params[:page].to_i, 1].max
-    @total_pages = [(@total_count.to_f / PER_PAGE).ceil, 1].max
+    @page = [ params[:page].to_i, 1 ].max
+    @total_pages = [ (@total_count.to_f / PER_PAGE).ceil, 1 ].max
     @merchants = scope.order(created_at: :desc)
                       .offset((@page - 1) * PER_PAGE)
                       .limit(PER_PAGE)
@@ -60,8 +60,8 @@ class Admin::MerchantsController < Admin::BaseController
       end
 
     @cards_total_count = cards_scope.count
-    @cards_page = [params[:cards_page].to_i, 1].max
-    @cards_total_pages = [(@cards_total_count.to_f / CARDS_PER_PAGE).ceil, 1].max
+    @cards_page = [ params[:cards_page].to_i, 1 ].max
+    @cards_total_pages = [ (@cards_total_count.to_f / CARDS_PER_PAGE).ceil, 1 ].max
     @gift_cards = cards_scope.includes(:recipient, :loads)
                              .order(created_at: :desc)
                              .offset((@cards_page - 1) * CARDS_PER_PAGE)
@@ -195,12 +195,12 @@ class Admin::MerchantsController < Admin::BaseController
   end
 
   def ensure_password_for(user)
-    return [user.password, false] if user.password.present?
+    return [ user.password, false ] if user.password.present?
 
     generated_password = SecureRandom.base58(12)
     user.password = generated_password
     user.password_confirmation = generated_password
-    [generated_password, true]
+    [ generated_password, true ]
   end
 
   def merchant_params

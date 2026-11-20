@@ -24,7 +24,7 @@ Rails.application.configure do
     config.action_controller.enable_fragment_cache_logging = true
 
     # Use Redis for cache store (required for idempotency tokens and Sidekiq)
-    redis_url = ENV['REDIS_URL'] || 'redis://localhost:6379/0'
+    redis_url = ENV["REDIS_URL"] || "redis://localhost:6379/0"
     config.cache_store = :redis_cache_store, { url: redis_url }
     config.public_file_server.headers = { "Cache-Control" => "public, max-age=#{2.days.to_i}" }
   else
@@ -32,7 +32,7 @@ Rails.application.configure do
 
     # Even without caching enabled, use Redis for idempotency tokens
     # This ensures idempotency service works properly
-    redis_url = ENV['REDIS_URL'] || 'redis://localhost:6379/0'
+    redis_url = ENV["REDIS_URL"] || "redis://localhost:6379/0"
     config.cache_store = :redis_cache_store, { url: redis_url }
   end
 
@@ -89,6 +89,4 @@ Rails.application.configure do
 
   # Allow ngrok tunnel host for external testing
   config.hosts << /.*\.ngrok-free\.dev/
-
-
 end

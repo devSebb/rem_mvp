@@ -6,3 +6,8 @@ inherit_gem: { rubocop-rails-omakase: rubocop.yml }
 # # Use `[a, [b, c]]` not `[ a, [ b, c ] ]`
 # Layout/SpaceInsideArrayLiteralBrackets:
 #   Enabled: false
+
+# Whitespace inside heredoc text (e.g. SQL in old migrations) is content, not
+# layout; "fixing" it rewrites strings as #{' '} interpolation.
+Layout/TrailingWhitespace:
+  AllowInHeredoc: true

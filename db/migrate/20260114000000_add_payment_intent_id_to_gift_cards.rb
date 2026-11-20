@@ -4,4 +4,3 @@ class AddPaymentIntentIdToGiftCards < ActiveRecord::Migration[7.2]
     add_index :gift_cards, :payment_intent_id, unique: true, where: "payment_intent_id IS NOT NULL"
   end
 end
-

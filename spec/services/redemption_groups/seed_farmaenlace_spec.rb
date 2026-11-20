@@ -32,7 +32,7 @@ RSpec.describe RedemptionGroups::SeedFarmaenlace do
   end
 
   it "raises naming the missing merchants and assigns nothing (§16.5 stop condition)" do
-    create_launch_merchants(except: ["Tuenti", "CNT"])
+    create_launch_merchants(except: [ "Tuenti", "CNT" ])
 
     expect { described_class.call }.to raise_error(described_class::MissingMerchant, /\["Tuenti", "CNT"\]/)
     expect(RedemptionGroup.where(name: "Farmaenlace")).not_to exist
@@ -40,12 +40,12 @@ RSpec.describe RedemptionGroups::SeedFarmaenlace do
   end
 
   it "falls back to the production id when the name was changed" do
-    create_launch_merchants(except: ["Movistar"])
+    create_launch_merchants(except: [ "Movistar" ])
     renamed = create(:merchant, store_name: "Movistar Ecuador")
     renamed.update_columns(id: 3) unless Merchant.exists?(3)
 
     result = described_class.call
-    expect(result[:by_id_fallback]).to eq(["Movistar"])
+    expect(result[:by_id_fallback]).to eq([ "Movistar" ])
     expect(Merchant.find(3).redemption_group).to eq(result[:group])
   end
 

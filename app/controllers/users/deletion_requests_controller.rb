@@ -9,7 +9,7 @@ module Users
     layout "marketing"
 
     def new
-      @support_email = ENV['DEFAULT_FROM_EMAIL'].presence || 'hola@papayal.app'
+      @support_email = ENV["DEFAULT_FROM_EMAIL"].presence || "hola@papayal.app"
     end
   end
 end

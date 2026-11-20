@@ -67,8 +67,8 @@ class ReloadableGiftCardsPhase1 < ActiveRecord::Migration[7.2]
       t.datetime :link_token_expires_at
       t.timestamps
     end
-    add_index :gift_card_loads, [:gift_card_id, :created_at]
-    add_index :gift_card_loads, [:sender_id, :created_at]
+    add_index :gift_card_loads, [ :gift_card_id, :created_at ]
+    add_index :gift_card_loads, [ :sender_id, :created_at ]
     add_index :gift_card_loads, :payment_intent_id, unique: true, where: "payment_intent_id IS NOT NULL"
     add_index :gift_card_loads, :checkout_session_id, unique: true, where: "checkout_session_id IS NOT NULL"
     add_index :gift_card_loads, :held_until, where: "held_until IS NOT NULL"
@@ -85,7 +85,7 @@ class ReloadableGiftCardsPhase1 < ActiveRecord::Migration[7.2]
       t.integer :direction, null: false, default: 0
       t.timestamps
     end
-    add_index :redemption_allocations, [:transaction_id, :gift_card_load_id], unique: true,
+    add_index :redemption_allocations, [ :transaction_id, :gift_card_load_id ], unique: true,
               name: "index_redemption_allocations_on_txn_and_load"
 
     # ── 5. transactions (§3.5) ─────────────────────────────────────────

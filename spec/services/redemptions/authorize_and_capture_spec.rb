@@ -33,10 +33,10 @@ RSpec.describe Redemptions::AuthorizeAndCapture do
     expect(result[:approved]).to be(true)
     expect(result).to include(remaining_balance_cents: 1_500, spendable_cents: 1_500, total_balance_cents: 1_500, amount_cents: 2_000)
     expect(card.reload.remaining_balance).to eq(1_500)
-    expect(card.loads.map(&:remaining_cents)).to eq([0, 1_500])
+    expect(card.loads.map(&:remaining_cents)).to eq([ 0, 1_500 ])
     expect(card.status).to eq("active")
     txn = result[:transaction]
-    expect(txn.redemption_allocations.map { |a| [a.gift_card_load_id, a.amount_cents] }).to eq(card.loads.map { |l| [l.id, l.id == card.loads.first.id ? 500 : 1_500] })
+    expect(txn.redemption_allocations.map { |a| [ a.gift_card_load_id, a.amount_cents ] }).to eq(card.loads.map { |l| [ l.id, l.id == card.loads.first.id ? 500 : 1_500 ] })
     expect(RedemptionToken.find_by(token_digest: RedemptionToken.digest(raw)).used_at).to be_present
     expect(card.verify_ledger!).to be(true)
   end

@@ -284,7 +284,7 @@ module Auth
     end
 
     def support_email
-      ENV['DEFAULT_FROM_EMAIL'].presence || 'hola@papayal.app'
+      ENV["DEFAULT_FROM_EMAIL"].presence || "hola@papayal.app"
     end
 
     # ── Masking ──────────────────────────────────────────────────────────

@@ -21,8 +21,8 @@ class Admin::PaymentFailuresController < Admin::BaseController
     @lost_volume_cents = PaymentFailure.unresolved.sum(:amount)
 
     @total_count = scope.count
-    @page = [params[:page].to_i, 1].max
-    @total_pages = [(@total_count.to_f / PER_PAGE).ceil, 1].max
+    @page = [ params[:page].to_i, 1 ].max
+    @total_pages = [ (@total_count.to_f / PER_PAGE).ceil, 1 ].max
     @payment_failures = scope.includes(:sender, :merchant)
                              .recent_first
                              .offset((@page - 1) * PER_PAGE)

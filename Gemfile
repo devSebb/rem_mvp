@@ -87,7 +87,6 @@ group :development, :test do
   group :development, :test do
     gem "dotenv-rails"
   end
-  
 end
 
 group :development do

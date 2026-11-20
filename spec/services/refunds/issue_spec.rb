@@ -20,14 +20,14 @@ RSpec.describe Refunds::Issue do
 
   it "credits the debited loads and leaves the card status alone" do
     redemption = redeem_card!(card, 2_000, merchant: merchant)
-    expect(card.loads.map(&:remaining_cents)).to eq([0, 1_500])
+    expect(card.loads.map(&:remaining_cents)).to eq([ 0, 1_500 ])
 
     result = reverse!(redemption)
 
     expect(result[:approved]).to be(true)
     expect(result[:remaining_balance_cents]).to eq(3_500)
     expect(result[:spendable_cents]).to eq(3_500)
-    expect(card.reload.loads.map(&:remaining_cents)).to eq([500, 3_000])
+    expect(card.reload.loads.map(&:remaining_cents)).to eq([ 500, 3_000 ])
     expect(card.status).to eq("active")
     refund = Transaction.find(result[:refund_transaction_id])
     expect(refund.reversal_of_transaction_id).to eq(redemption.id)

@@ -11,7 +11,7 @@ RSpec.describe Ledger::Verifier do
                               status: :succeeded, processor_ref: "merchant_api_v1", currency: "USD")
     RedemptionAllocation.create!(ledger_transaction: txn, gift_card_load: load, amount_cents: 2000, direction: :debit)
     card.update_columns(remaining_balance: 3000, total_loaded_cents: 5000)
-    [load, txn]
+    [ load, txn ]
   end
 
   it "is clean on a consistent card" do
@@ -168,7 +168,7 @@ RSpec.describe Ledger::Verifier do
       expect(result.cards_checked).to eq(2)
       expect(result).not_to be_ok
       expect(result.drift).to include(a_string_matching(/no loads/))
-      expect(result.duplicate_pairs).to eq({ [recipient.id, merchant.id] => 2 })
+      expect(result.duplicate_pairs).to eq({ [ recipient.id, merchant.id ] => 2 })
     end
   end
 end

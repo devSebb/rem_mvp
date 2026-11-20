@@ -23,7 +23,7 @@ RSpec.describe GiftCard, "reloadable-card Phase 1", type: :model do
       older = create(:gift_card_load, gift_card: card, created_at: 2.hours.ago)
       alloc = create(:redemption_allocation, gift_card_load: older, amount_cents: 100)
 
-      expect(card.loads).to eq([older, newer])
+      expect(card.loads).to eq([ older, newer ])
       expect(card.redemption_allocations).to contain_exactly(alloc)
     end
 

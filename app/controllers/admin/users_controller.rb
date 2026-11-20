@@ -27,8 +27,8 @@ class Admin::UsersController < Admin::BaseController
     end
 
     @total_count = scope.count
-    @page = [params[:page].to_i, 1].max
-    @total_pages = [(@total_count.to_f / PER_PAGE).ceil, 1].max
+    @page = [ params[:page].to_i, 1 ].max
+    @total_pages = [ (@total_count.to_f / PER_PAGE).ceil, 1 ].max
     @users = scope.order(created_at: :desc)
                   .includes(:received_gift_cards, :sent_loads)
                   .offset((@page - 1) * PER_PAGE)
@@ -39,7 +39,7 @@ class Admin::UsersController < Admin::BaseController
   def show
     @user = User.find(params[:id])
     @received_gift_cards = @user.received_gift_cards.not_merged.includes(:merchant, :loads).order(updated_at: :desc).limit(10)
-    @sent_loads = @user.sent_loads.in_scope.includes(gift_card: [:merchant, :recipient]).order(created_at: :desc).limit(10)
+    @sent_loads = @user.sent_loads.in_scope.includes(gift_card: [ :merchant, :recipient ]).order(created_at: :desc).limit(10)
     @recent_transactions = Transaction.where(user_id: @user.id).includes(:merchant).order(created_at: :desc).limit(10)
     @active_sessions_count = UserSession.where(user_id: @user.id, revoked_at: nil).count
     @push_tokens_count = @user.push_tokens.where(active: true).count

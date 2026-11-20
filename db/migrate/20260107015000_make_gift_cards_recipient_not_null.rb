@@ -15,5 +15,3 @@ class MakeGiftCardsRecipientNotNull < ActiveRecord::Migration[7.2]
     change_column_null :gift_cards, :recipient_id, true
   end
 end
-
-

@@ -12,7 +12,7 @@ RSpec.describe "Well-known universal-link association files", type: :request do
       details = payload.dig("applinks", "details")
       expect(details.length).to eq(1)
       expect(details.first["appID"]).to eq(WellKnownController::IOS_APP_ID)
-      expect(details.first["paths"]).to eq(["/claim/*", "/reset"])
+      expect(details.first["paths"]).to eq([ "/claim/*", "/reset" ])
     end
   end
 
@@ -28,11 +28,11 @@ RSpec.describe "Well-known universal-link association files", type: :request do
       expect(response.media_type).to eq("application/json")
 
       statement = JSON.parse(response.body).first
-      expect(statement["relation"]).to eq(["delegate_permission/common.handle_all_urls"])
+      expect(statement["relation"]).to eq([ "delegate_permission/common.handle_all_urls" ])
       expect(statement["target"]).to include(
         "namespace" => "android_app",
         "package_name" => WellKnownController::ANDROID_PACKAGE,
-        "sha256_cert_fingerprints" => ["AA:BB:CC", "DD:EE:FF"]
+        "sha256_cert_fingerprints" => [ "AA:BB:CC", "DD:EE:FF" ]
       )
     end
   end

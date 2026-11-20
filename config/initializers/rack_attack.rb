@@ -1,11 +1,11 @@
 require "digest"
 
 class Rack::Attack
-  redis_url = ENV['REDIS_URL']
+  redis_url = ENV["REDIS_URL"]
   if Rails.env.production?
     raise "REDIS_URL is required in production for Rack::Attack cache" if redis_url.blank?
   else
-    redis_url ||= 'redis://localhost:6379/0'
+    redis_url ||= "redis://localhost:6379/0"
   end
 
   # Configure cache store
@@ -45,38 +45,38 @@ class Rack::Attack
   # the mobile app uses them (uploads go through authenticated controllers),
   # but Rails mounts the route by default, letting anyone with a CSRF token
   # from a public page write arbitrary objects into the storage bucket.
-  blocklist('active_storage/direct_uploads') do |req|
-    req.path.start_with?('/rails/active_storage/direct_uploads')
+  blocklist("active_storage/direct_uploads") do |req|
+    req.path.start_with?("/rails/active_storage/direct_uploads")
   end
 
   # ── Web (Devise / marketing) ────────────────────────────────────────────
 
-  throttle('web/signup/ip', limit: 5, period: 1.hour) do |req|
-    req.ip if req.path == '/users' && req.post?
+  throttle("web/signup/ip", limit: 5, period: 1.hour) do |req|
+    req.ip if req.path == "/users" && req.post?
   end
 
   # Account deletion now requires the password; cap guessing.
-  throttle('web/account_delete/ip', limit: 5, period: 1.hour) do |req|
-    req.ip if req.path == '/users' && req.delete?
+  throttle("web/account_delete/ip", limit: 5, period: 1.hour) do |req|
+    req.ip if req.path == "/users" && req.delete?
   end
 
   # Reset-instructions emails: per IP and per target address (email bombing).
-  throttle('web/password_reset/ip', limit: 5, period: 1.hour) do |req|
-    req.ip if req.path == '/users/password' && req.post?
+  throttle("web/password_reset/ip", limit: 5, period: 1.hour) do |req|
+    req.ip if req.path == "/users/password" && req.post?
   end
 
-  throttle('web/password_reset/email', limit: 3, period: 1.hour) do |req|
-    submitted_email(req) if req.path == '/users/password' && req.post?
+  throttle("web/password_reset/email", limit: 3, period: 1.hour) do |req|
+    submitted_email(req) if req.path == "/users/password" && req.post?
   end
 
   # Submitting the new password with a reset token.
-  throttle('web/password_update/ip', limit: 10, period: 1.hour) do |req|
-    req.ip if req.path == '/users/password' && (req.put? || req.patch?)
+  throttle("web/password_update/ip", limit: 10, period: 1.hour) do |req|
+    req.ip if req.path == "/users/password" && (req.put? || req.patch?)
   end
 
   # Contact form emails the team inbox.
-  throttle('web/contact/ip', limit: 5, period: 1.hour) do |req|
-    req.ip if req.path == '/contact' && req.post?
+  throttle("web/contact/ip", limit: 5, period: 1.hour) do |req|
+    req.ip if req.path == "/contact" && req.post?
   end
 
   # ── Mobile API auth ─────────────────────────────────────────────────────
@@ -84,116 +84,116 @@ class Rack::Attack
   # The mobile claim flow re-POSTs signup for both "resend code" and each code
   # submission (auto-submitted on the 6th digit), so a real recipient can use
   # ~5 calls in one claim. 10/hour leaves headroom; 6-digit codes stay unguessable.
-  throttle('api/auth/signup/email', limit: 10, period: 1.hour) do |req|
-    submitted_email(req) if req.path == '/api/v1/auth/signup' && req.post?
+  throttle("api/auth/signup/email", limit: 10, period: 1.hour) do |req|
+    submitted_email(req) if req.path == "/api/v1/auth/signup" && req.post?
   end
 
-  throttle('api/auth/login/email', limit: 10, period: 10.minutes) do |req|
-    submitted_email(req) if req.path == '/api/v1/auth/login' && req.post?
+  throttle("api/auth/login/email", limit: 10, period: 10.minutes) do |req|
+    submitted_email(req) if req.path == "/api/v1/auth/login" && req.post?
   end
 
-  throttle('api/auth/forgot_password/ip', limit: 5, period: 1.hour) do |req|
-    req.ip if req.path == '/api/v1/auth/forgot_password' && req.post?
+  throttle("api/auth/forgot_password/ip", limit: 5, period: 1.hour) do |req|
+    req.ip if req.path == "/api/v1/auth/forgot_password" && req.post?
   end
 
-  throttle('api/auth/forgot_password/email', limit: 3, period: 1.hour) do |req|
-    submitted_email(req) if req.path == '/api/v1/auth/forgot_password' && req.post?
+  throttle("api/auth/forgot_password/email", limit: 3, period: 1.hour) do |req|
+    submitted_email(req) if req.path == "/api/v1/auth/forgot_password" && req.post?
   end
 
-  throttle('api/auth/reset_password/ip', limit: 10, period: 1.hour) do |req|
-    req.ip if req.path == '/api/v1/auth/reset_password' && req.post?
+  throttle("api/auth/reset_password/ip", limit: 10, period: 1.hour) do |req|
+    req.ip if req.path == "/api/v1/auth/reset_password" && req.post?
   end
 
   # Email OTP: the model caps attempts per code, these cap codes-per-hour and
   # guessing across code reissues.
-  throttle('api/auth/verify_email/ip', limit: 20, period: 10.minutes) do |req|
-    req.ip if req.path == '/api/v1/auth/verify_email' && req.post?
+  throttle("api/auth/verify_email/ip", limit: 20, period: 10.minutes) do |req|
+    req.ip if req.path == "/api/v1/auth/verify_email" && req.post?
   end
 
-  throttle('api/auth/verify_email/email', limit: 10, period: 1.hour) do |req|
-    submitted_email(req) if req.path == '/api/v1/auth/verify_email' && req.post?
+  throttle("api/auth/verify_email/email", limit: 10, period: 1.hour) do |req|
+    submitted_email(req) if req.path == "/api/v1/auth/verify_email" && req.post?
   end
 
-  throttle('api/auth/resend_verification/ip', limit: 5, period: 1.hour) do |req|
-    req.ip if req.path == '/api/v1/auth/resend_verification' && req.post?
+  throttle("api/auth/resend_verification/ip", limit: 5, period: 1.hour) do |req|
+    req.ip if req.path == "/api/v1/auth/resend_verification" && req.post?
   end
 
-  throttle('api/auth/resend_verification/email', limit: 3, period: 1.hour) do |req|
-    submitted_email(req) if req.path == '/api/v1/auth/resend_verification' && req.post?
+  throttle("api/auth/resend_verification/email", limit: 3, period: 1.hour) do |req|
+    submitted_email(req) if req.path == "/api/v1/auth/resend_verification" && req.post?
   end
 
   # Account deletion requires the password; cap guessing with a stolen token.
-  throttle('api/me/delete/ip', limit: 5, period: 1.hour) do |req|
-    req.ip if req.path == '/api/v1/me' && req.delete?
+  throttle("api/me/delete/ip", limit: 5, period: 1.hour) do |req|
+    req.ip if req.path == "/api/v1/me" && req.delete?
   end
 
   # ── Merchant POS API lookups (bearer secret) ────────────────────────────
 
   MERCHANT_LOOKUP = %r{\A/api/v1/gift_cards/(validate|[^/]+)\z}
 
-  throttle('api/merchant_lookup/ip', limit: 60, period: 1.minute) do |req|
+  throttle("api/merchant_lookup/ip", limit: 60, period: 1.minute) do |req|
     req.ip if req.path.match?(MERCHANT_LOOKUP) && (req.get? || req.post?)
   end
 
-  throttle('api/merchant_lookup/merchant_secret', limit: 120, period: 1.minute) do |req|
+  throttle("api/merchant_lookup/merchant_secret", limit: 120, period: 1.minute) do |req|
     next unless req.path.match?(MERCHANT_LOOKUP) && (req.get? || req.post?)
 
-    scheme, secret = req.get_header('HTTP_AUTHORIZATION').to_s.split(' ', 2)
-    Digest::SHA256.hexdigest(secret) if scheme == 'Bearer' && secret.present?
+    scheme, secret = req.get_header("HTTP_AUTHORIZATION").to_s.split(" ", 2)
+    Digest::SHA256.hexdigest(secret) if scheme == "Bearer" && secret.present?
   end
 
   # Throttle POST requests to merchant redemptions by IP
-  throttle('merchant/redemptions/ip', limit: 10, period: 1.minute) do |req|
-    if req.path == '/merchant/redemptions' && req.post?
+  throttle("merchant/redemptions/ip", limit: 10, period: 1.minute) do |req|
+    if req.path == "/merchant/redemptions" && req.post?
       req.ip
     end
   end
 
   # Throttle merchant POS/API redemption attempts by IP and by presented secret.
-  throttle('api/redemptions/ip', limit: 30, period: 1.minute) do |req|
-    if req.path == '/api/v1/redemptions' && req.post?
+  throttle("api/redemptions/ip", limit: 30, period: 1.minute) do |req|
+    if req.path == "/api/v1/redemptions" && req.post?
       req.ip
     end
   end
 
-  throttle('api/redemptions/merchant_secret', limit: 60, period: 1.minute) do |req|
-    next unless req.path == '/api/v1/redemptions' && req.post?
+  throttle("api/redemptions/merchant_secret", limit: 60, period: 1.minute) do |req|
+    next unless req.path == "/api/v1/redemptions" && req.post?
 
-    scheme, secret = req.get_header('HTTP_AUTHORIZATION').to_s.split(' ', 2)
-    Digest::SHA256.hexdigest(secret) if scheme == 'Bearer' && secret.present?
+    scheme, secret = req.get_header("HTTP_AUTHORIZATION").to_s.split(" ", 2)
+    Digest::SHA256.hexdigest(secret) if scheme == "Bearer" && secret.present?
   end
 
   # Throttle webhook requests by IP
-  throttle('webhooks/stripe/ip', limit: 60, period: 1.minute) do |req|
-    if req.path == '/webhooks/stripe' && req.post?
+  throttle("webhooks/stripe/ip", limit: 60, period: 1.minute) do |req|
+    if req.path == "/webhooks/stripe" && req.post?
       req.ip
     end
   end
 
   # Throttle Twilio webhook requests by IP
-  throttle('webhooks/twilio/ip', limit: 100, period: 1.minute) do |req|
-    if req.path == '/webhooks/twilio_status' && req.post?
+  throttle("webhooks/twilio/ip", limit: 100, period: 1.minute) do |req|
+    if req.path == "/webhooks/twilio_status" && req.post?
       req.ip
     end
   end
 
   # Throttle login attempts by IP
-  throttle('login/ip', limit: 5, period: 20.minutes) do |req|
-    if req.path == '/users/sign_in' && req.post?
+  throttle("login/ip", limit: 5, period: 20.minutes) do |req|
+    if req.path == "/users/sign_in" && req.post?
       req.ip
     end
   end
 
   # Throttle signups by IP. Also caps how fast an attacker can trigger
   # claim-verification OTP sends or brute-force claim codes via signup.
-  throttle('api/auth/signup/ip', limit: 15, period: 1.hour) do |req|
-    if req.path == '/api/v1/auth/signup' && req.post?
+  throttle("api/auth/signup/ip", limit: 15, period: 1.hour) do |req|
+    if req.path == "/api/v1/auth/signup" && req.post?
       req.ip
     end
   end
 
-  throttle('api/auth/login/ip', limit: 10, period: 10.minutes) do |req|
-    if req.path == '/api/v1/auth/login' && req.post?
+  throttle("api/auth/login/ip", limit: 10, period: 10.minutes) do |req|
+    if req.path == "/api/v1/auth/login" && req.post?
       req.ip
     end
   end
@@ -201,13 +201,13 @@ class Rack::Attack
   # Refresh tokens are 256-bit, so this only guards against abuse/cost. Kept
   # generous because mobile carriers put many real users behind one NAT IP,
   # and a 429 here can sign the app out.
-  throttle('api/auth/refresh/ip', limit: 120, period: 30.minutes) do |req|
-    if req.path == '/api/v1/auth/refresh' && req.post?
+  throttle("api/auth/refresh/ip", limit: 120, period: 30.minutes) do |req|
+    if req.path == "/api/v1/auth/refresh" && req.post?
       req.ip
     end
   end
 
-  throttle('api/me/redemption_token/ip', limit: 20, period: 5.minutes) do |req|
+  throttle("api/me/redemption_token/ip", limit: 20, period: 5.minutes) do |req|
     if req.path =~ %r{\A/api/v1/me/gift_cards/\d+/redemption_token\z} && req.post?
       req.ip
     end
@@ -216,37 +216,37 @@ class Rack::Attack
   # Claim-link teaser lookups (public, unauthenticated): caps token guessing.
   # Tokens are 128-bit HMACs so guessing is hopeless anyway; this just keeps
   # scanners from hammering the endpoint.
-  throttle('api/claim_link/ip', limit: 30, period: 5.minutes) do |req|
-    if req.path.start_with?('/api/v1/claim/') && req.get?
+  throttle("api/claim_link/ip", limit: 30, period: 5.minutes) do |req|
+    if req.path.start_with?("/api/v1/claim/") && req.get?
       req.ip
     end
   end
 
   # Same for the public claim web page.
-  throttle('web/claim/ip', limit: 60, period: 5.minutes) do |req|
-    if req.path.start_with?('/claim/') && req.get?
+  throttle("web/claim/ip", limit: 60, period: 5.minutes) do |req|
+    if req.path.start_with?("/claim/") && req.get?
       req.ip
     end
   end
 
   # Sender-side share/resend. Resend also has per-card service-level limits
   # (GiftCards::ResendDelivery); this adds a per-IP backstop.
-  throttle('api/me/share_link/ip', limit: 30, period: 5.minutes) do |req|
+  throttle("api/me/share_link/ip", limit: 30, period: 5.minutes) do |req|
     if req.path =~ %r{\A/api/v1/me/gift_cards/\d+(/loads/\d+)?/share_link\z} && req.post?
       req.ip
     end
   end
 
-  throttle('api/me/resend/ip', limit: 10, period: 5.minutes) do |req|
+  throttle("api/me/resend/ip", limit: 10, period: 5.minutes) do |req|
     if req.path =~ %r{\A/api/v1/me/gift_cards/\d+(/loads/\d+)?/resend\z} && req.post?
       req.ip
     end
   end
 
   # Throttle login attempts by email
-  throttle('login/email', limit: 5, period: 20.minutes) do |req|
-    if req.path == '/users/sign_in' && req.post? && req.params['user']
-      req.params['user']['email'].to_s.downcase.gsub(/\s+/, "")
+  throttle("login/email", limit: 5, period: 20.minutes) do |req|
+    if req.path == "/users/sign_in" && req.post? && req.params["user"]
+      req.params["user"]["email"].to_s.downcase.gsub(/\s+/, "")
     end
   end
 
@@ -258,10 +258,10 @@ class Rack::Attack
   # Allow requests from localhost in development only. Never in production:
   # a spoofed client IP of 127.0.0.1 would otherwise skip every throttle.
   # (The direct-uploads blocklist still applies locally so dev matches prod.)
-  safelist('allow localhost') do |req|
+  safelist("allow localhost") do |req|
     !Rails.env.production? &&
-      !req.path.start_with?('/rails/active_storage/direct_uploads') &&
-      ('127.0.0.1' == req.ip || '::1' == req.ip)
+      !req.path.start_with?("/rails/active_storage/direct_uploads") &&
+      ("127.0.0.1" == req.ip || "::1" == req.ip)
   end
 end
 
@@ -279,14 +279,14 @@ Rack::Attack.throttled_responder = lambda do |req|
 
   if req.path.start_with?("/api/")
     body = { error: { code: "rate_limited", message: message, details: { retry_after_seconds: retry_after } } }
-    [429, headers.merge("content-type" => "application/json; charset=utf-8"), [body.to_json]]
+    [ 429, headers.merge("content-type" => "application/json; charset=utf-8"), [ body.to_json ] ]
   else
-    [429, headers.merge("content-type" => "text/plain; charset=utf-8"), ["#{message}\n"]]
+    [ 429, headers.merge("content-type" => "text/plain; charset=utf-8"), [ "#{message}\n" ] ]
   end
 end
 
 # Log blocked requests
-ActiveSupport::Notifications.subscribe('rack.attack') do |name, start, finish, request_id, payload|
+ActiveSupport::Notifications.subscribe("rack.attack") do |name, start, finish, request_id, payload|
   req = payload[:request]
   Rails.logger.warn "[Rack::Attack] #{req.ip} #{req.request_method} #{req.fullpath} - #{payload[:match_discriminator]}"
 end

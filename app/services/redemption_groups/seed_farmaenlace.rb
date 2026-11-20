@@ -15,13 +15,13 @@ module RedemptionGroups
 
     # [prod id, store_name] — from the prod query in §5.6.
     MEMBERS = [
-      [1, "Mascotas"],
-      [2, "Farmacias Económicas"],
-      [3, "Movistar"],
-      [4, "Medicity"],
-      [5, "Tuenti"],
-      [6, "Salud S.A."],
-      [7, "CNT"]
+      [ 1, "Mascotas" ],
+      [ 2, "Farmacias Económicas" ],
+      [ 3, "Movistar" ],
+      [ 4, "Medicity" ],
+      [ 5, "Tuenti" ],
+      [ 6, "Salud S.A." ],
+      [ 7, "CNT" ]
     ].freeze
 
     module_function
@@ -72,7 +72,7 @@ module RedemptionGroups
         end
         merchant ? resolved << merchant : missing << name
       end
-      [resolved.uniq, missing, by_id]
+      [ resolved.uniq, missing, by_id ]
     end
   end
 end

@@ -5,7 +5,7 @@ module Api
       # unverified account attempting login), then issues auth tokens.
       # Backs Auth::EmailVerification.
       class EmailVerificationsController < Api::V1::BaseController
-        skip_before_action :authenticate_user_from_token!, only: [:verify, :resend]
+        skip_before_action :authenticate_user_from_token!, only: [ :verify, :resend ]
 
         # POST /api/v1/auth/verify_email  { email, code, device_id }
         def verify

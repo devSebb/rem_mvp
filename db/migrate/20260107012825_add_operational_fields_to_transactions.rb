@@ -13,13 +13,13 @@ class AddOperationalFieldsToTransactions < ActiveRecord::Migration[7.2]
     add_column :transactions, :decline_reason, :string
     add_column :transactions, :merchant_reference, :string
 
-    add_index :transactions, [:merchant_id, :idempotency_key],
+    add_index :transactions, [ :merchant_id, :idempotency_key ],
               unique: true,
               where: "idempotency_key IS NOT NULL"
   end
 
   def down
-    remove_index :transactions, [:merchant_id, :idempotency_key] if index_exists?(:transactions, [:merchant_id, :idempotency_key])
+    remove_index :transactions, [ :merchant_id, :idempotency_key ] if index_exists?(:transactions, [ :merchant_id, :idempotency_key ])
 
     remove_column :transactions, :merchant_reference
     remove_column :transactions, :decline_reason

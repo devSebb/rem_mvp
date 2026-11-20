@@ -9,6 +9,6 @@ class CreatePushTokens < ActiveRecord::Migration[7.2]
     end
 
     add_index :push_tokens, :token, unique: true
-    add_index :push_tokens, [:user_id, :active]
+    add_index :push_tokens, [ :user_id, :active ]
   end
 end

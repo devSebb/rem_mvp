@@ -57,13 +57,13 @@ module ApplicationHelper
   # Tarifas stay off the bar (reachable from the dashboard) to keep it sane.
   def admin_nav_links
     [
-      ["Inicio", admin_root_path, %w[admin/dashboard]],
-      ["Comercios", admin_merchants_path, %w[admin/merchants]],
-      ["Tarjetas", admin_gift_cards_path, %w[admin/gift_cards admin/refunds admin/holds]],
-      ["Usuarios", admin_users_path, %w[admin/users]],
-      ["Movimientos", admin_transactions_path, %w[admin/transactions]],
-      ["Pagos", admin_payouts_path, %w[admin/payouts]],
-      ["Rechazos", admin_payment_failures_path, %w[admin/payment_failures]]
+      [ "Inicio", admin_root_path, %w[admin/dashboard] ],
+      [ "Comercios", admin_merchants_path, %w[admin/merchants] ],
+      [ "Tarjetas", admin_gift_cards_path, %w[admin/gift_cards admin/refunds admin/holds] ],
+      [ "Usuarios", admin_users_path, %w[admin/users] ],
+      [ "Movimientos", admin_transactions_path, %w[admin/transactions] ],
+      [ "Pagos", admin_payouts_path, %w[admin/payouts] ],
+      [ "Rechazos", admin_payment_failures_path, %w[admin/payment_failures] ]
     ]
   end
 
@@ -72,7 +72,7 @@ module ApplicationHelper
   end
 
   def locale_tag(locale, tag: :span, class: nil, data: {}, **options, &block)
-    classes = [binding.local_variable_get(:class), ("hidden" if locale.to_s == "en")].compact.join(" ")
+    classes = [ binding.local_variable_get(:class), ("hidden" if locale.to_s == "en") ].compact.join(" ")
     content_tag(tag, capture(&block), **options.merge(class: classes.presence, data: data.merge(locale_content: locale.to_s)))
   end
 
@@ -80,7 +80,7 @@ module ApplicationHelper
     safe_join(
       [
         content_tag(tag, es, **options.merge(class:, data: data.merge(locale_content: "es"))),
-        content_tag(tag, en, **options.merge(class: [binding.local_variable_get(:class), "hidden"].compact.join(" "), data: data.merge(locale_content: "en")))
+        content_tag(tag, en, **options.merge(class: [ binding.local_variable_get(:class), "hidden" ].compact.join(" "), data: data.merge(locale_content: "en")))
       ]
     )
   end
@@ -117,7 +117,7 @@ module ApplicationHelper
     controller_path == "legal"
   end
 
-  def avatar_url_for(record, attachment_name: :avatar, resize_to_limit: [96, 96])
+  def avatar_url_for(record, attachment_name: :avatar, resize_to_limit: [ 96, 96 ])
     attachment = record.respond_to?(attachment_name) ? record.public_send(attachment_name) : nil
     fallback = asset_path("default-avatar.svg")
 
@@ -148,7 +148,7 @@ module ApplicationHelper
   end
 
   def avatar_image_for(record, attachment_name: :avatar, size: 48, classes: "")
-    url = avatar_url_for(record, attachment_name:, resize_to_limit: [size, size])
+    url = avatar_url_for(record, attachment_name:, resize_to_limit: [ size, size ])
     image_tag(
       url,
       alt: record.respond_to?(:name) ? record.name : "Avatar",
@@ -157,7 +157,7 @@ module ApplicationHelper
     )
   end
 
-  def merchant_logo_url(merchant, resize_to_limit: [96, 96])
+  def merchant_logo_url(merchant, resize_to_limit: [ 96, 96 ])
     fallback = asset_path("merchant-default.svg")
 
     return fallback unless merchant.logo.attached?
@@ -182,7 +182,7 @@ module ApplicationHelper
   end
 
   def merchant_logo_image(merchant, size: 64, classes: "", rounded: "2xl")
-    url = merchant_logo_url(merchant, resize_to_limit: [size, size])
+    url = merchant_logo_url(merchant, resize_to_limit: [ size, size ])
     content_tag(:div,
       image_tag(
         url,

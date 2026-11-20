@@ -11,7 +11,7 @@ class SettlementService
   # @param redeemer_merchant [Merchant] The merchant who performed the redemption(s)
   # @return [Hash] Settlement summary with :total_redeemed, :settled_amount, etc.
   def self.gift_card_settlement_summary_for_redeemer(gift_card, redeemer_merchant)
-    batch = gift_card_settlement_summaries_for_redeemer([gift_card], redeemer_merchant)
+    batch = gift_card_settlement_summaries_for_redeemer([ gift_card ], redeemer_merchant)
     batch[gift_card.id] || {
       total_redeemed: 0,
       settled_amount: 0,
@@ -61,7 +61,7 @@ class SettlementService
                 reversal_scope
                 .where(created_at: min_start..max_end)
                 .pluck(:created_at, :amount, :gift_card_id)
-                .map { |created_at, amount, gc_id| [created_at, -amount, gc_id] }
+                .map { |created_at, amount, gc_id| [ created_at, -amount, gc_id ] }
 
       settlements.each do |settlement|
         total_settlement = 0
