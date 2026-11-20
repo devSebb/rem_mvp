@@ -147,6 +147,8 @@ module Redemptions
     end
 
     def validate_request!
+      # Defense in depth: callers (merchant API, web portal) also gate on this.
+      raise ValidationError, "merchant is suspended" if merchant&.suspended?
       raise ValidationError, "token is required" if raw_token.blank?
       raise ValidationError, "amount_cents must be greater than 0" if amount_cents <= 0
       raise ValidationError, "idempotency_key is required" if idempotency_key.blank?

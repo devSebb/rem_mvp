@@ -3,6 +3,7 @@ require_relative "boot"
 require "rails"
 require File.expand_path("../lib/request_metrics", __dir__)
 require File.expand_path("../lib/request_metrics_middleware", __dir__)
+require_relative "cloudflare_ips"
 # Pick the frameworks you want:
 require "active_model/railtie"
 require "active_job/railtie"
@@ -29,6 +30,12 @@ module RemMvp
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
+
+    # Resolve request.remote_ip to the real client behind Cloudflare (see
+    # config/cloudflare_ips.rb). Rack::Request#ip, used by Rack::Attack, is
+    # configured to match in config/initializers/client_ip.rb.
+    config.action_dispatch.trusted_proxies =
+      ActionDispatch::RemoteIp::TRUSTED_PROXIES + CloudflareIps::RANGES
 
     # Configuration for the application, engines, and railties goes here.
     #

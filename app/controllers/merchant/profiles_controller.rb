@@ -1,5 +1,5 @@
 class Merchant::ProfilesController < ApplicationController
-  before_action :ensure_merchant
+  include MerchantPortalAccess
   before_action :set_merchant
 
   def show
@@ -20,13 +20,6 @@ class Merchant::ProfilesController < ApplicationController
   end
 
   private
-
-  def ensure_merchant
-    unless current_user&.merchant?
-      flash[:alert] = 'You must be a merchant to access this area.'
-      redirect_to root_path
-    end
-  end
 
   def set_merchant
     @merchant = current_user.merchant

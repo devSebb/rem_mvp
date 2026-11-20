@@ -171,12 +171,17 @@
           <h2 class="text-xl font-bold text-rose-800 mt-1">Cancelar mi cuenta</h2>
           <p class="text-sm text-rose-800/80 mt-1">Si ya no deseas usar Papayal puedes eliminar tu cuenta permanentemente.</p>
         </div>
-        <div class="flex flex-col gap-2 sm:flex-row">
-          <%= button_to "Cancelar mi cuenta", registration_path(resource_name),
-                data: { confirm: "¿Seguro que deseas eliminar tu cuenta?", turbo_confirm: "¿Seguro que deseas eliminar tu cuenta?" },
-                method: :delete,
-                class: "papayal-btn-ghost w-full text-center border border-rose-300 text-rose-700 hover:bg-rose-100" %>
-        </div>
+        <%= form_with url: registration_path(resource_name), method: :delete,
+              data: { turbo_confirm: "¿Seguro que deseas eliminar tu cuenta? Esta acción no se puede deshacer." },
+              class: "flex flex-col gap-2 sm:flex-row sm:items-end" do |f| %>
+          <div class="flex-1">
+            <%= f.label "user[current_password]", "Confirma tu contraseña", class: "block text-sm font-medium text-rose-800 mb-1" %>
+            <%= f.password_field "user[current_password]", required: true, autocomplete: "current-password",
+                  class: "w-full rounded-lg border border-rose-300 bg-white px-3 py-2 text-sm" %>
+          </div>
+          <%= f.submit "Cancelar mi cuenta",
+                class: "papayal-btn-ghost text-center border border-rose-300 text-rose-700 hover:bg-rose-100" %>
+        <% end %>
       </div>
     </div>
 

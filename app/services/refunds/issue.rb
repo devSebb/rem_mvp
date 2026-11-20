@@ -63,6 +63,8 @@ module Refunds
 
     def validate_request!
       raise ValidationError, "merchant is required" unless merchant
+      # Defense in depth: callers (merchant API, web portal) also gate on this.
+      raise ValidationError, "merchant is suspended" if merchant.suspended?
       raise ValidationError, "redemption_transaction_id is required" if redemption_transaction_id.blank?
     end
 

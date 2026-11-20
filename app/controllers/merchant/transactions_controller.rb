@@ -1,5 +1,5 @@
 class Merchant::TransactionsController < ApplicationController
-  before_action :ensure_merchant
+  include MerchantPortalAccess
   before_action :find_gift_card
 
   def refund
@@ -27,13 +27,6 @@ class Merchant::TransactionsController < ApplicationController
   end
 
   private
-
-  def ensure_merchant
-    unless current_user&.merchant?
-      flash[:alert] = "You must be a merchant to access this area."
-      redirect_to root_path
-    end
-  end
 
   def find_gift_card
     @gift_card = GiftCard.find(params[:gift_card_id])

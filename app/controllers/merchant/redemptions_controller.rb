@@ -1,5 +1,5 @@
 class Merchant::RedemptionsController < ApplicationController
-  before_action :ensure_merchant
+  include MerchantPortalAccess
 
   def new
     @gift_card = nil
@@ -163,7 +163,17 @@ class Merchant::RedemptionsController < ApplicationController
   end
 
   def success
-    @gift_card = GiftCard.find(params[:gift_card_id]) if params[:gift_card_id]
+    # Only a card this merchant actually redeemed: the id comes from the URL,
+    # and card ids are sequential, so an unscoped find let any merchant read
+    # every card's holder name and balances.
+    if params[:gift_card_id]
+      @gift_card = GiftCard
+        .joins(:transactions)
+        .merge(Transaction.redemptions.successful)
+        .where(transactions: { merchant_id: current_user.merchant.id })
+        .distinct
+        .find(params[:gift_card_id])
+    end
     # Amount captured by the redemption that just happened (passed on redirect).
     # Never derive it from the card: total_loaded - remaining also counts refunds.
     @redeemed_cents = params[:amount_cents].to_i if params[:amount_cents].present?
@@ -173,13 +183,6 @@ class Merchant::RedemptionsController < ApplicationController
   end
 
   private
-
-  def ensure_merchant
-    unless current_user&.merchant?
-      flash[:alert] = 'You must be a merchant to access this area.'
-      redirect_to root_path
-    end
-  end
 
   def format_amount(amount_cents, currency)
     return "-" if amount_cents.nil?

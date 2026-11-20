@@ -22,6 +22,26 @@ class RegistrationsController < Devise::RegistrationsController
     super
   end
 
+  # Web account deletion runs through the same soft-delete as the mobile app
+  # (Users::DeleteAccount): password re-entry, merchant/admin accounts refused,
+  # PII anonymized, sessions revoked. Devise's default #destroy hard-deleted
+  # the row with no re-authentication.
+  def destroy
+    Users::DeleteAccount.call(user: resource, password: params.dig(:user, :current_password))
+    sign_out(resource_name)
+    redirect_to root_path, notice: "Tu cuenta fue eliminada.", status: :see_other
+  rescue Users::DeleteAccount::InvalidPassword
+    redirect_to edit_user_registration_path,
+                alert: "Contraseña incorrecta. Tu cuenta no fue eliminada.", status: :see_other
+  rescue Users::DeleteAccount::MerchantNotAllowed, Users::DeleteAccount::AdminNotAllowed
+    redirect_to edit_user_registration_path,
+                alert: "Las cuentas de comercio o administrador no se pueden eliminar desde aquí. Escríbenos a soporte.",
+                status: :see_other
+  rescue Users::DeleteAccount::Error
+    redirect_to edit_user_registration_path,
+                alert: "No pudimos eliminar tu cuenta. Escríbenos a soporte.", status: :see_other
+  end
+
   # Public sign-up only ever creates consumers. Roles (merchant/admin) are
   # assigned exclusively from admin tooling, never from request params.
   def build_resource(hash = {})
