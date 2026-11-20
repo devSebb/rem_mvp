@@ -2,7 +2,7 @@ module Api
   module V1
     module Auth
       class SessionsController < Api::V1::BaseController
-        skip_before_action :authenticate_user_from_token!, only: [:login, :refresh, :logout]
+        skip_before_action :authenticate_user_from_token!, only: [ :login, :refresh, :logout ]
 
         def login
           # User.active scope excludes soft-deleted accounts; combined with
@@ -91,4 +91,3 @@ module Api
     end
   end
 end
-

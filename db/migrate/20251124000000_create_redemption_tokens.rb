@@ -11,12 +11,6 @@ class CreateRedemptionTokens < ActiveRecord::Migration[7.2]
 
     add_index :redemption_tokens, :token_digest, unique: true
     add_index :redemption_tokens, :expires_at
-    add_index :redemption_tokens, [:gift_card_id, :expires_at]
+    add_index :redemption_tokens, [ :gift_card_id, :expires_at ]
   end
 end
-
-
-
-
-
-

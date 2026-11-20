@@ -13,4 +13,3 @@ class RedemptionToken < ApplicationRecord
     Digest::SHA256.hexdigest(raw)
   end
 end
-

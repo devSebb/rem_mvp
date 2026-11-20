@@ -4,10 +4,10 @@ module Api
       class AvatarsController < Api::V1::BaseController
         def create
           avatar_file = params.require(:avatar)
-          
+
           # Attach the avatar first
           current_user.avatar.attach(avatar_file)
-          
+
           # Manually validate only the avatar (check size and type)
           # We skip other validations since this is an avatar-only update
           avatar_valid = true
@@ -21,18 +21,18 @@ module Api
               avatar_valid = false
             end
           end
-          
+
           if avatar_valid
             # Save without running validations on other fields
             # The avatar attachment will be persisted
             current_user.save(validate: false)
             # Reload to ensure we have the latest data including the avatar
             current_user.reload
-            
+
             render_success(
               data: {
                 avatar_url: attachment_url(current_user.avatar),
-                avatar_thumb_url: attachment_variant_url(current_user.avatar, resize_to_limit: [128, 128])
+                avatar_thumb_url: attachment_variant_url(current_user.avatar, resize_to_limit: [ 128, 128 ])
               }
             )
           else
@@ -49,4 +49,3 @@ module Api
     end
   end
 end
-

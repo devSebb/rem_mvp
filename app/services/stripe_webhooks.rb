@@ -27,17 +27,17 @@ class StripeWebhooks
 
   def self.process_event(event)
     case event.type
-    when 'payment_intent.succeeded'
+    when "payment_intent.succeeded"
       handle_payment_intent_succeeded(event.data.object)
-    when 'payment_intent.payment_failed'
+    when "payment_intent.payment_failed"
       handle_payment_intent_payment_failed(event.data.object)
-    when 'refund.created', 'refund.updated', 'refund.failed'
+    when "refund.created", "refund.updated", "refund.failed"
       handle_refund_event(event.data.object)
-    when 'charge.refunded'
+    when "charge.refunded"
       handle_charge_refunded(event.data.object)
-    when 'charge.dispute.created'
+    when "charge.dispute.created"
       handle_charge_dispute_created(event.data.object)
-    when 'charge.dispute.closed'
+    when "charge.dispute.closed"
       handle_charge_dispute_closed(event.data.object)
     else
       Rails.logger.info "Unhandled event type: #{event.type}"
@@ -161,7 +161,7 @@ class StripeWebhooks
       Rails.logger.info "[Refund] Recording Stripe refund #{refund.id} for load #{load.id} / card #{card.id} (amount: #{refund.amount}, status: #{refund.status})"
 
       amount = refund.amount.to_i
-      debit = [amount, load.remaining_cents].min
+      debit = [ amount, load.remaining_cents ].min
       over_refund = amount - debit
 
       # refunded_cents tracks money that left THIS load (keeps I2 intact); the
@@ -170,7 +170,7 @@ class StripeWebhooks
       GiftCardLoad.where(id: load.id).update_all([
         "remaining_cents = remaining_cents - ?, refunded_cents = refunded_cents + ?, updated_at = ?", debit, debit, Time.current
       ])
-      GiftCard.where(id: card.id).update_all(["remaining_balance = remaining_balance - ?, updated_at = ?", debit, Time.current])
+      GiftCard.where(id: card.id).update_all([ "remaining_balance = remaining_balance - ?, updated_at = ?", debit, Time.current ])
       load.reload.sync_status!
 
       Transaction.create!(
@@ -233,13 +233,13 @@ class StripeWebhooks
       # full amount, remaining_cents rises by what was actually debited
       # (never above the load's headroom).
       debited = txn.metadata["debited_cents"].nil? ? txn.amount.to_i : txn.metadata["debited_cents"].to_i
-      restore = [debited, load.refunded_cents].min
+      restore = [ debited, load.refunded_cents ].min
 
       GiftCardLoad.where(id: load.id).update_all([
         "remaining_cents = remaining_cents + ?, refunded_cents = refunded_cents - ?, updated_at = ?",
         restore, restore, Time.current
       ])
-      GiftCard.where(id: card.id).update_all(["remaining_balance = remaining_balance + ?, updated_at = ?", restore, Time.current])
+      GiftCard.where(id: card.id).update_all([ "remaining_balance = remaining_balance + ?, updated_at = ?", restore, Time.current ])
       load.reload.sync_status!
 
       txn.update!(
@@ -329,7 +329,7 @@ class StripeWebhooks
 
       Rails.logger.warn "⚠️ Dispute created on load #{load.id} (card #{card.id}): reason=#{dispute.reason} amount=#{dispute.amount}"
       load.update!(disputed_at: Time.current, dispute_id: dispute.id, dispute_outcome: nil)
-      User.where(id: load.sender_id).update_all(["dispute_open_count = dispute_open_count + 1, updated_at = ?", Time.current]) if load.sender_id
+      User.where(id: load.sender_id).update_all([ "dispute_open_count = dispute_open_count + 1, updated_at = ?", Time.current ]) if load.sender_id
       recorded = true
     end
     return unless recorded
@@ -394,7 +394,7 @@ class StripeWebhooks
       GiftCardLoad.where(id: load.id).update_all([
         "remaining_cents = 0, written_off_cents = written_off_cents + ?, updated_at = ?", written, Time.current
       ])
-      GiftCard.where(id: card.id).update_all(["remaining_balance = remaining_balance - ?, updated_at = ?", written, Time.current])
+      GiftCard.where(id: card.id).update_all([ "remaining_balance = remaining_balance - ?, updated_at = ?", written, Time.current ])
       load.reload
       load.update!(dispute_outcome: "lost", dispute_id: load.dispute_id || dispute.id, disputed_at: load.disputed_at || Time.current)
 
@@ -421,7 +421,7 @@ class StripeWebhooks
 
       if load.sender_id
         decrement_open_disputes!(load.sender_id) if was_open
-        User.where(id: load.sender_id).update_all(["dispute_lost_count = dispute_lost_count + 1, updated_at = ?", Time.current])
+        User.where(id: load.sender_id).update_all([ "dispute_lost_count = dispute_lost_count + 1, updated_at = ?", Time.current ])
         buyer = User.find_by(id: load.sender_id)
         if buyer && buyer.dispute_lost_count >= 2 && buyer.purchases_blocked_at.nil?
           buyer.update_columns(purchases_blocked_at: Time.current)
@@ -438,6 +438,6 @@ class StripeWebhooks
   def self.decrement_open_disputes!(user_id)
     return unless user_id
 
-    User.where(id: user_id).update_all(["dispute_open_count = GREATEST(dispute_open_count - 1, 0), updated_at = ?", Time.current])
+    User.where(id: user_id).update_all([ "dispute_open_count = GREATEST(dispute_open_count - 1, 0), updated_at = ?", Time.current ])
   end
 end

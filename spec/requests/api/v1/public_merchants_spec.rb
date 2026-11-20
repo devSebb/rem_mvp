@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "Api::V1::Public::Merchants", type: :request do
   describe "GET /api/v1/public/merchants" do
     it "allows anonymous users to browse active merchants" do
-      active = create(:merchant, store_name: "Mercado Central", categories: ["supermercado"])
+      active = create(:merchant, store_name: "Mercado Central", categories: [ "supermercado" ])
       create(:merchant, store_name: "Hidden Store", status: :suspended)
 
       get "/api/v1/public/merchants"
@@ -15,7 +15,7 @@ RSpec.describe "Api::V1::Public::Merchants", type: :request do
         "store_name" => "Mercado Central",
         "name" => "Mercado Central",
         "address" => active.address,
-        "categories" => ["supermercado"],
+        "categories" => [ "supermercado" ],
         "logo_url" => nil
       )
       expect(parsed_data.first).not_to have_key("contact_email")
@@ -43,25 +43,25 @@ RSpec.describe "Api::V1::Public::Merchants", type: :request do
     end
 
     it "filters active merchants by category" do
-      bakery = create(:merchant, store_name: "Pan Fresco", categories: ["restaurantes"])
-      create(:merchant, store_name: "Farmacia Norte", categories: ["salud_y_medicina"])
+      bakery = create(:merchant, store_name: "Pan Fresco", categories: [ "restaurantes" ])
+      create(:merchant, store_name: "Farmacia Norte", categories: [ "salud_y_medicina" ])
 
       get "/api/v1/public/merchants", params: { category: "restaurantes" }
 
       expect(response).to have_http_status(:ok)
-      expect(parsed_data.map { |merchant| merchant["id"] }).to eq([bakery.id])
+      expect(parsed_data.map { |merchant| merchant["id"] }).to eq([ bakery.id ])
     end
   end
 
   describe "GET /api/v1/public/merchants/:id" do
     it "allows anonymous users to view an active merchant" do
-      merchant = create(:merchant, categories: ["salud_y_medicina"])
+      merchant = create(:merchant, categories: [ "salud_y_medicina" ])
 
       get "/api/v1/public/merchants/#{merchant.id}"
 
       expect(response).to have_http_status(:ok)
       expect(parsed_data["id"]).to eq(merchant.id)
-      expect(parsed_data["categories"]).to eq(["salud_y_medicina"])
+      expect(parsed_data["categories"]).to eq([ "salud_y_medicina" ])
       expect(parsed_data).not_to have_key("contact_email")
     end
 

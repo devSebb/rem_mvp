@@ -22,4 +22,3 @@ class LegalController < ApplicationController
   def eliminacion_datos
   end
 end
-

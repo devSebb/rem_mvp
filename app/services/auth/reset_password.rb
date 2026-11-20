@@ -16,7 +16,7 @@ module Auth
 
       validate_password_reset_time(user)
       update_password(user)
-      
+
       { success: true, message: "Password has been reset successfully" }
     rescue PasswordResetError => e
       raise
@@ -36,7 +36,7 @@ module Auth
       # User.active excludes soft-deleted accounts. Anonymization already
       # nullifies reset_password_token, but this guards defense-in-depth.
       user = User.active.find_by(reset_password_token: digest)
-      
+
       # Also validate the token hasn't expired
       if user && user.reset_password_sent_at
         reset_within = 6.hours
@@ -47,7 +47,7 @@ module Auth
           )
         end
       end
-      
+
       user
     end
 
@@ -60,7 +60,7 @@ module Auth
     def update_password(user)
       user.password = password
       user.password_confirmation = password_confirmation
-      
+
       unless user.save
         errors = user.errors.full_messages.join(", ")
         raise PasswordResetError.new(
@@ -96,4 +96,3 @@ module Auth
     end
   end
 end
-

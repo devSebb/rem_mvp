@@ -16,4 +16,3 @@ class CreateUserSessions < ActiveRecord::Migration[7.2]
     add_index :user_sessions, :revoked_at
   end
 end
-

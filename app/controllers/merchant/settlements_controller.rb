@@ -1,13 +1,13 @@
 class Merchant::SettlementsController < ApplicationController
   include MerchantPortalAccess
-  before_action :set_settlement, only: [:show]
+  before_action :set_settlement, only: [ :show ]
 
   def index
     @merchant = current_user.merchant
-    
+
     # Get all settlements for this merchant (redeemer)
     @settlements = @merchant.settlements.order(created_at: :desc)
-    
+
     # Get all gift cards that have been REDEEMED BY this merchant (redeemer-paid model)
     # Note: This finds gift cards where THIS merchant performed a redemption,
     # regardless of who issued the gift card.
@@ -16,7 +16,7 @@ class Merchant::SettlementsController < ApplicationController
                                   .includes(:sender, :recipient, :merchant)
                                   .distinct
                                   .order(created_at: :desc)
-    
+
     # Batch settlement summaries to avoid N+1 (redeemer-based)
     summaries = SettlementService.gift_card_settlement_summaries_for_redeemer(@redeemed_gift_cards, @merchant)
     @gift_card_settlements = @redeemed_gift_cards.map do |gift_card|
@@ -26,27 +26,27 @@ class Merchant::SettlementsController < ApplicationController
         **summary
       }
     end
-    
+
     # Summary statistics
     @total_pending_settlement = @gift_card_settlements.sum { |gc| gc[:remaining_to_settle] }
     @total_settled_amount = @gift_card_settlements.sum { |gc| gc[:settled_amount] }
     @total_redeemed_amount = @gift_card_settlements.sum { |gc| gc[:total_redeemed] }
-    
+
     # Filter options
-    @status_filter = params[:status] || 'all'
+    @status_filter = params[:status] || "all"
     @gift_card_settlements = filter_by_status(@gift_card_settlements, @status_filter)
   end
 
   def show
     @merchant = current_user.merchant
-    
+
     # Get all transactions REDEEMED BY this merchant for this settlement period (redeemer-paid model)
     @settlement_transactions = Transaction.where(merchant: @merchant)
                                         .where(txn_type: :redemption, status: :succeeded)
                                         .where(created_at: @settlement.period_start..@settlement.period_end)
-                                        .includes(gift_card: [:sender, :recipient, :merchant])
+                                        .includes(gift_card: [ :sender, :recipient, :merchant ])
                                         .order(created_at: :desc)
-    
+
     # Group by gift card for detailed view
     @gift_cards_in_settlement = @settlement_transactions.group_by(&:gift_card)
   end
@@ -56,13 +56,13 @@ class Merchant::SettlementsController < ApplicationController
   def set_settlement
     @settlement = current_user.merchant.settlements.find(params[:id])
   end
-  
+
   def filter_by_status(gift_card_settlements, status)
     case status
-    when 'pending'
-      gift_card_settlements.select { |gc| gc[:settlement_status] == 'pending' }
-    when 'settled'
-      gift_card_settlements.select { |gc| gc[:settlement_status] == 'settled' }
+    when "pending"
+      gift_card_settlements.select { |gc| gc[:settlement_status] == "pending" }
+    when "settled"
+      gift_card_settlements.select { |gc| gc[:settlement_status] == "settled" }
     else
       gift_card_settlements
     end

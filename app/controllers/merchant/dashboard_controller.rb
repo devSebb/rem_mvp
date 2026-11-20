@@ -3,13 +3,13 @@ class Merchant::DashboardController < ApplicationController
 
   def index
     @merchant = current_user.merchant
-    
+
     # Get all redemption transactions REDEEMED BY this merchant (redeemer-paid model)
     # This now correctly shows redemptions performed by this merchant, not cards issued by them.
     @redemption_transactions = Transaction.where(merchant: @merchant)
                                         .where(txn_type: :redemption, status: :succeeded)
-                                        .includes(gift_card: [:recipient, :merchant, :loads])
-    
+                                        .includes(gift_card: [ :recipient, :merchant, :loads ])
+
     # Today's redemptions (count of transactions, not gift cards)
     @today_redemptions = @redemption_transactions.where(created_at: Date.current.all_day).count
 
@@ -29,5 +29,4 @@ class Merchant::DashboardController < ApplicationController
   end
 
   private
-
 end

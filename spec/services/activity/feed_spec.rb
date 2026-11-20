@@ -18,8 +18,8 @@ RSpec.describe Activity::Feed do
                         currency: "USD", processor_ref: "dispute_du_zero", metadata: { source: "dispute_lost" })
 
     page = described_class.call(user: recipient)
-    types = page[:events].map { |e| [e.type, e.load_id] }
-    expect(types).to include(["hold_released", released.id], ["write_off", lost.id])
+    types = page[:events].map { |e| [ e.type, e.load_id ] }
+    expect(types).to include([ "hold_released", released.id ], [ "write_off", lost.id ])
     expect(page[:events].count { |e| e.type == "write_off" }).to eq(1)
     expect(page[:events].find { |e| e.type == "hold_released" }.created_at).to be_within(1.second).of(released.held_until)
   end

@@ -47,7 +47,7 @@ class GiftCardSerializer
   def recipient_json
     balances = card.balances
     loads = card.loads.reject(&:status_canceled?)
-    latest = loads.max_by { |l| [l.created_at, l.id] }
+    latest = loads.max_by { |l| [ l.created_at, l.id ] }
     merchant_logo_url = attachment_url.call(card.merchant&.logo)
 
     {
@@ -80,7 +80,7 @@ class GiftCardSerializer
       sender: serialize_sender(latest ? latest.sender : card.sender),
       # COMPAT: only while a hold is still in the future
       held_until: balances[:held_until]&.iso8601,
-      loads: loads.sort_by { |l| [-l.created_at.to_f, -l.id] }.first(MAX_INLINE_LOADS).map { |l| serialize_load(l) },
+      loads: loads.sort_by { |l| [ -l.created_at.to_f, -l.id ] }.first(MAX_INLINE_LOADS).map { |l| serialize_load(l) },
       viewer_role: "recipient"
     }
   end
@@ -88,7 +88,7 @@ class GiftCardSerializer
   # Same keys (the app's types expect them), scoped to the viewer's own loads.
   def sender_json
     own = card.loads.reject(&:status_canceled?).select { |l| viewer && l.sender_id == viewer.id }
-    latest = own.max_by { |l| [l.created_at, l.id] }
+    latest = own.max_by { |l| [ l.created_at, l.id ] }
     own_total = own.sum(&:amount_cents)
     own_balances = card.balances(only_sender: viewer)
     merchant_logo_url = attachment_url.call(card.merchant&.logo)
@@ -119,7 +119,7 @@ class GiftCardSerializer
       note: latest&.note,
       sender: serialize_sender(latest&.sender),
       held_until: own_balances[:held_until]&.iso8601,
-      loads: own.sort_by { |l| [-l.created_at.to_f, -l.id] }.first(MAX_INLINE_LOADS).map { |l| serialize_load(l) },
+      loads: own.sort_by { |l| [ -l.created_at.to_f, -l.id ] }.first(MAX_INLINE_LOADS).map { |l| serialize_load(l) },
       viewer_role: "sender"
     }
   end

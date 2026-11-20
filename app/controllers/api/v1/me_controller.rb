@@ -91,7 +91,7 @@ module Api
           date_of_birth: user.date_of_birth&.iso8601,
           role: user.role,
           avatar_url: attachment_url(user.avatar),
-          avatar_thumb_url: attachment_variant_url(user.avatar, resize_to_limit: [128, 128]),
+          avatar_thumb_url: attachment_variant_url(user.avatar, resize_to_limit: [ 128, 128 ]),
           interests: user.interests,
           preferred_channel: user.preferred_channel
         }
@@ -105,4 +105,3 @@ module Api
     end
   end
 end
-

@@ -24,11 +24,11 @@ class User < ApplicationRecord
 
   # Associations
   has_one :merchant, dependent: :destroy
-  has_many :sent_gift_cards, class_name: 'GiftCard', foreign_key: 'sender_id', dependent: :nullify
-  has_many :received_gift_cards, class_name: 'GiftCard', foreign_key: 'recipient_id', dependent: :nullify
+  has_many :sent_gift_cards, class_name: "GiftCard", foreign_key: "sender_id", dependent: :nullify
+  has_many :received_gift_cards, class_name: "GiftCard", foreign_key: "recipient_id", dependent: :nullify
   # Loads this user paid for (RELOADABLE_CARD_PLAN.md D1: the buyer owns a
   # load, the recipient owns the card).
-  has_many :sent_loads, class_name: 'GiftCardLoad', foreign_key: 'sender_id', dependent: :nullify
+  has_many :sent_loads, class_name: "GiftCardLoad", foreign_key: "sender_id", dependent: :nullify
   has_many :push_tokens, dependent: :destroy
   has_one_attached :avatar
 
@@ -84,15 +84,15 @@ class User < ApplicationRecord
 
   # Methods
   def merchant?
-    role == 'merchant'
+    role == "merchant"
   end
 
   def admin?
-    role == 'admin'
+    role == "admin"
   end
 
   def full_name
-    [first_name, last_name].compact_blank.join(" ")
+    [ first_name, last_name ].compact_blank.join(" ")
   end
 
   # A user is "claimed" once they've completed signup themselves.
@@ -216,19 +216,19 @@ class User < ApplicationRecord
 
     return unless first_name.present? || last_name.present?
 
-    combined_name = [first_name, last_name].compact_blank.join(" ")
+    combined_name = [ first_name, last_name ].compact_blank.join(" ")
     self.name = combined_name if has_attribute?(:name)
   end
 
   def normalize_national_id
     return if national_id.blank?
 
-    self.national_id = national_id.to_s.strip.gsub(/[\s-]+/, '').upcase
+    self.national_id = national_id.to_s.strip.gsub(/[\s-]+/, "").upcase
   end
 
   def split_name(full_name)
     parts = full_name.to_s.strip.split(/\s+/, 2)
-    [parts.first, parts.second.to_s]
+    [ parts.first, parts.second.to_s ]
   end
 
   def validate_avatar

@@ -42,7 +42,7 @@ RSpec.describe "Client IP resolution and throttling", type: :request do
       expect(trusted).to include(*CloudflareIps::RANGES)
 
       env = Rack::MockRequest.env_for("/", via_cloudflare("203.0.113.9"))
-      ActionDispatch::RemoteIp.new(->(_) { [200, {}, []] }, true, trusted).call(env)
+      ActionDispatch::RemoteIp.new(->(_) { [ 200, {}, [] ] }, true, trusted).call(env)
       expect(ActionDispatch::Request.new(env).remote_ip).to eq("203.0.113.9")
     end
   end

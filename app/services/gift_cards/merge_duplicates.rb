@@ -68,7 +68,7 @@ module GiftCards
     end
 
     def plan(group)
-      group.survivor = group.cards.reject(&:canceled?).min_by { |c| [c.created_at, c.id] } || group.cards.first
+      group.survivor = group.cards.reject(&:canceled?).min_by { |c| [ c.created_at, c.id ] } || group.cards.first
 
       no_loads = group.cards.select { |c| !c.loads.exists? }
       if no_loads.any?

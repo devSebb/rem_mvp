@@ -6,7 +6,7 @@ class AccountDeletionMailer < ApplicationMailer
   # need the real address to actually reach the person.
   def deleted(user_id, recipient_email)
     @user_id = user_id
-    @support_email = ENV['DEFAULT_FROM_EMAIL'].presence || 'hola@papayal.app'
+    @support_email = ENV["DEFAULT_FROM_EMAIL"].presence || "hola@papayal.app"
 
     mail(
       to: recipient_email,

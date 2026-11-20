@@ -1,8 +1,8 @@
 Rails.application.configure do
   config.stripe = {
-    secret_key: ENV['STRIPE_SECRET_KEY'],
-    publishable_key: ENV['STRIPE_PUBLISHABLE_KEY'],
-    webhook_secret: ENV['STRIPE_WEBHOOK_SECRET']
+    secret_key: ENV["STRIPE_SECRET_KEY"],
+    publishable_key: ENV["STRIPE_PUBLISHABLE_KEY"],
+    webhook_secret: ENV["STRIPE_WEBHOOK_SECRET"]
   }
 end
 

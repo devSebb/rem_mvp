@@ -185,7 +185,7 @@ module Loads
     def face_value
       subtotal = metadata["subtotal_cents"].presence.to_i
       subtotal = payment_intent.amount if subtotal <= 0 || subtotal > payment_intent.amount
-      [subtotal, payment_intent.amount - subtotal]
+      [ subtotal, payment_intent.amount - subtotal ]
     end
 
     def notified?(load)
@@ -282,7 +282,7 @@ module Loads
     # is expanded so the processing cost is available without a second call.
     def retrieve_charge
       charge = payment_intent.try(:latest_charge)
-      charge = Stripe::Charge.retrieve({ id: charge, expand: ["balance_transaction"] }) if charge.is_a?(String)
+      charge = Stripe::Charge.retrieve({ id: charge, expand: [ "balance_transaction" ] }) if charge.is_a?(String)
       charge
     rescue => e
       Rails.logger.warn "[Stripe] Failed to retrieve charge for PI #{payment_intent.id}: #{e.class} #{e.message}"

@@ -6,16 +6,16 @@
 #   :unknown     - a Stripe/network error we could not resolve (NEVER auto-cancel these)
 def classify_gift_card_funding(gift_card)
   pi_id = gift_card.payment_intent_id
-  return [:no_stripe, nil] if pi_id.blank?
+  return [ :no_stripe, nil ] if pi_id.blank?
 
   begin
     pi = Stripe::PaymentIntent.retrieve(pi_id)
-    pi.livemode ? [:live, pi_id] : [:test, pi_id]
+    pi.livemode ? [ :live, pi_id ] : [ :test, pi_id ]
   rescue Stripe::InvalidRequestError => e
     # A test-mode payment_intent does not exist under the live key => resource_missing.
-    e.respond_to?(:code) && e.code == "resource_missing" ? [:test, pi_id] : [:unknown, pi_id]
+    e.respond_to?(:code) && e.code == "resource_missing" ? [ :test, pi_id ] : [ :unknown, pi_id ]
   rescue Stripe::StripeError
-    [:unknown, pi_id]
+    [ :unknown, pi_id ]
   end
 end
 
@@ -106,27 +106,27 @@ namespace :gift_cards do
   desc "Backfill encrypted raw codes for existing gift cards (generates new codes for cards without stored codes)"
   task backfill_raw_codes: :environment do
     puts "🔄 Backfilling raw codes for existing gift cards..."
-    
-    gift_cards = GiftCard.where(encrypted_raw_code: [nil, ''])
+
+    gift_cards = GiftCard.where(encrypted_raw_code: [ nil, "" ])
     count = gift_cards.count
-    
+
     if count == 0
       puts "✅ All gift cards already have encrypted raw codes"
       next
     end
-    
+
     puts "   Found #{count} gift cards without encrypted raw codes"
-    
+
     gift_cards.find_each do |gift_card|
       # Generate a new code and store it encrypted
       new_code = CodeGenerator.generate
       gift_card.code_digest = BCrypt::Password.create(new_code)
       gift_card.raw_code = new_code
       gift_card.save!
-      
+
       puts "   ✅ Updated gift card #{gift_card.id} with new code"
     end
-    
+
     puts "✅ Backfill complete! Updated #{count} gift cards"
     puts "⚠️  Note: These gift cards now have NEW codes. Recipients will need to be notified of the new codes."
   end
@@ -222,4 +222,3 @@ namespace :gift_cards do
     end
   end
 end
-

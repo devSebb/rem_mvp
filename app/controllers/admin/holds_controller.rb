@@ -1,5 +1,5 @@
 class Admin::HoldsController < Admin::BaseController
-  before_action :set_load, only: [:release]
+  before_action :set_load, only: [ :release ]
 
   # Currently-held LOADS (§9), soonest-to-unlock first. Admin can review and
   # release early after verifying the buyer through some out-of-band channel.
@@ -8,7 +8,7 @@ class Admin::HoldsController < Admin::BaseController
 
     @held_loads = GiftCardLoad.in_scope
                               .currently_held
-                              .includes(:sender, gift_card: [:recipient, :merchant])
+                              .includes(:sender, gift_card: [ :recipient, :merchant ])
                               .order(held_until: :asc)
   end
 

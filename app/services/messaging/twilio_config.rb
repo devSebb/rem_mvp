@@ -13,19 +13,19 @@ module Messaging
     end
 
     def account_sid
-      ENV['TWILIO_ACCOUNT_SID'] || twilio_config[:account_sid]
+      ENV["TWILIO_ACCOUNT_SID"] || twilio_config[:account_sid]
     end
 
     def auth_token
-      ENV['TWILIO_AUTH_TOKEN'] || twilio_config[:auth_token]
+      ENV["TWILIO_AUTH_TOKEN"] || twilio_config[:auth_token]
     end
 
     def from_number
-      ENV['TWILIO_PHONE_NUMBER'] || twilio_config[:from_number]
+      ENV["TWILIO_PHONE_NUMBER"] || twilio_config[:from_number]
     end
 
     def whatsapp_number
-      ENV['TWILIO_WHATSAPP_NUMBER'] || twilio_config[:whatsapp_number]
+      ENV["TWILIO_WHATSAPP_NUMBER"] || twilio_config[:whatsapp_number]
     end
 
     def twilio_config
@@ -33,4 +33,3 @@ module Messaging
     end
   end
 end
-

@@ -5,7 +5,7 @@ RSpec.describe PurchaseConfirmationMailer, type: :mailer do
   def bodies_of(mail)
     return mail.parts.map { |part| part.body.to_s } if mail.multipart?
 
-    [mail.body.to_s]
+    [ mail.body.to_s ]
   end
 
   let(:merchant) { create(:merchant, store_name: "Medicity") }
@@ -32,7 +32,7 @@ RSpec.describe PurchaseConfirmationMailer, type: :mailer do
       load = stripe_load!(card, 3_000, sender: buyer)
       mail = described_class.receipt(load.id)
 
-      expect(mail.to).to eq(["ana@example.com"])
+      expect(mail.to).to eq([ "ana@example.com" ])
       expect(mail.subject).to eq("Tu tarjeta de regalo digital de Medicity para Rita Paz")
       bodies_of(mail).each { |b| expect(b).to include("recibirá una tarjeta de regalo digital de Medicity con $30.00").and include("Rita Paz") }
     end
@@ -68,7 +68,7 @@ RSpec.describe GiftCardMailer, type: :mailer do
     load = stripe_load!(card, 3_000, sender: buyer, note: "Feliz cumple")
     mail = described_class.deliver_gift_card(load)
 
-    expect(mail.to).to eq(["rita@example.com"])
+    expect(mail.to).to eq([ "rita@example.com" ])
     expect(mail.subject).to eq("🎁 Recibiste una tarjeta de regalo digital de Medicity")
     token = GiftCards::ClaimLink.issue!(load)
     mail.parts.each do |part|
@@ -96,7 +96,7 @@ RSpec.describe GiftCardHoldMailer, type: :mailer do
 
     mail = described_class.held(load.id)
 
-    expect(mail.to).to eq(["buyer@example.com"])
+    expect(mail.to).to eq([ "buyer@example.com" ])
     expect(mail.subject).to eq("Tu recarga está bajo revisión de seguridad")
     mail.parts.each { |part| expect(part.body.to_s).to include("$25.00").and include("Solo esta recarga") }
   end

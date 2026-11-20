@@ -15,10 +15,10 @@ RSpec.describe "Api::V1 loads, sent list, activity and redemption token", type: 
 
   describe "GET /api/v1/me/gift_cards" do
     it "lists the card for the recipient and for every buyer; the recipient sees the full §8.1 card" do
-      [recipient, ana, luis].each do |u|
+      [ recipient, ana, luis ].each do |u|
         get "/api/v1/me/gift_cards", headers: auth_headers(access_token_for(u))
         expect(response).to have_http_status(:ok)
-        expect(parsed_data.map { |c| c["id"] }).to eq([card.id])
+        expect(parsed_data.map { |c| c["id"] }).to eq([ card.id ])
       end
 
       get "/api/v1/me/gift_cards", headers: auth_headers(access_token_for(recipient))
@@ -26,7 +26,7 @@ RSpec.describe "Api::V1 loads, sent list, activity and redemption token", type: 
       expect(c).to include("spendable_cents" => 5_000, "remaining_balance_cents" => 5_000, "amount_cents" => 5_000,
                            "total_loaded_cents" => 5_000, "loads_count" => 2, "status" => "active", "viewer_role" => "recipient")
       expect(c["sender_id"]).to eq(luis.id) # COMPAT: latest load's sender
-      expect(c["loads"].map { |l| l["id"] }).to eq([load_b.id, load_a.id])
+      expect(c["loads"].map { |l| l["id"] }).to eq([ load_b.id, load_a.id ])
       expect(c["loads"].last).to include("note" => "Feliz cumple", "is_self" => false)
     end
 
@@ -37,13 +37,13 @@ RSpec.describe "Api::V1 loads, sent list, activity and redemption token", type: 
       # Luis's own $20 only; the card's real $50 balance stays private.
       expect(c).to include("viewer_role" => "sender", "amount_cents" => 2_000, "total_loaded_cents" => 2_000, "loads_count" => 1,
                            "spendable_cents" => 2_000, "remaining_balance_cents" => 2_000, "sender_id" => luis.id)
-      expect(c["loads"].map { |l| l["id"] }).to eq([load_b.id])
+      expect(c["loads"].map { |l| l["id"] }).to eq([ load_b.id ])
       expect(response.body).not_to include("Feliz cumple") # ana's note
       expect(response.body).not_to include(ana.email)
 
       get "/api/v1/me/gift_cards/#{card.id}", headers: auth_headers(access_token_for(luis))
       expect(parsed_data).to include("viewer_role" => "sender", "spendable_cents" => 2_000)
-      expect(parsed_data["loads"].map { |l| l["id"] }).to eq([load_b.id])
+      expect(parsed_data["loads"].map { |l| l["id"] }).to eq([ load_b.id ])
     end
 
     it "hides the card from strangers" do
@@ -60,17 +60,17 @@ RSpec.describe "Api::V1 loads, sent list, activity and redemption token", type: 
 
       expect(response).to have_http_status(:ok)
       expect(parsed_data).to include("gift_card_id" => card.id, "page" => 1, "per_page" => 1, "total_count" => 2, "has_more" => true)
-      expect(parsed_data["loads"].map { |l| l["id"] }).to eq([load_b.id])
+      expect(parsed_data["loads"].map { |l| l["id"] }).to eq([ load_b.id ])
 
       get "/api/v1/me/gift_cards/#{card.id}/loads", params: { per_page: 1, page: 2 }, headers: auth_headers(access_token_for(recipient))
-      expect(parsed_data["loads"].map { |l| l["id"] }).to eq([load_a.id])
+      expect(parsed_data["loads"].map { |l| l["id"] }).to eq([ load_a.id ])
       expect(parsed_data["has_more"]).to be(false)
     end
 
     it "gives a buyer only the loads they paid for" do
       get "/api/v1/me/gift_cards/#{card.id}/loads", headers: auth_headers(access_token_for(ana))
 
-      expect(parsed_data["loads"].map { |l| l["id"] }).to eq([load_a.id])
+      expect(parsed_data["loads"].map { |l| l["id"] }).to eq([ load_a.id ])
       expect(parsed_data["total_count"]).to eq(1)
     end
   end
@@ -102,7 +102,7 @@ RSpec.describe "Api::V1 loads, sent list, activity and redemption token", type: 
       stripe_load!(pcard, 1_000, sender: ana)
 
       get "/api/v1/me/loads", params: { role: "sent" }, headers: auth_headers(access_token_for(ana))
-      statuses = parsed_data["loads"].to_h { |l| [l["gift_card_id"], l["claim_status"]] }
+      statuses = parsed_data["loads"].to_h { |l| [ l["gift_card_id"], l["claim_status"] ] }
       expect(statuses).to eq(card.id => "claimed", pcard.id => "pending_claim")
 
       get "/api/v1/me/loads", params: { role: "received" }, headers: auth_headers(access_token_for(ana))
@@ -139,9 +139,9 @@ RSpec.describe "Api::V1 loads, sent list, activity and redemption token", type: 
 
       get "/api/v1/me/activity", headers: auth_headers(access_token_for(ana))
 
-      types = parsed_data["events"].map { |e| [e["type"], e["load_id"]] }
-      expect(types).to include(["load_sent", load_a.id], ["load_self", self_load.id], ["refund", load_a.id])
-      expect(types).not_to include(["load_sent", load_b.id])
+      types = parsed_data["events"].map { |e| [ e["type"], e["load_id"] ] }
+      expect(types).to include([ "load_sent", load_a.id ], [ "load_self", self_load.id ], [ "refund", load_a.id ])
+      expect(types).not_to include([ "load_sent", load_b.id ])
       sent = parsed_data["events"].find { |e| e["type"] == "load_sent" }
       expect(sent["counterpart"]).to include("name" => "Rita")
     end

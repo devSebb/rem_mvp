@@ -34,8 +34,8 @@ RSpec.describe Loads::Allocator do
       expect(a.status).to eq("exhausted")
       expect(b.reload.remaining_cents).to eq(1_500)
       expect(card.reload.remaining_balance).to eq(1_500)
-      expect(txn.redemption_allocations.order(:id).map { |x| [x.gift_card_load_id, x.amount_cents, x.direction] })
-        .to eq([[a.id, 500, "debit"], [b.id, 1_500, "debit"]])
+      expect(txn.redemption_allocations.order(:id).map { |x| [ x.gift_card_load_id, x.amount_cents, x.direction ] })
+        .to eq([ [ a.id, 500, "debit" ], [ b.id, 1_500, "debit" ] ])
       expect(card.verify_ledger!).to be(true)
     end
 
@@ -86,7 +86,7 @@ RSpec.describe Loads::Allocator do
 
       credits = card.with_lock { described_class.credit_reversal!(card: card, reversal: reversal, redemption: redemption) }
 
-      expect(credits.map { |c| [c.load.id, c.cents, c.shortfall_load] }).to eq([[a.id, 500, nil], [b.id, 1_500, nil]])
+      expect(credits.map { |c| [ c.load.id, c.cents, c.shortfall_load ] }).to eq([ [ a.id, 500, nil ], [ b.id, 1_500, nil ] ])
       expect(a.reload.remaining_cents).to eq(500)
       expect(a.status).to eq("available")
       expect(b.reload.remaining_cents).to eq(3_000)

@@ -8,7 +8,7 @@ class Admin::GiftCardsController < Admin::BaseController
   # Old links / bookmarks.
   FILTER_ALIASES = { "held" => "with_held", "disputed" => "with_disputed", "redeemed" => "zero_balance" }.freeze
 
-  before_action :set_gift_card, only: [:show, :freeze, :unfreeze, :cancel]
+  before_action :set_gift_card, only: [ :show, :freeze, :unfreeze, :cancel ]
 
   def index
     @filter = FILTER_ALIASES.fetch(params[:filter].to_s, params[:filter].to_s)
@@ -21,8 +21,8 @@ class Admin::GiftCardsController < Admin::BaseController
     @status_counts = FILTERS.index_with { |f| filtered(GiftCard.not_merged, f).count }
 
     @total_count = scope.count
-    @page = [params[:page].to_i, 1].max
-    @total_pages = [(@total_count.to_f / PER_PAGE).ceil, 1].max
+    @page = [ params[:page].to_i, 1 ].max
+    @total_pages = [ (@total_count.to_f / PER_PAGE).ceil, 1 ].max
     @gift_cards = scope.includes(:recipient, :merchant, :loads)
                        .order(created_at: :desc)
                        .offset((@page - 1) * PER_PAGE)

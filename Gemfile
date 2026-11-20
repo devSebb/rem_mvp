@@ -87,15 +87,14 @@ group :development, :test do
   group :development, :test do
     gem "dotenv-rails"
   end
-  
 end
 
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
 
-  # Highlight the fine-grained location where an error occurred [https://github.com/ruby/error_highlight]
-  gem "error_highlight", ">= 0.4.0", platforms: [ :ruby ]
+  # error_highlight ships with Ruby (>= 3.1); listing it as a gem made Bundler
+  # conflict with the built-in copy Ruby loads at boot (failed CI on 3.3.14).
 end
 
 

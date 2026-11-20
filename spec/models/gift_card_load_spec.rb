@@ -130,13 +130,13 @@ RSpec.describe GiftCardLoad, type: :model do
 
       expect(GiftCardLoad.spendable.where(gift_card: card)).to contain_exactly(ok)
       expect(ok.spendable_cents).to eq(1000)
-      expect([held, disputed, canceled, empty].map(&:spendable_cents)).to all(eq(0))
+      expect([ held, disputed, canceled, empty ].map(&:spendable_cents)).to all(eq(0))
     end
 
     it "orders FIFO by created_at" do
       older = create(:gift_card_load, gift_card: card, created_at: 2.days.ago)
       newer = create(:gift_card_load, gift_card: card, created_at: 1.day.ago)
-      expect(card.loads.to_a).to eq([older, newer])
+      expect(card.loads.to_a).to eq([ older, newer ])
     end
   end
 

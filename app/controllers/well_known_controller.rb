@@ -9,7 +9,7 @@ class WellKnownController < ApplicationController
   ANDROID_PACKAGE = "com.papayal.app".freeze
   # Paths the app handles. Keep in sync with the mobile linking config
   # (papayal-mobile src/linking) and AppLinks url builders.
-  UNIVERSAL_LINK_PATHS = ["/claim/*", "/reset"].freeze
+  UNIVERSAL_LINK_PATHS = [ "/claim/*", "/reset" ].freeze
 
   def apple_app_site_association
     render json: {
@@ -29,7 +29,7 @@ class WellKnownController < ApplicationController
 
     render json: [
       {
-        relation: ["delegate_permission/common.handle_all_urls"],
+        relation: [ "delegate_permission/common.handle_all_urls" ],
         target: {
           namespace: "android_app",
           package_name: ANDROID_PACKAGE,

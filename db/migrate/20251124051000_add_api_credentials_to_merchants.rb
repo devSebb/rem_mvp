@@ -52,4 +52,3 @@ class AddApiCredentialsToMerchants < ActiveRecord::Migration[7.2]
     "pub_#{SecureRandom.hex(16)}"
   end
 end
-

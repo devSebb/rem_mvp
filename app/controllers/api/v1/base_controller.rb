@@ -158,7 +158,7 @@ module Api
 
         options = { host:, protocol: }
         port = request&.port
-        options[:port] = port if port && ![80, 443].include?(port)
+        options[:port] = port if port && ![ 80, 443 ].include?(port)
         options
       end
 
@@ -181,4 +181,3 @@ module Api
     end
   end
 end
-

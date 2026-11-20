@@ -4,7 +4,7 @@ class BackfillGiftCardCodeLookupHashJob < ApplicationJob
   queue_as :default
 
   def perform(start_after_id: nil, batch_size: 500)
-    scope = GiftCard.where(code_lookup_hash: nil).where.not(encrypted_raw_code: [nil, ""])
+    scope = GiftCard.where(code_lookup_hash: nil).where.not(encrypted_raw_code: [ nil, "" ])
     scope = scope.where("id > ?", start_after_id) if start_after_id.present?
 
     batch = scope.order(:id).limit(batch_size).to_a

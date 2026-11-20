@@ -5,6 +5,15 @@ on:
   push:
     branches: [ main ]
 
+# Read-only token: CI never needs to write to the repo.
+permissions:
+  contents: read
+
+# A newer push to the same branch/PR supersedes the older run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   scan_ruby:
     runs-on: ubuntu-latest
@@ -19,6 +28,8 @@ jobs:
           ruby-version: .ruby-version
           bundler-cache: true
 
+      # Known, tracked findings live in config/brakeman.ignore (with notes);
+      # anything new fails the build.
       - name: Scan for common Rails security vulnerabilities using static analysis
         run: bin/brakeman --no-pager
 
@@ -37,3 +48,78 @@ jobs:
       - name: Lint code for consistent style
         run: bin/rubocop -f github
 
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      # Matches production (Render PostgreSQL 15).
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      # Rack::Attack and Sidekiq use Redis even in tests.
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      RAILS_ENV: test
+      # config/boot.rb deliberately overrides DATABASE_URL in test (so a dev's
+      # global DATABASE_URL can never point tests at a real DB); it honors
+      # TEST_DATABASE_URL instead.
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/rem_mvp_test
+      REDIS_URL: redis://localhost:6379/0
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      # Active Storage variants (avatar/logo resizing) use libvips via
+      # image_processing; package name differs across Ubuntu releases.
+      - name: Install libvips
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libvips42t64 || sudo apt-get install -y --no-install-recommends libvips42
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: yarn
+
+      - name: Install JS dependencies
+        run: yarn install --frozen-lockfile
+
+      # Layouts reference the esbuild/Tailwind bundles (built at deploy, not
+      # committed); without them every page-rendering spec fails.
+      - name: Build JS and CSS
+        run: |
+          yarn build
+          yarn build:css
+
+      - name: Prepare database
+        run: bin/rails db:create db:schema:load
+
+      - name: Run test suite
+        run: bundle exec rspec

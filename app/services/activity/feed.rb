@@ -32,7 +32,7 @@ module Activity
     def page(cursor:, limit:)
       limit = limit.to_i
       limit = DEFAULT_LIMIT unless limit.between?(1, MAX_LIMIT)
-      all = events.sort_by { |e| [-e.created_at.to_f, e.type, -(e.load_id || e.transaction_id || 0)] }
+      all = events.sort_by { |e| [ -e.created_at.to_f, e.type, -(e.load_id || e.transaction_id || 0) ] }
 
       if cursor.present?
         after = decode(cursor)
@@ -48,8 +48,8 @@ module Activity
     def events
       received_card_ids = GiftCard.not_merged.where(recipient_id: user.id).pluck(:id)
       loads = GiftCardLoad.in_scope
-                          .where("gift_card_id IN (?) OR sender_id = ?", received_card_ids.presence || [0], user.id)
-                          .includes(:sender, gift_card: [:recipient, :merchant])
+                          .where("gift_card_id IN (?) OR sender_id = ?", received_card_ids.presence || [ 0 ], user.id)
+                          .includes(:sender, gift_card: [ :recipient, :merchant ])
                           .to_a
 
       out = []
@@ -72,8 +72,8 @@ module Activity
       end
 
       txns = Transaction.successful
-                        .where(gift_card_id: received_card_ids.presence || [0])
-                        .where(txn_type: [:redemption, :refund, :adjustment])
+                        .where(gift_card_id: received_card_ids.presence || [ 0 ])
+                        .where(txn_type: [ :redemption, :refund, :adjustment ])
                         .includes(:merchant, :gift_card_load, gift_card: :merchant)
                         .to_a
       # Stripe refunds also reach the buyer who paid the load.

@@ -63,8 +63,8 @@ RSpec.describe Loads::Fulfill do
     expect { fulfill(second) }.not_to change(GiftCard, :count)
 
     card = GiftCard.find_by!(recipient_id: recipient.id, merchant_id: merchant.id)
-    expect(card.loads.map(&:amount_cents)).to eq([1_500, 3_000])
-    expect(card.loads.map(&:sender_id)).to eq([sender.id, other_buyer.id])
+    expect(card.loads.map(&:amount_cents)).to eq([ 1_500, 3_000 ])
+    expect(card.loads.map(&:sender_id)).to eq([ sender.id, other_buyer.id ])
     expect(card).to have_attributes(remaining_balance: 4_500, total_loaded_cents: 4_500, loads_count: 2, sender_id: sender.id)
     expect(card.transactions.purchases.count).to eq(2)
     expect(card.verify_ledger!).to be(true)
@@ -108,7 +108,7 @@ RSpec.describe Loads::Fulfill do
   describe "Radar holds are per load (D5)" do
     def charge_with(score)
       charge = OpenStruct.new(id: "ch_#{SecureRandom.hex(3)}", outcome: OpenStruct.new(risk_score: score, risk_level: "elevated"))
-      allow(Stripe::Charge).to receive(:retrieve).with({ id: charge.id, expand: ["balance_transaction"] }).and_return(charge)
+      allow(Stripe::Charge).to receive(:retrieve).with({ id: charge.id, expand: [ "balance_transaction" ] }).and_return(charge)
       charge
     end
 

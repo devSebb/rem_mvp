@@ -66,10 +66,10 @@ class Settlement < ApplicationRecord
   # Get settlement status for a specific gift card
   def gift_card_settlement_status(gift_card)
     gift_card_transactions = transactions.where(gift_card: gift_card)
-    return 'not_included' if gift_card_transactions.empty?
-    
+    return "not_included" if gift_card_transactions.empty?
+
     # For now, all transactions in a settlement are considered settled
-    'settled'
+    "settled"
   end
 
   private
@@ -77,6 +77,6 @@ class Settlement < ApplicationRecord
   def period_end_after_period_start
     return unless period_start && period_end
 
-    errors.add(:period_end, 'must be after period start') if period_end < period_start
+    errors.add(:period_end, "must be after period start") if period_end < period_start
   end
 end

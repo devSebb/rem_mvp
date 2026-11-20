@@ -14,7 +14,7 @@ class Merchant::GiftCardsController < ApplicationController
                               .where(txn_type: :redemption, merchant_id: @merchant.id)
                               .order(created_at: :desc)
 
-    actor_ids = @transactions.map { |t| t.metadata['actor_id'] }.compact.uniq
+    actor_ids = @transactions.map { |t| t.metadata["actor_id"] }.compact.uniq
     @transaction_users = User.where(id: actor_ids).index_by(&:id)
 
     redemption_ids = @transactions.map(&:id)
@@ -39,11 +39,11 @@ class Merchant::GiftCardsController < ApplicationController
 
     # Ensure this gift card has been redeemed at this merchant
     unless @gift_card.transactions.where(txn_type: :redemption, merchant: current_user.merchant).exists?
-      flash[:alert] = 'You can only view gift cards that have been redeemed at your store.'
+      flash[:alert] = "You can only view gift cards that have been redeemed at your store."
       redirect_to merchant_root_path
     end
   rescue ActiveRecord::RecordNotFound
-    flash[:alert] = 'Gift card not found.'
+    flash[:alert] = "Gift card not found."
     redirect_to merchant_root_path
   end
 end

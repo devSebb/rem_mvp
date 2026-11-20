@@ -17,6 +17,6 @@ class ContactMailer < ApplicationMailer
   private
 
   def recipient
-    ENV['CONTACT_EMAIL'].presence || 'hola@papayal.app'
+    ENV["CONTACT_EMAIL"].presence || "hola@papayal.app"
   end
 end

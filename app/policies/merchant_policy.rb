@@ -33,4 +33,3 @@ class MerchantPolicy < ApplicationPolicy
     user.merchant? && record.user_id == user.id
   end
 end
-

@@ -1,5 +1,5 @@
 class Admin::RefundsController < Admin::BaseController
-  before_action :set_gift_card, only: [:new, :create]
+  before_action :set_gift_card, only: [ :new, :create ]
 
   # Type B refunds are per LOAD (§5.7, §9): the form lists the card's loads
   # with what each can still return to its buyer. The nested route

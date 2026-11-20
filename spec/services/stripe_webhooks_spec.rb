@@ -99,7 +99,7 @@ RSpec.describe StripeWebhooks do
     context "Radar risk assessment (per load, D5)" do
       it "places a security hold on the load when the risk score meets the threshold" do
         charge = build_charge(risk_score: GiftCard::RISK_HOLD_THRESHOLD, risk_level: "elevated")
-        allow(Stripe::Charge).to receive(:retrieve).with({ id: charge.id, expand: ["balance_transaction"] }).and_return(charge)
+        allow(Stripe::Charge).to receive(:retrieve).with({ id: charge.id, expand: [ "balance_transaction" ] }).and_return(charge)
         payment_intent = build_payment_intent(latest_charge: charge.id)
 
         described_class.handle_payment_intent_succeeded(payment_intent)
@@ -115,7 +115,7 @@ RSpec.describe StripeWebhooks do
 
       it "does not hold when the risk score is below the threshold" do
         charge = build_charge(risk_score: GiftCard::RISK_HOLD_THRESHOLD - 1, risk_level: "normal")
-        allow(Stripe::Charge).to receive(:retrieve).with({ id: charge.id, expand: ["balance_transaction"] }).and_return(charge)
+        allow(Stripe::Charge).to receive(:retrieve).with({ id: charge.id, expand: [ "balance_transaction" ] }).and_return(charge)
         payment_intent = build_payment_intent(latest_charge: charge.id)
 
         described_class.handle_payment_intent_succeeded(payment_intent)
@@ -149,7 +149,7 @@ RSpec.describe StripeWebhooks do
 
       it "treats a charge without a Radar outcome as zero risk (test charges)" do
         charge = build_charge(outcome: nil)
-        allow(Stripe::Charge).to receive(:retrieve).with({ id: charge.id, expand: ["balance_transaction"] }).and_return(charge)
+        allow(Stripe::Charge).to receive(:retrieve).with({ id: charge.id, expand: [ "balance_transaction" ] }).and_return(charge)
         payment_intent = build_payment_intent(latest_charge: charge.id)
 
         described_class.handle_payment_intent_succeeded(payment_intent)

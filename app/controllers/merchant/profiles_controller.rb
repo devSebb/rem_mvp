@@ -11,10 +11,10 @@ class Merchant::ProfilesController < ApplicationController
 
     if @merchant.update(merchant_attrs)
       @merchant.logo.attach(logo_file) if logo_file.present?
-      flash[:notice] = 'Perfil actualizado correctamente.'
+      flash[:notice] = "Perfil actualizado correctamente."
       redirect_to merchant_profile_path
     else
-      flash[:alert] = 'No se pudo actualizar el perfil. Revisa los campos.'
+      flash[:alert] = "No se pudo actualizar el perfil. Revisa los campos."
       render :show
     end
   end

@@ -46,7 +46,7 @@ RSpec.describe "Public marketing landing", type: :request do
     expect(section.css(".marquee a")).to be_empty
     # A shared restriction is stated once, not per logo.
     notes = section.css(".landing-merchant-note").map(&:text)
-    expect(notes).to eq(["Para canjear esta tarjeta, paga en Medicity o Farmacias Económicas."])
+    expect(notes).to eq([ "Para canjear esta tarjeta, paga en Medicity o Farmacias Económicas." ])
   end
 
   it "shows merchant logos with their name as alt text" do

@@ -74,7 +74,7 @@ RSpec.describe "Verified email ownership", type: :request do
                                   headers: json_headers
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(parsed_error.dig("details", "email")).to eq(["has already been taken"])
+      expect(parsed_error.dig("details", "email")).to eq([ "has already been taken" ])
       started.reload
       expect(started.valid_password?("OwnerPass!23")).to be(true)
       expect(started.valid_password?("Attacker!23")).to be(false)

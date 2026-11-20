@@ -4,7 +4,3 @@ class AddNationalIdToUsers < ActiveRecord::Migration[7.2]
     add_index :users, :national_id, unique: true
   end
 end
-
-
-
-

@@ -168,7 +168,7 @@ RSpec.describe "POST /api/v1/checkout/payment_intent", type: :request do
         hash_including(
           amount: 2500,
           currency: "usd",
-          payment_method_types: ["card"],
+          payment_method_types: [ "card" ],
           metadata: hash_including(
             sender_id: user.id.to_s,
             merchant_id: merchant.id.to_s,

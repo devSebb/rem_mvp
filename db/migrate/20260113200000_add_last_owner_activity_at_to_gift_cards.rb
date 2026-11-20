@@ -4,4 +4,3 @@ class AddLastOwnerActivityAtToGiftCards < ActiveRecord::Migration[7.2]
     add_index :gift_cards, :last_owner_activity_at
   end
 end
-

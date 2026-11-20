@@ -118,17 +118,17 @@ module Api
           if self_load
             {
               recipient_user_id: current_user.id.to_s,
-              recipient_email: current_user.placeholder_email? ? '' : current_user.email.to_s,
+              recipient_email: current_user.placeholder_email? ? "" : current_user.email.to_s,
               recipient_phone: current_user.phone.to_s,
               recipient_name: current_user.full_name.presence || current_user.name.to_s,
-              recipient_note: ''
+              recipient_note: ""
             }
           else
             {
-              recipient_email: recipient_params[:email] || '',
-              recipient_phone: recipient_params[:phone] || '',
-              recipient_name: recipient_params[:name] || 'Gift Card Recipient',
-              recipient_note: recipient_params[:note] || ''
+              recipient_email: recipient_params[:email] || "",
+              recipient_phone: recipient_params[:phone] || "",
+              recipient_name: recipient_params[:name] || "Gift Card Recipient",
+              recipient_note: recipient_params[:note] || ""
             }
           end
 
@@ -162,7 +162,7 @@ module Api
             {
               amount: quote.total_cents,
               currency: currency.downcase,
-              payment_method_types: ['card'],
+              payment_method_types: [ "card" ],
               # Let Stripe Radar decide when 3DS is required: liability for
               # fraud disputes shifts to the issuer on 3DS-confirmed charges.
               # Zero UX cost on the normal path; Radar only prompts when warranted.
@@ -326,8 +326,8 @@ module Api
         else
           # Time bucket: 10 minutes (600 seconds)
           time_bucket = Time.now.to_i / 600
-          recipient_identifier = recipient_params[:email].presence || recipient_params[:phone].presence || (recipient_params[:self].present? ? "self:#{user_id}" : '')
-          recipient_name = recipient_params[:name].presence || ''
+          recipient_identifier = recipient_params[:email].presence || recipient_params[:phone].presence || (recipient_params[:self].present? ? "self:#{user_id}" : "")
+          recipient_name = recipient_params[:name].presence || ""
 
           raw_key = [
             user_id,
@@ -337,7 +337,7 @@ module Api
             recipient_identifier,
             recipient_name,
             time_bucket
-          ].join(':')
+          ].join(":")
 
           "mobile_pi:#{Digest::SHA256.hexdigest(raw_key)[0..31]}"
         end

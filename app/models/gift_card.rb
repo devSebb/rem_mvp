@@ -52,7 +52,7 @@ class GiftCard < ApplicationRecord
   scope :currently_held, -> { where(id: GiftCardLoad.in_scope.currently_held.select(:gift_card_id)) }
   scope :disputed, -> { where(id: GiftCardLoad.in_scope.dispute_open.select(:gift_card_id)) }
   scope :not_merged, -> { where(merged_into_id: nil) }
-  scope :active_or_frozen, -> { where(status: [statuses[:active], statuses[:frozen_by_admin]]) }
+  scope :active_or_frozen, -> { where(status: [ statuses[:active], statuses[:frozen_by_admin] ]) }
 
   # Validations. `sender` and `amount` are deprecated card columns (§3.1):
   # the buyer and the face value belong to each load. `amount` stays
@@ -209,7 +209,7 @@ end
   until_at = balances[:held_until]
   return 0 unless until_at
 
-  [(until_at - Time.current).to_i, 0].max
+  [ (until_at - Time.current).to_i, 0 ].max
 end
 
   def disputed?
@@ -432,7 +432,7 @@ end
     held_until: held_until,
     disputed_at: disputed_at
   )
-  transactions.where(txn_type: [:issuance, :purchase], gift_card_load_id: nil).update_all(gift_card_load_id: load.id)
+  transactions.where(txn_type: [ :issuance, :purchase ], gift_card_load_id: nil).update_all(gift_card_load_id: load.id)
   update_columns(last_loaded_at: load.created_at)
 end
 end

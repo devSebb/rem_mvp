@@ -73,7 +73,7 @@ module Admin::GiftCardsHelper
 
   def admin_txn_metadata_rows(txn)
     (txn.metadata || {}).map do |key, value|
-      [METADATA_LABELS.fetch(key.to_s, key.to_s.humanize), admin_txn_metadata_value(key.to_s, value)]
+      [ METADATA_LABELS.fetch(key.to_s, key.to_s.humanize), admin_txn_metadata_value(key.to_s, value) ]
     end
   end
 

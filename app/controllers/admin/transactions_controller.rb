@@ -33,8 +33,8 @@ class Admin::TransactionsController < Admin::BaseController
     @total_volume_cents = scope.where(status: :succeeded).sum(:amount)
 
     @total_count = scope.count
-    @page = [params[:page].to_i, 1].max
-    @total_pages = [(@total_count.to_f / PER_PAGE).ceil, 1].max
+    @page = [ params[:page].to_i, 1 ].max
+    @total_pages = [ (@total_count.to_f / PER_PAGE).ceil, 1 ].max
     @transactions = scope.includes(:gift_card, :merchant, :user)
                          .order(created_at: :desc, id: :desc)
                          .offset((@page - 1) * PER_PAGE)

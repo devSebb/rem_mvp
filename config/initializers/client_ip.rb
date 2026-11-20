@@ -6,7 +6,7 @@
 #    it, so a client could send `Forwarded: for=<anything>` and pick its own
 #    rate-limit bucket (or `for=127.0.0.1` to look like localhost).
 #    ActionDispatch::RemoteIp never reads it either, so this keeps both in sync.
-Rack::Request.forwarded_priority = [:x_forwarded]
+Rack::Request.forwarded_priority = [ :x_forwarded ]
 
 # 2. Treat Cloudflare edges as trusted proxies, like the private ranges Rack
 #    already trusts, so #ip skips past them to the real client.

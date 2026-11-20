@@ -41,15 +41,15 @@ module Loads
       loads.each do |load|
         break if left.zero?
 
-        take = [left, load.remaining_cents].min
-        GiftCardLoad.where(id: load.id).update_all(["remaining_cents = remaining_cents - ?, updated_at = ?", take, Time.current])
+        take = [ left, load.remaining_cents ].min
+        GiftCardLoad.where(id: load.id).update_all([ "remaining_cents = remaining_cents - ?, updated_at = ?", take, Time.current ])
         RedemptionAllocation.create!(ledger_transaction: transaction, gift_card_load: load, amount_cents: take, direction: :debit)
         load.reload.sync_status!
         debits << Debit.new(load: load, cents: take)
         left -= take
       end
 
-      GiftCard.where(id: card.id).update_all(["remaining_balance = remaining_balance - ?, updated_at = ?", amount, Time.current])
+      GiftCard.where(id: card.id).update_all([ "remaining_balance = remaining_balance - ?, updated_at = ?", amount, Time.current ])
       card.reload
       debits
     end
@@ -66,11 +66,11 @@ module Loads
       debits.each do |alloc|
         load = alloc.gift_card_load.reload
         cap = load.amount_cents - load.refunded_cents - load.written_off_cents - load.remaining_cents
-        restore = [[alloc.amount_cents, cap].min, 0].max
+        restore = [ [ alloc.amount_cents, cap ].min, 0 ].max
         shortfall = alloc.amount_cents - restore
 
         if restore.positive?
-          GiftCardLoad.where(id: load.id).update_all(["remaining_cents = remaining_cents + ?, updated_at = ?", restore, Time.current])
+          GiftCardLoad.where(id: load.id).update_all([ "remaining_cents = remaining_cents + ?, updated_at = ?", restore, Time.current ])
           RedemptionAllocation.create!(ledger_transaction: reversal, gift_card_load: load, amount_cents: restore, direction: :credit)
           load.reload.sync_status!
         end
@@ -92,7 +92,7 @@ module Loads
             metadata: { source: "reversal_shortfall", reversal_transaction_id: reversal.id,
                         redemption_transaction_id: redemption.id, original_load_id: load.id }
           )
-          GiftCard.where(id: card.id).update_all(["total_loaded_cents = total_loaded_cents + ?, amount = COALESCE(amount, 0) + ?, last_loaded_at = ?", shortfall, shortfall, Time.current])
+          GiftCard.where(id: card.id).update_all([ "total_loaded_cents = total_loaded_cents + ?, amount = COALESCE(amount, 0) + ?, last_loaded_at = ?", shortfall, shortfall, Time.current ])
           Rails.logger.warn "[Allocator] reversal #{reversal.id}: load #{load.id} short by #{shortfall}; created adjustment load #{shortfall_load.id}"
         end
 
@@ -100,7 +100,7 @@ module Loads
         credits << Credit.new(load: load, cents: restore, shortfall_load: shortfall_load)
       end
 
-      GiftCard.where(id: card.id).update_all(["remaining_balance = remaining_balance + ?, updated_at = ?", total, Time.current])
+      GiftCard.where(id: card.id).update_all([ "remaining_balance = remaining_balance + ?, updated_at = ?", total, Time.current ])
 
       # The reversal row records what it could not put back on the original
       # loads; Ledger::Verifier counts it toward I5 (credit allocs + shortfall

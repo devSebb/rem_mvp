@@ -16,4 +16,3 @@ module Jwt
     end
   end
 end
-

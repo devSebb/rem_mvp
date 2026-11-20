@@ -56,7 +56,7 @@ def seed_merchant!(user:, store_name:, address:, contact_email:, iban: nil, part
 end
 
 def pair_index_exists?
-  ActiveRecord::Base.connection.index_exists?(:gift_cards, [:recipient_id, :merchant_id],
+  ActiveRecord::Base.connection.index_exists?(:gift_cards, [ :recipient_id, :merchant_id ],
                                               name: "index_gift_cards_on_recipient_merchant_unique")
 end
 
@@ -126,13 +126,13 @@ def seed_redemption!(card, marker:, redeemer:, actor:, amount_cents:)
     loads.each do |load|
       break if left.zero?
 
-      take = [left, load.remaining_cents].min
+      take = [ left, load.remaining_cents ].min
       RedemptionAllocation.create!(ledger_transaction: txn, gift_card_load: load, amount_cents: take, direction: :debit)
-      GiftCardLoad.where(id: load.id).update_all(["remaining_cents = remaining_cents - ?", take])
+      GiftCardLoad.where(id: load.id).update_all([ "remaining_cents = remaining_cents - ?", take ])
       load.reload.sync_status!
       left -= take
     end
-    GiftCard.where(id: card.id).update_all(["remaining_balance = remaining_balance - ?", amount_cents])
+    GiftCard.where(id: card.id).update_all([ "remaining_balance = remaining_balance - ?", amount_cents ])
     card.touch_owner_activity!
     txn
   end
@@ -145,7 +145,7 @@ merchant_user = seed_user!(email: "merchant@example.com", name: "Merchant Owner"
 merchant_user_two = seed_user!(email: "merchant2@example.com", name: "Second Merchant Owner", role: :merchant, phone: "+1098765432", national_id: "MERC002B")
 regular_user = seed_user!(email: "user@example.com", name: "Regular User", phone: "+1987654321", national_id: "USER001C")
 sender_user = seed_user!(email: "sender@example.com", name: "Sender Abroad", phone: "+1555000100", national_id: "SEND001D")
-puts "✅ Users: #{[admin, merchant_user, merchant_user_two, regular_user, sender_user].map(&:email).join(', ')}"
+puts "✅ Users: #{[ admin, merchant_user, merchant_user_two, regular_user, sender_user ].map(&:email).join(', ')}"
 
 # ── merchants ──────────────────────────────────────────────────────────
 

@@ -12,7 +12,7 @@ RSpec.describe GiftCards::MergeDuplicates do
   before do
     conn = ActiveRecord::Base.connection
     pair_index = "index_gift_cards_on_recipient_merchant_unique"
-    conn.remove_index(:gift_cards, name: pair_index) if conn.index_exists?(:gift_cards, [:recipient_id, :merchant_id], name: pair_index)
+    conn.remove_index(:gift_cards, name: pair_index) if conn.index_exists?(:gift_cards, [ :recipient_id, :merchant_id ], name: pair_index)
   end
 
   let(:io) { StringIO.new }
@@ -43,7 +43,7 @@ RSpec.describe GiftCards::MergeDuplicates do
   end
 
   def unsettled_snapshot
-    Merchant.order(:id).map { |m| [m.id, m.unsettled_net_redeemed_cents] }
+    Merchant.order(:id).map { |m| [ m.id, m.unsettled_net_redeemed_cents ] }
   end
 
   describe "three cards on one pair" do
@@ -53,9 +53,9 @@ RSpec.describe GiftCards::MergeDuplicates do
     let!(:unrelated) { create(:gift_card, recipient: recipient, merchant: redeemer) }
 
     it "DRY_RUN lists the group with the survivor and projected result and changes nothing" do
-      before = [GiftCard.pluck(:id, :status, :remaining_balance, :merged_into_id),
+      before = [ GiftCard.pluck(:id, :status, :remaining_balance, :merged_into_id),
                 GiftCardLoad.pluck(:id, :gift_card_id), Transaction.pluck(:id, :gift_card_id),
-                RedemptionToken.pluck(:id, :gift_card_id)]
+                RedemptionToken.pluck(:id, :gift_card_id) ]
 
       result = described_class.call(dry_run: true, io: io)
 
@@ -66,9 +66,9 @@ RSpec.describe GiftCards::MergeDuplicates do
       expect(group.result).to include(remaining_balance: 6000, total_loaded_cents: 9000, loads_count: 3,
                                       transactions: 5, redemption_tokens: 3)
       expect(io.string).to include("DRY RUN", "SURVIVOR", "absorb", "recipient #{recipient.id} × merchant #{issuer.id}")
-      expect([GiftCard.pluck(:id, :status, :remaining_balance, :merged_into_id),
+      expect([ GiftCard.pluck(:id, :status, :remaining_balance, :merged_into_id),
               GiftCardLoad.pluck(:id, :gift_card_id), Transaction.pluck(:id, :gift_card_id),
-              RedemptionToken.pluck(:id, :gift_card_id)]).to eq(before)
+              RedemptionToken.pluck(:id, :gift_card_id) ]).to eq(before)
     end
 
     it "merges into the oldest card, re-points every FK, and keeps absorbed rows for audit" do
@@ -82,12 +82,12 @@ RSpec.describe GiftCards::MergeDuplicates do
       expect(oldest).to have_attributes(status: "active", remaining_balance: 6000, total_loaded_cents: 9000,
                                         amount: 9000, loads_count: 3, merged_into_id: nil)
       expect(oldest.last_loaded_at).to be_within(1.second).of(newest.created_at)
-      expect(oldest.loads.map(&:amount_cents)).to eq([5000, 3000, 1000]) # FIFO order preserved
-      expect(oldest.loads.map(&:remaining_cents)).to eq([3000, 3000, 0])
+      expect(oldest.loads.map(&:amount_cents)).to eq([ 5000, 3000, 1000 ]) # FIFO order preserved
+      expect(oldest.loads.map(&:remaining_cents)).to eq([ 3000, 3000, 0 ])
       expect(Transaction.where(gift_card_id: oldest.id).count).to eq(5)
       expect(RedemptionToken.where(gift_card_id: oldest.id).count).to eq(3)
 
-      [middle, newest].each do |absorbed|
+      [ middle, newest ].each do |absorbed|
         absorbed.reload
         expect(absorbed).to have_attributes(status: "canceled", merged_into_id: oldest.id,
                                             remaining_balance: 0, total_loaded_cents: 0, loads_count: 0)
@@ -165,7 +165,7 @@ RSpec.describe GiftCards::MergeDuplicates do
     it "picks the oldest card when every card in the pair is canceled" do
       a = legacy_card(created_at: 3.days.ago, amount: 1000, sender: buyer_a, status: :canceled)
       b = legacy_card(created_at: 2.days.ago, amount: 1000, sender: buyer_b, status: :canceled)
-      [a, b].each do |c| # fully refunded at Stripe, with the ledger row that proves it
+      [ a, b ].each do |c| # fully refunded at Stripe, with the ledger row that proves it
         load = c.loads.sole
         Transaction.create!(gift_card: c, gift_card_load: load, merchant: issuer, amount: 1000, txn_type: :refund,
                             status: :succeeded, currency: "USD", processor_ref: "re_#{c.id}", metadata: { stripe_refund_id: "re_#{c.id}" })

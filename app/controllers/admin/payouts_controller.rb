@@ -1,5 +1,5 @@
 class Admin::PayoutsController < Admin::BaseController
-  before_action :set_settlement, only: [:show, :mark_paid]
+  before_action :set_settlement, only: [ :show, :mark_paid ]
 
   # Per-merchant payout summary across the platform. The "pending" amount is
   # what we still owe each merchant — the gap between what they've redeemed
@@ -56,9 +56,9 @@ class Admin::PayoutsController < Admin::BaseController
 
   def show
     @merchant = @settlement.merchant
-    @transactions = @settlement.transactions.includes(gift_card: [:sender, :recipient])
+    @transactions = @settlement.transactions.includes(gift_card: [ :sender, :recipient ])
                               .order(created_at: :desc)
-    @reversals = @settlement.reversals.includes(gift_card: [:sender, :recipient])
+    @reversals = @settlement.reversals.includes(gift_card: [ :sender, :recipient ])
                             .order(created_at: :desc)
   end
 
@@ -86,7 +86,7 @@ class Admin::PayoutsController < Admin::BaseController
       return
     end
 
-    period_start = [unsettled_redemptions.minimum(:created_at), unsettled_reversals.minimum(:created_at)].compact.min.to_date
+    period_start = [ unsettled_redemptions.minimum(:created_at), unsettled_reversals.minimum(:created_at) ].compact.min.to_date
     period_end = Time.current.to_date
 
     # amount = what we actually pay the merchant (gross minus platform

@@ -1,6 +1,6 @@
 class GiftCardMailer < ApplicationMailer
   layout "branded_mailer"
-  default from: ENV['DEFAULT_FROM_EMAIL'] || 'hola@papayal.app'
+  default from: ENV["DEFAULT_FROM_EMAIL"] || "hola@papayal.app"
 
   # Recipient-facing delivery of ONE load (§5.9): the first load on a card
   # announces the gift card, a later one announces the reload and the

@@ -45,7 +45,7 @@ module GiftCards
       return if started_at.blank?
 
       elapsed = Time.current.to_i - started_at.to_i
-      raise Throttled.new([COOLDOWN.to_i - elapsed, 1].max)
+      raise Throttled.new([ COOLDOWN.to_i - elapsed, 1 ].max)
     end
 
     def enforce_daily_limit!

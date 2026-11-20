@@ -83,14 +83,14 @@ module Messaging
     end
 
     def send_whatsapp
-      return { success: false, error: 'No phone number' } unless @recipient&.phone.present?
+      return { success: false, error: "No phone number" } unless @recipient&.phone.present?
       return twilio_disabled_response(:whatsapp) unless Messaging::TwilioConfig.enabled?
 
       client = Messaging::TwilioConfig.client
-      return twilio_disabled_response(:whatsapp, 'Twilio client unavailable') unless client
+      return twilio_disabled_response(:whatsapp, "Twilio client unavailable") unless client
 
       from_number = Messaging::TwilioConfig.whatsapp_number
-      return twilio_disabled_response(:whatsapp, 'TWILIO_WHATSAPP_NUMBER missing') unless from_number.present?
+      return twilio_disabled_response(:whatsapp, "TWILIO_WHATSAPP_NUMBER missing") unless from_number.present?
 
       begin
         message = client.messages.create(
@@ -106,14 +106,14 @@ module Messaging
     end
 
     def send_sms
-      return { success: false, error: 'No phone number' } unless @recipient&.phone.present?
+      return { success: false, error: "No phone number" } unless @recipient&.phone.present?
       return twilio_disabled_response(:sms) unless Messaging::TwilioConfig.enabled?
 
       client = Messaging::TwilioConfig.client
-      return twilio_disabled_response(:sms, 'Twilio client unavailable') unless client
+      return twilio_disabled_response(:sms, "Twilio client unavailable") unless client
 
       from_number = Messaging::TwilioConfig.from_number
-      return twilio_disabled_response(:sms, 'TWILIO_PHONE_NUMBER missing') unless from_number.present?
+      return twilio_disabled_response(:sms, "TWILIO_PHONE_NUMBER missing") unless from_number.present?
 
       begin
         message = client.messages.create(from: from_number, to: @recipient.phone, body: phone_message)
@@ -134,7 +134,7 @@ module Messaging
     end
 
     def send_email
-      return { success: false, error: 'No email address' } unless @recipient&.email.present?
+      return { success: false, error: "No email address" } unless @recipient&.email.present?
 
       begin
         mail = GiftCardMailer.deliver_gift_card(@load)
@@ -231,7 +231,7 @@ module Messaging
       @load.update_columns(updates.merge(updated_at: Time.current)) if updates.any?
     end
 
-    def twilio_disabled_response(channel, reason = 'Twilio not configured')
+    def twilio_disabled_response(channel, reason = "Twilio not configured")
       Rails.logger.warn "[Twilio] #{reason}; #{channel} not sent"
       { success: false, error: reason }
     end
