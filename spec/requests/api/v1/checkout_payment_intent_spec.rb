@@ -230,23 +230,25 @@ RSpec.describe "POST /api/v1/checkout/payment_intent", type: :request do
       )
     end
 
-    it "uses draft_id when provided for idempotency" do
-      expect(Stripe::PaymentIntent).to receive(:create).with(
-        anything,
-        hash_including(idempotency_key: "mobile_pi:draft:my-draft-uuid-123")
-      ).and_return(
-        double(
-          id: "pi_test_123456",
-          client_secret: "pi_test_123456_secret_abc",
-          last_response: nil
-        )
-      )
+    it "keys on the user, the draft_id and the exact PaymentIntent params" do
+      keys = []
+      allow(Stripe::PaymentIntent).to receive(:create) do |_params, opts|
+        keys << opts[:idempotency_key]
+        double(id: "pi_test_#{keys.size}", client_secret: "secret_#{keys.size}", last_response: nil)
+      end
 
-      post "/api/v1/checkout/payment_intent",
-           params: valid_params.merge(draft_id: "my-draft-uuid-123").to_json,
-           headers: auth_headers(access_token)
-
+      draft = valid_params.merge(draft_id: "my-draft-uuid-123")
+      2.times do # double tap / network retry: same draft, same params
+        post "/api/v1/checkout/payment_intent", params: draft.to_json, headers: auth_headers(access_token)
+        expect(response).to have_http_status(:ok)
+      end
+      # Card declined, buyer changes the amount and retries with the same draft.
+      post "/api/v1/checkout/payment_intent", params: draft.merge(amount_cents: 3_000).to_json, headers: auth_headers(access_token)
       expect(response).to have_http_status(:ok)
+
+      expect(keys[0]).to start_with("mobile_pi:draft:#{user.id}:my-draft-uuid-123:")
+      expect(keys[1]).to eq(keys[0])     # still deduped
+      expect(keys[2]).not_to eq(keys[0]) # new params → new key (Stripe would 400 a reused key)
     end
 
     it "generates deterministic idempotency key for same inputs within time bucket" do

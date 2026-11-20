@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_12_130000) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_20_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -273,6 +273,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_130000) do
     t.integer "gross_amount"
     t.integer "commission_amount", default: 0, null: false
     t.integer "commission_bps", default: 0, null: false
+    t.datetime "period_start_at", null: false
+    t.datetime "period_end_at", null: false
     t.index ["merchant_id"], name: "index_settlements_on_merchant_id"
     t.index ["paid_by_admin_id"], name: "index_settlements_on_paid_by_admin_id"
     t.index ["payout_status"], name: "index_settlements_on_payout_status"

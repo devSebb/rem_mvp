@@ -9,6 +9,8 @@ class Settlement < ApplicationRecord
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :period_start, presence: true
   validates :period_end, presence: true
+  validates :period_start_at, presence: true
+  validates :period_end_at, presence: true
   validates :payout_status, presence: true
 
   # Validations
@@ -19,10 +21,7 @@ class Settlement < ApplicationRecord
   scope :paid, -> { where(payout_status: :paid) }
   scope :failed, -> { where(payout_status: :failed) }
 
-  # Get all transactions included in this settlement.
-  # period_start/period_end are dates; created_at is a timestamp. Compare
-  # against the full end day — a bare date range ends at midnight and would
-  # silently drop every transaction from the settlement's last day.
+  # Redemptions this settlement paid for (its exact window; see period_range).
   def transactions
     Transaction.where(merchant: merchant)
               .where(txn_type: :redemption, status: :succeeded)
@@ -46,8 +45,12 @@ class Settlement < ApplicationRecord
             .distinct
   end
 
+  # The exact window this settlement paid for: from its first unsettled
+  # transaction to the moment it was created (inclusive). period_start /
+  # period_end are the same window as dates, for display only. Never widen
+  # this to end_of_day: redemptions after the cutoff are NOT in `amount`.
   def period_range
-    period_start.beginning_of_day..period_end.end_of_day
+    period_start_at..period_end_at
   end
 
   # Total that should be settled for this period: redemptions net of
@@ -75,8 +78,11 @@ class Settlement < ApplicationRecord
   private
 
   def period_end_after_period_start
-    return unless period_start && period_end
-
-    errors.add(:period_end, "must be after period start") if period_end < period_start
+    if period_start && period_end && period_end < period_start
+      errors.add(:period_end, "must be after period start")
+    end
+    if period_start_at && period_end_at && period_end_at < period_start_at
+      errors.add(:period_end_at, "must be after period start")
+    end
   end
 end

@@ -95,7 +95,7 @@ class Merchant::RedemptionsController < ApplicationController
 
   def redeem
     gift_card_id = params[:gift_card_id]
-    redemption_amount = params[:redemption_amount]&.to_f&.*(100)&.to_i # Convert to cents
+    redemption_amount = MoneyInput.to_cents(params[:redemption_amount]) # exact cents, never via Float
     idempotency_token = params[:idempotency_token]
     redemption_token_value = normalized_token(params[:redemption_token])
 
@@ -110,6 +110,15 @@ class Merchant::RedemptionsController < ApplicationController
 
     @gift_card = GiftCard.find(gift_card_id)
     Rails.logger.info "✅ Found gift card #{@gift_card.id} - Balance: #{@gift_card.remaining_balance}"
+
+    if redemption_amount.nil? || redemption_amount <= 0
+      flash[:alert] = "Ingresa un monto válido, por ejemplo 19.99."
+      redirect_to confirm_merchant_redemptions_path(
+        gift_card_id: @gift_card.id,
+        redemption_mode: "token",
+        redemption_token: redemption_token_value
+      ) and return
+    end
 
     if redemption_token_value.blank?
       Rails.logger.warn "❌ Dynamic token missing from redemption submit"

@@ -149,7 +149,7 @@ class StripeWebhooks
   # merchant) is NOT floored silently: the excess is recorded and alerted.
   # The card is never canceled by a refund; the load flips to `refunded`
   # when it is empty and something was refunded.
-  def self.apply_refund!(load, refund)
+  def self.apply_refund!(load, refund, source: "stripe_webhook")
     card = load.gift_card
     alert = nil
 
@@ -192,7 +192,7 @@ class StripeWebhooks
           debited_cents: debit,
           over_refund_cents: over_refund,
           refunded_at: Time.current.iso8601,
-          source: "stripe_webhook"
+          source: source
         }.compact
       )
 
@@ -342,7 +342,9 @@ class StripeWebhooks
     raise
   end
 
-  # won  → funds return to spendable; buyer unblocked.
+  # won / warning_closed → funds return to spendable; buyer unblocked.
+  #        (warning_closed = an inquiry Stripe closed without a chargeback:
+  #        the money stays with us, exactly like a won dispute.)
   # lost → write off THAT load's remaining cents only (idempotent on
   #        `dispute_<id>`); buyer's lost count goes up; two lost disputes
   #        block the buyer from purchasing until an admin lifts it.
@@ -355,10 +357,14 @@ class StripeWebhooks
     Rails.logger.info "[Dispute] Closed on load #{load.id} (card #{card.id}): status=#{dispute.status}"
 
     case dispute.status
-    when "won"
+    when "won", "warning_closed"
       resolve_dispute_won!(load, dispute)
     when "lost"
       write_off_lost_dispute!(load, dispute)
+    else
+      # Not a final outcome we know how to apply: leave the load frozen (safe)
+      # but make it loud. The dispute_closed alert below names the status.
+      Rails.logger.error "[Dispute] Unhandled closed status #{dispute.status.inspect} for dispute #{dispute.id} on load #{load.id}; load left disputed"
     end
 
     AdminAlertMailer.dispute_closed(card.id, dispute.id, dispute.status).deliver_later

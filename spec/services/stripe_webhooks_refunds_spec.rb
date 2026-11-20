@@ -238,6 +238,29 @@ RSpec.describe StripeWebhooks do
         expect(AdminAlertMailer).to have_received(:dispute_closed).with(gift_card.id, dispute.id, "won")
       end
 
+      it "WARNING_CLOSED (inquiry closed without a chargeback): treated like a win, load and buyer released" do
+        dispute = build_dispute
+        described_class.handle_charge_dispute_created(dispute)
+        expect(buyer.reload.dispute_open_count).to eq(1)
+
+        described_class.handle_charge_dispute_closed(build_dispute(id: dispute.id, status: "warning_closed"))
+
+        expect(load.reload).not_to be_dispute_open
+        expect(gift_card.reload.balances).to include(disputed_cents: 0, spendable_cents: 5000)
+        expect(buyer.reload.dispute_open_count).to eq(0)
+        expect(buyer).not_to be_purchases_blocked
+      end
+
+      it "an unknown closed status leaves the load frozen (safe) and still alerts" do
+        dispute = build_dispute
+        described_class.handle_charge_dispute_created(dispute)
+
+        described_class.handle_charge_dispute_closed(build_dispute(id: dispute.id, status: "something_new"))
+
+        expect(load.reload).to be_dispute_open
+        expect(AdminAlertMailer).to have_received(:dispute_closed).with(gift_card.id, dispute.id, "something_new")
+      end
+
       it "LOST: writes off only that load's remaining cents; the card stays active with the other money" do
         other = stripe_load!(gift_card, 2000, sender: other_buyer)
         redeem_card!(gift_card, 1000, merchant: merchant) # FIFO: spent 1000 of the disputed load

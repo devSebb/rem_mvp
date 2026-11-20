@@ -62,13 +62,15 @@ class Admin::PayoutsController < Admin::BaseController
                             .order(created_at: :desc)
   end
 
-  # Create a Settlement covering all unsettled redemptions for a merchant.
-  # The period spans from the earliest unsettled redemption to now.
+  # Create a Settlement covering all unsettled redemptions for a merchant up
+  # to an exact cutoff (now). Anything after the cutoff stays unsettled and
+  # goes into the next payout; the window must never extend past it.
   def create
     merchant = Merchant.find(params[:merchant_id])
+    cutoff = Time.current
 
-    unsettled_redemptions = merchant.unsettled_redemptions
-    unsettled_reversals = merchant.unsettled_reversals
+    unsettled_redemptions = merchant.unsettled_redemptions.where(created_at: ..cutoff)
+    unsettled_reversals = merchant.unsettled_reversals.where(created_at: ..cutoff)
     if unsettled_redemptions.empty? && unsettled_reversals.empty?
       redirect_to admin_payouts_path, alert: "No hay canjes sin liquidar para #{merchant.store_name}."
       return
@@ -86,8 +88,7 @@ class Admin::PayoutsController < Admin::BaseController
       return
     end
 
-    period_start = [ unsettled_redemptions.minimum(:created_at), unsettled_reversals.minimum(:created_at) ].compact.min.to_date
-    period_end = Time.current.to_date
+    period_start_at = [ unsettled_redemptions.minimum(:created_at), unsettled_reversals.minimum(:created_at) ].compact.min
 
     # amount = what we actually pay the merchant (gross minus platform
     # commission). The gross and rate are stored so the payout stays
@@ -100,8 +101,10 @@ class Admin::PayoutsController < Admin::BaseController
       gross_amount: gross,
       commission_amount: commission,
       commission_bps: settings.merchant_commission_bps,
-      period_start: period_start,
-      period_end: period_end,
+      period_start: period_start_at.to_date,
+      period_end: cutoff.to_date,
+      period_start_at: period_start_at,
+      period_end_at: cutoff,
       payout_status: :pending
     )
 

@@ -41,9 +41,9 @@ class Merchant::SettlementsController < ApplicationController
     @merchant = current_user.merchant
 
     # Get all transactions REDEEMED BY this merchant for this settlement period (redeemer-paid model)
-    @settlement_transactions = Transaction.where(merchant: @merchant)
-                                        .where(txn_type: :redemption, status: :succeeded)
-                                        .where(created_at: @settlement.period_start..@settlement.period_end)
+    # Settlement#transactions is the exact paid window (the old bare date
+    # range ended at midnight and dropped the payout's last day).
+    @settlement_transactions = @settlement.transactions
                                         .includes(gift_card: [ :sender, :recipient, :merchant ])
                                         .order(created_at: :desc)
 

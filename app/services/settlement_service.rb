@@ -47,10 +47,10 @@ class SettlementService
     # Load settlement periods and relevant redemption transactions once, then compute
     # per-settlement totals in memory to avoid 2 queries per settlement.
     settled_by_gc = Hash.new(0)
-    settlements = redeemer_merchant.settlements.select(:id, :amount, :period_start, :period_end).to_a
+    settlements = redeemer_merchant.settlements.select(:id, :amount, :period_start_at, :period_end_at).to_a
     if settlements.any?
-      min_start = settlements.map(&:period_start).min.beginning_of_day
-      max_end = settlements.map(&:period_end).max.end_of_day
+      min_start = settlements.map(&:period_start_at).min
+      max_end = settlements.map(&:period_end_at).max
       gift_card_id_set = gift_card_ids.each_with_object({}) { |id, memo| memo[id] = true }
 
       # Reversal rows enter with a negative sign so every per-settlement
@@ -67,9 +67,8 @@ class SettlementService
         total_settlement = 0
         by_gift_card = Hash.new(0)
 
-        # Same day-inclusive window as Settlement#period_range — a bare
-        # date comparison silently drops the period's last day.
-        range = settlement.period_start.beginning_of_day..settlement.period_end.end_of_day
+        # Same exact window as Settlement#period_range.
+        range = settlement.period_range
 
         tx_rows.each do |created_at, amount, gift_card_id|
           next unless range.cover?(created_at)
