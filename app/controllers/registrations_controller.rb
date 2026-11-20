@@ -22,6 +22,13 @@ class RegistrationsController < Devise::RegistrationsController
     super
   end
 
+  # Public sign-up only ever creates consumers. Roles (merchant/admin) are
+  # assigned exclusively from admin tooling, never from request params.
+  def build_resource(hash = {})
+    super(hash.except("role", :role))
+    resource.role = :user
+  end
+
   def update
     self.resource = resource_class.to_adapter.get!(send(:"current_#{resource_name}").to_key)
     prev_unconfirmed_email = resource.unconfirmed_email if resource.respond_to?(:unconfirmed_email)

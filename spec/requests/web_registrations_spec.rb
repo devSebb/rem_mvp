@@ -56,4 +56,27 @@ RSpec.describe "Web registrations (pending-recipient claim block)", type: :reque
 
     expect(User.find_by(email: "nueva@example.com")).to be_claimed
   end
+
+  %w[admin merchant].each do |escalated_role|
+    it "ignores a submitted role=#{escalated_role} and creates a plain user" do
+      expect {
+        post user_registration_path, params: {
+          user: {
+            email: "intruso-#{escalated_role}@example.com",
+            password: "Password!23",
+            password_confirmation: "Password!23",
+            first_name: "Intruso",
+            last_name: "Anon",
+            phone: "+59399555#{escalated_role == 'admin' ? '1111' : '2222'}",
+            role: escalated_role
+          }
+        }
+      }.to change(User, :count).by(1)
+
+      created = User.find_by(email: "intruso-#{escalated_role}@example.com")
+      expect(created.role).to eq("user")
+      expect(created).not_to be_admin
+      expect(created).not_to be_merchant
+    end
+  end
 end
