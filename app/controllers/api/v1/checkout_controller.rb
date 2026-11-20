@@ -138,6 +138,24 @@ module Api
         # face value directly.
         quote = Checkout::Quote.call(amount_cents: amount_cents, currency: currency)
 
+        payment_intent_params = {
+          amount: quote.total_cents,
+          currency: currency.downcase,
+          payment_method_types: [ "card" ],
+          # Let Stripe Radar decide when 3DS is required: liability for
+          # fraud disputes shifts to the issuer on 3DS-confirmed charges.
+          # Zero UX cost on the normal path; Radar only prompts when warranted.
+          payment_method_options: {
+            card: { request_three_d_secure: "automatic" }
+          },
+          metadata: recipient_metadata.merge(
+            sender_id: current_user.id.to_s,
+            merchant_id: merchant.id.to_s,
+            subtotal_cents: quote.subtotal_cents.to_s,
+            fee_cents: quote.fee_cents.to_s
+          )
+        }
+
         # Generate Stripe-level idempotency key to prevent duplicate PaymentIntents on retries
         idempotency_key = generate_stripe_idempotency_key(
           draft_id: draft_id,
@@ -145,7 +163,8 @@ module Api
           merchant_id: merchant.id,
           amount_cents: amount_cents,
           currency: currency,
-          recipient_params: recipient_params
+          recipient_params: recipient_params,
+          payment_intent_params: payment_intent_params
         )
 
         # Log the payment intent creation attempt
@@ -159,23 +178,7 @@ module Api
         # Create Stripe PaymentIntent
         begin
           payment_intent = Stripe::PaymentIntent.create(
-            {
-              amount: quote.total_cents,
-              currency: currency.downcase,
-              payment_method_types: [ "card" ],
-              # Let Stripe Radar decide when 3DS is required: liability for
-              # fraud disputes shifts to the issuer on 3DS-confirmed charges.
-              # Zero UX cost on the normal path; Radar only prompts when warranted.
-              payment_method_options: {
-                card: { request_three_d_secure: "automatic" }
-              },
-              metadata: recipient_metadata.merge(
-                sender_id: current_user.id.to_s,
-                merchant_id: merchant.id.to_s,
-                subtotal_cents: quote.subtotal_cents.to_s,
-                fee_cents: quote.fee_cents.to_s
-              )
-            },
+            payment_intent_params,
             { idempotency_key: idempotency_key }
           )
 
@@ -317,12 +320,20 @@ module Api
       # Generate a deterministic idempotency key for Stripe PaymentIntent creation.
       # This prevents duplicate PaymentIntents when the mobile client retries on network errors.
       #
-      # If draft_id is provided (e.g., from mobile app's local draft), use that directly.
+      # If draft_id is provided (e.g., from mobile app's local draft), key on it plus the params (below).
       # Otherwise, use a hash of the purchase inputs + a 10-minute time bucket to allow
       # legitimate repeated purchases while preventing accidental duplicates.
-      def generate_stripe_idempotency_key(draft_id:, user_id:, merchant_id:, amount_cents:, currency:, recipient_params:)
+      #
+      # With a draft_id, the key also covers the exact PaymentIntent params.
+      # Stripe rejects a reused key whose params differ, so after a declined
+      # card a buyer who changed the amount, recipient, note or merchant got a
+      # 500 on every retry until restarting the app. Same draft + same params
+      # still dedupes (double taps, network retries); changed params get a new
+      # PaymentIntent. Scoped to the user so drafts can't collide across users.
+      def generate_stripe_idempotency_key(draft_id:, user_id:, merchant_id:, amount_cents:, currency:, recipient_params:, payment_intent_params:)
         if draft_id.present?
-          "mobile_pi:draft:#{draft_id}"
+          params_digest = Digest::SHA256.hexdigest(payment_intent_params.to_json)[0, 16]
+          "mobile_pi:draft:#{user_id}:#{draft_id}:#{params_digest}"
         else
           # Time bucket: 10 minutes (600 seconds)
           time_bucket = Time.now.to_i / 600

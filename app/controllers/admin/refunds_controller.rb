@@ -12,12 +12,14 @@ class Admin::RefundsController < Admin::BaseController
     @loads = @gift_card.loads.reject(&:status_canceled?)
     @selected_load = selected_load
     @max_refund_amount = @selected_load&.refundable_cents.to_i
+    # One Stripe idempotency key per rendered form (see IssueStripeRefund).
+    @idempotency_token = SecureRandom.uuid
   end
 
   def create
     authorize @gift_card, :stripe_refund?
 
-    refund_amount = params[:refund_amount]&.to_f&.*(100)&.to_i # Convert to cents
+    refund_amount = MoneyInput.to_cents(params[:refund_amount]) # exact cents, never via Float
     reason = params[:reason]&.strip
     load = selected_load
 
@@ -45,10 +47,11 @@ class Admin::RefundsController < Admin::BaseController
     end
 
     begin
-      refund = Refunds::IssueStripeRefund.call(load: load, amount_cents: refund_amount, reason: reason, actor: current_user)
+      refund = Refunds::IssueStripeRefund.call(load: load, amount_cents: refund_amount, reason: reason, actor: current_user,
+                                               idempotency_token: params[:idempotency_token])
 
       flash[:notice] = "Reembolso Stripe #{refund.id} emitido por #{format_amount(refund_amount, @gift_card.currency)} " \
-                       "sobre la recarga ##{load.id}. El saldo interno se actualiza cuando llegue el webhook de Stripe."
+                       "sobre la recarga ##{load.id}. El saldo de la tarjeta ya se descontó."
       redirect_to admin_gift_card_path(@gift_card)
     rescue Refunds::IssueStripeRefund::MissingPaymentIntent
       flash[:alert] = "Esta recarga no se creó vía Stripe — no hay pago que reembolsar."

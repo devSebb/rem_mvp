@@ -53,9 +53,14 @@ module Redemptions
       token = locate_token
       return decline!("invalid_token") unless token
 
-      token.with_lock do
-        gift_card = token.gift_card
-        return decline!("invalid_token") unless gift_card
+      gift_card = token.gift_card
+      return decline!("invalid_token") unless gift_card
+
+      # Lock order is card → token, the same as RedemptionTokens::Issue.
+      # Locking the token first (as before) could deadlock a code refresh in
+      # the app against a cashier redeeming that code at the same moment.
+      gift_card.with_lock do
+        token.lock!
         return decline_without_transaction!("merchant_missing", gift_card: gift_card) unless gift_card.merchant_id
 
         if (existing = existing_transaction)
@@ -71,27 +76,25 @@ module Redemptions
         return decline!("expired_token", token: token, gift_card: gift_card) if token_expired?(token)
         return decline!("token_used", token: token, gift_card: gift_card) if token.used_at.present?
 
-        gift_card.with_lock do
-          gift_card.reload
-          balances = gift_card.balances
+        # with_lock reloaded the card, so balances are current under the lock.
+        balances = gift_card.balances
 
-          return decline!("card_frozen", token: token, gift_card: gift_card) if gift_card.frozen_by_admin?
-          return decline!("gift_card_inactive", token: token, gift_card: gift_card) unless gift_card.active?
+        return decline!("card_frozen", token: token, gift_card: gift_card) if gift_card.frozen_by_admin?
+        return decline!("gift_card_inactive", token: token, gift_card: gift_card) unless gift_card.active?
 
-          if balances[:spendable_cents].zero?
-            if balances[:held_cents].positive?
-              return decline!("card_held_security_review", token: token, gift_card: gift_card, balances: balances)
-            elsif balances[:disputed_cents].positive?
-              return decline!("card_disputed", token: token, gift_card: gift_card, balances: balances)
-            end
+        if balances[:spendable_cents].zero?
+          if balances[:held_cents].positive?
+            return decline!("card_held_security_review", token: token, gift_card: gift_card, balances: balances)
+          elsif balances[:disputed_cents].positive?
+            return decline!("card_disputed", token: token, gift_card: gift_card, balances: balances)
           end
-
-          if amount_cents > balances[:spendable_cents]
-            return decline!("insufficient_balance", token: token, gift_card: gift_card, balances: balances)
-          end
-
-          capture!(token, gift_card)
         end
+
+        if amount_cents > balances[:spendable_cents]
+          return decline!("insufficient_balance", token: token, gift_card: gift_card, balances: balances)
+        end
+
+        capture!(token, gift_card)
       end
     end
 

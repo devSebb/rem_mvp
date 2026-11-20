@@ -93,6 +93,7 @@
     </div>
 
     <%= form_with url: admin_gift_card_load_refund_path(@gift_card, @selected_load), method: :post, local: true, class: "space-y-5" do |form| %>
+      <%= hidden_field_tag :idempotency_token, @idempotency_token %>
       <div>
         <%= form.label :refund_amount, "Monto a reembolsar", class: "block text-sm font-medium text-[#0D2F32] mb-2" %>
         <div class="relative">

@@ -6,9 +6,16 @@ module Refunds
   # NOT to be confused with Refunds::Issue (Type A — reverses a merchant
   # capture, no money moves at Stripe).
   #
-  # Idempotent at two levels: a fixed Stripe idempotency key per
-  # (load, amount, actor), and the refund.* webhooks de-duping on
-  # stripe_refund_id when they reconcile the internal ledger.
+  # The load is debited immediately, inside the card lock, as soon as Stripe
+  # accepts the refund, so the refunded money can't be spent at a register
+  # while the webhook is in flight (or if it never arrives). The refund.*
+  # webhooks then find the ledger row (de-duped on stripe_refund_id) and skip;
+  # refund.failed reverses it if the bank later rejects the refund.
+  #
+  # Stripe idempotency key: one per submitted admin form (idempotency_token),
+  # so a double-submit can't refund twice while two deliberate refunds of the
+  # same amount are not collapsed into one. Without a token, falls back to
+  # (load, amount, actor).
   class IssueStripeRefund
     class Error < StandardError; end
     class MissingPaymentIntent < Error; end
@@ -21,11 +28,12 @@ module Refunds
       new(...).call
     end
 
-    def initialize(load:, amount_cents:, reason:, actor:)
+    def initialize(load:, amount_cents:, reason:, actor:, idempotency_token: nil)
       @load = load
       @amount_cents = amount_cents.to_i
       @reason = reason.to_s.strip.presence
       @actor = actor
+      @idempotency_token = idempotency_token.to_s.strip.presence
     end
 
     def call
@@ -46,14 +54,24 @@ module Refunds
                 "Requested #{@amount_cents} exceeds refundable #{@load.refundable_cents} for load=#{@load.id} (card=#{card.id})"
         end
 
-        create_stripe_refund(card)
+        refund = create_stripe_refund(card)
+        # Same lock: the debit lands before any redemption can see the money.
+        if %w[succeeded pending].include?(refund.status.to_s)
+          StripeWebhooks.apply_refund!(@load, refund, source: "admin_refund")
+        end
+        refund
       end
     end
 
     private
 
     def create_stripe_refund(card)
-      idem_key = "refund:load#{@load.id}:#{@amount_cents}:#{@actor&.id}"
+      idem_key =
+        if @idempotency_token
+          "refund:load#{@load.id}:form:#{@idempotency_token}"
+        else
+          "refund:load#{@load.id}:#{@amount_cents}:#{@actor&.id}"
+        end
 
       refund = Stripe::Refund.create(
         {
@@ -75,8 +93,6 @@ module Refunds
         "amount_cents=#{@amount_cents} actor=#{@actor&.id} reason=#{@reason.inspect}"
       )
 
-      # Internal balance reconciliation is performed by the refund.* webhook
-      # (StripeWebhooks.apply_refund!) to keep a single code path.
       refund
     end
 
