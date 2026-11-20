@@ -76,25 +76,21 @@ module Auth
     # Invalid (with attempts_remaining) on a wrong code, and
     # TooManyAttempts once MAX_ATTEMPTS wrong codes invalidate the digest
     # (forcing a resend). On success, clears the OTP columns.
+    #
+    # Runs under a row lock on a freshly reloaded user so concurrent guesses
+    # are serialized: each one sees the previous attempt count (and a digest
+    # already cleared by a 5th miss). The outcome is computed inside the lock
+    # and raised after it, so the attempt counter write is committed rather
+    # than rolled back by the exception.
     def verify!(otp)
-      raise Expired if @user.claim_otp_digest.blank? || @user.claim_otp_sent_at.blank?
-      raise Expired if @user.claim_otp_sent_at <= OTP_TTL.ago
+      outcome = @user.with_lock { evaluate(otp) }
 
-      if ActiveSupport::SecurityUtils.secure_compare(digest(otp.to_s), @user.claim_otp_digest)
-        clear_otp!
-        return true
+      case outcome
+      when :verified then true
+      when :expired then raise Expired
+      when :too_many_attempts then raise TooManyAttempts
+      else raise Invalid.new(outcome)
       end
-
-      attempts = @user.claim_otp_attempts + 1
-      if attempts >= MAX_ATTEMPTS
-        # Invalidate the code entirely (sent_at too, so a resend is
-        # allowed immediately instead of waiting out the throttle).
-        clear_otp!
-        raise TooManyAttempts
-      end
-
-      @user.update_columns(claim_otp_attempts: attempts, updated_at: Time.current)
-      raise Invalid.new(MAX_ATTEMPTS - attempts)
     end
 
     # Notifies the ORIGINAL contact channels (captured before the signup
@@ -110,6 +106,29 @@ module Auth
     end
 
     private
+
+    # Returns :verified, :expired, :too_many_attempts, or the Integer number
+    # of attempts remaining after a wrong code. Never raises.
+    def evaluate(otp)
+      return :expired if @user.claim_otp_digest.blank? || @user.claim_otp_sent_at.blank?
+      return :expired if @user.claim_otp_sent_at <= OTP_TTL.ago
+
+      if ActiveSupport::SecurityUtils.secure_compare(digest(otp.to_s), @user.claim_otp_digest)
+        clear_otp!
+        return :verified
+      end
+
+      attempts = @user.claim_otp_attempts + 1
+      if attempts >= MAX_ATTEMPTS
+        # Invalidate the code entirely (sent_at too, so a resend is
+        # allowed immediately instead of waiting out the throttle).
+        clear_otp!
+        return :too_many_attempts
+      end
+
+      @user.update_columns(claim_otp_attempts: attempts, updated_at: Time.current)
+      MAX_ATTEMPTS - attempts
+    end
 
     def throttled?
       @user.claim_otp_sent_at.present? && @user.claim_otp_sent_at > RESEND_INTERVAL.ago

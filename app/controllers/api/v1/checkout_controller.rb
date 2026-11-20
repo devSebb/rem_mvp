@@ -83,16 +83,18 @@ module Api
         return unless validate_amount!(amount_cents)
 
         # Validate recipient
-        if !self_load && recipient_params[:phone].blank? && recipient_params[:email].blank?
+        # Gifts are routed by email only (Loads::Fulfill.find_recipient), so a
+        # recipient email is required; the app has always collected one.
+        if !self_load && recipient_params[:email].to_s.strip.blank?
           return render_error(
             code: "invalid_recipient",
-            message: "Recipient phone or email is required",
+            message: "Ingresa el correo electrónico del destinatario.",
             status: :unprocessable_entity
           )
         end
 
         # §4.1 caps (D7). The prospective recipient is resolved exactly as the
-        # webhook will (self → buyer; else phone → email) but never created
+        # webhook will (self → buyer; else by email) but never created
         # here; recipient- and card-level caps are re-checked at fulfilment.
         prospective_recipient =
           if self_load

@@ -70,11 +70,18 @@ module Auth
         )
       end
 
-      # Clear the reset token after successful password change
-      user.update_columns(
-        reset_password_token: nil,
-        reset_password_sent_at: nil
-      )
+      # Clear the reset token after successful password change. The token was
+      # emailed to this address, so using it proves the owner controls the
+      # email: mark it verified (this is also how the real owner recovers an
+      # address someone else started a signup with).
+      attrs = { reset_password_token: nil, reset_password_sent_at: nil }
+      attrs[:email_verified_at] = Time.current if user.email_verified_at.blank? && !user.placeholder_email?
+      user.update_columns(attrs)
+
+      # A reset usually means the old password is compromised: end every
+      # existing app session (refresh tokens) so only the new password works.
+      UserSession.where(user_id: user.id, revoked_at: nil)
+                 .update_all(revoked_at: Time.current, updated_at: Time.current)
     end
   end
 

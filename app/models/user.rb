@@ -10,10 +10,11 @@ class User < ApplicationRecord
 
   attr_accessor :skip_national_id_validation
   attr_accessor :terms_accepted
-  # Set to true by the mobile API signup path so a fresh account is created
-  # UNVERIFIED (email_verified_at stays nil) and must confirm an emailed code
-  # before any tokens are issued. All other creation paths (web signup,
-  # console, tests) leave this nil and are auto-verified on create.
+  # Set to true by the public signup paths (mobile API and web) so a fresh
+  # account is created UNVERIFIED (email_verified_at stays nil) and must
+  # confirm an emailed code before it can get tokens or a web session.
+  # Admin-created accounts, console and tests leave this nil and are
+  # auto-verified on create.
   attr_accessor :require_email_verification
   # Set to true when the Stripe webhook creates a recipient shell. Suppresses
   # the default-claim callback so claimed_at stays nil until the real owner
@@ -70,6 +71,7 @@ class User < ApplicationRecord
   before_validation :normalize_contact_fields
   before_validation :sync_name_fields
   before_validation :normalize_national_id
+  before_update :reset_email_verification_on_change
 
   # Send a welcome email for fresh signups only. Pending recipients
   # (created via the Stripe webhook for someone who received a gift card
@@ -122,6 +124,22 @@ class User < ApplicationRecord
     email_verified_at.present?
   end
 
+  # Devise (web) sign-in gate, checked on every request. Gifts are routed by
+  # email (Loads::Fulfill.find_recipient) and a web session can view the
+  # wallet and mint redemption codes, so a consumer account must have PROVEN
+  # its email first. Merchant/admin accounts are created by admins and are
+  # exempt. Deleted accounts never sign in.
+  def active_for_authentication?
+    super && !deleted? && (email_verified? || merchant? || admin?)
+  end
+
+  def inactive_message
+    return :deleted_account if deleted?
+    return :unverified_email unless email_verified? || merchant? || admin?
+
+    super
+  end
+
   # Deterministic placeholder email for a deleted account.
   def self.deleted_email_for(id)
     "#{DELETED_EMAIL_PREFIX}#{id}@#{CLAIM_EMAIL_DOMAIN}"
@@ -149,9 +167,20 @@ class User < ApplicationRecord
     self.claimed_at ||= Time.current
   end
 
-  # Auto-verify every creation path EXCEPT the mobile API fresh signup
-  # (which sets require_email_verification and drives the emailed-code flow)
-  # and pending-recipient shells (verified when their owner claims them).
+  # A changed address is unproven: the owner must confirm it again (email
+  # code, or a password reset sent to it). Without this, a verified account
+  # could switch to someone else's address and receive gifts sent there.
+  # Case-only changes keep verification.
+  def reset_email_verification_on_change
+    return unless will_save_change_to_email?
+    return if email_in_database.to_s.casecmp?(email.to_s)
+
+    self.email_verified_at = nil
+  end
+
+  # Auto-verify every creation path EXCEPT public signups (mobile API and
+  # web, which set require_email_verification and must confirm an emailed
+  # code) and pending-recipient shells (verified when their owner claims them).
   def default_email_verified_on_create
     return if require_email_verification
     return if pending_recipient

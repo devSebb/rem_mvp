@@ -44,9 +44,14 @@ class RegistrationsController < Devise::RegistrationsController
 
   # Public sign-up only ever creates consumers. Roles (merchant/admin) are
   # assigned exclusively from admin tooling, never from request params.
+  #
+  # The email is NOT auto-verified: gifts are routed by email, so the account
+  # can't get a web session (User#active_for_authentication?) or app tokens
+  # until its owner confirms the emailed code (prompted on first app login).
   def build_resource(hash = {})
     super(hash.except("role", :role))
     resource.role = :user
+    resource.require_email_verification = true
   end
 
   def update

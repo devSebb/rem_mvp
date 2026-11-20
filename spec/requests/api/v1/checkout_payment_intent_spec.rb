@@ -205,7 +205,7 @@ RSpec.describe "POST /api/v1/checkout/payment_intent", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
-    it "accepts recipient with only phone (no email)" do
+    it "rejects a recipient with only a phone (gifts are routed by email)" do
       params_phone_only = valid_params.merge(
         recipient: { name: "Jane", phone: "+15559876543" }
       )
@@ -214,7 +214,8 @@ RSpec.describe "POST /api/v1/checkout/payment_intent", type: :request do
            params: params_phone_only.to_json,
            headers: auth_headers(access_token)
 
-      expect(response).to have_http_status(:ok)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(parsed_error["code"]).to eq("invalid_recipient")
     end
   end
 
@@ -405,8 +406,18 @@ RSpec.describe "POST /api/v1/checkout/payment_intent", type: :request do
       )
     end
 
+    it "never resolves the recipient by phone (unverified numbers can't capture gifts)" do
+      squatter = create(:user, email: "squatter@example.com", phone: "+15551234567")
+      create(:gift_card, recipient: squatter, merchant: merchant, amount: 0)
+
+      post "/api/v1/checkout/payment_intent", params: valid_params.to_json, headers: auth_headers(access_token)
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data["target"]).to include("existing_card_id" => nil, "current_balance_cents" => 0)
+    end
+
     it "fills the target for a known recipient's existing card" do
-      other = create(:user, phone: "+15551234567")
+      other = create(:user, email: "Recipient@Example.com")
       card = create(:gift_card, recipient: other, merchant: merchant, amount: 0)
       stripe_load!(card, 1_000, sender: create(:user), at: 2.days.ago)
 

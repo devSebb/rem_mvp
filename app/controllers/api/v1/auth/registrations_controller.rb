@@ -29,6 +29,17 @@ module Api
           # reuses that row (and re-sends a code) instead of colliding on
           # the unique-email index.
           unverified_user = pending_user ? nil : reusable_unverified_user
+
+          # Only the person who started that signup (knows its password) may
+          # retry it. Otherwise anyone could overwrite the password of an
+          # account whose owner is mid-verification and share it once they
+          # confirm their code. A real owner who forgot the password uses
+          # "forgot password", which also proves the email. Reported as the
+          # usual "already taken" so the app shows its normal message.
+          if unverified_user && !unverified_user.valid_password?(signup_params[:password].to_s)
+            return render_signup_error(details: { email: ["has already been taken"] })
+          end
+
           user = pending_user || unverified_user || User.new
           was_pending_claim = pending_user.present?
           # Capture the pending account's ORIGINAL contact channels before
@@ -36,6 +47,12 @@ module Api
           # recipient that their account was claimed.
           original_email = pending_user&.email
           original_phone = pending_user&.phone
+          # The claim code went to the pending account's existing address, so
+          # that address is the one proven. A different email typed into the
+          # signup form is NOT proven, and gifts are routed by email, so the
+          # claimed account keeps the proven address (placeholder addresses of
+          # phone-only shells aren't real, so they don't count).
+          proven_email = pending_user&.placeholder_email? ? nil : original_email
 
           # Fresh (non-claim) signups must prove control of their email
           # before any tokens are issued. The flag tells the User model to
@@ -44,13 +61,17 @@ module Api
           user.require_email_verification = true unless was_pending_claim
 
           populate_user_attributes(user)
+          user.email = proven_email if proven_email.present?
 
           if user.save
             if was_pending_claim
-              Rails.logger.info "[Auth] Claimed pending account user_id=#{user.id} email=#{user.email}"
-              # Claiming already proved control of the email/phone via the
-              # claim OTP, so the account is verified — issue tokens as before.
-              user.update_columns(email_verified_at: Time.current, updated_at: Time.current) if user.email_verified_at.blank?
+              Rails.logger.info "[Auth] Claimed pending account user_id=#{user.id}"
+              # The claim OTP was delivered to proven_email, so that address is
+              # verified. (A phone-only shell's claim proves the phone, not the
+              # typed email; that path stays unverified and is handled below.)
+              if proven_email.present? && user.email_verified_at.blank?
+                user.update_columns(email_verified_at: Time.current, updated_at: Time.current)
+              end
               # Alert the original contact channel that the account was
               # claimed, so the rightful recipient finds out if someone
               # else somehow completed the OTP challenge.
@@ -62,6 +83,15 @@ module Api
               # Claim is an UPDATE, so the User#after_create_commit hook
               # doesn't fire. Send the welcome explicitly here.
               WelcomeMailer.welcome(user.id).deliver_later unless user.placeholder_email?
+
+              # No tokens until the account's email is proven: gifts are routed
+              # by email, so tokens on an unproven address could receive gifts
+              # meant for its real owner. Only reachable for phone-only shells
+              # (claimed via SMS/WhatsApp), which need an SMS provider anyway.
+              unless user.reload.email_verified?
+                details = ::Auth::EmailVerification.request!(user)
+                return render_verification_required(user, details)
+              end
 
               tokens = ::Auth::IssueTokens.call(
                 user:,

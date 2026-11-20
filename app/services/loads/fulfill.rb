@@ -210,18 +210,27 @@ module Loads
 
     # ── Recipient resolution (shared with checkout) ─────────────────────
 
-    # phone → email → new pending shell user. Returns nil when neither
-    # contact channel is present. Exposed for checkout's prospective lookup
-    # via `find_recipient` (never creates).
+    # Existing account with the recipient EMAIL, else a new pending shell.
+    # Returns nil when neither contact channel is present. Exposed for
+    # checkout's prospective lookup via `find_recipient` (never creates).
     def self.find_or_create_recipient(metadata)
       found = find_recipient(metadata)
       return found if found
 
       phone = metadata["recipient_phone"].presence
-      email = metadata["recipient_email"].presence&.downcase
+      email = normalized_recipient_email(metadata)
       if email.blank? && phone.blank?
         Rails.logger.error "❌ Cannot create recipient: both email and phone are blank"
         return nil
+      end
+
+      # Phone is unique per user but never matched for routing. If another
+      # account already holds it, keep the shell without a phone rather than
+      # failing fulfilment on the unique index.
+      placeholder_email = User.placeholder_email_for_phone(phone)
+      if phone.present? && User.where(phone: phone).exists?
+        Rails.logger.info "[Fulfill] recipient phone already belongs to another account; shell created without phone"
+        phone = nil
       end
 
       recipient_name = metadata["recipient_name"].presence
@@ -230,21 +239,40 @@ module Loads
         name: recipient_name,
         first_name: name_parts[0].presence,
         last_name: name_parts[1].presence,
-        email: email || User.placeholder_email_for_phone(phone),
+        email: email || placeholder_email,
         phone: phone,
         password: SecureRandom.hex(32),
         role: :user,
         pending_recipient: true,
         skip_national_id_validation: true
       )
-      Rails.logger.info "✅ Created pending recipient: user_id=#{recipient.id} email=#{recipient.email} phone=#{recipient.phone || '(none)'}"
+      Rails.logger.info "✅ Created pending recipient: user_id=#{recipient.id}"
       recipient
     end
 
+    # Gifts are routed by EMAIL ONLY. Phone numbers are never verified (no
+    # SMS provider), so matching on phone let anyone who put a victim's
+    # number on their profile receive the victim's gifts.
+    #
+    # Matching the email is safe whatever the account's state: emails are
+    # unique, and an account only gets app tokens or a web session after
+    # proving that address (emailed code, claim code sent to it, or a
+    # password reset sent to it). A gift parked on an unverified account is
+    # therefore only ever usable by the address's real owner.
+    #
+    # Legacy phone-only gifts (no email; checkout now requires one) resolve
+    # to the deterministic placeholder address of that phone's pending shell,
+    # which only a pending shell can have, so they keep accumulating there.
     def self.find_recipient(metadata)
-      phone = metadata["recipient_phone"].presence
-      email = metadata["recipient_email"].presence&.downcase
-      (phone.present? && User.find_by(phone: phone)) || (email.present? && User.find_by(email: email)) || nil
+      email = normalized_recipient_email(metadata) ||
+              User.placeholder_email_for_phone(metadata["recipient_phone"].presence)
+      return nil if email.blank?
+
+      User.active.where("LOWER(email) = ?", email).first
+    end
+
+    def self.normalized_recipient_email(metadata)
+      metadata["recipient_email"].to_s.strip.downcase.presence
     end
 
     # ── Stripe charge helpers ───────────────────────────────────────────

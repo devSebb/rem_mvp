@@ -69,26 +69,43 @@ module Auth
     # attempts_remaining) on a wrong code, and TooManyAttempts once
     # MAX_ATTEMPTS wrong codes invalidate the digest (forcing a resend). On
     # success, clears the OTP columns and marks the email verified.
+    #
+    # Runs under a row lock on a freshly reloaded user so concurrent guesses
+    # are serialized; the outcome is raised after the lock so the attempt
+    # counter write is committed, not rolled back (see ClaimVerification).
     def verify!(otp)
-      raise Expired if @user.email_otp_digest.blank? || @user.email_otp_sent_at.blank?
-      raise Expired if @user.email_otp_sent_at <= OTP_TTL.ago
+      outcome = @user.with_lock { evaluate(otp) }
+
+      case outcome
+      when :verified then true
+      when :expired then raise Expired
+      when :too_many_attempts then raise TooManyAttempts
+      else raise Invalid.new(outcome)
+      end
+    end
+
+    private
+
+    # Returns :verified, :expired, :too_many_attempts, or the Integer number
+    # of attempts remaining after a wrong code. Never raises.
+    def evaluate(otp)
+      return :expired if @user.email_otp_digest.blank? || @user.email_otp_sent_at.blank?
+      return :expired if @user.email_otp_sent_at <= OTP_TTL.ago
 
       if ActiveSupport::SecurityUtils.secure_compare(digest(otp.to_s), @user.email_otp_digest)
         mark_verified!
-        return true
+        return :verified
       end
 
       attempts = @user.email_otp_attempts + 1
       if attempts >= MAX_ATTEMPTS
         clear_otp!
-        raise TooManyAttempts
+        return :too_many_attempts
       end
 
       @user.update_columns(email_otp_attempts: attempts, updated_at: Time.current)
-      raise Invalid.new(MAX_ATTEMPTS - attempts)
+      MAX_ATTEMPTS - attempts
     end
-
-    private
 
     def throttled?
       @user.email_otp_sent_at.present? && @user.email_otp_sent_at > RESEND_INTERVAL.ago
