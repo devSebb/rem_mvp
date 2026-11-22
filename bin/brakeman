@@ -2,6 +2,7 @@
 require "rubygems"
 require "bundler/setup"
 
-ARGV.unshift("--ensure-latest")
+# No --ensure-latest: it failed CI on every new Brakeman release, unrelated
+# to our code. The version is pinned in Gemfile.lock and bumped deliberately.
 
 load Gem.bin_path("brakeman", "brakeman")
