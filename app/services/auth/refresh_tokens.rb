@@ -38,27 +38,45 @@ module Auth
 
       # Revoke + issue in ONE transaction (with_lock): if issuing fails, the
       # old token stays valid instead of leaving the client with nothing.
-      session.with_lock do
+      family_revoked = false
+      tokens = session.with_lock do
         first_rotation = !session.revoked?
         if !first_rotation && !within_rotation_grace?(session)
-          raise TokenError.new(code: "auth.refresh_revoked", message: "Refresh token has been revoked")
+          # A token that was ROTATED (not logged out) is being replayed after
+          # the grace window. Either the client is very stale or someone copied
+          # it. We can't tell which, so end every session from that sign-in:
+          # the legitimate user signs in again, a thief loses access.
+          family_revoked = revoke_family!(session) if session.replaced_by_id.present?
+          next nil # block returns -> the revocation commits; raise below
         end
         # Otherwise a revoked session here is a lost-response retry of a token
         # rotated moments ago: issue a fresh pair; the earlier replacement stays
         # valid (the client may yet hold it).
         Rails.logger.info("[Auth] refresh rotation grace used for session #{session.id}") unless first_rotation
 
-        tokens = Auth::IssueTokens.call(
+        issued = Auth::IssueTokens.call(
           user:,
           device_id: session.device_id,
           ip: ip.presence || session.ip,
-          user_agent: user_agent.presence || session.user_agent
+          user_agent: user_agent.presence || session.user_agent,
+          family_id: session.family_id
         )
         if first_rotation
-          session.update!(revoked_at: Time.current, last_used_at: Time.current, replaced_by: tokens[:session])
+          session.update!(
+            revoked_at: Time.current,
+            last_used_at: Time.current,
+            replaced_by: issued[:session],
+            family_id: issued[:session].family_id # adopts the family if it predates family_id
+          )
         end
-        tokens
+        issued
       end
+
+      unless tokens
+        Rails.logger.warn("[Auth] refresh token reuse: revoked session family of user #{user.id}") if family_revoked
+        raise TokenError.new(code: "auth.refresh_revoked", message: "Refresh token has been revoked")
+      end
+      tokens
     rescue JWT::ExpiredSignature
       raise TokenError.new(code: "auth.token_expired", message: "Refresh token expired")
     rescue JWT::DecodeError
@@ -73,6 +91,15 @@ module Auth
       session.replaced_by_id.present? &&
         session.revoked_at > ROTATION_GRACE.ago &&
         session.replaced_by&.revoked_at.nil?
+    end
+
+    # Revokes every still-active session descended from the same sign-in.
+    def revoke_family!(session)
+      return false if session.family_id.blank?
+
+      UserSession.active.where(user_id: session.user_id, family_id: session.family_id)
+        .update_all(revoked_at: Time.current, updated_at: Time.current)
+      true
     end
 
     def token_expired?(payload)

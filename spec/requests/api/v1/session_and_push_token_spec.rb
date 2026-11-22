@@ -51,6 +51,31 @@ RSpec.describe "Sessions and push tokens (mobile reliability)", type: :request d
       expect(refresh(r1)).to eq(401)
     end
 
+    it "replaying a rotated token after the grace window ends that sign-in everywhere (reuse detection)" do
+      r1 = login["refresh_token"]
+      refresh(r1)
+      r2 = parsed_body.dig("data", "refresh_token")
+      other_device = login["refresh_token"] # separate sign-in, separate family
+
+      travel(Auth::RefreshTokens::ROTATION_GRACE + 1.second) do
+        expect(refresh(r1)).to eq(401) # stolen/stale copy replayed
+        expect(refresh(r2)).to eq(401) # the descendant is revoked too
+        expect(refresh(other_device)).to eq(200) # unrelated sessions untouched
+      end
+    end
+
+    it "brings sessions created before family tracking into a family on rotation" do
+      r1 = login["refresh_token"]
+      UserSession.update_all(family_id: nil) # as if issued before the migration
+      refresh(r1)
+      r2 = parsed_body.dig("data", "refresh_token")
+
+      travel(Auth::RefreshTokens::ROTATION_GRACE + 1.second) do
+        expect(refresh(r1)).to eq(401)
+        expect(refresh(r2)).to eq(401)
+      end
+    end
+
     it "gives no grace to a token revoked by logout (not rotation)" do
       r1 = login["refresh_token"]
       post "/api/v1/auth/logout", params: { refresh_token: r1 }.to_json, headers: json_headers
