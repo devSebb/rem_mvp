@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_11_20_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_20_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -323,7 +323,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_20_120000) do
     t.datetime "revoked_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "replaced_by_id"
+    t.string "family_id"
+    t.index ["family_id"], name: "index_user_sessions_on_family_id"
     t.index ["refresh_token_digest"], name: "index_user_sessions_on_refresh_token_digest", unique: true
+    t.index ["replaced_by_id"], name: "index_user_sessions_on_replaced_by_id"
     t.index ["revoked_at"], name: "index_user_sessions_on_revoked_at"
     t.index ["user_id"], name: "index_user_sessions_on_user_id"
   end
@@ -390,5 +394,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_20_120000) do
   add_foreign_key "transactions", "merchants"
   add_foreign_key "transactions", "redemption_tokens"
   add_foreign_key "transactions", "users"
+  add_foreign_key "user_sessions", "user_sessions", column: "replaced_by_id"
   add_foreign_key "user_sessions", "users"
 end
